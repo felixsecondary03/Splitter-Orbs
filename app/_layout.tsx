@@ -16,8 +16,9 @@ import {
 } from "@react-navigation/native";
 import { StatusBar } from "expo-status-bar";
 import { WidgetProvider } from "@/contexts/WidgetContext";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { ProfileProvider } from "@/contexts/ProfileContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-// Note: Error logging is auto-initialized via index.ts import
 
 // Only wrap with ErrorBoundary in dev — production apps should not include it
 const DevErrorBoundary = __DEV__
@@ -28,7 +29,7 @@ const DevErrorBoundary = __DEV__
 SplashScreen.preventAutoHideAsync();
 
 export const unstable_settings = {
-  initialRouteName: "(tabs)", // Ensure any route can link back to `/`
+  initialRouteName: "(tabs)",
 };
 
 export default function RootLayout() {
@@ -56,48 +57,45 @@ export default function RootLayout() {
     }
   }, [networkState.isConnected, networkState.isInternetReachable]);
 
-  const CustomDefaultTheme: Theme = {
-    ...DefaultTheme,
-    dark: false,
+  const GameDarkTheme: Theme = {
+    ...DarkTheme,
     colors: {
-      primary: "rgb(0, 122, 255)", // System Blue
-      background: "rgb(242, 242, 247)", // Light mode background
-      card: "rgb(255, 255, 255)", // White cards/surfaces
-      text: "rgb(0, 0, 0)", // Black text for light mode
-      border: "rgb(216, 216, 220)", // Light gray for separators/borders
-      notification: "rgb(255, 59, 48)", // System Red
+      primary: '#4F8EF7',
+      background: '#0A0E1A',
+      card: '#111827',
+      text: '#F1F5F9',
+      border: 'rgba(255, 255, 255, 0.06)',
+      notification: '#EF4444',
     },
   };
 
-  const CustomDarkTheme: Theme = {
-    ...DarkTheme,
-    colors: {
-      primary: "rgb(10, 132, 255)", // System Blue (Dark Mode)
-      background: "rgb(1, 1, 1)", // True black background for OLED displays
-      card: "rgb(28, 28, 30)", // Dark card/surface color
-      text: "rgb(255, 255, 255)", // White text for dark mode
-      border: "rgb(44, 44, 46)", // Dark gray for separators/borders
-      notification: "rgb(255, 69, 58)", // System Red (Dark Mode)
-    },
-  };
   return (
     <DevErrorBoundary>
-      <StatusBar style="auto" animated />
-        <ThemeProvider
-          value={colorScheme === "dark" ? CustomDarkTheme : CustomDefaultTheme}
-        >
-          <SafeAreaProvider>
-            <WidgetProvider>
-              <GestureHandlerRootView>
-              <Stack>
-                {/* Main app with tabs */}
-                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-              </Stack>
-              <SystemBars style={"auto"} />
-              </GestureHandlerRootView>
-            </WidgetProvider>
-          </SafeAreaProvider>
-        </ThemeProvider>
+      <StatusBar style="light" animated />
+      <ThemeProvider value={GameDarkTheme}>
+        <SafeAreaProvider>
+          <AuthProvider>
+            <ProfileProvider>
+              <WidgetProvider>
+                <GestureHandlerRootView style={{ flex: 1 }}>
+                  <Stack>
+                    <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                    <Stack.Screen name="game" options={{ headerShown: false, animation: 'fade' }} />
+                    <Stack.Screen name="auth/welcome" options={{ headerShown: false }} />
+                    <Stack.Screen name="auth/login" options={{ title: 'Sign In', presentation: 'modal' }} />
+                    <Stack.Screen name="auth/register" options={{ title: 'Create Account', presentation: 'modal' }} />
+                    <Stack.Screen name="auth/forgot-password" options={{ title: 'Reset Password', presentation: 'modal' }} />
+                    <Stack.Screen name="onboarding" options={{ headerShown: false, gestureEnabled: false }} />
+                    <Stack.Screen name="match-result" options={{ headerShown: false, animation: 'slide_from_bottom' }} />
+                    <Stack.Screen name="admin" options={{ headerShown: false, presentation: 'modal' }} />
+                  </Stack>
+                  <SystemBars style="light" />
+                </GestureHandlerRootView>
+              </WidgetProvider>
+            </ProfileProvider>
+          </AuthProvider>
+        </SafeAreaProvider>
+      </ThemeProvider>
     </DevErrorBoundary>
   );
 }

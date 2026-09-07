@@ -8,7 +8,7 @@ import {
   useColorScheme,
   ViewStyle,
 } from "react-native";
-import { appleBlue, zincColors } from "@/constants/Colors";
+import { COLORS } from "@/constants/Colors";
 
 type ButtonVariant = "filled" | "outline" | "ghost";
 type ButtonSize = "sm" | "md" | "lg";
@@ -46,7 +46,7 @@ export const Button: React.FC<ButtonProps> = ({
     lg: { height: 55, fontSize: 18, padding: 20 },
   };
 
-  const getVariantStyle = () => {
+  const getVariantStyle = (): ViewStyle => {
     const baseStyle: ViewStyle = {
       borderRadius: 12,
       flexDirection: "row",
@@ -58,14 +58,14 @@ export const Button: React.FC<ButtonProps> = ({
       case "filled":
         return {
           ...baseStyle,
-          backgroundColor: isDark ? zincColors[50] : zincColors[900],
+          backgroundColor: COLORS.primary,
         };
       case "outline":
         return {
           ...baseStyle,
           backgroundColor: "transparent",
           borderWidth: 1,
-          borderColor: isDark ? zincColors[700] : zincColors[300],
+          borderColor: COLORS.border,
         };
       case "ghost":
         return {
@@ -77,15 +77,15 @@ export const Button: React.FC<ButtonProps> = ({
 
   const getTextColor = () => {
     if (disabled) {
-      return isDark ? zincColors[500] : zincColors[400];
+      return COLORS.textTertiary;
     }
 
     switch (variant) {
       case "filled":
-        return isDark ? zincColors[900] : zincColors[50];
+        return "#fff";
       case "outline":
       case "ghost":
-        return appleBlue;
+        return COLORS.primary;
     }
   };
 

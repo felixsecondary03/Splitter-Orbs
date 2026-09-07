@@ -9,7 +9,7 @@ import Animated, {
   useAnimatedStyle,
 } from "react-native-reanimated";
 import Reanimated from "react-native-reanimated";
-import { appleRed, borderColor } from "@/constants/Colors";
+import { COLORS } from "@/constants/Colors";
 import { IconCircle } from "./IconCircle";
 import { IconSymbol } from "./IconSymbol";
 
@@ -37,7 +37,7 @@ export default function ListItem({ listId }: { listId: string }) {
         }}
       >
         <Reanimated.View style={[styleAnimation, styles.rightAction]}>
-          <IconSymbol name="trash.fill" size={24} color="white" />
+          <IconSymbol android_material_icon_name="delete" ios_icon_name="trash.fill" size={24} color="white" />
         </Reanimated.View>
       </Pressable>
     );
@@ -98,7 +98,7 @@ const styles = StyleSheet.create({
   listItemContainer: {
     padding: 16,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: borderColor,
+    borderBottomColor: COLORS.border,
     backgroundColor: "transparent",
   },
   listItemText: {
@@ -107,7 +107,7 @@ const styles = StyleSheet.create({
   rightAction: {
     width: 200,
     height: 65,
-    backgroundColor: appleRed,
+    backgroundColor: COLORS.danger,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -117,7 +117,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: borderColor,
+    borderBottomColor: COLORS.border,
     gap: 8,
     paddingHorizontal: 16,
     paddingVertical: 8,
