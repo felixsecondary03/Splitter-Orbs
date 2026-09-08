@@ -19,6 +19,7 @@ import { WidgetProvider } from "@/contexts/WidgetContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProfileProvider } from "@/contexts/ProfileContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { LanguageProvider } from "@/i18n/LanguageContext";
 
 // Only wrap with ErrorBoundary in dev — production apps should not include it
 const DevErrorBoundary = __DEV__
@@ -70,6 +71,7 @@ export default function RootLayout() {
   };
 
   return (
+    <LanguageProvider>
     <DevErrorBoundary>
       <StatusBar style="light" animated />
       <ThemeProvider value={GameDarkTheme}>
@@ -89,6 +91,9 @@ export default function RootLayout() {
                     <Stack.Screen name="onboarding" options={{ headerShown: false, gestureEnabled: false }} />
                     <Stack.Screen name="match-result" options={{ headerShown: false, animation: 'slide_from_bottom' }} />
                     <Stack.Screen name="admin" options={{ headerShown: false, presentation: 'modal' }} />
+                    <Stack.Screen name="privacy" options={{ headerShown: false }} />
+                    <Stack.Screen name="eula-screen" options={{ headerShown: false }} />
+                    <Stack.Screen name="impressum" options={{ headerShown: false }} />
                   </Stack>
                   <SystemBars style="light" />
                 </GestureHandlerRootView>
@@ -98,5 +103,6 @@ export default function RootLayout() {
         </SafeAreaProvider>
       </ThemeProvider>
     </DevErrorBoundary>
+    </LanguageProvider>
   );
 }

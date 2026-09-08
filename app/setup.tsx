@@ -1,791 +1,596 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
+  TouchableOpacity,
   ScrollView,
   StyleSheet,
-  Pressable,
-  ActivityIndicator,
+  SafeAreaView,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
-import { ChevronLeft, Lock } from 'lucide-react-native';
+import { useRouter } from 'expo-router';
 import { COLORS } from '@/constants/Colors';
-import { AnimatedPressable } from '@/components/AnimatedPressable';
-import { TowerIcon } from '@/components/TowerIcon';
-import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/utils/supabase';
+import { useProfile } from '@/contexts/ProfileContext';
+import { useTranslation } from '@/i18n/LanguageContext';
+import { TowerIcon } from '@/components/TowerIcon';
 import {
-  TOWER_TYPES, ORB_TYPES, ABILITIES,
-  STARTER_TOWERS, STARTER_ORBS, STARTER_ABILITIES,
-  TOWER_LOADOUT_SIZE, ORB_LOADOUT_SIZE, ABILITY_LOADOUT_SIZE,
-  ORB_TROPHY_UNLOCKS, TOWER_TROPHY_UNLOCKS, ABILITY_TROPHY_UNLOCKS,
+  TOWER_TYPES, TOWER_LOADOUT_SIZE,
+  ORB_TYPES, SENDABLE_ORBS, ORB_LOADOUT_SIZE,
+  ABILITIES, AI_LEVELS,
 } from '@/game/constants';
 import type { TowerType, OrbType, AbilityType } from '@/game/constants';
 
-type GameMode = 'training' | 'casual' | 'ranked';
-type Difficulty = 'easy' | 'normal' | 'hard';
-
-const MODE_PILLS: { key: GameMode; label: string }[] = [
-  { key: 'training', label: '🎯 Training' },
-  { key: 'casual', label: '🎲 Casual' },
-  { key: 'ranked', label: '🏆 Ranked' },
-];
-
-const DIFFICULTY_PILLS: { key: Difficulty; label: string }[] = [
-  { key: 'easy', label: 'Easy' },
-  { key: 'normal', label: 'Normal' },
-  { key: 'hard', label: 'Hard' },
-];
-
-const ABILITY_EMOJIS: Record<AbilityType, string> = {
-  zap: '⚡', portal: '🌀', repair: '🔧', freeze: '❄️', rage: '🔥',
-  shield: '🛡️', burner: '🔥', meteor: '☄️', glue: '🟢', overclock: '⚙️',
-  speed_zone: '💨', damage_zone: '💥', frost_zone: '🧊', deep_freeze: '🌨️',
-};
-
-const ABILITY_DESCRIPTIONS: Record<AbilityType, string> = {
-  zap: 'Stuns nearby orbs', portal: 'Teleport orbs to base', repair: 'Heal your station',
-  freeze: 'Freeze all enemy orbs', rage: 'Double tower fire rate', shield: 'Block incoming damage',
-  burner: 'Burn area with fire', meteor: 'Targeted meteor strike', glue: 'Slow orbs in area',
-  overclock: 'Boost tower speed', speed_zone: 'Speed zone on enemy side', damage_zone: 'Damage zone on enemy side',
-  frost_zone: 'Frost zone on enemy side', deep_freeze: 'Freeze everything',
-};
-
-type PlayerProfile = {
-  tower_cards?: Record<string, number>;
-  orb_cards?: Record<string, number>;
-  ability_cards?: Record<string, number>;
-  trophies?: number;
+const ABILITY_ICONS: Record<string, string> = {
+  zap: '⚡', portal: '🌀', repair: '➕', freeze: '❄️', rage: '🔥',
+  shield: '🛡️', burner: '🌋', meteor: '☄️', glue: '🟢', overclock: '⚙️',
+  speed_zone: '💨', damage_zone: '💢', frost_zone: '🌨️', deep_freeze: '🧊',
 };
 
 export default function SetupScreen() {
-  const insets = useSafeAreaInsets();
-  const { user } = useAuth();
+  const router = useRouter();
+  const { t } = useTranslation();
+  const { profile } = useProfile();
 
+  const [mode, setMode] = useState<'training' | 'casual' | 'ranked'>('casual');
+  const [difficulty, setDifficulty] = useState<'easy' | 'normal' | 'hard'>('normal');
   const [showQuickPlay, setShowQuickPlay] = useState(true);
-  const [mode, setMode] = useState<GameMode>('casual');
-  const [difficulty, setDifficulty] = useState<Difficulty>('normal');
-  const [towers, setTowers] = useState<TowerType[]>([...STARTER_TOWERS]);
-  const [orbs, setOrbs] = useState<OrbType[]>([...STARTER_ORBS]);
-  const [abilities, setAbilities] = useState<AbilityType[]>([...STARTER_ABILITIES]);
-  const [profile, setProfile] = useState<PlayerProfile | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [starting, setStarting] = useState(false);
 
-  // Load profile to determine unlocked cards
+  const [towers, setTowers] = useState<TowerType[]>(['basic', 'machinegun', 'boomerang', 'bomb']);
+  const [orbs, setOrbs] = useState<OrbType[]>(['normal', 'fast', 'bomb', 'splitter', 'tank']);
+  const [abilities, setAbilities] = useState<AbilityType[]>(['zap', 'portal', 'repair']);
+
   useEffect(() => {
-    if (!user) return;
-    console.log('[Setup] Loading player profile for user', user.id);
-    supabase
-      .from('player_profiles')
-      .select('*')
-      .eq('id', user.id)
-      .single()
-      .then(({ data, error }) => {
-        if (error) {
-          console.warn('[Setup] Failed to load profile', error.message);
-          return;
-        }
-        console.log('[Setup] Profile loaded', { trophies: data?.trophies });
-        setProfile(data);
-      });
-  }, [user]);
+    if (profile) {
+      if (profile.selected_towers?.length) {
+        setTowers(profile.selected_towers as TowerType[]);
+      }
+      if (profile.selected_orbs?.length) {
+        setOrbs(profile.selected_orbs as OrbType[]);
+      }
+      if (profile.selected_abilities?.length === 3) {
+        setAbilities(profile.selected_abilities as AbilityType[]);
+      }
+    }
+  }, [profile]);
 
-  const trophies = profile?.trophies ?? 0;
+  const unlockedTowers = Object.keys(profile.tower_cards || {}).filter(
+    (id) => (profile.tower_cards[id]?.level || 0) >= 1
+  );
+  const unlockedOrbs = Object.keys(profile.orb_cards || {}).filter(
+    (id) => (profile.orb_cards[id]?.level || 0) >= 1
+  );
+  const unlockedAbilities = Object.keys(profile.ability_cards || {}).filter(
+    (id) => (profile.ability_cards[id]?.level || 0) >= 1
+  );
 
-  // Determine unlocked items
-  const unlockedTowers = (Object.keys(TOWER_TYPES) as TowerType[]).filter((t) => {
-    const def = TOWER_TYPES[t];
-    if (def.crateOnly) return false;
-    const trophyReq = TOWER_TROPHY_UNLOCKS[t] ?? def.unlockTrophies ?? 0;
-    if (trophyReq > trophies) return false;
-    const cardLevel = (profile?.tower_cards as Record<string, number> | undefined)?.[t] ?? 0;
-    return cardLevel >= 1 || STARTER_TOWERS.includes(t);
-  });
+  // Fall back to starter sets if profile has no cards yet
+  const effectiveUnlockedTowers = unlockedTowers.length > 0
+    ? unlockedTowers
+    : ['basic', 'machinegun', 'boomerang', 'bomb'];
+  const effectiveUnlockedOrbs = unlockedOrbs.length > 0
+    ? unlockedOrbs
+    : ['normal', 'fast', 'bomb', 'splitter', 'tank'];
+  const effectiveUnlockedAbilities = unlockedAbilities.length > 0
+    ? unlockedAbilities
+    : ['zap', 'portal', 'repair', 'freeze'];
 
-  const unlockedOrbs = (Object.keys(ORB_TYPES) as OrbType[]).filter((o) => {
-    const def = ORB_TYPES[o];
-    if (def.crateOnly) return false;
-    const trophyReq = ORB_TROPHY_UNLOCKS[o] ?? 0;
-    if (trophyReq > trophies) return false;
-    const cardLevel = (profile?.orb_cards as Record<string, number> | undefined)?.[o] ?? 0;
-    return cardLevel >= 1 || STARTER_ORBS.includes(o);
-  });
-
-  const unlockedAbilities = (Object.keys(ABILITIES) as AbilityType[]).filter((a) => {
-    const def = ABILITIES[a];
-    if (def.crateOnly) return false;
-    const trophyReq = ABILITY_TROPHY_UNLOCKS[a] ?? def.unlockTrophies ?? 0;
-    if (trophyReq > trophies) return false;
-    const cardLevel = (profile?.ability_cards as Record<string, number> | undefined)?.[a] ?? 0;
-    return cardLevel >= 1 || STARTER_ABILITIES.includes(a);
-  });
-
-  const lockedTowerCount = (Object.keys(TOWER_TYPES) as TowerType[]).filter(
-    (t) => !unlockedTowers.includes(t)
+  const lockedTowerCount = Object.values(TOWER_TYPES).filter(
+    (def) => !effectiveUnlockedTowers.includes(def.id)
+  ).length;
+  const lockedOrbCount = SENDABLE_ORBS.filter(
+    (id) => !effectiveUnlockedOrbs.includes(id)
+  ).length;
+  const lockedAbilityCount = Object.values(ABILITIES).filter(
+    (def) => !effectiveUnlockedAbilities.includes(def.id)
   ).length;
 
-  const toggleTower = useCallback((t: TowerType) => {
-    setTowers((prev) => {
-      if (prev.includes(t)) {
-        console.log(`[Setup] Tower deselected: ${t}`);
-        return prev.filter((x) => x !== t);
-      }
-      if (prev.length >= TOWER_LOADOUT_SIZE) {
-        console.log(`[Setup] Tower swap: removed ${prev[0]}, added ${t}`);
-        return [...prev.slice(1), t];
-      }
-      console.log(`[Setup] Tower selected: ${t}`);
-      return [...prev, t];
-    });
-  }, []);
+  const toggleTower = (id: TowerType) => {
+    console.log('[Setup] Tower toggled:', id);
+    setTowers((cur) =>
+      cur.includes(id)
+        ? cur.filter((x) => x !== id)
+        : cur.length >= TOWER_LOADOUT_SIZE
+        ? cur
+        : [...cur, id]
+    );
+  };
 
-  const toggleOrb = useCallback((o: OrbType) => {
-    setOrbs((prev) => {
-      if (prev.includes(o)) {
-        console.log(`[Setup] Orb deselected: ${o}`);
-        return prev.filter((x) => x !== o);
-      }
-      if (prev.length >= ORB_LOADOUT_SIZE) {
-        console.log(`[Setup] Orb swap: removed ${prev[0]}, added ${o}`);
-        return [...prev.slice(1), o];
-      }
-      console.log(`[Setup] Orb selected: ${o}`);
-      return [...prev, o];
-    });
-  }, []);
+  const toggleOrb = (id: OrbType) => {
+    console.log('[Setup] Orb toggled:', id);
+    setOrbs((cur) =>
+      cur.includes(id)
+        ? cur.filter((x) => x !== id)
+        : cur.length >= ORB_LOADOUT_SIZE
+        ? cur
+        : [...cur, id]
+    );
+  };
 
-  const toggleAbility = useCallback((a: AbilityType) => {
-    setAbilities((prev) => {
-      if (prev.includes(a)) {
-        console.log(`[Setup] Ability deselected: ${a}`);
-        return prev.filter((x) => x !== a);
-      }
-      if (prev.length >= ABILITY_LOADOUT_SIZE) {
-        console.log(`[Setup] Ability swap: removed ${prev[0]}, added ${a}`);
-        return [...prev.slice(1), a];
-      }
-      console.log(`[Setup] Ability selected: ${a}`);
-      return [...prev, a];
-    });
-  }, []);
+  const toggleAbility = (id: AbilityType) => {
+    console.log('[Setup] Ability toggled:', id);
+    setAbilities((cur) =>
+      cur.includes(id)
+        ? cur.filter((x) => x !== id)
+        : cur.length >= 3
+        ? cur
+        : [...cur, id]
+    );
+  };
 
-  const handleStart = useCallback(async () => {
-    if (starting) return;
+  const start = async () => {
     console.log('[Setup] Start Match pressed', { mode, difficulty, towers, orbs, abilities });
-    setStarting(true);
     try {
-      await supabase.functions.invoke('set-loadout', {
-        body: { towers, orbs, abilities },
-      });
+      await supabase.functions.invoke('set-loadout', { body: { towers, orbs, abilities } });
     } catch (e) {
       console.warn('[Setup] set-loadout error', e);
     }
+    const engineMode =
+      mode === 'training' ? `ai_${difficulty}` : mode === 'casual' ? 'ai_normal' : 'ranked';
     router.push({
       pathname: '/game',
       params: {
-        mode,
+        mode: engineMode,
+        abilities: JSON.stringify(abilities),
         difficulty,
         towers: JSON.stringify(towers),
         orbs: JSON.stringify(orbs),
-        abilities: JSON.stringify(abilities),
       },
     });
-    setStarting(false);
-  }, [starting, mode, difficulty, towers, orbs, abilities]);
+  };
 
-  const handleQuickPlay = useCallback(async () => {
-    if (starting) return;
-    console.log('[Setup] Quick Play pressed', { mode, difficulty });
-    setStarting(true);
-    try {
-      await supabase.functions.invoke('set-loadout', {
-        body: { towers, orbs, abilities },
-      });
-    } catch (e) {
-      console.warn('[Setup] set-loadout error (quick play)', e);
-    }
-    router.push({
-      pathname: '/game',
-      params: {
-        mode,
-        difficulty,
-        towers: JSON.stringify(towers),
-        orbs: JSON.stringify(orbs),
-        abilities: JSON.stringify(abilities),
-      },
-    });
-    setStarting(false);
-  }, [starting, mode, difficulty, towers, orbs, abilities]);
+  const MODES = [
+    { id: 'training' as const, label: t('setup.training'), icon: '🎯' },
+    { id: 'casual' as const, label: t('setup.casual'), icon: '🎲' },
+    { id: 'ranked' as const, label: t('setup.ranked'), icon: '🏆' },
+  ];
 
-  const canStart = abilities.length >= ABILITY_LOADOUT_SIZE && towers.length >= 1;
+  // ── QUICK PLAY VIEW ──
+  if (showQuickPlay) {
+    return (
+      <SafeAreaView style={styles.safe}>
+        <ScrollView contentContainerStyle={styles.content}>
+          <TouchableOpacity
+            onPress={() => {
+              console.log('[Setup] Back pressed');
+              router.back();
+            }}
+            style={styles.backLink}
+          >
+            <Text style={styles.backLinkText}>← {t('game.home')}</Text>
+          </TouchableOpacity>
 
+          <Text style={styles.pageTitle}>{t('setup.title')}</Text>
+          <Text style={styles.pageSubtitle}>{t('setup.quickPlayHint')}</Text>
+
+          <Text style={styles.bigEmoji}>⚔️</Text>
+
+          <View style={styles.modePills}>
+            {MODES.map((m) => {
+              const isActive = mode === m.id;
+              const pillLabel = `${m.icon} ${m.label}`;
+              return (
+                <TouchableOpacity
+                  key={m.id}
+                  onPress={() => {
+                    console.log('[Setup] Mode selected:', m.id);
+                    setMode(m.id);
+                  }}
+                  style={[styles.modePill, isActive && styles.modePillActive]}
+                >
+                  <Text style={[styles.modePillText, isActive && styles.modePillTextActive]}>
+                    {pillLabel}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+
+          {mode === 'ranked' && (
+            <Text style={styles.disclaimer}>{t('setup.rankedBetaDisclaimer')}</Text>
+          )}
+
+          <TouchableOpacity onPress={start} style={styles.playBtn}>
+            <Text style={styles.playBtnText}>⚡ {t('setup.quickPlay')} →</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={() => {
+              console.log('[Setup] Change Loadout pressed');
+              setShowQuickPlay(false);
+            }}
+            style={styles.loadoutBtn}
+          >
+            <Text style={styles.loadoutBtnText}>⚙️ {t('setup.changeLoadout')}</Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
+
+  // ── LOADOUT EDITOR VIEW ──
   return (
-    <View style={[styles.root, { paddingTop: insets.top }]}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Pressable
-          style={styles.backBtn}
+    <SafeAreaView style={styles.safe}>
+      <ScrollView contentContainerStyle={styles.content}>
+        <TouchableOpacity
           onPress={() => {
-            console.log('[Setup] Back button pressed');
+            console.log('[Setup] Back pressed');
             router.back();
           }}
+          style={styles.backLink}
         >
-          <ChevronLeft size={20} color="#64748b" strokeWidth={2} />
-          <Text style={styles.backText}>Home</Text>
-        </Pressable>
-        <View style={styles.headerCenter}>
-          <Text style={styles.title}>Setup</Text>
-          <Text style={styles.subtitle}>
-            {showQuickPlay ? 'Quick play with your saved loadout' : 'Choose your loadout'}
-          </Text>
-        </View>
-      </View>
+          <Text style={styles.backLinkText}>← {t('game.home')}</Text>
+        </TouchableOpacity>
 
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 100 }]}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Mode pills */}
-        <View style={styles.pillRow}>
-          {MODE_PILLS.map((p) => (
-            <Pressable
-              key={p.key}
-              style={[styles.pill, mode === p.key && styles.pillActive]}
-              onPress={() => {
-                console.log(`[Setup] Mode selected: ${p.key}`);
-                setMode(p.key);
-              }}
-            >
-              <Text style={[styles.pillText, mode === p.key && styles.pillTextActive]}>
-                {p.label}
-              </Text>
-            </Pressable>
-          ))}
-        </View>
+        <Text style={styles.pageTitle}>{t('setup.title')}</Text>
+        <Text style={styles.pageSubtitle}>
+          {t('setup.subtitle', { towers: TOWER_LOADOUT_SIZE, orbs: ORB_LOADOUT_SIZE })}
+        </Text>
 
-        {/* Training difficulty */}
-        {mode === 'training' && (
-          <View style={styles.pillRow}>
-            {DIFFICULTY_PILLS.map((p) => (
-              <Pressable
-                key={p.key}
-                style={[styles.pill, difficulty === p.key && styles.pillActive]}
+        <View style={styles.modePills}>
+          {MODES.map((m) => {
+            const isActive = mode === m.id;
+            const pillLabel = `${m.icon} ${m.label}`;
+            return (
+              <TouchableOpacity
+                key={m.id}
                 onPress={() => {
-                  console.log(`[Setup] Difficulty selected: ${p.key}`);
-                  setDifficulty(p.key);
+                  console.log('[Setup] Mode selected:', m.id);
+                  setMode(m.id);
                 }}
+                style={[styles.modePill, isActive && styles.modePillActive]}
               >
-                <Text style={[styles.pillText, difficulty === p.key && styles.pillTextActive]}>
-                  {p.label}
+                <Text style={[styles.modePillText, isActive && styles.modePillTextActive]}>
+                  {pillLabel}
                 </Text>
-              </Pressable>
-            ))}
-          </View>
-        )}
+              </TouchableOpacity>
+            );
+          })}
+        </View>
 
-        {/* Ranked disclaimer */}
         {mode === 'ranked' && (
-          <Text style={styles.disclaimer}>
-            Ranked matches affect your trophy count. Win to climb leagues!
-          </Text>
+          <Text style={styles.disclaimer}>{t('setup.rankedBetaDisclaimer')}</Text>
         )}
 
-        {showQuickPlay ? (
-          /* ── Quick Play view ── */
-          <View style={styles.quickPlaySection}>
-            <Text style={styles.bigEmoji}>⚔️</Text>
-            <AnimatedPressable
-              style={styles.quickPlayBtn}
-              onPress={handleQuickPlay}
-              disabled={starting}
-            >
-              {starting ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <Text style={styles.quickPlayBtnText}>⚡ Quick Play →</Text>
-              )}
-            </AnimatedPressable>
-            <Pressable
-              style={styles.changeLoadoutBtn}
-              onPress={() => {
-                console.log('[Setup] Change Loadout pressed');
-                setShowQuickPlay(false);
-              }}
-            >
-              <Text style={styles.changeLoadoutText}>⚙️ Change Loadout</Text>
-            </Pressable>
-          </View>
-        ) : (
-          /* ── Full loadout view ── */
-          <>
-            {/* TOWERS */}
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>TOWERS</Text>
-              <Text style={styles.sectionCount}>{towers.length}/{TOWER_LOADOUT_SIZE}</Text>
-            </View>
-            <View style={styles.cardGrid}>
-              {(Object.keys(TOWER_TYPES) as TowerType[]).map((t) => {
-                const def = TOWER_TYPES[t];
-                const isSelected = towers.includes(t);
-                const isUnlocked = unlockedTowers.includes(t);
-                const selIdx = towers.indexOf(t);
-                const trophyReq = TOWER_TROPHY_UNLOCKS[t] ?? def.unlockTrophies ?? 0;
-                const lockLabel = def.crateOnly ? 'Crate' : trophyReq > 0 ? `${trophyReq}🏆` : '🔒';
+        {mode === 'training' && (
+          <View style={styles.section}>
+            <Text style={styles.sectionLabel}>{t('setup.aiDifficulty')}</Text>
+            <View style={styles.modePills}>
+              {(Object.keys(AI_LEVELS) as ('easy' | 'normal' | 'hard')[]).map((id) => {
+                const isActive = difficulty === id;
                 return (
-                  <Pressable
-                    key={t}
-                    style={styles.cardItem}
+                  <TouchableOpacity
+                    key={id}
                     onPress={() => {
-                      if (!isUnlocked) return;
-                      toggleTower(t);
+                      console.log('[Setup] Difficulty selected:', id);
+                      setDifficulty(id);
                     }}
+                    style={[styles.modePill, isActive && styles.modePillActive]}
                   >
-                    <View style={[
-                      styles.cardItemInner,
-                      isSelected && styles.cardItemSelected,
-                      !isUnlocked && styles.cardItemLocked,
-                    ]}>
-                      {isSelected && (
+                    <Text style={[styles.modePillText, isActive && styles.modePillTextActive]}>
+                      {t(`difficulty.${id}`)}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+        )}
+
+        {/* Tower grid */}
+        <View style={styles.section}>
+          <Text style={styles.sectionLabel}>
+            {t('setup.towers')} · {towers.length}/{TOWER_LOADOUT_SIZE}
+          </Text>
+          <View style={styles.cardGrid}>
+            {Object.values(TOWER_TYPES)
+              .filter((def) => effectiveUnlockedTowers.includes(def.id))
+              .map((def) => {
+                const isSel = towers.includes(def.id as TowerType);
+                const selIdx = towers.indexOf(def.id as TowerType);
+                const selBorderStyle = isSel
+                  ? { borderColor: '#F59E0B', backgroundColor: '#FFFBEB' }
+                  : undefined;
+                return (
+                  <TouchableOpacity
+                    key={def.id}
+                    onPress={() => toggleTower(def.id as TowerType)}
+                    style={styles.cardItem}
+                  >
+                    <View style={[styles.cardItemInner, selBorderStyle]}>
+                      {isSel && (
                         <View style={styles.selBadge}>
                           <Text style={styles.selBadgeText}>{selIdx + 1}</Text>
                         </View>
                       )}
-                      <TowerIcon type={t} size={32} level={1} />
-                      <Text style={styles.cardName} numberOfLines={1}>{def.name}</Text>
-                      {isUnlocked ? (
-                        <Text style={styles.cardCost}>{def.cost}🪙</Text>
-                      ) : (
-                        <View style={styles.lockRow}>
-                          <Lock size={10} color="#94a3b8" strokeWidth={2} />
-                          <Text style={styles.lockText}>{lockLabel}</Text>
-                        </View>
-                      )}
+                      <TowerIcon type={def.id as TowerType} size={32} />
+                      <Text style={styles.cardName} numberOfLines={1}>
+                        {t(`towers.${def.id}.name`)}
+                      </Text>
+                      <Text style={styles.cardCost}>🪙{def.cost}</Text>
                     </View>
-                  </Pressable>
+                  </TouchableOpacity>
                 );
               })}
-            </View>
-            {lockedTowerCount > 0 && (
-              <Text style={styles.lockedHint}>{lockedTowerCount} more in Lab</Text>
-            )}
+          </View>
+          {lockedTowerCount > 0 && (
+            <Text style={styles.moreHint}>{t('setup.moreInLab', { n: lockedTowerCount })}</Text>
+          )}
+        </View>
 
-            {/* ORBS */}
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>ORBS</Text>
-              <Text style={styles.sectionCount}>{orbs.length}/{ORB_LOADOUT_SIZE}</Text>
-            </View>
-            <View style={styles.cardGrid}>
-              {(Object.keys(ORB_TYPES) as OrbType[]).map((o) => {
-                const def = ORB_TYPES[o];
-                const isSelected = orbs.includes(o);
-                const isUnlocked = unlockedOrbs.includes(o);
-                const selIdx = orbs.indexOf(o);
-                const trophyReq = ORB_TROPHY_UNLOCKS[o] ?? 0;
-                const lockLabel = def.crateOnly ? 'Crate' : trophyReq > 0 ? `${trophyReq}🏆` : '🔒';
-                return (
-                  <Pressable
-                    key={o}
-                    style={styles.cardItem}
-                    onPress={() => {
-                      if (!isUnlocked) return;
-                      toggleOrb(o);
-                    }}
-                  >
-                    <View style={[
-                      styles.cardItemInner,
-                      isSelected && styles.cardItemOrbSelected,
-                      !isUnlocked && styles.cardItemLocked,
-                    ]}>
-                      {isSelected && (
-                        <View style={[styles.selBadge, styles.selBadgeOrb]}>
-                          <Text style={styles.selBadgeText}>{selIdx + 1}</Text>
-                        </View>
-                      )}
-                      <View style={[styles.orbCircle, { backgroundColor: def.color }]}>
-                        <Text style={styles.orbHpText}>{def.hp}</Text>
-                      </View>
-                      <Text style={styles.cardName} numberOfLines={1}>{def.name}</Text>
-                      {isUnlocked ? (
-                        <Text style={styles.cardCost}>{def.cost}🪙</Text>
-                      ) : (
-                        <View style={styles.lockRow}>
-                          <Lock size={10} color="#94a3b8" strokeWidth={2} />
-                          <Text style={styles.lockText}>{lockLabel}</Text>
-                        </View>
-                      )}
-                    </View>
-                  </Pressable>
-                );
-              })}
-            </View>
-
-            {/* ABILITIES */}
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>ABILITIES</Text>
-              <Text style={styles.sectionCount}>{abilities.length}/{ABILITY_LOADOUT_SIZE}</Text>
-            </View>
-            <View style={styles.abilityGrid}>
-              {(Object.keys(ABILITIES) as AbilityType[]).map((a) => {
-                const def = ABILITIES[a];
-                const isSelected = abilities.includes(a);
-                const isUnlocked = unlockedAbilities.includes(a);
-                const selIdx = abilities.indexOf(a);
-                const trophyReq = ABILITY_TROPHY_UNLOCKS[a] ?? def.unlockTrophies ?? 0;
-                const lockLabel = def.crateOnly ? 'Crate' : trophyReq > 0 ? `${trophyReq}🏆` : '🔒';
-                return (
-                  <Pressable
-                    key={a}
-                    style={[
-                      styles.abilityItem,
-                      isSelected && styles.abilityItemSelected,
-                      !isUnlocked && styles.cardItemLocked,
-                    ]}
-                    onPress={() => {
-                      if (!isUnlocked) return;
-                      toggleAbility(a);
-                    }}
-                  >
-                    {isSelected && (
-                      <View style={[styles.selBadge, styles.selBadgeAbility]}>
+        {/* Orb grid */}
+        <View style={styles.section}>
+          <Text style={styles.sectionLabel}>
+            {t('setup.orbs')} · {orbs.length}/{ORB_LOADOUT_SIZE}
+          </Text>
+          <View style={styles.cardGrid}>
+            {SENDABLE_ORBS.filter((id) => effectiveUnlockedOrbs.includes(id)).map((id) => {
+              const def = ORB_TYPES[id as OrbType];
+              if (!def) return null;
+              const isSel = orbs.includes(id as OrbType);
+              const selIdx = orbs.indexOf(id as OrbType);
+              const selBorderStyle = isSel
+                ? { borderColor: '#818CF8', backgroundColor: '#EEF2FF' }
+                : undefined;
+              return (
+                <TouchableOpacity
+                  key={id}
+                  onPress={() => toggleOrb(id as OrbType)}
+                  style={styles.cardItem}
+                >
+                  <View style={[styles.cardItemInner, selBorderStyle]}>
+                    {isSel && (
+                      <View style={styles.selBadge}>
                         <Text style={styles.selBadgeText}>{selIdx + 1}</Text>
                       </View>
                     )}
-                    <Text style={styles.abilityEmoji}>{ABILITY_EMOJIS[a]}</Text>
-                    <View style={styles.abilityInfo}>
-                      <Text style={styles.abilityName}>{def.name}</Text>
-                      <Text style={styles.abilityDesc} numberOfLines={1}>
-                        {ABILITY_DESCRIPTIONS[a]}
+                    <View style={[styles.orbCircle, { backgroundColor: def.color }]}>
+                      <Text style={styles.orbHp}>{def.hp}</Text>
+                    </View>
+                    <Text style={styles.cardName} numberOfLines={1}>
+                      {t(`orbs.${id}.name`)}
+                    </Text>
+                    <Text style={styles.cardCost}>🪙{def.cost}</Text>
+                  </View>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+          {lockedOrbCount > 0 && (
+            <Text style={styles.moreHint}>{t('setup.moreInLab', { n: lockedOrbCount })}</Text>
+          )}
+        </View>
+
+        {/* Ability grid */}
+        <View style={styles.section}>
+          <Text style={styles.sectionLabel}>
+            {t('setup.powers')} · {abilities.length}/3
+          </Text>
+          <View style={styles.abilityGrid}>
+            {Object.values(ABILITIES)
+              .filter((def) => effectiveUnlockedAbilities.includes(def.id))
+              .map((def) => {
+                const isSel = abilities.includes(def.id as AbilityType);
+                const selIdx = abilities.indexOf(def.id as AbilityType);
+                const selBorderStyle = isSel
+                  ? { borderColor: COLORS.primary, backgroundColor: '#EFF6FF' }
+                  : undefined;
+                const abilityIcon = ABILITY_ICONS[def.id] || '✨';
+                const abilityIconBg = def.color + '22';
+                return (
+                  <TouchableOpacity
+                    key={def.id}
+                    onPress={() => toggleAbility(def.id as AbilityType)}
+                    style={styles.abilityItem}
+                  >
+                    <View style={[styles.abilityItemInner, selBorderStyle]}>
+                      {isSel && (
+                        <View style={[styles.selBadge, styles.selBadgeAbsolute]}>
+                          <Text style={styles.selBadgeText}>{selIdx + 1}</Text>
+                        </View>
+                      )}
+                      <View style={styles.abilityIconRow}>
+                        <View style={[styles.abilityIcon, { backgroundColor: abilityIconBg }]}>
+                          <Text style={styles.abilityEmoji}>{abilityIcon}</Text>
+                        </View>
+                        <Text style={styles.abilityName}>{t(`abilities.${def.id}.name`)}</Text>
+                      </View>
+                      <Text style={styles.abilityDesc} numberOfLines={2}>
+                        {t(`abilities.${def.id}.desc`)}
                       </Text>
                     </View>
-                    {!isUnlocked && (
-                      <View style={styles.lockRow}>
-                        <Lock size={10} color="#94a3b8" strokeWidth={2} />
-                        <Text style={styles.lockText}>{lockLabel}</Text>
-                      </View>
-                    )}
-                  </Pressable>
+                  </TouchableOpacity>
                 );
               })}
-            </View>
-          </>
-        )}
-      </ScrollView>
-
-      {/* Bottom action bar */}
-      {!showQuickPlay && (
-        <View style={[styles.bottomBar, { paddingBottom: insets.bottom + 16 }]}>
-          <AnimatedPressable
-            style={[styles.startBtn, !canStart && styles.startBtnDisabled]}
-            onPress={handleStart}
-            disabled={!canStart || starting}
-          >
-            {starting ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.startBtnText}>Start Match →</Text>
-            )}
-          </AnimatedPressable>
+          </View>
+          {lockedAbilityCount > 0 && (
+            <Text style={styles.moreHint}>{t('setup.moreInLab', { n: lockedAbilityCount })}</Text>
+          )}
         </View>
-      )}
-    </View>
+
+        {/* Start button */}
+        <TouchableOpacity
+          onPress={start}
+          disabled={abilities.length !== 3 || towers.length < 1 || orbs.length < 1}
+          style={[
+            styles.startBtn,
+            (abilities.length !== 3 || towers.length < 1 || orbs.length < 1) &&
+              styles.startBtnDisabled,
+          ]}
+        >
+          <Text style={styles.startBtnText}>{t('setup.startMatch')} →</Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-    backgroundColor: '#F8FAFC',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    gap: 12,
-  },
-  backBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingVertical: 4,
-  },
-  backText: {
-    fontSize: 15,
-    color: '#64748b',
-    fontWeight: '600',
-  },
-  headerCenter: {
-    flex: 1,
-  },
-  title: {
+  safe: { flex: 1, backgroundColor: COLORS.background },
+  content: { padding: 16, paddingBottom: 100, alignItems: 'center' },
+  backLink: { alignSelf: 'flex-start', marginBottom: 8 },
+  backLinkText: { fontSize: 14, fontWeight: '700', color: COLORS.textSecondary },
+  pageTitle: {
     fontSize: 28,
     fontWeight: '900',
-    color: '#0f172a',
-    letterSpacing: -0.5,
+    color: COLORS.text,
+    marginBottom: 4,
+    alignSelf: 'flex-start',
   },
-  subtitle: {
-    fontSize: 13,
-    color: '#64748b',
-    fontWeight: '500',
-    marginTop: 2,
+  pageSubtitle: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
+    marginBottom: 24,
+    alignSelf: 'flex-start',
   },
-  scroll: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingHorizontal: 16,
-    gap: 12,
-  },
-  pillRow: {
+  bigEmoji: { fontSize: 64, marginBottom: 24 },
+  modePills: {
     flexDirection: 'row',
     gap: 8,
+    marginBottom: 16,
     flexWrap: 'wrap',
+    justifyContent: 'center',
   },
-  pill: {
+  modePill: {
     paddingHorizontal: 16,
     paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1.5,
-    borderColor: '#e2e8f0',
+    borderRadius: 12,
+    backgroundColor: COLORS.surface,
+    borderWidth: 2,
+    borderColor: COLORS.border,
   },
-  pillActive: {
-    backgroundColor: '#1e293b',
-    borderColor: '#1e293b',
-  },
-  pillText: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#64748b',
-  },
-  pillTextActive: {
-    color: '#FFFFFF',
-  },
+  modePillActive: { backgroundColor: COLORS.text, borderColor: COLORS.text },
+  modePillText: { fontSize: 14, fontWeight: '700', color: COLORS.textSecondary },
+  modePillTextActive: { color: '#fff' },
   disclaimer: {
     fontSize: 12,
-    color: '#64748b',
-    fontWeight: '500',
-    backgroundColor: '#f1f5f9',
-    borderRadius: 10,
-    padding: 10,
+    color: COLORS.textTertiary,
+    textAlign: 'center',
+    marginBottom: 16,
+    maxWidth: 320,
   },
-  quickPlaySection: {
-    alignItems: 'center',
-    gap: 16,
-    paddingVertical: 24,
-  },
-  bigEmoji: {
-    fontSize: 64,
-  },
-  quickPlayBtn: {
-    backgroundColor: '#3b82f6',
-    borderRadius: 18,
+  playBtn: {
+    width: '100%',
+    maxWidth: 360,
     paddingVertical: 18,
-    paddingHorizontal: 48,
-    shadowColor: '#3b82f6',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
+    borderRadius: 20,
+    backgroundColor: COLORS.primary,
+    alignItems: 'center',
+    marginBottom: 12,
+    shadowColor: COLORS.primary,
+    shadowOpacity: 0.3,
     shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
     elevation: 6,
-    minWidth: 200,
+  },
+  playBtnText: { fontSize: 18, fontWeight: '900', color: '#fff' },
+  loadoutBtn: {
+    width: '100%',
+    maxWidth: 360,
+    paddingVertical: 14,
+    borderRadius: 20,
+    borderWidth: 2,
+    borderColor: COLORS.border,
+    backgroundColor: COLORS.surface,
     alignItems: 'center',
   },
-  quickPlayBtnText: {
-    fontSize: 18,
-    fontWeight: '900',
-    color: '#FFFFFF',
-    letterSpacing: 0.3,
-  },
-  changeLoadoutBtn: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 14,
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderWidth: 1.5,
-    borderColor: '#e2e8f0',
-  },
-  changeLoadoutText: {
-    fontSize: 15,
+  loadoutBtnText: { fontSize: 14, fontWeight: '800', color: COLORS.text },
+  section: { width: '100%', marginBottom: 24 },
+  sectionLabel: {
+    fontSize: 11,
     fontWeight: '700',
-    color: '#475569',
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: 8,
-  },
-  sectionTitle: {
-    fontSize: 13,
-    fontWeight: '800',
-    color: '#64748b',
+    color: COLORS.textTertiary,
+    textTransform: 'uppercase',
     letterSpacing: 1,
+    marginBottom: 10,
   },
-  sectionCount: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#3b82f6',
-  },
-  cardGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginHorizontal: -4,
-  },
-  cardItem: {
-    width: '33.333%',
-    paddingHorizontal: 4,
-    paddingVertical: 4,
-  },
+  cardGrid: { flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: -4 },
+  cardItem: { width: '33.333%', padding: 4 },
   cardItemInner: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 14,
-    padding: 10,
+    backgroundColor: COLORS.surface,
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: COLORS.border,
+    padding: 8,
     alignItems: 'center',
-    gap: 5,
-    borderWidth: 1.5,
-    borderColor: '#e2e8f0',
     position: 'relative',
-  },
-  cardItemSelected: {
-    backgroundColor: '#fffbeb',
-    borderColor: '#fbbf24',
-  },
-  cardItemOrbSelected: {
-    backgroundColor: '#eef2ff',
-    borderColor: '#818cf8',
-  },
-  cardItemLocked: {
-    opacity: 0.4,
   },
   selBadge: {
     position: 'absolute',
-    top: 4,
-    right: 4,
+    top: -6,
+    right: -6,
     width: 18,
     height: 18,
     borderRadius: 9,
-    backgroundColor: '#1e293b',
+    backgroundColor: COLORS.text,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 10,
+  },
+  selBadgeText: { fontSize: 10, fontWeight: '900', color: '#fff' },
+  cardName: {
+    fontSize: 9,
+    fontWeight: '700',
+    color: COLORS.text,
+    textAlign: 'center',
+    marginTop: 4,
+  },
+  cardCost: { fontSize: 10, fontWeight: '700', color: '#F59E0B', marginTop: 2 },
+  orbCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  selBadgeOrb: {
-    backgroundColor: '#4f46e5',
-  },
-  selBadgeAbility: {
-    backgroundColor: '#2563eb',
-  },
-  selBadgeText: {
-    fontSize: 10,
-    fontWeight: '800',
-    color: '#FFFFFF',
-  },
-  cardName: {
+  orbHp: { fontSize: 10, fontWeight: '900', color: '#fff' },
+  moreHint: {
     fontSize: 11,
+    color: COLORS.textTertiary,
     fontWeight: '700',
-    color: '#1e293b',
     textAlign: 'center',
+    marginTop: 8,
   },
-  cardCost: {
-    fontSize: 10,
-    color: '#64748b',
-    fontWeight: '600',
+  abilityGrid: { flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: -4 },
+  abilityItem: { width: '50%', padding: 4 },
+  abilityItemInner: {
+    backgroundColor: COLORS.surface,
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: COLORS.border,
+    padding: 12,
+    position: 'relative',
   },
-  lockRow: {
+  selBadgeAbsolute: { position: 'absolute', top: -6, right: -6 },
+  abilityIconRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 3,
+    gap: 8,
+    marginBottom: 6,
   },
-  lockText: {
-    fontSize: 10,
-    color: '#94a3b8',
-    fontWeight: '600',
-  },
-  orbCircle: {
+  abilityIcon: {
     width: 36,
     height: 36,
     borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  orbHpText: {
-    fontSize: 11,
-    fontWeight: '800',
-    color: '#FFFFFF',
-  },
-  lockedHint: {
-    fontSize: 12,
-    color: '#94a3b8',
-    fontWeight: '500',
-    textAlign: 'center',
-    marginTop: 4,
-  },
-  abilityGrid: {
-    gap: 8,
-  },
-  abilityItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 14,
-    padding: 12,
-    gap: 12,
-    borderWidth: 1.5,
-    borderColor: '#e2e8f0',
-    position: 'relative',
-  },
-  abilityItemSelected: {
-    backgroundColor: '#eff6ff',
-    borderColor: '#60a5fa',
-  },
-  abilityEmoji: {
-    fontSize: 24,
-    width: 36,
-    textAlign: 'center',
-  },
-  abilityInfo: {
-    flex: 1,
-    gap: 2,
-  },
-  abilityName: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#1e293b',
-  },
-  abilityDesc: {
-    fontSize: 12,
-    color: '#64748b',
-    fontWeight: '500',
-  },
-  bottomBar: {
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    backgroundColor: '#F8FAFC',
-    borderTopWidth: 1,
-    borderTopColor: '#e2e8f0',
-  },
+  abilityEmoji: { fontSize: 18 },
+  abilityName: { fontSize: 13, fontWeight: '800', color: COLORS.text, flex: 1 },
+  abilityDesc: { fontSize: 11, color: COLORS.textSecondary, lineHeight: 16 },
   startBtn: {
-    backgroundColor: '#3b82f6',
-    borderRadius: 16,
-    paddingVertical: 16,
+    width: '100%',
+    maxWidth: 360,
+    paddingVertical: 18,
+    borderRadius: 20,
+    backgroundColor: COLORS.primary,
     alignItems: 'center',
-    shadowColor: '#3b82f6',
+    marginTop: 8,
+    shadowColor: COLORS.primary,
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.35,
-    shadowRadius: 10,
-    elevation: 5,
+    elevation: 6,
   },
-  startBtnDisabled: {
-    backgroundColor: '#94a3b8',
-    shadowOpacity: 0,
-    elevation: 0,
-  },
-  startBtnText: {
-    fontSize: 17,
-    fontWeight: '800',
-    color: '#FFFFFF',
-    letterSpacing: 0.3,
-  },
+  startBtnDisabled: { opacity: 0.4 },
+  startBtnText: { fontSize: 18, fontWeight: '900', color: '#fff' },
 });

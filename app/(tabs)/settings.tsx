@@ -1,1154 +1,501 @@
-import React, { useRef, useEffect, useState, useCallback } from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  Switch,
-  Animated,
-  StyleSheet,
-  TextInput,
-  Modal,
-  Pressable,
-  Alert,
-  ActivityIndicator,
-} from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import {
-  Volume2,
-  Vibrate,
-  Globe,
-  User,
-  Trash2,
-  Download,
-  FileText,
-  Shield,
-  Info,
-  ChevronRight,
-  Settings,
-  LogOut,
-  Monitor,
-  Link,
-  Pencil,
-  Check,
-  X,
-} from 'lucide-react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, Alert, ActivityIndicator, SafeAreaView, Modal } from 'react-native';
 import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '@/constants/Colors';
-import { AnimatedPressable } from '@/components/AnimatedPressable';
-import { useProfile } from '@/contexts/ProfileContext';
-import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/utils/supabase';
-
-function AnimatedListItem({ index, children }: { index: number; children: React.ReactNode }) {
-  const opacity = useRef(new Animated.Value(0)).current;
-  const translateY = useRef(new Animated.Value(12)).current;
-  useEffect(() => {
-    Animated.parallel([
-      Animated.timing(opacity, { toValue: 1, duration: 300, delay: index * 50, useNativeDriver: true }),
-      Animated.timing(translateY, { toValue: 0, duration: 300, delay: index * 50, useNativeDriver: true }),
-    ]).start();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-  return (
-    <Animated.View style={{ opacity, transform: [{ translateY }] }}>
-      {children}
-    </Animated.View>
-  );
-}
-
-const LANGUAGES = [
-  { code: 'en', label: 'EN', name: 'English', flag: '🇬🇧' },
-  { code: 'de', label: 'DE', name: 'Deutsch', flag: '🇩🇪' },
-  { code: 'es', label: 'ES', name: 'Español', flag: '🇪🇸' },
-  { code: 'fr', label: 'FR', name: 'Français', flag: '🇫🇷' },
-  { code: 'nl', label: 'NL', name: 'Nederlands', flag: '🇳🇱' },
-  { code: 'ja', label: 'JA', name: '日本語', flag: '🇯🇵' },
-  { code: 'it', label: 'IT', name: 'Italiano', flag: '🇮🇹' },
-  { code: 'pt', label: 'PT', name: 'Português', flag: '🇧🇷' },
-];
-
-const HAPTICS_OPTIONS: ('off' | 'low' | 'medium' | 'high')[] = ['off', 'low', 'medium', 'high'];
-
-const AVATAR_COLORS = [
-  '#4F8EF7', '#A855F7', '#22C55E', '#F59E0B',
-  '#EF4444', '#EC4899', '#06B6D4', '#F97316',
-];
-
-interface SettingRowProps {
-  icon: React.ReactNode;
-  label: string;
-  right?: React.ReactNode;
-  onPress?: () => void;
-  destructive?: boolean;
-  sublabel?: string;
-}
-
-function SettingRow({ icon, label, right, onPress, destructive, sublabel }: SettingRowProps) {
-  const content = (
-    <View style={styles.settingRow}>
-      <View style={styles.settingLeft}>
-        {icon}
-        <View style={styles.settingLabelWrap}>
-          <Text style={[styles.settingLabel, destructive && { color: COLORS.danger }]}>{label}</Text>
-          {sublabel ? <Text style={styles.settingSubLabel}>{sublabel}</Text> : null}
-        </View>
-      </View>
-      <View style={styles.settingRight}>
-        {right ?? <ChevronRight size={18} color={COLORS.textTertiary} strokeWidth={2} />}
-      </View>
-    </View>
-  );
-
-  if (onPress) {
-    return <AnimatedPressable onPress={onPress}>{content}</AnimatedPressable>;
-  }
-  return content;
-}
+import { useProfile } from '@/contexts/ProfileContext';
+import { useTranslation, LANGS_LAUNCH } from '@/i18n/LanguageContext';
 
 export default function SettingsScreen() {
-  const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { profile, updateProfile, refreshProfile } = useProfile();
-  const { user, signOut } = useAuth();
+  const { t, lang, setLang } = useTranslation();
+  const { profile, refreshProfile } = useProfile();
 
-  const [editingName, setEditingName] = useState(false);
-  const [nameInput, setNameInput] = useState(profile.display_name);
-  const [nameSaving, setNameSaving] = useState(false);
-  const [nameStatus, setNameStatus] = useState<string | null>(null);
+  const [name, setName] = useState('');
+  const [savedName, setSavedName] = useState(false);
+  const [nameError, setNameError] = useState<string | null>(null);
+  const [nameBusy, setNameBusy] = useState(false);
+  const [showNameConfirm, setShowNameConfirm] = useState(false);
 
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [showSignOutModal, setShowSignOutModal] = useState(false);
-  const [showLangModal, setShowLangModal] = useState(false);
-  const [showAvatarModal, setShowAvatarModal] = useState(false);
-  const [versionTapCount, setVersionTapCount] = useState(0);
-  const [showAdmin, setShowAdmin] = useState(false);
-  const [deletingAccount, setDeletingAccount] = useState(false);
-  const [signingOut, setSigningOut] = useState(false);
+  const [soundOn, setSoundOn] = useState(true);
+  const [soundCats, setSoundCats] = useState({ clicks: true, explosions: true, fanfare: true });
+  const [hapticsIntensity, setHapticsIntensity] = useState<'off' | 'low' | 'medium' | 'high'>('off');
+  const [advancedHaptics, setAdvancedHaptics] = useState(false);
+  const [towerMenuAnytime, setTowerMenuAnytime] = useState(false);
+  const [fitToScreen, setFitToScreen] = useState(true);
 
-  // ── Helpers ────────────────────────────────────────────────────────────────
-  const saveToSupabase = useCallback(async (partial: Record<string, unknown>, label: string) => {
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [deleting, setDeleting] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+
+  useEffect(() => {
+    if (profile) {
+      setName(profile.display_name || '');
+      setSoundOn(profile.sound_enabled !== false);
+      setSoundCats({
+        clicks: profile.sound_categories?.clicks !== false,
+        explosions: profile.sound_categories?.explosions !== false,
+        fanfare: profile.sound_categories?.fanfare !== false,
+      });
+      setHapticsIntensity(profile.haptics_intensity || (profile.haptics_enabled ? 'medium' : 'off'));
+      setAdvancedHaptics(profile.advanced_haptics_enabled === true);
+      setTowerMenuAnytime(profile.tower_menu_anytime === true);
+      setFitToScreen(profile.fit_to_screen !== false);
+    }
+  }, [profile]);
+
+  const saveField = async (field: string, value: unknown) => {
+    console.log('[Settings] saveField', { field, value });
+    const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
-    console.log(`[Settings] Saving ${label} to Supabase`, partial);
-    const { error } = await supabase
-      .from('player_profiles')
-      .update(partial)
-      .eq('id', user.id);
-    if (error) {
-      console.warn(`[Settings] Save ${label} error`, error.message);
-    } else {
-      console.log(`[Settings] ${label} saved`);
-    }
-  }, [user]);
-
-  // ── Handlers ───────────────────────────────────────────────────────────────
-  const handleSoundToggle = async (val: boolean) => {
-    console.log('[Settings] Sound master toggle', { val });
-    updateProfile({ sound_enabled: val });
-    await saveToSupabase({ sound_enabled: val }, 'sound_enabled');
+    await supabase.from('player_profiles').update({ [field]: value }).eq('user_id', user.id);
   };
 
-  const handleCategoryToggle = async (key: keyof typeof profile.sound_categories, val: boolean) => {
-    console.log('[Settings] Sound category toggle', { key, val });
-    const updated = { ...profile.sound_categories, [key]: val };
-    updateProfile({ sound_categories: updated });
-    await saveToSupabase({ sound_categories: updated }, `sound_categories.${key}`);
+  const requestSaveName = () => {
+    console.log('[Settings] requestSaveName pressed', { name });
+    if (!name.trim() || name.trim() === profile?.display_name) return;
+    setShowNameConfirm(true);
   };
 
-  const handleHapticsToggle = async (val: boolean) => {
-    console.log('[Settings] Haptics toggle', { val });
-    updateProfile({ haptics_enabled: val });
-    await saveToSupabase({ haptics_enabled: val }, 'haptics_enabled');
-  };
-
-  const handleAdvancedHapticsToggle = async (val: boolean) => {
-    console.log('[Settings] Advanced haptics toggle', { val });
-    updateProfile({ advanced_haptics_enabled: val });
-    await saveToSupabase({ advanced_haptics_enabled: val }, 'advanced_haptics_enabled');
-  };
-
-  const handleHapticsIntensity = async (intensity: 'off' | 'low' | 'medium' | 'high') => {
-    console.log('[Settings] Haptics intensity changed', { intensity });
-    updateProfile({ haptics_intensity: intensity });
-    await saveToSupabase({ haptics_intensity: intensity }, 'haptics_intensity');
-  };
-
-  const handleLanguage = async (code: string) => {
-    console.log('[Settings] Language changed', { code });
-    updateProfile({ language: code });
-    setShowLangModal(false);
-    await saveToSupabase({ language: code }, 'language');
-  };
-
-  const handleSaveName = async () => {
-    const trimmed = nameInput.trim();
-    if (trimmed.length < 2 || trimmed.length > 20) {
-      setEditingName(false);
-      setNameInput(profile.display_name);
-      return;
-    }
-    console.log('[Settings] Display name save pressed', { name: trimmed });
-    setNameSaving(true);
-    setNameStatus(null);
+  const saveName = async () => {
+    console.log('[Settings] saveName confirmed', { name });
+    if (nameBusy || !name.trim()) return;
+    setNameBusy(true);
+    setNameError(null);
     try {
-      if (!user) throw new Error('Not authenticated');
-      const { error } = await supabase
-        .from('player_profiles')
-        .update({ display_name: trimmed })
-        .eq('id', user.id);
-      if (error) {
-        console.warn('[Settings] Display name save error', error.message);
-        setNameStatus('Failed to save');
-        Alert.alert('Error', error.message);
+      const { data, error } = await supabase.functions.invoke('set-display-name', { body: { name: name.trim() } });
+      if (error) throw error;
+      const r = data;
+      if (r?.success) {
+        console.log('[Settings] Name saved successfully');
+        setSavedName(true);
+        setTimeout(() => setSavedName(false), 2000);
+        setShowNameConfirm(false);
+        refreshProfile();
+      } else if (r?.error === 'name_taken') {
+        console.log('[Settings] Name taken');
+        setNameError(t('settings.nameTaken'));
+        setShowNameConfirm(false);
+      } else if (r?.error === 'name_inappropriate') {
+        console.log('[Settings] Name inappropriate');
+        setNameError(t('settings.nameInappropriate'));
+        setShowNameConfirm(false);
       } else {
-        console.log('[Settings] Display name saved', { name: trimmed });
-        updateProfile({ display_name: trimmed });
-        await refreshProfile();
-        setNameStatus('Saved!');
-        setTimeout(() => setNameStatus(null), 2000);
+        console.log('[Settings] Name save error', r?.error);
+        setNameError(t('settings.nameError'));
+        setShowNameConfirm(false);
       }
-    } catch (e: any) {
-      console.warn('[Settings] Display name unexpected error', e?.message);
-    } finally {
-      setNameSaving(false);
-      setEditingName(false);
+    } catch (e) {
+      console.warn('[Settings] saveName error', e);
+      setNameError(t('settings.nameError'));
+      setShowNameConfirm(false);
     }
+    setNameBusy(false);
   };
 
-  const handleAvatarColor = async (color: string) => {
-    console.log('[Settings] Avatar color changed', { color });
-    updateProfile({ avatar_color: color });
-    setShowAvatarModal(false);
-    await saveToSupabase({ avatar_color: color }, 'avatar_color');
-  };
-
-  const handleFitToScreen = async (val: boolean) => {
-    console.log('[Settings] Fit to screen toggled', { val });
-    updateProfile({ fit_to_screen: val });
-    await saveToSupabase({ fit_to_screen: val }, 'fit_to_screen');
-  };
-
-  const handleTowerMenuAnytime = async (val: boolean) => {
-    console.log('[Settings] Tower menu anytime toggled', { val });
-    updateProfile({ tower_menu_anytime: val });
-    await saveToSupabase({ tower_menu_anytime: val }, 'tower_menu_anytime');
-  };
-
-  const handleExportData = () => {
-    console.log('[Settings] Export Data pressed');
-    Alert.alert('Export Data', 'Your data export will be emailed to you within 24 hours.');
+  const handleSignOut = () => {
+    console.log('[Settings] Sign Out pressed');
+    Alert.alert(t('settings.signOut'), t('settings.signOut') + '?', [
+      { text: t('settings.cancel'), style: 'cancel' },
+      {
+        text: t('settings.signOut'), style: 'destructive', onPress: async () => {
+          console.log('[Settings] Sign Out confirmed');
+          await supabase.auth.signOut();
+          router.replace('/auth/welcome');
+        }
+      },
+    ]);
   };
 
   const handleDeleteAccount = async () => {
     console.log('[Settings] Delete Account confirmed');
-    setShowDeleteModal(false);
-    setDeletingAccount(true);
+    setDeleting(true);
     try {
-      const { error: fnError } = await supabase.functions.invoke('deleteAccount', {});
-      if (fnError) {
-        console.warn('[Settings] deleteAccount edge function failed', fnError.message);
-        // Fallback: just sign out with a note
-        console.log('[Settings] Falling back to sign out (deletion pending)');
-        Alert.alert(
-          'Account deletion requested',
-          'Your account will be deleted shortly. You have been signed out.',
-        );
-      } else {
-        console.log('[Settings] deleteAccount edge function succeeded');
-      }
-      await supabase.auth.signOut();
-      await signOut();
-      router.replace('/auth/welcome' as never);
-    } catch (e: any) {
-      console.warn('[Settings] Delete account unexpected error', e?.message);
-      Alert.alert('Error', e?.message ?? 'Could not delete account. Please try again.');
-    } finally {
-      setDeletingAccount(false);
+      await supabase.functions.invoke('delete-account', {});
+    } catch (e) {
+      console.warn('[Settings] delete-account error', e);
     }
+    await supabase.auth.signOut();
+    router.replace('/auth/welcome');
+    setDeleting(false);
   };
 
-  const handleSignOut = async () => {
-    console.log('[Settings] Sign Out confirmed');
-    setShowSignOutModal(false);
-    setSigningOut(true);
+  const handleDownloadData = async () => {
+    console.log('[Settings] Download Data pressed');
+    setDownloading(true);
     try {
-      await supabase.auth.signOut();
-      await signOut();
-      console.log('[Settings] Sign out complete, navigating to welcome');
-      router.replace('/auth/welcome' as never);
-    } catch (e: any) {
-      console.warn('[Settings] Sign out error', e?.message);
-    } finally {
-      setSigningOut(false);
+      const { data } = await supabase.functions.invoke('export-user-data', {});
+      console.log('[Settings] export-user-data response', data);
+      Alert.alert('Data Export', 'Your data has been prepared. In the full app, this would download a JSON file.');
+    } catch (e) {
+      console.warn('[Settings] export-user-data error', e);
+      Alert.alert('Error', 'Could not export data.');
     }
+    setDownloading(false);
   };
 
-  const handlePrivacyPolicy = () => {
-    console.log('[Settings] Privacy Policy pressed');
-  };
-
-  const handleEULA = () => {
-    console.log('[Settings] EULA pressed');
-  };
-
-  const handleImpressum = () => {
-    console.log('[Settings] Impressum pressed');
-  };
-
-  const handleVersionTap = useCallback(() => {
-    const next = versionTapCount + 1;
-    setVersionTapCount(next);
-    if (next >= 5) {
-      console.log('[Settings] Admin mode unlocked');
-      setShowAdmin(true);
-      setVersionTapCount(0);
-    }
-  }, [versionTapCount]);
-
-  const handleAdminPanel = () => {
-    console.log('[Settings] Admin Panel pressed');
-    router.push('/admin' as never);
-  };
-
-  const currentLang = LANGUAGES.find(l => l.code === profile.language) ?? LANGUAGES[0];
-  const initials = profile.display_name.slice(0, 2).toUpperCase();
-  const accountTypeLabel = profile.account_type.charAt(0).toUpperCase() + profile.account_type.slice(1);
+  const hapticLevels = ['off', 'low', 'medium', 'high'] as const;
 
   return (
-    <>
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={[styles.content, { paddingTop: insets.top + 16, paddingBottom: 120 }]}
-        showsVerticalScrollIndicator={false}
-      >
-        <AnimatedListItem index={0}>
-          <View style={styles.headerRow}>
-            <Settings size={22} color={COLORS.primary} strokeWidth={2} />
-            <Text style={styles.screenTitle}>Settings</Text>
-          </View>
-        </AnimatedListItem>
+    <SafeAreaView style={styles.safe}>
+      <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
+        {/* Header */}
+        <View style={styles.headerRow}>
+          <TouchableOpacity onPress={() => { console.log('[Settings] Back pressed'); router.back(); }} style={styles.backBtn}>
+            <Ionicons name="arrow-back" size={20} color={COLORS.textSecondary} />
+            <Text style={styles.backText}>{t('settings.back')}</Text>
+          </TouchableOpacity>
+          <Text style={styles.pageTitle}>{t('settings.title')}</Text>
+        </View>
 
         {/* Profile */}
-        <AnimatedListItem index={1}>
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <User size={16} color={COLORS.textSecondary} strokeWidth={2} />
-              <Text style={styles.sectionTitle}>PROFILE</Text>
+        <View style={styles.card}>
+          <View style={styles.cardHeader}>
+            <View style={[styles.iconCircle, { backgroundColor: '#EFF6FF' }]}>
+              <Ionicons name="person" size={20} color={COLORS.primary} />
             </View>
-
-            {/* Avatar + name row */}
-            <View style={styles.profileRow}>
-              <AnimatedPressable onPress={() => { console.log('[Settings] Avatar pressed'); setShowAvatarModal(true); }}>
-                <View style={[styles.avatar, { backgroundColor: profile.avatar_color }]}>
-                  <Text style={styles.avatarInitials}>{initials}</Text>
-                  <View style={styles.avatarEditBadge}>
-                    <Pencil size={10} color="#fff" strokeWidth={2.5} />
-                  </View>
-                </View>
-              </AnimatedPressable>
-              <View style={styles.profileInfo}>
-                {editingName ? (
-                  <View style={styles.nameEditRow}>
-                    <TextInput
-                      style={styles.nameInput}
-                      value={nameInput}
-                      onChangeText={setNameInput}
-                      autoFocus
-                      maxLength={20}
-                      autoCapitalize="none"
-                      autoCorrect={false}
-                      returnKeyType="done"
-                      onSubmitEditing={handleSaveName}
-                      placeholderTextColor={COLORS.textTertiary}
-                    />
-                    {nameSaving ? (
-                      <ActivityIndicator color={COLORS.primary} size="small" />
-                    ) : (
-                      <>
-                        <AnimatedPressable style={styles.nameSaveBtn} onPress={handleSaveName}>
-                          <Check size={16} color="#fff" strokeWidth={2.5} />
-                        </AnimatedPressable>
-                        <AnimatedPressable style={styles.nameCancelBtn} onPress={() => { setEditingName(false); setNameInput(profile.display_name); }}>
-                          <X size={16} color={COLORS.textSecondary} strokeWidth={2.5} />
-                        </AnimatedPressable>
-                      </>
-                    )}
-                  </View>
-                ) : (
-                  <AnimatedPressable onPress={() => { console.log('[Settings] Edit name pressed'); setEditingName(true); setNameInput(profile.display_name); }}>
-                    <View style={styles.nameRow}>
-                      <Text style={styles.profileName}>{profile.display_name}</Text>
-                      <Pencil size={14} color={COLORS.textTertiary} strokeWidth={2} />
-                    </View>
-                  </AnimatedPressable>
-                )}
-                {nameStatus ? (
-                  <Text style={[styles.nameStatusText, nameStatus === 'Saved!' && { color: COLORS.success }]}>
-                    {nameStatus}
-                  </Text>
-                ) : (
-                  <View style={styles.accountTypeBadge}>
-                    <Text style={styles.accountTypeText}>{accountTypeLabel}</Text>
-                  </View>
-                )}
-              </View>
-            </View>
-
-            {profile.account_type === 'guest' && (
-              <>
-                <View style={styles.divider} />
-                <SettingRow
-                  icon={<Link size={18} color={COLORS.primary} strokeWidth={2} />}
-                  label="Link Account"
-                  sublabel="Save your progress"
-                  onPress={() => { console.log('[Settings] Link Account pressed'); router.push('/auth/welcome' as never); }}
-                  right={<ChevronRight size={18} color={COLORS.primary} strokeWidth={2} />}
-                />
-              </>
-            )}
+            <Text style={styles.cardTitle}>{t('settings.profile')}</Text>
           </View>
-        </AnimatedListItem>
-
-        {/* Sound */}
-        <AnimatedListItem index={2}>
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Volume2 size={16} color={COLORS.textSecondary} strokeWidth={2} />
-              <Text style={styles.sectionTitle}>SOUND</Text>
-            </View>
-            <SettingRow
-              icon={<Volume2 size={18} color={COLORS.textSecondary} strokeWidth={2} />}
-              label="Master Sound"
-              right={
-                <Switch
-                  value={profile.sound_enabled}
-                  onValueChange={handleSoundToggle}
-                  trackColor={{ false: COLORS.surfaceSecondary, true: COLORS.primary }}
-                  thumbColor="#fff"
-                />
-              }
+          <Text style={styles.fieldLabel}>{t('settings.displayName')}</Text>
+          <View style={styles.nameRow}>
+            <TextInput
+              value={name}
+              onChangeText={v => { setName(v); setNameError(null); }}
+              style={[styles.nameInput, nameError ? styles.nameInputError : null]}
+              maxLength={20}
             />
-            {profile.sound_enabled && (
-              <>
-                <View style={styles.divider} />
-                <SettingRow
-                  icon={<View style={styles.subIcon} />}
-                  label="Clicks"
-                  right={
-                    <Switch
-                      value={profile.sound_categories.clicks}
-                      onValueChange={(v) => handleCategoryToggle('clicks', v)}
-                      trackColor={{ false: COLORS.surfaceSecondary, true: COLORS.primary }}
-                      thumbColor="#fff"
-                    />
-                  }
-                />
-                <View style={styles.divider} />
-                <SettingRow
-                  icon={<View style={styles.subIcon} />}
-                  label="Explosions"
-                  right={
-                    <Switch
-                      value={profile.sound_categories.explosions}
-                      onValueChange={(v) => handleCategoryToggle('explosions', v)}
-                      trackColor={{ false: COLORS.surfaceSecondary, true: COLORS.primary }}
-                      thumbColor="#fff"
-                    />
-                  }
-                />
-                <View style={styles.divider} />
-                <SettingRow
-                  icon={<View style={styles.subIcon} />}
-                  label="Fanfare"
-                  right={
-                    <Switch
-                      value={profile.sound_categories.fanfare}
-                      onValueChange={(v) => handleCategoryToggle('fanfare', v)}
-                      trackColor={{ false: COLORS.surfaceSecondary, true: COLORS.primary }}
-                      thumbColor="#fff"
-                    />
-                  }
-                />
-              </>
-            )}
+            <TouchableOpacity
+              onPress={requestSaveName}
+              disabled={nameBusy || !name.trim()}
+              style={styles.saveBtn}
+            >
+              {savedName
+                ? <Ionicons name="checkmark" size={18} color="#fff" />
+                : nameBusy
+                  ? <ActivityIndicator size="small" color="#fff" />
+                  : <Text style={styles.saveBtnText}>{t('settings.save')}</Text>
+              }
+            </TouchableOpacity>
           </View>
-        </AnimatedListItem>
-
-        {/* Haptics */}
-        <AnimatedListItem index={3}>
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Vibrate size={16} color={COLORS.textSecondary} strokeWidth={2} />
-              <Text style={styles.sectionTitle}>HAPTICS</Text>
-            </View>
-            <SettingRow
-              icon={<Vibrate size={18} color={COLORS.textSecondary} strokeWidth={2} />}
-              label="Enable Haptics"
-              right={
-                <Switch
-                  value={profile.haptics_enabled}
-                  onValueChange={handleHapticsToggle}
-                  trackColor={{ false: COLORS.surfaceSecondary, true: COLORS.primary }}
-                  thumbColor="#fff"
-                />
-              }
-            />
-            <View style={styles.divider} />
-            <View style={styles.settingRow}>
-              <View style={styles.settingLeft}>
-                <View style={styles.subIcon} />
-                <View style={styles.settingLabelWrap}>
-                  <Text style={[styles.settingLabel, !profile.haptics_enabled && { opacity: 0.4 }]}>Intensity</Text>
-                </View>
-              </View>
-              <View style={styles.hapticsRow}>
-                {HAPTICS_OPTIONS.map((opt) => {
-                  const isActive = profile.haptics_intensity === opt;
-                  const optLabel = opt.charAt(0).toUpperCase() + opt.slice(1);
-                  return (
-                    <AnimatedPressable
-                      key={opt}
-                      style={[styles.hapticsBtn, isActive && styles.hapticsBtnActive]}
-                      onPress={() => handleHapticsIntensity(opt)}
-                      disabled={!profile.haptics_enabled}
-                    >
-                      <Text style={[styles.hapticsBtnText, isActive && styles.hapticsBtnTextActive]}>
-                        {optLabel}
-                      </Text>
-                    </AnimatedPressable>
-                  );
-                })}
-              </View>
-            </View>
-            <View style={styles.divider} />
-            <SettingRow
-              icon={<View style={styles.subIcon} />}
-              label="Advanced Haptics"
-              right={
-                <Switch
-                  value={profile.advanced_haptics_enabled}
-                  onValueChange={handleAdvancedHapticsToggle}
-                  trackColor={{ false: COLORS.surfaceSecondary, true: COLORS.primary }}
-                  thumbColor="#fff"
-                  disabled={!profile.haptics_enabled}
-                />
-              }
-            />
-          </View>
-        </AnimatedListItem>
-
-        {/* Display */}
-        <AnimatedListItem index={4}>
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Monitor size={16} color={COLORS.textSecondary} strokeWidth={2} />
-              <Text style={styles.sectionTitle}>DISPLAY</Text>
-            </View>
-            <SettingRow
-              icon={<Monitor size={18} color={COLORS.textSecondary} strokeWidth={2} />}
-              label="Fit to screen"
-              sublabel="Scale game to fill display"
-              right={
-                <Switch
-                  value={profile.fit_to_screen}
-                  onValueChange={handleFitToScreen}
-                  trackColor={{ false: COLORS.surfaceSecondary, true: COLORS.primary }}
-                  thumbColor="#fff"
-                />
-              }
-            />
-            <View style={styles.divider} />
-            <SettingRow
-              icon={<View style={styles.subIcon} />}
-              label="Tower menu anytime"
-              sublabel="Open tower menu outside edit mode"
-              right={
-                <Switch
-                  value={profile.tower_menu_anytime}
-                  onValueChange={handleTowerMenuAnytime}
-                  trackColor={{ false: COLORS.surfaceSecondary, true: COLORS.primary }}
-                  thumbColor="#fff"
-                />
-              }
-            />
-          </View>
-        </AnimatedListItem>
+          {nameError && <Text style={styles.nameError}>{nameError}</Text>}
+          <TouchableOpacity
+            onPress={() => { console.log('[Settings] Friends pressed'); router.push('/social' as any); }}
+            style={styles.linkRow}
+          >
+            <Ionicons name="people" size={20} color={COLORS.primary} />
+            <Text style={styles.linkText}>{t('settings.friends')}</Text>
+            <Ionicons name="chevron-forward" size={16} color={COLORS.textTertiary} />
+          </TouchableOpacity>
+        </View>
 
         {/* Language */}
-        <AnimatedListItem index={5}>
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Globe size={16} color={COLORS.textSecondary} strokeWidth={2} />
-              <Text style={styles.sectionTitle}>LANGUAGE</Text>
+        <View style={styles.card}>
+          <View style={styles.cardHeader}>
+            <View style={[styles.iconCircle, { backgroundColor: '#F0FDF4' }]}>
+              <Ionicons name="globe" size={20} color="#10B981" />
             </View>
-            <SettingRow
-              icon={<Globe size={18} color={COLORS.textSecondary} strokeWidth={2} />}
-              label="Language"
-              sublabel={currentLang.flag + ' ' + currentLang.name}
-              onPress={() => { console.log('[Settings] Language picker opened'); setShowLangModal(true); }}
-            />
+            <Text style={styles.cardTitle}>{t('settings.language')}</Text>
           </View>
-        </AnimatedListItem>
-
-        {/* Account */}
-        <AnimatedListItem index={6}>
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <User size={16} color={COLORS.textSecondary} strokeWidth={2} />
-              <Text style={styles.sectionTitle}>ACCOUNT</Text>
-            </View>
-            <SettingRow
-              icon={<Download size={18} color={COLORS.textSecondary} strokeWidth={2} />}
-              label="Export my data"
-              sublabel="GDPR data export"
-              onPress={handleExportData}
-            />
-            <View style={styles.divider} />
-            <SettingRow
-              icon={signingOut
-                ? <ActivityIndicator size="small" color={COLORS.textSecondary} />
-                : <LogOut size={18} color={COLORS.textSecondary} strokeWidth={2} />}
-              label="Sign out"
-              onPress={() => { console.log('[Settings] Sign Out pressed'); setShowSignOutModal(true); }}
-            />
-            <View style={styles.divider} />
-            <SettingRow
-              icon={deletingAccount
-                ? <ActivityIndicator size="small" color={COLORS.danger} />
-                : <Trash2 size={18} color={COLORS.danger} strokeWidth={2} />}
-              label="Delete account"
-              sublabel="Permanently remove all data"
-              onPress={() => { console.log('[Settings] Delete Account pressed'); setShowDeleteModal(true); }}
-              destructive
-            />
+          <Text style={styles.cardDesc}>{t('settings.languageDesc')}</Text>
+          <View style={styles.langGrid}>
+            {LANGS_LAUNCH.map(l => (
+              <TouchableOpacity
+                key={l.code}
+                onPress={() => { console.log('[Settings] Language selected', { code: l.code }); setLang(l.code); }}
+                style={[styles.langBtn, lang === l.code && styles.langBtnActive]}
+              >
+                <Text style={styles.langFlag}>{l.flag}</Text>
+                <Text style={styles.langLabel}>{l.label}</Text>
+              </TouchableOpacity>
+            ))}
           </View>
-        </AnimatedListItem>
+        </View>
 
-        {/* Legal */}
-        <AnimatedListItem index={7}>
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Shield size={16} color={COLORS.textSecondary} strokeWidth={2} />
-              <Text style={styles.sectionTitle}>LEGAL</Text>
+        {/* Sound & Haptics */}
+        <View style={styles.card}>
+          <View style={styles.cardHeader}>
+            <View style={[styles.iconCircle, { backgroundColor: '#FAF5FF' }]}>
+              <Ionicons name="volume-high" size={20} color="#8B5CF6" />
             </View>
-            <SettingRow
-              icon={<Shield size={18} color={COLORS.textSecondary} strokeWidth={2} />}
-              label="Privacy Policy"
-              onPress={handlePrivacyPolicy}
-            />
-            <View style={styles.divider} />
-            <SettingRow
-              icon={<FileText size={18} color={COLORS.textSecondary} strokeWidth={2} />}
-              label="Terms of Service / EULA"
-              onPress={handleEULA}
-            />
-            <View style={styles.divider} />
-            <SettingRow
-              icon={<Info size={18} color={COLORS.textSecondary} strokeWidth={2} />}
-              label="Impressum"
-              onPress={handleImpressum}
-            />
+            <Text style={styles.cardTitle}>{t('settings.sound')}</Text>
           </View>
-        </AnimatedListItem>
-
-        {/* Version */}
-        <AnimatedListItem index={8}>
-          <AnimatedPressable onPress={handleVersionTap}>
-            <View style={styles.versionRow}>
-              <Text style={styles.versionText}>Orb Clash</Text>
-              <Text style={styles.versionNum}>v1.0.0 (build 1)</Text>
-              {versionTapCount > 0 && versionTapCount < 5 && (
-                <Text style={styles.versionHint}>{5 - versionTapCount} more taps for admin</Text>
-              )}
-            </View>
-          </AnimatedPressable>
-        </AnimatedListItem>
-
-        {/* Admin section (hidden until 5x tap) */}
-        {showAdmin && (
-          <AnimatedListItem index={9}>
-            <View style={[styles.section, { borderColor: COLORS.warning }]}>
-              <View style={styles.sectionHeader}>
-                <Shield size={16} color={COLORS.warning} strokeWidth={2} />
-                <Text style={[styles.sectionTitle, { color: COLORS.warning }]}>ADMIN</Text>
-              </View>
-              <SettingRow
-                icon={<Shield size={18} color={COLORS.warning} strokeWidth={2} />}
-                label="Admin Panel"
-                onPress={handleAdminPanel}
-                right={<ChevronRight size={18} color={COLORS.warning} strokeWidth={2} />}
+          <Text style={styles.cardDesc}>{t('settings.soundDesc')}</Text>
+          <ToggleRow
+            label={t('settings.sound')}
+            value={soundOn}
+            onChange={v => { setSoundOn(v); saveField('sound_enabled', v); }}
+          />
+          {soundOn && (
+            <View style={styles.subToggles}>
+              <ToggleRow
+                label={t('settings.soundClicks')}
+                value={soundCats.clicks}
+                onChange={v => { setSoundCats(c => ({ ...c, clicks: v })); saveField('sound_categories', { ...soundCats, clicks: v }); }}
+              />
+              <ToggleRow
+                label={t('settings.soundExplosions')}
+                value={soundCats.explosions}
+                onChange={v => { setSoundCats(c => ({ ...c, explosions: v })); saveField('sound_categories', { ...soundCats, explosions: v }); }}
+              />
+              <ToggleRow
+                label={t('settings.soundFanfare')}
+                value={soundCats.fanfare}
+                onChange={v => { setSoundCats(c => ({ ...c, fanfare: v })); saveField('sound_categories', { ...soundCats, fanfare: v }); }}
               />
             </View>
-          </AnimatedListItem>
-        )}
-      </ScrollView>
-
-      {/* Language Modal */}
-      <Modal visible={showLangModal} transparent animationType="slide" onRequestClose={() => setShowLangModal(false)}>
-        <Pressable style={styles.modalBackdrop} onPress={() => setShowLangModal(false)}>
-          <View style={styles.modalSheet}>
-            <View style={styles.modalHandle} />
-            <Text style={styles.modalTitle}>Choose Language</Text>
-            {LANGUAGES.map((lang) => {
-              const isActive = profile.language === lang.code;
-              return (
-                <AnimatedPressable key={lang.code} onPress={() => handleLanguage(lang.code)}>
-                  <View style={[styles.langRow, isActive && styles.langRowActive]}>
-                    <Text style={styles.langFlag}>{lang.flag}</Text>
-                    <Text style={[styles.langRowName, isActive && { color: COLORS.primary }]}>{lang.name}</Text>
-                    {isActive && <Check size={18} color={COLORS.primary} strokeWidth={2.5} />}
-                  </View>
-                </AnimatedPressable>
-              );
-            })}
-          </View>
-        </Pressable>
-      </Modal>
-
-      {/* Avatar Color Modal */}
-      <Modal visible={showAvatarModal} transparent animationType="fade" onRequestClose={() => setShowAvatarModal(false)}>
-        <Pressable style={styles.modalBackdrop} onPress={() => setShowAvatarModal(false)}>
-          <View style={styles.avatarModal}>
-            <Text style={styles.modalTitle}>Choose Avatar Color</Text>
-            <View style={styles.colorGrid}>
-              {AVATAR_COLORS.map((color) => {
-                const isActive = profile.avatar_color === color;
+          )}
+          <View style={styles.hapticsSection}>
+            <Text style={styles.fieldLabel}>{t('settings.hapticsIntensity')}</Text>
+            <Text style={styles.cardDesc}>{t('settings.hapticsIntensityDesc')}</Text>
+            <View style={styles.hapticsRow}>
+              {hapticLevels.map(lvl => {
+                const capKey = lvl.charAt(0).toUpperCase() + lvl.slice(1);
+                const labelKey = `settings.haptic${capKey}` as any;
+                const isActive = hapticsIntensity === lvl;
                 return (
-                  <AnimatedPressable key={color} onPress={() => handleAvatarColor(color)}>
-                    <View style={[styles.colorSwatch, { backgroundColor: color }, isActive && styles.colorSwatchActive]}>
-                      {isActive && <Check size={18} color="#fff" strokeWidth={3} />}
-                    </View>
-                  </AnimatedPressable>
+                  <TouchableOpacity
+                    key={lvl}
+                    onPress={() => { console.log('[Settings] Haptics intensity changed', { lvl }); setHapticsIntensity(lvl); saveField('haptics_intensity', lvl); }}
+                    style={[styles.hapticBtn, isActive && styles.hapticBtnActive]}
+                  >
+                    <Text style={[styles.hapticBtnText, isActive && styles.hapticBtnTextActive]}>
+                      {t(labelKey)}
+                    </Text>
+                  </TouchableOpacity>
                 );
               })}
             </View>
           </View>
-        </Pressable>
-      </Modal>
-
-      {/* Delete Account Modal */}
-      <Modal visible={showDeleteModal} transparent animationType="fade" onRequestClose={() => setShowDeleteModal(false)}>
-        <View style={styles.confirmBackdrop}>
-          <View style={styles.confirmModal}>
-            <View style={styles.confirmIconWrap}>
-              <Trash2 size={28} color={COLORS.danger} strokeWidth={2} />
+          {hapticsIntensity !== 'off' && (
+            <View style={styles.subToggles}>
+              <ToggleRow
+                label={t('settings.advancedHaptics')}
+                desc={t('settings.advancedHapticsDesc')}
+                value={advancedHaptics}
+                onChange={v => { setAdvancedHaptics(v); saveField('advanced_haptics_enabled', v); }}
+              />
             </View>
-            <Text style={styles.confirmTitle}>Delete account?</Text>
-            <Text style={styles.confirmBody}>
-              This will permanently delete your account and all game progress. This cannot be undone.
-            </Text>
-            <AnimatedPressable style={styles.confirmDangerBtn} onPress={handleDeleteAccount}>
-              <Text style={styles.confirmDangerText}>Delete my account</Text>
-            </AnimatedPressable>
-            <AnimatedPressable style={styles.confirmCancelBtn} onPress={() => { console.log('[Settings] Delete Account cancelled'); setShowDeleteModal(false); }}>
-              <Text style={styles.confirmCancelText}>Cancel</Text>
-            </AnimatedPressable>
+          )}
+        </View>
+
+        {/* Gameplay */}
+        <View style={styles.card}>
+          <View style={styles.cardHeader}>
+            <View style={[styles.iconCircle, { backgroundColor: '#EFF6FF' }]}>
+              <Ionicons name="construct" size={20} color={COLORS.primary} />
+            </View>
+            <Text style={styles.cardTitle}>{t('settings.gameplay')}</Text>
+          </View>
+          <Text style={styles.cardDesc}>{t('settings.gameplayDesc')}</Text>
+          <ToggleRow
+            label={t('settings.towerMenuAnytime')}
+            desc={t('settings.towerMenuAnytimeDesc')}
+            value={towerMenuAnytime}
+            onChange={v => { setTowerMenuAnytime(v); saveField('tower_menu_anytime', v); }}
+          />
+          <ToggleRow
+            label={t('settings.fitToScreen')}
+            desc={t('settings.fitToScreenDesc')}
+            value={fitToScreen}
+            onChange={v => { setFitToScreen(v); saveField('fit_to_screen', v); }}
+          />
+          <TouchableOpacity
+            onPress={() => { console.log('[Settings] Replay Tutorial pressed'); router.push({ pathname: '/game', params: { mode: 'tutorial' } }); }}
+            style={styles.linkRow}
+          >
+            <Ionicons name="school" size={20} color={COLORS.primary} />
+            <Text style={styles.linkText}>{t('settings.replayTutorial')}</Text>
+            <Ionicons name="chevron-forward" size={16} color={COLORS.textTertiary} />
+          </TouchableOpacity>
+        </View>
+
+        {/* Account */}
+        <View style={styles.card}>
+          <View style={styles.cardHeader}>
+            <View style={[styles.iconCircle, { backgroundColor: '#FFFBEB' }]}>
+              <Ionicons name="shield-checkmark" size={20} color="#F59E0B" />
+            </View>
+            <Text style={styles.cardTitle}>{t('settings.account')}</Text>
+          </View>
+          <Text style={styles.cardDesc}>{t('settings.accountDesc')}</Text>
+          <TouchableOpacity
+            onPress={() => { console.log('[Settings] Privacy Policy pressed'); router.push('/privacy' as any); }}
+            style={styles.linkRow}
+          >
+            <Ionicons name="document-text" size={20} color={COLORS.textSecondary} />
+            <Text style={styles.linkText}>{t('settings.privacyPolicy')}</Text>
+            <Ionicons name="chevron-forward" size={16} color={COLORS.textTertiary} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => { console.log('[Settings] EULA pressed'); router.push('/eula-screen' as any); }}
+            style={styles.linkRow}
+          >
+            <Ionicons name="document-text" size={20} color={COLORS.textSecondary} />
+            <Text style={styles.linkText}>{t('settings.eula')}</Text>
+            <Ionicons name="chevron-forward" size={16} color={COLORS.textTertiary} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => { console.log('[Settings] Impressum pressed'); router.push('/impressum' as any); }}
+            style={styles.linkRow}
+          >
+            <Ionicons name="document-text" size={20} color={COLORS.textSecondary} />
+            <Text style={styles.linkText}>{t('settings.impressum')}</Text>
+            <Ionicons name="chevron-forward" size={16} color={COLORS.textTertiary} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={handleDownloadData}
+            disabled={downloading}
+            style={styles.linkRow}
+          >
+            <Ionicons name="download" size={20} color={COLORS.textSecondary} />
+            <Text style={styles.linkText}>{t('settings.downloadData')}</Text>
+            {downloading && <ActivityIndicator size="small" color={COLORS.textTertiary} />}
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => { console.log('[Settings] Delete Account pressed'); setDeleteConfirmText(''); setShowDeleteDialog(true); }}
+            style={[styles.linkRow, styles.dangerRow]}
+          >
+            <Ionicons name="trash" size={20} color={COLORS.danger} />
+            <Text style={[styles.linkText, { color: COLORS.danger }]}>{t('settings.deleteAccount')}</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Sign Out */}
+        <TouchableOpacity onPress={handleSignOut} style={styles.signOutBtn}>
+          <Text style={styles.signOutText}>{t('settings.signOut')}</Text>
+        </TouchableOpacity>
+      </ScrollView>
+
+      {/* Name change confirm modal */}
+      <Modal visible={showNameConfirm} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>{t('settings.changeNameTitle')}</Text>
+            <Text style={styles.modalBody}>{t('settings.changeNameBody')}</Text>
+            <View style={styles.modalBtns}>
+              <TouchableOpacity
+                onPress={() => { console.log('[Settings] Name change cancelled'); setShowNameConfirm(false); }}
+                style={styles.modalBtnSecondary}
+              >
+                <Text style={styles.modalBtnSecondaryText}>{t('settings.cancel')}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={saveName} disabled={nameBusy} style={styles.modalBtnPrimary}>
+                {nameBusy
+                  ? <ActivityIndicator size="small" color="#fff" />
+                  : <Text style={styles.modalBtnPrimaryText}>{t('settings.confirmChange')}</Text>
+                }
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </Modal>
 
-      {/* Sign Out Modal */}
-      <Modal visible={showSignOutModal} transparent animationType="fade" onRequestClose={() => setShowSignOutModal(false)}>
-        <View style={styles.confirmBackdrop}>
-          <View style={styles.confirmModal}>
-            <View style={styles.confirmIconWrap}>
-              <LogOut size={28} color={COLORS.textSecondary} strokeWidth={2} />
+      {/* Delete confirm modal */}
+      <Modal visible={showDeleteDialog} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>{t('settings.deleteConfirmTitle')}</Text>
+            <Text style={styles.modalBody}>{t('settings.deleteConfirmBody')}</Text>
+            <Text style={styles.fieldLabel}>{t('settings.deleteTypeHint')}</Text>
+            <TextInput
+              value={deleteConfirmText}
+              onChangeText={setDeleteConfirmText}
+              placeholder="delete"
+              style={[styles.nameInput, { marginBottom: 16 }]}
+              autoCapitalize="none"
+            />
+            <View style={styles.modalBtns}>
+              <TouchableOpacity
+                onPress={() => { console.log('[Settings] Delete Account cancelled'); setShowDeleteDialog(false); }}
+                style={styles.modalBtnSecondary}
+              >
+                <Text style={styles.modalBtnSecondaryText}>{t('settings.cancel')}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={handleDeleteAccount}
+                disabled={deleting || deleteConfirmText.trim().toLowerCase() !== 'delete'}
+                style={[styles.modalBtnPrimary, { backgroundColor: COLORS.danger }]}
+              >
+                {deleting
+                  ? <ActivityIndicator size="small" color="#fff" />
+                  : <Text style={styles.modalBtnPrimaryText}>{t('settings.deleteButton')}</Text>
+                }
+              </TouchableOpacity>
             </View>
-            <Text style={styles.confirmTitle}>Sign out?</Text>
-            <Text style={styles.confirmBody}>
-              You'll need to sign back in to access your account.
-            </Text>
-            <AnimatedPressable style={styles.confirmSignOutBtn} onPress={handleSignOut}>
-              <Text style={styles.confirmSignOutText}>Sign out</Text>
-            </AnimatedPressable>
-            <AnimatedPressable style={styles.confirmCancelBtn} onPress={() => { console.log('[Settings] Sign Out cancelled'); setShowSignOutModal(false); }}>
-              <Text style={styles.confirmCancelText}>Cancel</Text>
-            </AnimatedPressable>
           </View>
         </View>
       </Modal>
-    </>
+    </SafeAreaView>
+  );
+}
+
+function ToggleRow({ label, desc, value, onChange }: { label: string; desc?: string; value: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <TouchableOpacity onPress={() => { console.log('[Settings] Toggle pressed', { label, newValue: !value }); onChange(!value); }} style={styles.toggleRow}>
+      <View style={{ flex: 1 }}>
+        <Text style={styles.toggleLabel}>{label}</Text>
+        {desc && <Text style={styles.toggleDesc}>{desc}</Text>}
+      </View>
+      <View style={[styles.toggleTrack, value && styles.toggleTrackOn]}>
+        <View style={[styles.toggleThumb, value && styles.toggleThumbOn]} />
+      </View>
+    </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-  },
-  content: {
-    paddingHorizontal: 20,
-    gap: 16,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  screenTitle: {
-    fontSize: 24,
-    fontWeight: '800',
-    color: COLORS.text,
-    letterSpacing: -0.4,
-  },
-  section: {
-    backgroundColor: COLORS.surface,
-    borderRadius: 16,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: 16,
-    paddingTop: 14,
-    paddingBottom: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.divider,
-  },
-  sectionTitle: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: COLORS.textSecondary,
-    letterSpacing: 0.8,
-  },
-  settingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  settingLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    flex: 1,
-  },
-  settingLabelWrap: {
-    flex: 1,
-    gap: 2,
-  },
-  settingLabel: {
-    fontSize: 15,
-    fontWeight: '500',
-    color: COLORS.text,
-  },
-  settingSubLabel: {
-    fontSize: 12,
-    color: COLORS.textTertiary,
-  },
-  settingRight: {
-    alignItems: 'flex-end',
-  },
-  subIcon: {
-    width: 18,
-    height: 18,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: COLORS.divider,
-    marginLeft: 46,
-  },
-  // Profile
-  profileRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
-    padding: 16,
-  },
-  avatar: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatarInitials: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: '#fff',
-    letterSpacing: -0.5,
-  },
-  avatarEditBadge: {
-    position: 'absolute',
-    bottom: 0,
-    right: 0,
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    backgroundColor: COLORS.surfaceSecondary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1.5,
-    borderColor: COLORS.surface,
-  },
-  profileInfo: {
-    flex: 1,
-    gap: 6,
-  },
-  nameRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  profileName: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: COLORS.text,
-    letterSpacing: -0.3,
-  },
-  nameEditRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  nameInput: {
-    flex: 1,
-    backgroundColor: COLORS.surfaceSecondary,
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    fontSize: 16,
-    fontWeight: '600',
-    color: COLORS.text,
-    borderWidth: 1.5,
-    borderColor: COLORS.primary,
-  },
-  nameSaveBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    backgroundColor: COLORS.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  nameCancelBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    backgroundColor: COLORS.surfaceSecondary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  nameStatusText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: COLORS.danger,
-  },
-  accountTypeBadge: {
-    alignSelf: 'flex-start',
-    backgroundColor: COLORS.primaryMuted,
-    borderRadius: 6,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-  },
-  accountTypeText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: COLORS.primary,
-    letterSpacing: 0.3,
-  },
-  // Haptics
-  hapticsRow: {
-    flexDirection: 'row',
-    gap: 6,
-  },
-  hapticsBtn: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 8,
-    backgroundColor: COLORS.surfaceSecondary,
-  },
-  hapticsBtnActive: {
-    backgroundColor: COLORS.primaryMuted,
-  },
-  hapticsBtnText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: COLORS.textSecondary,
-  },
-  hapticsBtnTextActive: {
-    color: COLORS.primary,
-  },
-  // Version
-  versionRow: {
-    alignItems: 'center',
-    gap: 4,
-    paddingVertical: 8,
-  },
-  versionText: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: COLORS.textTertiary,
-  },
-  versionNum: {
-    fontSize: 12,
-    color: COLORS.textTertiary,
-    fontFamily: 'SpaceMono',
-  },
-  versionHint: {
-    fontSize: 11,
-    color: COLORS.warning,
-    fontWeight: '500',
-  },
-  // Language modal
-  modalBackdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    justifyContent: 'flex-end',
-  },
-  modalSheet: {
-    backgroundColor: COLORS.surface,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    padding: 24,
-    paddingBottom: 40,
-    gap: 4,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-  modalHandle: {
-    width: 40,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: COLORS.border,
-    alignSelf: 'center',
-    marginBottom: 16,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: COLORS.text,
-    marginBottom: 12,
-    letterSpacing: -0.3,
-  },
-  langRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingVertical: 14,
-    paddingHorizontal: 12,
-    borderRadius: 12,
-  },
-  langRowActive: {
-    backgroundColor: COLORS.primaryMuted,
-  },
-  langFlag: {
-    fontSize: 22,
-  },
-  langRowName: {
-    flex: 1,
-    fontSize: 16,
-    fontWeight: '500',
-    color: COLORS.text,
-  },
-  // Avatar modal
-  avatarModal: {
-    backgroundColor: COLORS.surface,
-    borderRadius: 20,
-    padding: 24,
-    margin: 32,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    gap: 16,
-  },
-  colorGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-    justifyContent: 'center',
-  },
-  colorSwatch: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  colorSwatchActive: {
-    borderWidth: 3,
-    borderColor: '#fff',
-  },
-  // Confirm modals
-  confirmBackdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.75)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 32,
-  },
-  confirmModal: {
-    backgroundColor: COLORS.surface,
-    borderRadius: 20,
-    padding: 28,
-    width: '100%',
-    alignItems: 'center',
-    gap: 12,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-  confirmIconWrap: {
-    width: 60,
-    height: 60,
-    borderRadius: 18,
-    backgroundColor: COLORS.surfaceSecondary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 4,
-  },
-  confirmTitle: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: COLORS.text,
-    letterSpacing: -0.3,
-  },
-  confirmBody: {
-    fontSize: 14,
-    color: COLORS.textSecondary,
-    textAlign: 'center',
-    lineHeight: 20,
-  },
-  confirmDangerBtn: {
-    backgroundColor: COLORS.danger,
-    borderRadius: 14,
-    paddingVertical: 14,
-    paddingHorizontal: 24,
-    width: '100%',
-    alignItems: 'center',
-    marginTop: 4,
-  },
-  confirmDangerText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#fff',
-  },
-  confirmSignOutBtn: {
-    backgroundColor: COLORS.surfaceSecondary,
-    borderRadius: 14,
-    paddingVertical: 14,
-    paddingHorizontal: 24,
-    width: '100%',
-    alignItems: 'center',
-    marginTop: 4,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-  confirmSignOutText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: COLORS.text,
-  },
-  confirmCancelBtn: {
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    width: '100%',
-    alignItems: 'center',
-  },
-  confirmCancelText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: COLORS.textSecondary,
-  },
+  safe: { flex: 1, backgroundColor: COLORS.background },
+  scroll: { flex: 1 },
+  content: { padding: 16, paddingBottom: 100 },
+  headerRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 20 },
+  backBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 12, backgroundColor: COLORS.surface, borderWidth: 2, borderColor: COLORS.border },
+  backText: { fontSize: 14, fontWeight: '700', color: COLORS.textSecondary },
+  pageTitle: { fontSize: 24, fontWeight: '900', color: COLORS.text },
+  card: { backgroundColor: COLORS.surface, borderRadius: 24, borderWidth: 2, borderColor: COLORS.border, padding: 20, marginBottom: 16 },
+  cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 },
+  iconCircle: { width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  cardTitle: { fontSize: 16, fontWeight: '800', color: COLORS.text },
+  cardDesc: { fontSize: 11, color: COLORS.textTertiary, marginBottom: 12 },
+  fieldLabel: { fontSize: 11, fontWeight: '700', color: COLORS.textTertiary, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 },
+  nameRow: { flexDirection: 'row', gap: 8, marginBottom: 4 },
+  nameInput: { flex: 1, borderWidth: 2, borderColor: COLORS.border, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10, fontSize: 14, fontWeight: '700', color: COLORS.text, backgroundColor: COLORS.background },
+  nameInputError: { borderColor: COLORS.danger },
+  saveBtn: { paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12, backgroundColor: COLORS.text, alignItems: 'center', justifyContent: 'center' },
+  saveBtnText: { color: '#fff', fontSize: 14, fontWeight: '700' },
+  nameError: { fontSize: 12, fontWeight: '700', color: COLORS.danger, marginBottom: 8 },
+  linkRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, borderTopWidth: 1, borderTopColor: COLORS.border },
+  dangerRow: { borderTopColor: '#FEE2E2' },
+  linkText: { flex: 1, fontSize: 14, fontWeight: '700', color: COLORS.text },
+  langGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  langBtn: { padding: 8, borderRadius: 16, borderWidth: 2, borderColor: COLORS.border, alignItems: 'center', minWidth: 64 },
+  langBtnActive: { borderColor: '#10B981', backgroundColor: '#F0FDF4' },
+  langFlag: { fontSize: 20, marginBottom: 2 },
+  langLabel: { fontSize: 9, fontWeight: '700', color: COLORS.text, textAlign: 'center' },
+  subToggles: { marginLeft: 24, paddingLeft: 12, borderLeftWidth: 2, borderLeftColor: COLORS.border },
+  hapticsSection: { marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: COLORS.border },
+  hapticsRow: { flexDirection: 'row', gap: 6 },
+  hapticBtn: { flex: 1, paddingVertical: 8, borderRadius: 12, backgroundColor: COLORS.background, alignItems: 'center' },
+  hapticBtnActive: { backgroundColor: COLORS.primary },
+  hapticBtnText: { fontSize: 12, fontWeight: '700', color: COLORS.textSecondary },
+  hapticBtnTextActive: { color: '#fff' },
+  toggleRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 8, gap: 12 },
+  toggleLabel: { fontSize: 14, fontWeight: '700', color: COLORS.text },
+  toggleDesc: { fontSize: 10, color: COLORS.textTertiary, marginTop: 1 },
+  toggleTrack: { width: 44, height: 24, borderRadius: 12, backgroundColor: COLORS.border, position: 'relative' },
+  toggleTrackOn: { backgroundColor: COLORS.primary },
+  toggleThumb: { position: 'absolute', top: 2, left: 2, width: 20, height: 20, borderRadius: 10, backgroundColor: '#fff', shadowColor: '#000', shadowOpacity: 0.15, shadowRadius: 2, shadowOffset: { width: 0, height: 1 } },
+  toggleThumbOn: { left: 22 },
+  signOutBtn: { marginTop: 8, padding: 16, borderRadius: 16, borderWidth: 2, borderColor: COLORS.border, alignItems: 'center', backgroundColor: COLORS.surface },
+  signOutText: { fontSize: 16, fontWeight: '800', color: COLORS.text },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', alignItems: 'center', justifyContent: 'center', padding: 24 },
+  modalCard: { backgroundColor: '#fff', borderRadius: 24, padding: 24, width: '100%', maxWidth: 360 },
+  modalTitle: { fontSize: 20, fontWeight: '900', color: COLORS.text, marginBottom: 8, textAlign: 'center' },
+  modalBody: { fontSize: 14, color: COLORS.textSecondary, marginBottom: 20, textAlign: 'center', lineHeight: 20 },
+  modalBtns: { flexDirection: 'row', gap: 8 },
+  modalBtnSecondary: { flex: 1, paddingVertical: 12, borderRadius: 12, borderWidth: 2, borderColor: COLORS.border, alignItems: 'center' },
+  modalBtnSecondaryText: { fontSize: 14, fontWeight: '700', color: COLORS.textSecondary },
+  modalBtnPrimary: { flex: 1, paddingVertical: 12, borderRadius: 12, backgroundColor: COLORS.text, alignItems: 'center' },
+  modalBtnPrimaryText: { fontSize: 14, fontWeight: '700', color: '#fff' },
 });
