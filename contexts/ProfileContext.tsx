@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useState, useEffect, useCallback, useContext } from 'react';
 import { supabase } from '@/utils/supabase';
 
 export interface PlayerProfile {
@@ -166,7 +166,7 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
 }
 
 export function useProfile() {
-  const ctx = React.use(ProfileContext);
+  const ctx = useContext(ProfileContext);
   if (!ctx) throw new Error('useProfile must be used within ProfileProvider');
   return ctx;
 }
