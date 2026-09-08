@@ -147,7 +147,7 @@ export default function CollectionScreen() {
             <Text style={styles.labCardName}>{name}</Text>
             <View style={styles.levelDots}>
               {Array.from({ length: maxLevel }).map((_, i) => (
-                <View key={i} style={[styles.levelDot, i < level && styles.levelDotFilled]} />
+                <View key={i} style={[styles.levelDot, i < level ? styles.levelDotFilled : null]} />
               ))}
             </View>
             {!isMaxed && (
@@ -193,11 +193,7 @@ export default function CollectionScreen() {
       const msg = e instanceof Error ? e.message : String(e);
       const stack = e instanceof Error ? e.stack : '';
       console.error('[Lab] renderCard ERROR:', msg, stack);
-      return (
-        <View style={{ padding: 8, backgroundColor: '#1f0000' }}>
-          <Text style={{ color: '#ef4444', fontSize: 10 }}>{msg}</Text>
-        </View>
-      );
+      return null;
     }
   };
 

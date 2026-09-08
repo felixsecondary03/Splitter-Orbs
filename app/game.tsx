@@ -35,6 +35,7 @@ import {
 import type { GameState, Tower, Loadout } from '@/game/engine-types';
 import type { TowerType, AbilityType, OrbType } from '@/game/constants';
 import { TOWER_COSTS, TOWER_TYPES, UPGRADE_COST_MULT_ARRAY, SELL_RATIO, GAME_WIDTH, GAME_HEIGHT, WALL_Y } from '@/game/constants';
+import { TowerIcon } from '@/components/TowerIcon';
 import { distance } from '@/game/engine-helpers';
 import type { MatchMode } from '@/game/engine-types';
 import { useGameLoop } from '@/hooks/useGameLoop';
@@ -617,16 +618,7 @@ export default function GameScreen() {
                   handleSelectTower(isSelected ? null : towerType);
                 }}
               >
-                <View style={{
-                  width: 32, height: 32, borderRadius: 6,
-                  backgroundColor: (TOWER_TYPES[towerType]?.color ?? '#64748b') + '33',
-                  borderWidth: 1.5, borderColor: TOWER_TYPES[towerType]?.color ?? '#64748b',
-                  alignItems: 'center', justifyContent: 'center',
-                }}>
-                  <Text style={{ fontSize: 11, color: TOWER_TYPES[towerType]?.color ?? '#64748b', fontWeight: '700' }}>
-                    {(TOWER_TYPES[towerType]?.name ?? towerType).slice(0, 2).toUpperCase()}
-                  </Text>
-                </View>
+                <TowerIcon type={towerType} size={32} />
                 <Text style={[styles.towerCost, !canAfford && { color: COLORS.textTertiary }]}>
                   {cost}
                 </Text>

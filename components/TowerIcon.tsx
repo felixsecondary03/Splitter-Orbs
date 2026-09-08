@@ -1,4 +1,5 @@
 import React from 'react';
+import { Platform } from 'react-native';
 import Svg, {
   Defs, LinearGradient, RadialGradient, Stop,
   Ellipse, Polygon, Rect, Line, Circle, Path, G,
@@ -25,25 +26,34 @@ export function TowerIcon({ type, size = 36, level = 1 }: TowerIconProps) {
 
   const levelPips = Array.from({ length: level });
 
+  // On web, gradients crash — use solid fallback colors
+  const isWeb = Platform.OS === 'web';
+  const stoneFill = isWeb ? '#94a3b8' : `url(#${stoneId})`;
+  const glowFill = isWeb ? c : `url(#${glowId})`;
+
   return (
     <Svg viewBox="0 0 48 64" width={size} height={h}>
       <Defs>
-        <LinearGradient id={stoneId} x1="0" x2="1" y1="0" y2="0">
-          <Stop offset="0" stopColor="#cbd5e1" />
-          <Stop offset="0.5" stopColor="#94a3b8" />
-          <Stop offset="1" stopColor="#64748b" />
-        </LinearGradient>
-        <RadialGradient id={glowId} cx="50%" cy="50%" r="50%">
-          <Stop offset="0" stopColor={c} stopOpacity="0.9" />
-          <Stop offset="1" stopColor={c} stopOpacity="0" />
-        </RadialGradient>
+        {!isWeb ? (
+          <LinearGradient id={stoneId} x1="0" x2="1" y1="0" y2="0">
+            <Stop offset="0" stopColor="#cbd5e1" />
+            <Stop offset="0.5" stopColor="#94a3b8" />
+            <Stop offset="1" stopColor="#64748b" />
+          </LinearGradient>
+        ) : null}
+        {!isWeb ? (
+          <RadialGradient id={glowId} cx="50%" cy="50%" r="50%">
+            <Stop offset="0" stopColor={c} stopOpacity="0.9" />
+            <Stop offset="1" stopColor={c} stopOpacity="0" />
+          </RadialGradient>
+        ) : null}
       </Defs>
 
       {/* Shadow */}
       <Ellipse cx="24" cy="60" rx="16" ry="3" fill="rgba(15,23,42,0.18)" />
 
       {/* Stone base trapezoid */}
-      <Polygon points="8,56 12,34 36,34 40,56" fill={`url(#${stoneId})`} />
+      <Polygon points="8,56 12,34 36,34 40,56" fill={stoneFill} />
       <Rect x="8" y="34" width="4" height="22" fill="rgba(255,255,255,0.25)" />
       <Rect x="36" y="34" width="4" height="22" fill="rgba(15,23,42,0.2)" />
       <Line x1="8" y1="45" x2="40" y2="45" stroke="rgba(15,23,42,0.2)" strokeWidth="1" />
@@ -56,7 +66,7 @@ export function TowerIcon({ type, size = 36, level = 1 }: TowerIconProps) {
       {level >= 3 && <Rect x="29" y={top - 5} width="4" height="5" fill="#cbd5e1" />}
 
       {/* Glow halo */}
-      <Circle cx="24" cy="22" r="13" fill={`url(#${glowId})`} opacity="0.7" />
+      <Circle cx="24" cy="22" r="13" fill={glowFill} opacity="0.7" />
 
       {/* Crystal per type */}
       <G fill={c}>
