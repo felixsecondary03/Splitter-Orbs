@@ -5,10 +5,10 @@ import {
   TouchableOpacity,
   ScrollView,
   StyleSheet,
-  SafeAreaView,
   ActivityIndicator,
   Alert,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS } from '@/constants/Colors';
 import { supabase } from '@/utils/supabase';
 import { useProfile } from '@/contexts/ProfileContext';
@@ -31,13 +31,9 @@ const ABILITY_ICONS: Record<string, string> = {
 
 export default function CollectionScreen() {
   const { t } = useTranslation();
-  const { profile, refreshProfile, isLoading } = useProfile();
+  const { profile, refreshProfile } = useProfile();
   const [tab, setTab] = useState<LabTab>('towers');
   const [busy, setBusy] = useState<string | null>(null);
-
-  if (isLoading) {
-    return <ActivityIndicator size="large" color={COLORS.primary} style={{ flex: 1, marginTop: 80 }} />;
-  }
 
   const getCardData = (
     category: 'tower_cards' | 'orb_cards' | 'ability_cards',
