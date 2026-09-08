@@ -31,18 +31,12 @@ const ABILITY_ICONS: Record<string, string> = {
 
 export default function CollectionScreen() {
   const { t } = useTranslation();
-  const { profile, refreshProfile } = useProfile();
+  const { profile, refreshProfile, isLoading } = useProfile();
   const [tab, setTab] = useState<LabTab>('towers');
   const [busy, setBusy] = useState<string | null>(null);
 
-  if (!profile || !profile.id) {
-    return (
-      <SafeAreaView style={styles.safe}>
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-          <Text style={{ color: COLORS.textSecondary }}>Loading...</Text>
-        </View>
-      </SafeAreaView>
-    );
+  if (isLoading) {
+    return <ActivityIndicator size="large" color={COLORS.primary} style={{ flex: 1, marginTop: 80 }} />;
   }
 
   const getCardData = (
@@ -59,6 +53,10 @@ export default function CollectionScreen() {
 
   const handleLevelUp = async (category: string, id: string) => {
     console.log('[Lab] Level Up pressed:', category, id);
+    if (!profile.id) {
+      Alert.alert('Anmelden erforderlich', 'Melde dich an, um Karten zu verbessern.');
+      return;
+    }
     setBusy(id);
     try {
       const { error } = await supabase.functions.invoke('level-up-card', {
@@ -76,6 +74,10 @@ export default function CollectionScreen() {
 
   const handleBuyCopy = async (category: string, id: string) => {
     console.log('[Lab] Buy Copy pressed:', category, id);
+    if (!profile.id) {
+      Alert.alert('Anmelden erforderlich', 'Melde dich an, um Karten zu verbessern.');
+      return;
+    }
     setBusy(id + '_buy');
     try {
       const { error } = await supabase.functions.invoke('buy-card-copy', {
@@ -93,6 +95,10 @@ export default function CollectionScreen() {
 
   const handleUpgradeMeta = async (type: 'hand' | 'side_tower') => {
     console.log('[Lab] Upgrade meta pressed:', type);
+    if (!profile.id) {
+      Alert.alert('Anmelden erforderlich', 'Melde dich an, um Karten zu verbessern.');
+      return;
+    }
     setBusy(type);
     try {
       const fn = type === 'hand' ? 'upgrade-hand' : 'upgrade-side-tower';

@@ -487,7 +487,45 @@ export default function GameScreen() {
 
       {/* ── Game Canvas ── */}
       {Platform.OS === 'web' ? (
-        <View style={{ width: canvasWidth, height: canvasHeight }}>
+        <Pressable
+          style={{ width: canvasWidth, height: canvasHeight }}
+          onPress={(e) => {
+            const x = e.nativeEvent.locationX;
+            const y = e.nativeEvent.locationY;
+            const gameX = (x / canvasWidth) * GAME_WIDTH;
+            const gameY = (y / canvasHeight) * GAME_HEIGHT;
+
+            console.log(`[Game] Web tap at screen=(${x.toFixed(0)},${y.toFixed(0)}) game=(${gameX.toFixed(0)},${gameY.toFixed(0)})`);
+
+            const state = gameStateRef.current as GameState;
+
+            if (state.aiming) {
+              console.log(`[Game] Web confirming aim at game=(${gameX.toFixed(0)},${gameY.toFixed(0)})`);
+              dispatch((s) => confirmAim(s, gameX, gameY));
+              return;
+            }
+
+            const coin = findCoinAtPosition(state, gameX, gameY);
+            if (coin) {
+              console.log(`[Game] Web collecting coin id=${coin.id}`);
+              dispatch((s) => collectCoin(s, coin.id));
+              return;
+            }
+
+            const tappedOrb = findOrbAtPosition(state, gameX, gameY);
+            if (tappedOrb) {
+              console.log(`[Game] Web tapped orb id=${tappedOrb.id}`);
+              dispatch((s) => clickOrb(s, tappedOrb.id));
+              return;
+            }
+
+            if (state.player.selectedTower && gameY > WALL_Y) {
+              console.log(`[Game] Web placing tower type=${state.player.selectedTower} at game=(${gameX.toFixed(0)},${gameY.toFixed(0)})`);
+              dispatch((s) => placeTower(s, s.player.selectedTower!, gameX, gameY));
+              return;
+            }
+          }}
+        >
           <GameCanvas
             state={renderState}
             width={canvasWidth}
@@ -503,7 +541,7 @@ export default function GameScreen() {
               </Pressable>
             </View>
           )}
-        </View>
+        </Pressable>
       ) : (
         <GestureDetector gesture={composedGesture}>
           <View style={{ width: canvasWidth, height: canvasHeight }}>

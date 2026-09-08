@@ -118,10 +118,15 @@ export default function SetupScreen() {
 
   const start = async () => {
     console.log('[Setup] Start Match pressed', { mode, difficulty, towers, orbs, abilities });
-    try {
-      await supabase.functions.invoke('set-loadout', { body: { towers, orbs, abilities } });
-    } catch (e) {
-      console.warn('[Setup] set-loadout error', e);
+    if (profile.id) {
+      try {
+        console.log('[Setup] Saving loadout for user', profile.id);
+        await supabase.functions.invoke('set-loadout', { body: { towers, orbs, abilities } });
+      } catch (e) {
+        console.warn('[Setup] set-loadout error', e);
+      }
+    } else {
+      console.log('[Setup] Guest mode — skipping set-loadout');
     }
     const engineMode =
       mode === 'training' ? `ai_${difficulty}` : mode === 'casual' ? 'ai_normal' : 'ranked';

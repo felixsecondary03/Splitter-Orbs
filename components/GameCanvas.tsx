@@ -52,29 +52,9 @@ interface GameCanvasProps {
   onFieldTap: (x: number, y: number) => void;
 }
 
-export function GameCanvas({ state, width, height }: GameCanvasProps) {
-  // Guard against Skia not being ready (web WASM async init).
-  // useIsReady() is the canonical hook but is not available in this Skia version (2.2.12).
-  // We probe Skia.Path.Make() safely — if it throws or returns a non-object, Skia isn't ready.
-  const [skiaReady, setSkiaReady] = React.useState(() => {
-    try { const p = Skia.Path.Make(); p.close(); return true; } catch { return false; }
-  });
-  React.useEffect(() => {
-    if (skiaReady) return;
-    let cancelled = false;
-    const check = () => {
-      try {
-        const p = Skia.Path.Make(); p.close();
-        if (!cancelled) setSkiaReady(true);
-      } catch {
-        if (!cancelled) setTimeout(check, 100);
-      }
-    };
-    check();
-    return () => { cancelled = true; };
-  }, [skiaReady]);
-  if (!skiaReady) return null;
+// ─── Inner component — all Skia hooks live here, only mounted once Skia is ready ───
 
+function GameCanvasInner({ state, width, height }: GameCanvasProps) {
   const scaleX = width / GAME_WIDTH;
   const scaleY = height / GAME_HEIGHT;
 
@@ -287,6 +267,33 @@ export function GameCanvas({ state, width, height }: GameCanvasProps) {
       </Group>
     </Canvas>
   );
+}
+
+// ─── Thin shell — guards against Skia WASM not being ready on web ─────────────
+
+export function GameCanvas(props: GameCanvasProps) {
+  // Guard against Skia not being ready (web WASM async init).
+  // useIsReady() is the canonical hook but is not available in this Skia version (2.2.12).
+  // We probe Skia.Path.Make() safely — if it throws or returns a non-object, Skia isn't ready.
+  const [skiaReady, setSkiaReady] = React.useState(() => {
+    try { const p = Skia.Path.Make(); p.close(); return true; } catch { return false; }
+  });
+  React.useEffect(() => {
+    if (skiaReady) return;
+    let cancelled = false;
+    const check = () => {
+      try {
+        const p = Skia.Path.Make(); p.close();
+        if (!cancelled) setSkiaReady(true);
+      } catch {
+        if (!cancelled) setTimeout(check, 100);
+      }
+    };
+    check();
+    return () => { cancelled = true; };
+  }, [skiaReady]);
+  if (!skiaReady) return null;
+  return <GameCanvasInner {...props} />;
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────

@@ -85,12 +85,14 @@ interface ProfileContextType {
   setProfile: (p: PlayerProfile) => void;
   updateProfile: (partial: Partial<PlayerProfile>) => Promise<void>;
   refreshProfile: () => Promise<void>;
+  isLoading: boolean;
 }
 
 const ProfileContext = createContext<ProfileContextType | null>(null);
 
 export function ProfileProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<PlayerProfile>(DEFAULT_PROFILE);
+  const [isLoading, setIsLoading] = useState(true);
 
   const refreshProfile = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -119,7 +121,12 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
     supabase.auth.getSession().then(({ data }) => {
       if (data.session?.user) {
         console.log('[Profile] Session found on mount, loading profile');
-        refreshProfile();
+        refreshProfile().finally(() => {
+          setIsLoading(false);
+        });
+      } else {
+        console.log('[Profile] No session on mount, guest mode');
+        setIsLoading(false);
       }
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -152,7 +159,7 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <ProfileContext.Provider value={{ profile, setProfile, updateProfile, refreshProfile }}>
+    <ProfileContext.Provider value={{ profile, setProfile, updateProfile, refreshProfile, isLoading }}>
       {children}
     </ProfileContext.Provider>
   );
