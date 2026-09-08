@@ -836,3 +836,5 @@ export function GameCanvasInner({
     </GestureDetector>
   );
 }
+
+export default GameCanvasInner;

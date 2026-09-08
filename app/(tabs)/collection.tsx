@@ -13,13 +13,12 @@ import { COLORS } from '@/constants/Colors';
 import { supabase } from '@/utils/supabase';
 import { useProfile } from '@/contexts/ProfileContext';
 import { useTranslation } from '@/i18n/LanguageContext';
-import { TowerIcon } from '@/components/TowerIcon';
 import {
   TOWER_TYPES, ORB_TYPES, ABILITIES, SENDABLE_ORBS,
   SHARD_CARD_PRICES, CARD_COPIES_NEEDED, MAX_CARD_LEVEL,
   HAND_UPGRADE_COSTS, SIDE_TOWER_UPGRADE_COSTS,
 } from '@/game/constants';
-import type { TowerType, OrbType, AbilityType } from '@/game/constants';
+import type { OrbType } from '@/game/constants';
 
 type LabTab = 'towers' | 'orbs' | 'powers' | 'upgrades';
 
@@ -29,16 +28,21 @@ const ABILITY_ICONS: Record<string, string> = {
   speed_zone: '💨', damage_zone: '💢', frost_zone: '🌨️', deep_freeze: '🧊',
 };
 
+// ─── Screen ───────────────────────────────────────────────────────────────────
+
 export default function CollectionScreen() {
   const { t } = useTranslation();
   const { profile, refreshProfile } = useProfile();
   const [tab, setTab] = useState<LabTab>('towers');
   const [busy, setBusy] = useState<string | null>(null);
 
+  console.log('[Lab] render', { profileId: profile?.id, isLoading: false });
+
   const getCardData = (
     category: 'tower_cards' | 'orb_cards' | 'ability_cards',
     id: string
   ) => {
+    if (!profile) return { level: 0, copies: 0, boughtCopies: 0 };
     const cards =
       category === 'tower_cards' ? profile.tower_cards :
       category === 'orb_cards' ? profile.orb_cards :
@@ -61,9 +65,10 @@ export default function CollectionScreen() {
       if (error) throw error;
       console.log('[Lab] Level Up success:', id);
       await refreshProfile();
-    } catch (e: any) {
-      console.warn('[Lab] level-up-card error', e?.message);
-      Alert.alert('Error', e?.message || 'Could not level up card');
+    } catch (e: unknown) {
+      const msg = (e as Error)?.message;
+      console.warn('[Lab] level-up-card error', msg);
+      Alert.alert('Error', msg || 'Could not level up card');
     }
     setBusy(null);
   };
@@ -82,9 +87,10 @@ export default function CollectionScreen() {
       if (error) throw error;
       console.log('[Lab] Buy Copy success:', id);
       await refreshProfile();
-    } catch (e: any) {
-      console.warn('[Lab] buy-card-copy error', e?.message);
-      Alert.alert('Error', e?.message || 'Could not buy copy');
+    } catch (e: unknown) {
+      const msg = (e as Error)?.message;
+      console.warn('[Lab] buy-card-copy error', msg);
+      Alert.alert('Error', msg || 'Could not buy copy');
     }
     setBusy(null);
   };
@@ -102,9 +108,10 @@ export default function CollectionScreen() {
       if (error) throw error;
       console.log('[Lab] Upgrade meta success:', type);
       await refreshProfile();
-    } catch (e: any) {
-      console.warn('[Lab] upgrade meta error', e?.message);
-      Alert.alert('Error', e?.message || 'Could not upgrade');
+    } catch (e: unknown) {
+      const msg = (e as Error)?.message;
+      console.warn('[Lab] upgrade meta error', msg);
+      Alert.alert('Error', msg || 'Could not upgrade');
     }
     setBusy(null);
   };
@@ -115,84 +122,96 @@ export default function CollectionScreen() {
     visual: React.ReactNode,
     name: string
   ) => {
-    const cardData = getCardData(category, id);
-    const level = cardData.level;
-    const copies = cardData.copies;
-    const maxLevel = MAX_CARD_LEVEL;
-    const isMaxed = level >= maxLevel;
-    const copiesNeeded = CARD_COPIES_NEEDED[level] ?? (level === 0 ? 2 : 999);
-    const canLevel = copies >= copiesNeeded && level < maxLevel;
-    const shardCost = SHARD_CARD_PRICES[level] ?? 0;
-    const isBusy = busy === id;
-    const isBuyBusy = busy === id + '_buy';
-    const buyCopyCost = SHARD_CARD_PRICES[0] || 4;
+    try {
+      const cardData = getCardData(category, id);
+      const level = cardData.level;
+      const copies = cardData.copies;
+      const maxLevel = MAX_CARD_LEVEL;
+      const isMaxed = level >= maxLevel;
+      const copiesNeeded = CARD_COPIES_NEEDED[level] ?? (level === 0 ? 2 : 999);
+      const canLevel = copies >= copiesNeeded && level < maxLevel;
+      const shardCost = SHARD_CARD_PRICES[level] ?? 0;
+      const isBusy = busy === id;
+      const isBuyBusy = busy === id + '_buy';
+      const buyCopyCost = SHARD_CARD_PRICES[0] || 4;
 
-    return (
-      <View key={id} style={styles.labCard}>
-        <View style={styles.labCardVisual}>{visual}</View>
-        <View style={styles.labCardInfo}>
-          <Text style={styles.labCardName}>{name}</Text>
-          <View style={styles.levelDots}>
-            {Array.from({ length: maxLevel }).map((_, i) => (
-              <View key={i} style={[styles.levelDot, i < level && styles.levelDotFilled]} />
-            ))}
-          </View>
-          {!isMaxed && (
-            <Text style={styles.copiesText}>
-              {copies}/{copiesNeeded} {t('collection.copies')}
-            </Text>
-          )}
-        </View>
-        <View style={styles.labCardAction}>
-          {isMaxed ? (
-            <View style={styles.maxBadge}>
-              <Text style={styles.maxBadgeText}>{t('collection.maxLevel')}</Text>
+      const levelUpLabel = shardCost > 0
+        ? t('collection.levelUpShards', { n: shardCost })
+        : t('collection.levelUpFree');
+      const buyCopyLabel = t('collection.buyCopy', { n: buyCopyCost });
+
+      return (
+        <View key={id} style={styles.labCard}>
+          <View style={styles.labCardVisual}>{visual}</View>
+          <View style={styles.labCardInfo}>
+            <Text style={styles.labCardName}>{name}</Text>
+            <View style={styles.levelDots}>
+              {Array.from({ length: maxLevel }).map((_, i) => (
+                <View key={i} style={[styles.levelDot, i < level && styles.levelDotFilled]} />
+              ))}
             </View>
-          ) : canLevel ? (
-            <TouchableOpacity
-              onPress={() => handleLevelUp(category, id)}
-              disabled={!!isBusy}
-              style={styles.levelUpBtn}
-            >
-              {isBusy ? (
-                <ActivityIndicator size="small" color="#fff" />
-              ) : (
-                <Text style={styles.levelUpBtnText}>
-                  {shardCost > 0
-                    ? t('collection.levelUpShards', { n: shardCost })
-                    : t('collection.levelUpFree')}
-                </Text>
-              )}
-            </TouchableOpacity>
-          ) : (
-            <TouchableOpacity
-              onPress={() => handleBuyCopy(category, id)}
-              disabled={!!isBuyBusy}
-              style={styles.buyBtn}
-            >
-              {isBuyBusy ? (
-                <ActivityIndicator size="small" color={COLORS.primary} />
-              ) : (
-                <Text style={styles.buyBtnText}>
-                  {t('collection.buyCopy', { n: buyCopyCost })}
-                </Text>
-              )}
-            </TouchableOpacity>
-          )}
+            {!isMaxed && (
+              <Text style={styles.copiesText}>
+                {copies}/{copiesNeeded} {t('collection.copies')}
+              </Text>
+            )}
+          </View>
+          <View style={styles.labCardAction}>
+            {isMaxed ? (
+              <View style={styles.maxBadge}>
+                <Text style={styles.maxBadgeText}>{t('collection.maxLevel')}</Text>
+              </View>
+            ) : canLevel ? (
+              <TouchableOpacity
+                onPress={() => handleLevelUp(category, id)}
+                disabled={!!isBusy}
+                style={styles.levelUpBtn}
+              >
+                {isBusy ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Text style={styles.levelUpBtnText}>{levelUpLabel}</Text>
+                )}
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                onPress={() => handleBuyCopy(category, id)}
+                disabled={!!isBuyBusy}
+                style={styles.buyBtn}
+              >
+                {isBuyBusy ? (
+                  <ActivityIndicator size="small" color={COLORS.primary} />
+                ) : (
+                  <Text style={styles.buyBtnText}>{buyCopyLabel}</Text>
+                )}
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
-      </View>
-    );
+      );
+    } catch (e) {
+      console.error('[Lab] renderCard error', e);
+      return null;
+    }
   };
 
   const renderTowers = () =>
-    Object.values(TOWER_TYPES).map((def) =>
-      renderCard(
-        'tower_cards',
-        def.id,
-        <TowerIcon type={def.id as TowerType} size={36} />,
-        def.name
-      )
-    );
+    Object.values(TOWER_TYPES).map((def) => {
+      const towerInitials = def.name.slice(0, 2).toUpperCase();
+      const towerVisual = (
+        <View style={{
+          width: 36, height: 36, borderRadius: 8,
+          backgroundColor: def.color + '33',
+          borderWidth: 1.5, borderColor: def.color,
+          alignItems: 'center', justifyContent: 'center',
+        }}>
+          <Text style={{ fontSize: 14, color: def.color, fontWeight: '700' }}>
+            {towerInitials}
+          </Text>
+        </View>
+      );
+      return renderCard('tower_cards', def.id, towerVisual, def.name);
+    });
 
   const renderOrbs = () =>
     SENDABLE_ORBS.map((id) => {

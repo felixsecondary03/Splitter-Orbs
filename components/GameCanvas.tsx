@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { Platform, View } from 'react-native';
-import { GameCanvasInner } from './GameCanvasInner';
 import type { GameCanvasProps } from './GameCanvasInner';
 
 export type { GameCanvasProps };
+
+const LazyGameCanvasInner = React.lazy(() => import('./GameCanvasInner'));
 
 export function GameCanvas(props: GameCanvasProps) {
   const [skiaReady, setSkiaReady] = useState(Platform.OS !== 'web');
@@ -26,10 +27,12 @@ export function GameCanvas(props: GameCanvasProps) {
   }, []);
 
   if (!skiaReady) {
-    return (
-      <View style={{ width: props.width, height: props.height, backgroundColor: '#0A0E1A' }} />
-    );
+    return <View style={{ width: props.width, height: props.height, backgroundColor: '#0A0E1A' }} />;
   }
 
-  return <GameCanvasInner {...props} />;
+  return (
+    <Suspense fallback={<View style={{ width: props.width, height: props.height, backgroundColor: '#0A0E1A' }} />}>
+      <LazyGameCanvasInner {...props} />
+    </Suspense>
+  );
 }
