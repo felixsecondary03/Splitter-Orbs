@@ -1,4 +1,4 @@
-import React, { useRef, useState, useCallback, useEffect } from 'react';
+import React, { useRef, useState, useCallback, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   ScrollView,
   Modal,
   useWindowDimensions,
+  Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
@@ -157,7 +158,18 @@ export default function GameScreen() {
   const [selectedTowerMenu, setSelectedTowerMenu] = useState<Tower | null>(null);
   const [showPauseMenu, setShowPauseMenu] = useState(false);
 
-  const initialState = useRef(createInitialState(engineMode, 0, seed, loadout)).current;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const initialState = useMemo(() => {
+    try {
+      console.log('[Game] createInitialState', { engineMode, seed });
+      return createInitialState(engineMode, 0, seed, loadout);
+    } catch (e) {
+      console.error('[Game] createInitialState failed, using fallback:', e);
+      return createInitialState('ai_normal', 0, Date.now(), DEFAULT_LOADOUT);
+    }
+  // Only run once on mount — seed and loadout are stable at this point
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Notify backend that match has started
   useEffect(() => {
@@ -387,19 +399,19 @@ export default function GameScreen() {
     dispatch((s) => cancelAim(s));
   }, [dispatch]);
 
-  // ── Derived display values ──
-  const playerHp = renderState.player.station.hp;
-  const playerMaxHp = renderState.player.station.maxHp;
-  const oppHp = renderState.opponent.station.hp;
-  const oppMaxHp = renderState.opponent.station.maxHp;
-  const playerCoins = Math.floor(renderState.player.coins);
-  const oppCoins = Math.floor(renderState.opponent.coins);
-  const timeDisplay = formatTime(renderState.time);
-  const selectedTowerType = renderState.player.selectedTower;
-  const isAiming = renderState.aiming !== null;
-  const clicksLeft = renderState.player.clicks;
-  const maxClicks = renderState.player.maxClicks;
-  const escalationTier = renderState.escalationTier;
+  // ── Derived display values (null-guarded for safety during first render) ──
+  const playerHp = renderState?.player?.station?.hp ?? 0;
+  const playerMaxHp = renderState?.player?.station?.maxHp ?? 100;
+  const oppHp = renderState?.opponent?.station?.hp ?? 0;
+  const oppMaxHp = renderState?.opponent?.station?.maxHp ?? 100;
+  const playerCoins = Math.floor(renderState?.player?.coins ?? 0);
+  const oppCoins = Math.floor(renderState?.opponent?.coins ?? 0);
+  const timeDisplay = formatTime(renderState?.time ?? 0);
+  const selectedTowerType = renderState?.player?.selectedTower ?? null;
+  const isAiming = (renderState?.aiming ?? null) !== null;
+  const clicksLeft = renderState?.player?.clicks ?? 0;
+  const maxClicks = renderState?.player?.maxClicks ?? 5;
+  const escalationTier = renderState?.escalationTier ?? 'none';
 
   const escalationLabel: Record<string, string> = {
     overtime: 'OT',
@@ -474,7 +486,7 @@ export default function GameScreen() {
       </View>
 
       {/* ── Game Canvas ── */}
-      <GestureDetector gesture={composedGesture}>
+      {Platform.OS === 'web' ? (
         <View style={{ width: canvasWidth, height: canvasHeight }}>
           <GameCanvas
             state={renderState}
@@ -483,7 +495,6 @@ export default function GameScreen() {
             onOrbTap={() => {}}
             onFieldTap={() => {}}
           />
-          {/* Aiming cancel overlay */}
           {isAiming && (
             <View style={styles.aimingBanner}>
               <Text style={styles.aimingText}>Tap to aim — </Text>
@@ -493,7 +504,28 @@ export default function GameScreen() {
             </View>
           )}
         </View>
-      </GestureDetector>
+      ) : (
+        <GestureDetector gesture={composedGesture}>
+          <View style={{ width: canvasWidth, height: canvasHeight }}>
+            <GameCanvas
+              state={renderState}
+              width={canvasWidth}
+              height={canvasHeight}
+              onOrbTap={() => {}}
+              onFieldTap={() => {}}
+            />
+            {/* Aiming cancel overlay */}
+            {isAiming && (
+              <View style={styles.aimingBanner}>
+                <Text style={styles.aimingText}>Tap to aim — </Text>
+                <Pressable onPress={handleCancelAim}>
+                  <Text style={styles.aimingCancel}>Cancel</Text>
+                </Pressable>
+              </View>
+            )}
+          </View>
+        </GestureDetector>
+      )}
 
       {/* ── Bottom HUD ── */}
       <View style={[styles.bottomHud, { paddingBottom: insets.bottom + 4 }]}>
@@ -559,7 +591,7 @@ export default function GameScreen() {
 
         {/* Ability bar */}
         <View style={styles.abilityBar}>
-          {renderState.player.abilities.map((ability) => (
+          {(renderState?.player?.abilities ?? []).map((ability) => (
             <AbilityButton
               key={ability.type}
               abilityType={ability.type}

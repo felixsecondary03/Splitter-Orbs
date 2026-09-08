@@ -111,8 +111,23 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  // Safety net: load profile on mount if a session already exists.
+  // onAuthStateChange fires INITIAL_SESSION asynchronously; this ensures
+  // the profile loads even if the listener is registered after the event fires.
+  useEffect(() => {
+    console.log('[Profile] Mount-time session check');
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session?.user) {
+        console.log('[Profile] Session found on mount, loading profile');
+        refreshProfile();
+      }
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   useEffect(() => {
     const { data: listener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('[Profile] onAuthStateChange event=', event, 'hasUser=', !!session?.user);
       if (session?.user) {
         await refreshProfile();
       } else {
