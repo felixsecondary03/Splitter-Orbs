@@ -190,8 +190,14 @@ export default function CollectionScreen() {
         </View>
       );
     } catch (e) {
-      console.error('[Lab] renderCard error', e);
-      return null;
+      const msg = e instanceof Error ? e.message : String(e);
+      const stack = e instanceof Error ? e.stack : '';
+      console.error('[Lab] renderCard ERROR:', msg, stack);
+      return (
+        <View style={{ padding: 8, backgroundColor: '#1f0000' }}>
+          <Text style={{ color: '#ef4444', fontSize: 10 }}>{msg}</Text>
+        </View>
+      );
     }
   };
 

@@ -12,7 +12,6 @@ import { COLORS } from '@/constants/Colors';
 import { supabase } from '@/utils/supabase';
 import { useProfile } from '@/contexts/ProfileContext';
 import { useTranslation } from '@/i18n/LanguageContext';
-import { TowerIcon } from '@/components/TowerIcon';
 import {
   TOWER_TYPES, TOWER_LOADOUT_SIZE, STARTER_TOWERS,
   ORB_TYPES, SENDABLE_ORBS, ORB_LOADOUT_SIZE, STARTER_ORBS,
@@ -306,7 +305,16 @@ export default function SetupScreen() {
                           <Text style={styles.selBadgeText}>{selIdx + 1}</Text>
                         </View>
                       )}
-                      <TowerIcon type={def.id as TowerType} size={32} />
+                      <View style={{
+                        width: 32, height: 32, borderRadius: 6,
+                        backgroundColor: (TOWER_TYPES[def.id as TowerType]?.color ?? '#64748b') + '33',
+                        borderWidth: 1.5, borderColor: TOWER_TYPES[def.id as TowerType]?.color ?? '#64748b',
+                        alignItems: 'center', justifyContent: 'center',
+                      }}>
+                        <Text style={{ fontSize: 11, color: TOWER_TYPES[def.id as TowerType]?.color ?? '#64748b', fontWeight: '700' }}>
+                          {(TOWER_TYPES[def.id as TowerType]?.name ?? def.id).slice(0, 2).toUpperCase()}
+                        </Text>
+                      </View>
                       <Text style={styles.cardName} numberOfLines={1}>
                         {t(`towers.${def.id}.name`)}
                       </Text>

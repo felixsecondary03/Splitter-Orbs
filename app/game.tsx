@@ -18,7 +18,6 @@ import { useProfile } from '@/contexts/ProfileContext';
 import { GameCanvas } from '@/components/GameCanvas';
 import { HPBar } from '@/components/HPBar';
 import { CoinDisplay } from '@/components/CoinDisplay';
-import { TowerIcon } from '@/components/TowerIcon';
 import { AbilityButton } from '@/components/AbilityButton';
 import {
   createInitialState,
@@ -35,7 +34,7 @@ import {
 } from '@/game/engine';
 import type { GameState, Tower, Loadout } from '@/game/engine-types';
 import type { TowerType, AbilityType, OrbType } from '@/game/constants';
-import { TOWER_COSTS, UPGRADE_COST_MULT_ARRAY, SELL_RATIO, GAME_WIDTH, GAME_HEIGHT, WALL_Y } from '@/game/constants';
+import { TOWER_COSTS, TOWER_TYPES, UPGRADE_COST_MULT_ARRAY, SELL_RATIO, GAME_WIDTH, GAME_HEIGHT, WALL_Y } from '@/game/constants';
 import { distance } from '@/game/engine-helpers';
 import type { MatchMode } from '@/game/engine-types';
 import { useGameLoop } from '@/hooks/useGameLoop';
@@ -618,7 +617,16 @@ export default function GameScreen() {
                   handleSelectTower(isSelected ? null : towerType);
                 }}
               >
-                <TowerIcon type={towerType} size={30} />
+                <View style={{
+                  width: 32, height: 32, borderRadius: 6,
+                  backgroundColor: (TOWER_TYPES[towerType]?.color ?? '#64748b') + '33',
+                  borderWidth: 1.5, borderColor: TOWER_TYPES[towerType]?.color ?? '#64748b',
+                  alignItems: 'center', justifyContent: 'center',
+                }}>
+                  <Text style={{ fontSize: 11, color: TOWER_TYPES[towerType]?.color ?? '#64748b', fontWeight: '700' }}>
+                    {(TOWER_TYPES[towerType]?.name ?? towerType).slice(0, 2).toUpperCase()}
+                  </Text>
+                </View>
                 <Text style={[styles.towerCost, !canAfford && { color: COLORS.textTertiary }]}>
                   {cost}
                 </Text>
@@ -654,7 +662,16 @@ export default function GameScreen() {
             {selectedTowerMenu && (
               <>
                 <View style={styles.towerMenuHeader}>
-                  <TowerIcon type={selectedTowerMenu.type} size={36} />
+                  <View style={{
+                    width: 36, height: 36, borderRadius: 8,
+                    backgroundColor: (TOWER_TYPES[selectedTowerMenu.type]?.color ?? '#64748b') + '33',
+                    borderWidth: 1.5, borderColor: TOWER_TYPES[selectedTowerMenu.type]?.color ?? '#64748b',
+                    alignItems: 'center', justifyContent: 'center',
+                  }}>
+                    <Text style={{ fontSize: 12, color: TOWER_TYPES[selectedTowerMenu.type]?.color ?? '#64748b', fontWeight: '700' }}>
+                      {(TOWER_TYPES[selectedTowerMenu.type]?.name ?? selectedTowerMenu.type).slice(0, 2).toUpperCase()}
+                    </Text>
+                  </View>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.towerMenuName}>
                       {selectedTowerMenu.type.replace(/_/g, ' ').toUpperCase()}
