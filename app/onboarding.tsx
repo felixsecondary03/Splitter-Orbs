@@ -7,6 +7,8 @@ import {
   Animated,
   StyleSheet,
   Platform,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -15,6 +17,8 @@ import { Globe, Calendar, FileText, User, Check, ChevronLeft } from 'lucide-reac
 import { COLORS } from '@/constants/Colors';
 import { AnimatedPressable } from '@/components/AnimatedPressable';
 import { useProfile } from '@/contexts/ProfileContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/utils/supabase';
 import { CURRENT_EULA_VERSION } from '@/game/constants';
 
 const TOTAL_STEPS = 4;
@@ -64,7 +68,8 @@ For support: support@orbclash.game`;
 export default function OnboardingScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { updateProfile } = useProfile();
+  const { refreshProfile } = useProfile();
+  const { user } = useAuth();
 
   const [step, setStep] = useState(0);
   const [language, setLanguage] = useState('en');
@@ -72,6 +77,7 @@ export default function OnboardingScreen() {
   const [eulaAccepted, setEulaAccepted] = useState(false);
   const [displayName, setDisplayName] = useState('');
   const [nameError, setNameError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const slideAnim = useRef(new Animated.Value(0)).current;
 
@@ -82,25 +88,68 @@ export default function OnboardingScreen() {
     ]).start();
   };
 
+  const handleComplete = async () => {
+    const trimmed = displayName.trim();
+    if (!trimmed || trimmed.length < 2) {
+      setNameError('Display name must be at least 2 characters');
+      return;
+    }
+    if (trimmed.length > 20) {
+      setNameError('Display name must be 20 characters or less');
+      return;
+    }
+
+    console.log('[Onboarding] Completing onboarding', { language, displayName: trimmed });
+    setIsSubmitting(true);
+
+    try {
+      // Try edge function first
+      const { error: fnError } = await supabase.functions.invoke('acceptEula', {
+        body: { version: CURRENT_EULA_VERSION, display_name: trimmed },
+      });
+
+      if (fnError) {
+        console.warn('[Onboarding] acceptEula edge function failed, falling back', fnError.message);
+        // Fallback: direct table update
+        if (!user) throw new Error('Not authenticated');
+        const { error: updateError } = await supabase
+          .from('player_profiles')
+          .update({
+            onboarded: true,
+            eula_accepted_version: CURRENT_EULA_VERSION,
+            display_name: trimmed,
+            language,
+          })
+          .eq('id', user.id);
+
+        if (updateError) {
+          console.error('[Onboarding] Fallback update failed', updateError.message);
+          throw updateError;
+        }
+      } else {
+        // Also save language via direct update since edge function may not handle it
+        if (user) {
+          await supabase
+            .from('player_profiles')
+            .update({ language })
+            .eq('id', user.id);
+        }
+      }
+
+      console.log('[Onboarding] Onboarding complete, refreshing profile');
+      await refreshProfile();
+      router.replace('/(tabs)/(home)' as never);
+    } catch (e: any) {
+      console.error('[Onboarding] Completion error', e?.message ?? e);
+      Alert.alert('Error', e?.message ?? 'Something went wrong. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleNext = () => {
     if (step === 3) {
-      const trimmed = displayName.trim();
-      if (!trimmed || trimmed.length < 2) {
-        setNameError('Display name must be at least 2 characters');
-        return;
-      }
-      if (trimmed.length > 20) {
-        setNameError('Display name must be 20 characters or less');
-        return;
-      }
-      console.log('[Onboarding] Completing onboarding', { language, birthDate, displayName: trimmed });
-      updateProfile({
-        language,
-        display_name: trimmed,
-        eula_accepted_version: CURRENT_EULA_VERSION,
-        onboarded: true,
-      });
-      router.replace('/(tabs)/(home)');
+      handleComplete();
       return;
     }
     console.log('[Onboarding] Next pressed', { step });
@@ -109,7 +158,11 @@ export default function OnboardingScreen() {
   };
 
   const handleBack = () => {
-    if (step === 0) return;
+    if (step === 0) {
+      console.log('[Onboarding] Back pressed on step 0, navigating to welcome');
+      router.replace('/auth/welcome' as never);
+      return;
+    }
     console.log('[Onboarding] Back pressed', { step });
     animateStep(-1);
     setStep((s) => s - 1);
@@ -127,7 +180,7 @@ export default function OnboardingScreen() {
 
   const canProceed = () => {
     if (step === 2) return eulaAccepted;
-    if (step === 3) return displayName.trim().length >= 2;
+    if (step === 3) return displayName.trim().length >= 2 && !isSubmitting;
     return true;
   };
 
@@ -137,6 +190,8 @@ export default function OnboardingScreen() {
     const m = today.getMonth() - birthDate.getMonth();
     return age < 13 || (age === 13 && m < 0);
   };
+
+  const nextBtnLabel = step === TOTAL_STEPS - 1 ? 'Start playing' : 'Next';
 
   return (
     <View style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom + 24 }]}>
@@ -276,21 +331,21 @@ export default function OnboardingScreen() {
 
       {/* Navigation */}
       <View style={styles.navRow}>
-        {step > 0 ? (
-          <AnimatedPressable style={styles.backBtn} onPress={handleBack}>
-            <ChevronLeft size={20} color={COLORS.textSecondary} strokeWidth={2} />
-            <Text style={styles.backText}>Back</Text>
-          </AnimatedPressable>
-        ) : (
-          <View style={styles.backBtn} />
-        )}
+        <AnimatedPressable style={styles.backBtn} onPress={handleBack}>
+          <ChevronLeft size={20} color={COLORS.textSecondary} strokeWidth={2} />
+          <Text style={styles.backText}>Back</Text>
+        </AnimatedPressable>
 
         <AnimatedPressable
           style={[styles.nextBtn, !canProceed() && { opacity: 0.4 }]}
           onPress={handleNext}
           disabled={!canProceed()}
         >
-          <Text style={styles.nextText}>{step === TOTAL_STEPS - 1 ? 'Start playing' : 'Next'}</Text>
+          {isSubmitting ? (
+            <ActivityIndicator color="#fff" size="small" />
+          ) : (
+            <Text style={styles.nextText}>{nextBtnLabel}</Text>
+          )}
         </AnimatedPressable>
       </View>
     </View>
@@ -512,7 +567,9 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     paddingVertical: 14,
     paddingHorizontal: 32,
-    boxShadow: '0 4px 16px rgba(79,142,247,0.3)',
+    minWidth: 140,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   nextText: {
     fontSize: 16,

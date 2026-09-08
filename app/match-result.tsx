@@ -77,6 +77,7 @@ function Confetti({ active }: { active: boolean }) {
     });
 
     Animated.stagger(0, animations).start();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [active]);
 
   if (!active) return null;
@@ -121,6 +122,7 @@ function StatCard({ icon, label, value, index }: StatCardProps) {
       Animated.timing(opacity, { toValue: 1, duration: 350, delay: 400 + index * 80, useNativeDriver: true }),
       Animated.timing(translateY, { toValue: 0, duration: 350, delay: 400 + index * 80, useNativeDriver: true }),
     ]).start();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   return (
     <Animated.View style={[styles.statCard, { opacity, transform: [{ translateY }] }]}>
@@ -215,6 +217,7 @@ export default function MatchResultScreen() {
     }, 600);
 
     return () => clearInterval(interval);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handlePlayAgain = () => {

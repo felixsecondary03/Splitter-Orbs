@@ -38,6 +38,7 @@ function AnimatedListItem({ index, children }: { index: number; children: React.
       Animated.timing(opacity, { toValue: 1, duration: 380, delay: index * 65, useNativeDriver: true }),
       Animated.timing(translateY, { toValue: 0, duration: 380, delay: index * 65, useNativeDriver: true }),
     ]).start();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   return (
     <Animated.View style={{ opacity, transform: [{ translateY }] }}>
@@ -85,7 +86,8 @@ function MatchmakingModal({
 }) {
   const [state, setState] = useState<MatchmakingState>('searching');
   const pulseAnim = useRef(new Animated.Value(1)).current;
-  const opponent = MOCK_OPPONENTS[Math.floor(Math.random() * MOCK_OPPONENTS.length)];
+  const opponentRef = useRef(MOCK_OPPONENTS[Math.floor(Math.random() * MOCK_OPPONENTS.length)]);
+  const opponent = opponentRef.current;
 
   useEffect(() => {
     if (!visible) {
@@ -104,14 +106,14 @@ function MatchmakingModal({
       pulse.stop();
       pulseAnim.setValue(1);
       setState('found');
-      setTimeout(() => onMatchFound(opponent), 1500);
+      setTimeout(() => onMatchFound(opponentRef.current), 1500);
     }, 3000);
 
     return () => {
       clearTimeout(timer);
       pulse.stop();
     };
-  }, [visible]);
+  }, [visible, onMatchFound, pulseAnim]);
 
   const modeLabel = mode === 'ranked' ? 'Ranked Match' : mode === 'casual' ? 'Casual Match' : `vs AI (${mode})`;
 

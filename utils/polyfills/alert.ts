@@ -7,6 +7,7 @@ polyfillGlobal('alert', () => (message?: string) => {
   Alert.alert('', String(message ?? ''));
 });
 
+// @ts-expect-error untyped module augmentation
 declare module 'react-native/Libraries/Utilities/PolyfillFunctions' {
   export function polyfillGlobal(name: string, getValue: () => unknown): void;
 }

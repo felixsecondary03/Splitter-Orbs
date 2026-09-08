@@ -32,7 +32,7 @@ import {
   selectTower,
 } from '@/game/engine';
 import type { GameState, Tower, Loadout } from '@/game/engine-types';
-import type { TowerType, AbilityType } from '@/game/constants';
+import type { TowerType, AbilityType, OrbType } from '@/game/constants';
 import { TOWER_COSTS, UPGRADE_COST_MULT, SELL_RATIO, GAME_WIDTH, GAME_HEIGHT, WALL_Y } from '@/game/constants';
 import { distance } from '@/game/engine-helpers';
 import type { MatchMode } from '@/game/engine-types';
@@ -138,7 +138,7 @@ export default function GameScreen() {
   // Parse loadout from params or fall back to defaults
   const loadout: Loadout = {
     towers: params.towers ? (JSON.parse(params.towers) as TowerType[]) : DEFAULT_LOADOUT.towers,
-    orbs: params.orbs ? (JSON.parse(params.orbs) as string[]) : DEFAULT_LOADOUT.orbs,
+    orbs: params.orbs ? (JSON.parse(params.orbs) as OrbType[]) : DEFAULT_LOADOUT.orbs,
     abilities: params.abilities ? (JSON.parse(params.abilities) as AbilityType[]) : DEFAULT_LOADOUT.abilities,
     sideTowerLevel: DEFAULT_LOADOUT.sideTowerLevel,
     handLevel: DEFAULT_LOADOUT.handLevel,
@@ -922,5 +922,72 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '700',
     color: COLORS.danger,
+  },
+  hudTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  hudCenterBlock: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  opponentNameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  kiBadge: {
+    backgroundColor: '#F1F5F9',
+    borderRadius: 6,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  kiBadgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#475569',
+  },
+  hudPills: {
+    flexDirection: 'row',
+    gap: 4,
+    alignItems: 'center',
+  },
+  clicksPill: {
+    backgroundColor: 'rgba(16,185,129,0.1)',
+    borderWidth: 1,
+    borderColor: '#10B981',
+    borderRadius: 8,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  coinsPill: {
+    backgroundColor: 'rgba(245,158,11,0.1)',
+    borderWidth: 1,
+    borderColor: '#F59E0B',
+    borderRadius: 8,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  pillText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#0F172A',
+  },
+  hpBarsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 4,
+  },
+  hpBarBlock: {
+    flex: 1,
+    gap: 2,
+  },
+  hpLabel: {
+    fontSize: 9,
+    fontWeight: '700',
+    color: '#94A3B8',
+    letterSpacing: 0.5,
   },
 });

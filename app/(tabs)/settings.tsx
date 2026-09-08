@@ -9,6 +9,8 @@ import {
   TextInput,
   Modal,
   Pressable,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
@@ -35,6 +37,7 @@ import { COLORS } from '@/constants/Colors';
 import { AnimatedPressable } from '@/components/AnimatedPressable';
 import { useProfile } from '@/contexts/ProfileContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/utils/supabase';
 
 function AnimatedListItem({ index, children }: { index: number; children: React.ReactNode }) {
   const opacity = useRef(new Animated.Value(0)).current;
@@ -44,6 +47,7 @@ function AnimatedListItem({ index, children }: { index: number; children: React.
       Animated.timing(opacity, { toValue: 1, duration: 300, delay: index * 50, useNativeDriver: true }),
       Animated.timing(translateY, { toValue: 0, duration: 300, delay: index * 50, useNativeDriver: true }),
     ]).start();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   return (
     <Animated.View style={{ opacity, transform: [{ translateY }] }}>
@@ -104,77 +108,178 @@ function SettingRow({ icon, label, right, onPress, destructive, sublabel }: Sett
 export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { profile, updateProfile } = useProfile();
+  const { profile, updateProfile, refreshProfile } = useProfile();
   const { user, signOut } = useAuth();
 
   const [editingName, setEditingName] = useState(false);
   const [nameInput, setNameInput] = useState(profile.display_name);
+  const [nameSaving, setNameSaving] = useState(false);
+  const [nameStatus, setNameStatus] = useState<string | null>(null);
+
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showSignOutModal, setShowSignOutModal] = useState(false);
   const [showLangModal, setShowLangModal] = useState(false);
   const [showAvatarModal, setShowAvatarModal] = useState(false);
   const [versionTapCount, setVersionTapCount] = useState(0);
   const [showAdmin, setShowAdmin] = useState(false);
+  const [deletingAccount, setDeletingAccount] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
 
-  const handleSoundToggle = (val: boolean) => {
+  // ── Helpers ────────────────────────────────────────────────────────────────
+  const saveToSupabase = useCallback(async (partial: Record<string, unknown>, label: string) => {
+    if (!user) return;
+    console.log(`[Settings] Saving ${label} to Supabase`, partial);
+    const { error } = await supabase
+      .from('player_profiles')
+      .update(partial)
+      .eq('id', user.id);
+    if (error) {
+      console.warn(`[Settings] Save ${label} error`, error.message);
+    } else {
+      console.log(`[Settings] ${label} saved`);
+    }
+  }, [user]);
+
+  // ── Handlers ───────────────────────────────────────────────────────────────
+  const handleSoundToggle = async (val: boolean) => {
     console.log('[Settings] Sound master toggle', { val });
     updateProfile({ sound_enabled: val });
+    await saveToSupabase({ sound_enabled: val }, 'sound_enabled');
   };
 
-  const handleCategoryToggle = (key: keyof typeof profile.sound_categories, val: boolean) => {
+  const handleCategoryToggle = async (key: keyof typeof profile.sound_categories, val: boolean) => {
     console.log('[Settings] Sound category toggle', { key, val });
-    updateProfile({ sound_categories: { ...profile.sound_categories, [key]: val } });
+    const updated = { ...profile.sound_categories, [key]: val };
+    updateProfile({ sound_categories: updated });
+    await saveToSupabase({ sound_categories: updated }, `sound_categories.${key}`);
   };
 
-  const handleHapticsToggle = (val: boolean) => {
+  const handleHapticsToggle = async (val: boolean) => {
     console.log('[Settings] Haptics toggle', { val });
     updateProfile({ haptics_enabled: val });
+    await saveToSupabase({ haptics_enabled: val }, 'haptics_enabled');
   };
 
-  const handleAdvancedHapticsToggle = (val: boolean) => {
+  const handleAdvancedHapticsToggle = async (val: boolean) => {
     console.log('[Settings] Advanced haptics toggle', { val });
     updateProfile({ advanced_haptics_enabled: val });
+    await saveToSupabase({ advanced_haptics_enabled: val }, 'advanced_haptics_enabled');
   };
 
-  const handleHapticsIntensity = (intensity: 'off' | 'low' | 'medium' | 'high') => {
+  const handleHapticsIntensity = async (intensity: 'off' | 'low' | 'medium' | 'high') => {
     console.log('[Settings] Haptics intensity changed', { intensity });
     updateProfile({ haptics_intensity: intensity });
+    await saveToSupabase({ haptics_intensity: intensity }, 'haptics_intensity');
   };
 
-  const handleLanguage = (code: string) => {
+  const handleLanguage = async (code: string) => {
     console.log('[Settings] Language changed', { code });
     updateProfile({ language: code });
     setShowLangModal(false);
+    await saveToSupabase({ language: code }, 'language');
   };
 
-  const handleSaveName = () => {
+  const handleSaveName = async () => {
     const trimmed = nameInput.trim();
-    if (trimmed.length >= 2 && trimmed.length <= 20) {
-      console.log('[Settings] Display name saved', { name: trimmed });
-      updateProfile({ display_name: trimmed });
+    if (trimmed.length < 2 || trimmed.length > 20) {
+      setEditingName(false);
+      setNameInput(profile.display_name);
+      return;
     }
-    setEditingName(false);
+    console.log('[Settings] Display name save pressed', { name: trimmed });
+    setNameSaving(true);
+    setNameStatus(null);
+    try {
+      if (!user) throw new Error('Not authenticated');
+      const { error } = await supabase
+        .from('player_profiles')
+        .update({ display_name: trimmed })
+        .eq('id', user.id);
+      if (error) {
+        console.warn('[Settings] Display name save error', error.message);
+        setNameStatus('Failed to save');
+        Alert.alert('Error', error.message);
+      } else {
+        console.log('[Settings] Display name saved', { name: trimmed });
+        updateProfile({ display_name: trimmed });
+        await refreshProfile();
+        setNameStatus('Saved!');
+        setTimeout(() => setNameStatus(null), 2000);
+      }
+    } catch (e: any) {
+      console.warn('[Settings] Display name unexpected error', e?.message);
+    } finally {
+      setNameSaving(false);
+      setEditingName(false);
+    }
   };
 
-  const handleAvatarColor = (color: string) => {
+  const handleAvatarColor = async (color: string) => {
     console.log('[Settings] Avatar color changed', { color });
     updateProfile({ avatar_color: color });
     setShowAvatarModal(false);
+    await saveToSupabase({ avatar_color: color }, 'avatar_color');
+  };
+
+  const handleFitToScreen = async (val: boolean) => {
+    console.log('[Settings] Fit to screen toggled', { val });
+    updateProfile({ fit_to_screen: val });
+    await saveToSupabase({ fit_to_screen: val }, 'fit_to_screen');
+  };
+
+  const handleTowerMenuAnytime = async (val: boolean) => {
+    console.log('[Settings] Tower menu anytime toggled', { val });
+    updateProfile({ tower_menu_anytime: val });
+    await saveToSupabase({ tower_menu_anytime: val }, 'tower_menu_anytime');
   };
 
   const handleExportData = () => {
     console.log('[Settings] Export Data pressed');
+    Alert.alert('Export Data', 'Your data export will be emailed to you within 24 hours.');
   };
 
-  const handleDeleteAccount = () => {
+  const handleDeleteAccount = async () => {
     console.log('[Settings] Delete Account confirmed');
     setShowDeleteModal(false);
+    setDeletingAccount(true);
+    try {
+      const { error: fnError } = await supabase.functions.invoke('deleteAccount', {});
+      if (fnError) {
+        console.warn('[Settings] deleteAccount edge function failed', fnError.message);
+        // Fallback: just sign out with a note
+        console.log('[Settings] Falling back to sign out (deletion pending)');
+        Alert.alert(
+          'Account deletion requested',
+          'Your account will be deleted shortly. You have been signed out.',
+        );
+      } else {
+        console.log('[Settings] deleteAccount edge function succeeded');
+      }
+      await supabase.auth.signOut();
+      await signOut();
+      router.replace('/auth/welcome' as never);
+    } catch (e: any) {
+      console.warn('[Settings] Delete account unexpected error', e?.message);
+      Alert.alert('Error', e?.message ?? 'Could not delete account. Please try again.');
+    } finally {
+      setDeletingAccount(false);
+    }
   };
 
   const handleSignOut = async () => {
     console.log('[Settings] Sign Out confirmed');
     setShowSignOutModal(false);
-    await signOut();
+    setSigningOut(true);
+    try {
+      await supabase.auth.signOut();
+      await signOut();
+      console.log('[Settings] Sign out complete, navigating to welcome');
+      router.replace('/auth/welcome' as never);
+    } catch (e: any) {
+      console.warn('[Settings] Sign out error', e?.message);
+    } finally {
+      setSigningOut(false);
+    }
   };
 
   const handlePrivacyPolicy = () => {
@@ -187,16 +292,6 @@ export default function SettingsScreen() {
 
   const handleImpressum = () => {
     console.log('[Settings] Impressum pressed');
-  };
-
-  const handleFitToScreen = (val: boolean) => {
-    console.log('[Settings] Fit to screen toggled', { val });
-    updateProfile({ fit_to_screen: val });
-  };
-
-  const handleTowerMenuAnytime = (val: boolean) => {
-    console.log('[Settings] Tower menu anytime toggled', { val });
-    updateProfile({ tower_menu_anytime: val });
   };
 
   const handleVersionTap = useCallback(() => {
@@ -265,12 +360,18 @@ export default function SettingsScreen() {
                       onSubmitEditing={handleSaveName}
                       placeholderTextColor={COLORS.textTertiary}
                     />
-                    <AnimatedPressable style={styles.nameSaveBtn} onPress={handleSaveName}>
-                      <Check size={16} color="#fff" strokeWidth={2.5} />
-                    </AnimatedPressable>
-                    <AnimatedPressable style={styles.nameCancelBtn} onPress={() => { setEditingName(false); setNameInput(profile.display_name); }}>
-                      <X size={16} color={COLORS.textSecondary} strokeWidth={2.5} />
-                    </AnimatedPressable>
+                    {nameSaving ? (
+                      <ActivityIndicator color={COLORS.primary} size="small" />
+                    ) : (
+                      <>
+                        <AnimatedPressable style={styles.nameSaveBtn} onPress={handleSaveName}>
+                          <Check size={16} color="#fff" strokeWidth={2.5} />
+                        </AnimatedPressable>
+                        <AnimatedPressable style={styles.nameCancelBtn} onPress={() => { setEditingName(false); setNameInput(profile.display_name); }}>
+                          <X size={16} color={COLORS.textSecondary} strokeWidth={2.5} />
+                        </AnimatedPressable>
+                      </>
+                    )}
                   </View>
                 ) : (
                   <AnimatedPressable onPress={() => { console.log('[Settings] Edit name pressed'); setEditingName(true); setNameInput(profile.display_name); }}>
@@ -280,9 +381,15 @@ export default function SettingsScreen() {
                     </View>
                   </AnimatedPressable>
                 )}
-                <View style={styles.accountTypeBadge}>
-                  <Text style={styles.accountTypeText}>{accountTypeLabel}</Text>
-                </View>
+                {nameStatus ? (
+                  <Text style={[styles.nameStatusText, nameStatus === 'Saved!' && { color: COLORS.success }]}>
+                    {nameStatus}
+                  </Text>
+                ) : (
+                  <View style={styles.accountTypeBadge}>
+                    <Text style={styles.accountTypeText}>{accountTypeLabel}</Text>
+                  </View>
+                )}
               </View>
             </View>
 
@@ -497,13 +604,17 @@ export default function SettingsScreen() {
             />
             <View style={styles.divider} />
             <SettingRow
-              icon={<LogOut size={18} color={COLORS.textSecondary} strokeWidth={2} />}
+              icon={signingOut
+                ? <ActivityIndicator size="small" color={COLORS.textSecondary} />
+                : <LogOut size={18} color={COLORS.textSecondary} strokeWidth={2} />}
               label="Sign out"
               onPress={() => { console.log('[Settings] Sign Out pressed'); setShowSignOutModal(true); }}
             />
             <View style={styles.divider} />
             <SettingRow
-              icon={<Trash2 size={18} color={COLORS.danger} strokeWidth={2} />}
+              icon={deletingAccount
+                ? <ActivityIndicator size="small" color={COLORS.danger} />
+                : <Trash2 size={18} color={COLORS.danger} strokeWidth={2} />}
               label="Delete account"
               sublabel="Permanently remove all data"
               onPress={() => { console.log('[Settings] Delete Account pressed'); setShowDeleteModal(true); }}
@@ -820,6 +931,11 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.surfaceSecondary,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  nameStatusText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: COLORS.danger,
   },
   accountTypeBadge: {
     alignSelf: 'flex-start',

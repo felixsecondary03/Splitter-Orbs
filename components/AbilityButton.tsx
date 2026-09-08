@@ -74,6 +74,7 @@ export function AbilityButton({ abilityType, cooldown, maxCooldown, onPress, siz
       glowAnim.stopAnimation();
       glowAnim.setValue(0);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isReady]);
 
   const handlePress = () => {

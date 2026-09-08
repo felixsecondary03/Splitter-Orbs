@@ -58,6 +58,7 @@ export function CrateButton({ type, lastClaimed, onClaim }: CrateButtonProps) {
     }
     bounceAnim.setValue(1);
     return undefined;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isReady]);
 
   const isFree = type === 'free';

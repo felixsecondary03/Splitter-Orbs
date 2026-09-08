@@ -8,6 +8,8 @@ import {
   Modal,
   StyleSheet,
   Dimensions,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
@@ -27,6 +29,8 @@ import { COLORS } from '@/constants/Colors';
 import { AnimatedPressable } from '@/components/AnimatedPressable';
 import { LeagueBadge } from '@/components/LeagueBadge';
 import { useProfile } from '@/contexts/ProfileContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/utils/supabase';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -40,6 +44,7 @@ function AnimatedListItem({ index, children }: { index: number; children: React.
       Animated.timing(opacity, { toValue: 1, duration: 300, delay: index * 55, useNativeDriver: true }),
       Animated.timing(translateY, { toValue: 0, duration: 300, delay: index * 55, useNativeDriver: true }),
     ]).start();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   return (
     <Animated.View style={{ opacity, transform: [{ translateY }] }}>
@@ -49,48 +54,26 @@ function AnimatedListItem({ index, children }: { index: number; children: React.
 }
 
 interface LeaderboardPlayer {
+  id: string;
   rank: number;
   name: string;
   trophies: number;
-  leagueTrophies: number;
+  wins: number;
+  losses: number;
   isMe?: boolean;
 }
 
-const LEADERBOARD_DATA: LeaderboardPlayer[] = [
-  { rank: 1,  name: 'OrbMaster_X',   trophies: 4820, leagueTrophies: 4820 },
-  { rank: 2,  name: 'FrostQueen',     trophies: 4650, leagueTrophies: 4650 },
-  { rank: 3,  name: 'BlasterKing',    trophies: 4410, leagueTrophies: 4410 },
-  { rank: 4,  name: 'ShadowOrb99',    trophies: 4200, leagueTrophies: 4200 },
-  { rank: 5,  name: 'TowerLord',      trophies: 3980, leagueTrophies: 3980 },
-  { rank: 6,  name: 'CryoStrike',     trophies: 3750, leagueTrophies: 3750 },
-  { rank: 7,  name: 'VenomBurst',     trophies: 3500, leagueTrophies: 3500 },
-  { rank: 8,  name: 'ArcFlash',       trophies: 3200, leagueTrophies: 3200 },
-  { rank: 9,  name: 'MortarKing',     trophies: 2900, leagueTrophies: 2900 },
-  { rank: 10, name: 'PyreFist',       trophies: 2700, leagueTrophies: 2700 },
-  { rank: 11, name: 'IceBreaker',     trophies: 2500, leagueTrophies: 2500 },
-  { rank: 12, name: 'ZapQueen',       trophies: 2300, leagueTrophies: 2300 },
-  { rank: 13, name: 'NovaSurge',      trophies: 2100, leagueTrophies: 2100 },
-  { rank: 14, name: 'GlacierPeak',    trophies: 1950, leagueTrophies: 1950 },
-  { rank: 15, name: 'TeslaStorm',     trophies: 1800, leagueTrophies: 1800 },
-  { rank: 16, name: 'SeekrBot',       trophies: 1650, leagueTrophies: 1650 },
-  { rank: 17, name: 'FlakCannon',     trophies: 1500, leagueTrophies: 1500 },
-  { rank: 18, name: 'HarpoonHero',    trophies: 1350, leagueTrophies: 1350 },
-  { rank: 19, name: 'TwinBlaster',    trophies: 1200, leagueTrophies: 1200 },
-  { rank: 20, name: 'MagnetMage',     trophies: 1050, leagueTrophies: 1050 },
-];
-
-interface Friend {
+interface FriendRow {
+  id: string;
   name: string;
   trophies: number;
-  status: 'online' | 'in-match' | 'offline';
 }
 
-const FRIENDS_DATA: Friend[] = [
-  { name: 'FrostQueen',  trophies: 4650, status: 'online' },
-  { name: 'CryoStrike',  trophies: 3750, status: 'in-match' },
-  { name: 'ArcFlash',    trophies: 3200, status: 'offline' },
-  { name: 'TowerLord',   trophies: 3980, status: 'online' },
-];
+interface FriendRequest {
+  id: string;
+  sender_id: string;
+  senderName: string;
+}
 
 interface InboxItem {
   id: string;
@@ -100,31 +83,55 @@ interface InboxItem {
   time: string;
 }
 
-const INBOX_DATA: InboxItem[] = [
-  { id: '1', type: 'friend_request', from: 'NovaSurge',   message: 'wants to be your friend', time: '2m ago' },
-  { id: '2', type: 'game_invite',    from: 'TowerLord',   message: 'invited you to a match',   time: '15m ago' },
-  { id: '3', type: 'system',                              message: 'Achievement unlocked: First Victory! +100 coins', time: '1h ago' },
-  { id: '4', type: 'system',                              message: 'You reached Rookie league! Keep climbing.', time: '3h ago' },
-];
-
 const RANK_COLORS = [COLORS.gold, COLORS.silver, COLORS.bronze];
 
-const STATUS_COLORS: Record<string, string> = {
-  online: COLORS.success,
-  'in-match': COLORS.warning,
-  offline: COLORS.textTertiary,
-};
-
-const STATUS_LABELS: Record<string, string> = {
-  online: 'Online',
-  'in-match': 'In Match',
-  offline: 'Offline',
-};
-
-const SEARCH_RESULTS: Friend[] = [
-  { name: 'GlacierPeak', trophies: 1950, status: 'online' },
-  { name: 'TeslaStorm',  trophies: 1800, status: 'offline' },
+const STATIC_INBOX: InboxItem[] = [
+  { id: 'sys1', type: 'system', message: 'Achievement unlocked: First Victory! +100 coins', time: '1h ago' },
+  { id: 'sys2', type: 'system', message: 'You reached Rookie league! Keep climbing.', time: '3h ago' },
 ];
+
+function SkeletonRow() {
+  const opacity = useRef(new Animated.Value(0.3)).current;
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(opacity, { toValue: 1, duration: 700, useNativeDriver: true }),
+        Animated.timing(opacity, { toValue: 0.3, duration: 700, useNativeDriver: true }),
+      ])
+    ).start();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  return (
+    <Animated.View style={[skeletonStyles.row, { opacity }]}>
+      <View style={skeletonStyles.rank} />
+      <View style={skeletonStyles.avatar} />
+      <View style={skeletonStyles.info}>
+        <View style={skeletonStyles.nameLine} />
+        <View style={skeletonStyles.subLine} />
+      </View>
+      <View style={skeletonStyles.trophy} />
+    </Animated.View>
+  );
+}
+
+const skeletonStyles = StyleSheet.create({
+  row: {
+    backgroundColor: COLORS.surface,
+    borderRadius: 14,
+    padding: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  rank: { width: 28, height: 28, borderRadius: 8, backgroundColor: COLORS.surfaceSecondary },
+  avatar: { width: 36, height: 36, borderRadius: 18, backgroundColor: COLORS.surfaceSecondary },
+  info: { flex: 1, gap: 6 },
+  nameLine: { height: 12, borderRadius: 6, backgroundColor: COLORS.surfaceSecondary, width: '60%' },
+  subLine: { height: 10, borderRadius: 5, backgroundColor: COLORS.surfaceSecondary, width: '40%' },
+  trophy: { width: 48, height: 14, borderRadius: 6, backgroundColor: COLORS.surfaceSecondary },
+});
 
 function PodiumCard({ player, rank }: { player: LeaderboardPlayer; rank: 1 | 2 | 3 }) {
   const rankColor = RANK_COLORS[rank - 1];
@@ -213,15 +220,167 @@ const podiumStyles = StyleSheet.create({
 export default function SocialScreen() {
   const insets = useSafeAreaInsets();
   const { profile } = useProfile();
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<SocialTab>('leaderboard');
-  const [friendSearch, setFriendSearch] = useState('');
+
+  // Leaderboard state
+  const [leaderboard, setLeaderboard] = useState<LeaderboardPlayer[]>([]);
+  const [leaderboardLoading, setLeaderboardLoading] = useState(false);
+  const [leaderboardError, setLeaderboardError] = useState<string | null>(null);
+  const [myRank, setMyRank] = useState<number | null>(null);
+
+  // Friends state
+  const [friends, setFriends] = useState<FriendRow[]>([]);
+  const [friendsLoading, setFriendsLoading] = useState(false);
+  const [friendsError, setFriendsError] = useState<string | null>(null);
+
+  // Incoming requests state
+  const [incomingRequests, setIncomingRequests] = useState<FriendRequest[]>([]);
+
+  // Search modal state
   const [showSearchModal, setShowSearchModal] = useState(false);
-  const [friends, setFriends] = useState<Friend[]>(FRIENDS_DATA);
-  const [inbox, setInbox] = useState<InboxItem[]>(INBOX_DATA);
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<{ id: string; display_name: string; trophies: number }[]>([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [addingFriend, setAddingFriend] = useState<string | null>(null);
 
-  const inboxCount = inbox.filter((i) => i.type === 'friend_request' || i.type === 'game_invite').length;
+  // Inbox
+  const [inbox] = useState<InboxItem[]>(STATIC_INBOX);
 
+  const inboxCount = incomingRequests.length;
+
+  // ── Leaderboard fetch ──────────────────────────────────────────────────────
+  const fetchLeaderboard = useCallback(async () => {
+    console.log('[Social] Fetching leaderboard');
+    setLeaderboardLoading(true);
+    setLeaderboardError(null);
+    try {
+      const { data, error } = await supabase
+        .from('player_profiles')
+        .select('id, display_name, trophies, wins, losses')
+        .order('trophies', { ascending: false })
+        .limit(100);
+
+      if (error) {
+        console.warn('[Social] Leaderboard fetch error', error.message);
+        setLeaderboardError(error.message);
+        return;
+      }
+
+      const rows: LeaderboardPlayer[] = (data ?? []).map((row, i) => ({
+        id: row.id,
+        rank: i + 1,
+        name: row.display_name ?? 'Unknown',
+        trophies: row.trophies ?? 0,
+        wins: row.wins ?? 0,
+        losses: row.losses ?? 0,
+        isMe: row.id === user?.id,
+      }));
+
+      setLeaderboard(rows);
+
+      const meIndex = rows.findIndex((r) => r.isMe);
+      setMyRank(meIndex >= 0 ? meIndex + 1 : null);
+      console.log('[Social] Leaderboard loaded', { count: rows.length, myRank: meIndex + 1 });
+    } catch (e) {
+      console.warn('[Social] Leaderboard unexpected error', e);
+      setLeaderboardError('Leaderboard coming soon');
+    } finally {
+      setLeaderboardLoading(false);
+    }
+  }, [user?.id]);
+
+  // ── Friends fetch ──────────────────────────────────────────────────────────
+  const fetchFriends = useCallback(async () => {
+    if (!user) return;
+    console.log('[Social] Fetching friends list');
+    setFriendsLoading(true);
+    setFriendsError(null);
+    try {
+      const [friendsRes, requestsRes] = await Promise.all([
+        supabase
+          .from('friendships')
+          .select('friend_id, friend:player_profiles!friend_id(id, display_name, trophies)')
+          .eq('user_id', user.id),
+        supabase
+          .from('friend_requests')
+          .select('id, sender_id, sender:player_profiles!sender_id(id, display_name)')
+          .eq('receiver_id', user.id)
+          .eq('status', 'pending'),
+      ]);
+
+      if (friendsRes.error) {
+        console.warn('[Social] Friends fetch error', friendsRes.error.message);
+        setFriendsError(friendsRes.error.message);
+      } else {
+        const rows: FriendRow[] = (friendsRes.data ?? []).map((row: any) => ({
+          id: row.friend?.id ?? row.friend_id,
+          name: row.friend?.display_name ?? 'Unknown',
+          trophies: row.friend?.trophies ?? 0,
+        }));
+        setFriends(rows);
+        console.log('[Social] Friends loaded', { count: rows.length });
+      }
+
+      if (!requestsRes.error) {
+        const reqs: FriendRequest[] = (requestsRes.data ?? []).map((row: any) => ({
+          id: row.id,
+          sender_id: row.sender_id,
+          senderName: row.sender?.display_name ?? 'Unknown',
+        }));
+        setIncomingRequests(reqs);
+        console.log('[Social] Incoming requests loaded', { count: reqs.length });
+      }
+    } catch (e) {
+      console.warn('[Social] Friends unexpected error', e);
+      setFriendsError('Friends feature coming soon');
+    } finally {
+      setFriendsLoading(false);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (activeTab === 'leaderboard') fetchLeaderboard();
+    if (activeTab === 'friends' || activeTab === 'inbox') fetchFriends();
+  }, [activeTab, fetchLeaderboard, fetchFriends]);
+
+  // ── Search ─────────────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (searchQuery.length < 2) {
+      setSearchResults([]);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      console.log('[Social] Searching for player', { query: searchQuery });
+      setSearchLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('player_profiles')
+          .select('id, display_name, trophies')
+          .ilike('display_name', `%${searchQuery}%`)
+          .neq('id', user?.id ?? '')
+          .limit(10);
+
+        if (error) {
+          console.warn('[Social] Search error', error.message);
+          setSearchResults([]);
+        } else {
+          const filtered = (data ?? []).filter(
+            (r) => !friends.find((f) => f.id === r.id)
+          );
+          setSearchResults(filtered);
+          console.log('[Social] Search results', { count: filtered.length });
+        }
+      } catch (e) {
+        console.warn('[Social] Search unexpected error', e);
+      } finally {
+        setSearchLoading(false);
+      }
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [searchQuery, user?.id, friends]);
+
+  // ── Handlers ───────────────────────────────────────────────────────────────
   const handleTabChange = useCallback((tab: SocialTab) => {
     console.log('[Social] Tab changed', { tab });
     setActiveTab(tab);
@@ -236,53 +395,100 @@ export default function SocialScreen() {
     console.log('[Social] Add Friend modal closed');
     setShowSearchModal(false);
     setSearchQuery('');
+    setSearchResults([]);
   }, []);
 
-  const handleAddFriend = useCallback((name: string) => {
-    console.log('[Social] Friend added', { name });
-    const found = SEARCH_RESULTS.find((r) => r.name === name);
-    if (found && !friends.find((f) => f.name === name)) {
-      setFriends((prev) => [...prev, found]);
+  const handleAddFriend = useCallback(async (targetId: string, targetName: string) => {
+    if (!user) return;
+    console.log('[Social] Add friend pressed', { targetId, targetName });
+    setAddingFriend(targetId);
+    try {
+      const { error } = await supabase
+        .from('friend_requests')
+        .insert({ sender_id: user.id, receiver_id: targetId, status: 'pending' });
+
+      if (error) {
+        console.warn('[Social] Add friend error', error.message);
+        Alert.alert('Error', error.message);
+      } else {
+        console.log('[Social] Friend request sent', { targetName });
+        Alert.alert('Request sent', `Friend request sent to ${targetName}`);
+        handleCloseSearch();
+      }
+    } catch (e) {
+      console.warn('[Social] Add friend unexpected error', e);
+    } finally {
+      setAddingFriend(null);
     }
-    setShowSearchModal(false);
-    setSearchQuery('');
-  }, [friends]);
+  }, [user, handleCloseSearch]);
+
+  const handleAcceptRequest = useCallback(async (req: FriendRequest) => {
+    if (!user) return;
+    console.log('[Social] Accepting friend request', { requestId: req.id, from: req.senderName });
+    try {
+      const [updateRes, insertRes] = await Promise.all([
+        supabase
+          .from('friend_requests')
+          .update({ status: 'accepted' })
+          .eq('id', req.id),
+        supabase
+          .from('friendships')
+          .insert([
+            { user_id: user.id, friend_id: req.sender_id },
+            { user_id: req.sender_id, friend_id: user.id },
+          ]),
+      ]);
+
+      if (updateRes.error) console.warn('[Social] Accept request update error', updateRes.error.message);
+      if (insertRes.error) console.warn('[Social] Accept request insert error', insertRes.error.message);
+
+      setIncomingRequests((prev) => prev.filter((r) => r.id !== req.id));
+      await fetchFriends();
+      console.log('[Social] Friend request accepted', { from: req.senderName });
+    } catch (e) {
+      console.warn('[Social] Accept request unexpected error', e);
+    }
+  }, [user, fetchFriends]);
+
+  const handleDeclineRequest = useCallback(async (req: FriendRequest) => {
+    console.log('[Social] Declining friend request', { requestId: req.id, from: req.senderName });
+    try {
+      const { error } = await supabase
+        .from('friend_requests')
+        .update({ status: 'declined' })
+        .eq('id', req.id);
+
+      if (error) console.warn('[Social] Decline request error', error.message);
+      setIncomingRequests((prev) => prev.filter((r) => r.id !== req.id));
+      console.log('[Social] Friend request declined', { from: req.senderName });
+    } catch (e) {
+      console.warn('[Social] Decline request unexpected error', e);
+    }
+  }, []);
 
   const handleInviteToMatch = useCallback((name: string) => {
     console.log('[Social] Invite to match pressed', { name });
   }, []);
 
-  const handleAcceptFriendRequest = useCallback((id: string, from: string) => {
-    console.log('[Social] Friend request accepted', { id, from });
-    setInbox((prev) => prev.filter((i) => i.id !== id));
-    const newFriend: Friend = { name: from, trophies: 1200, status: 'online' };
-    setFriends((prev) => [...prev, newFriend]);
-  }, []);
-
-  const handleDeclineFriendRequest = useCallback((id: string) => {
-    console.log('[Social] Friend request declined', { id });
-    setInbox((prev) => prev.filter((i) => i.id !== id));
-  }, []);
-
-  const handleAcceptGameInvite = useCallback((id: string, from: string) => {
-    console.log('[Social] Game invite accepted', { id, from });
-    setInbox((prev) => prev.filter((i) => i.id !== id));
-  }, []);
-
-  const handleDeclineGameInvite = useCallback((id: string) => {
-    console.log('[Social] Game invite declined', { id });
-    setInbox((prev) => prev.filter((i) => i.id !== id));
-  }, []);
-
-  const filteredSearchResults = searchQuery.length >= 2
-    ? SEARCH_RESULTS.filter((r) =>
-        r.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
-        !friends.find((f) => f.name === r.name)
-      )
-    : [];
-
-  const myRank = 42;
   const myTrophies = profile.trophies;
+  const displayRank = myRank ?? '—';
+
+  // Leaderboard display helpers
+  const top3 = leaderboard.slice(0, 3);
+  const rest = leaderboard.slice(3);
+
+  const podiumPlaceholder = (rank: 1 | 2 | 3): LeaderboardPlayer => ({
+    id: `placeholder-${rank}`,
+    rank,
+    name: '---',
+    trophies: 0,
+    wins: 0,
+    losses: 0,
+  });
+
+  const p1 = top3[0] ?? podiumPlaceholder(1);
+  const p2 = top3[1] ?? podiumPlaceholder(2);
+  const p3 = top3[2] ?? podiumPlaceholder(3);
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -330,56 +536,90 @@ export default function SocialScreen() {
           contentContainerStyle={[styles.listContent, { paddingBottom: 120 }]}
           showsVerticalScrollIndicator={false}
         >
-          {/* Podium */}
-          <AnimatedListItem index={0}>
-            <View style={styles.podiumRow}>
-              <PodiumCard player={LEADERBOARD_DATA[1]} rank={2} />
-              <PodiumCard player={LEADERBOARD_DATA[0]} rank={1} />
-              <PodiumCard player={LEADERBOARD_DATA[2]} rank={3} />
-            </View>
-          </AnimatedListItem>
-
-          {/* My rank highlight */}
-          <AnimatedListItem index={1}>
-            <View style={styles.myRankCard}>
-              <View style={styles.myRankLeft}>
-                <Text style={styles.myRankLabel}>YOUR RANK</Text>
-                <Text style={styles.myRankNum}>#{myRank}</Text>
-              </View>
-              <View style={styles.myRankRight}>
-                <View style={styles.myRankTrophyRow}>
-                  <Trophy size={14} color={COLORS.gold} strokeWidth={2} />
-                  <Text style={styles.myRankTrophies}>{myTrophies.toLocaleString()}</Text>
+          {leaderboardError ? (
+            <AnimatedListItem index={0}>
+              <View style={styles.emptyState}>
+                <View style={styles.emptyIconWrap}>
+                  <Trophy size={32} color={COLORS.textTertiary} strokeWidth={1.5} />
                 </View>
-                <LeagueBadge trophies={myTrophies} size="sm" />
+                <Text style={styles.emptyTitle}>Leaderboard coming soon</Text>
+                <Text style={styles.emptySub}>Rankings will appear here once matches are played</Text>
               </View>
-            </View>
-          </AnimatedListItem>
+            </AnimatedListItem>
+          ) : leaderboardLoading ? (
+            <>
+              {Array.from({ length: 8 }).map((_, i) => (
+                <SkeletonRow key={i} />
+              ))}
+            </>
+          ) : leaderboard.length === 0 ? (
+            <AnimatedListItem index={0}>
+              <View style={styles.emptyState}>
+                <View style={styles.emptyIconWrap}>
+                  <Trophy size={32} color={COLORS.textTertiary} strokeWidth={1.5} />
+                </View>
+                <Text style={styles.emptyTitle}>No rankings yet</Text>
+                <Text style={styles.emptySub}>Play matches to appear on the leaderboard</Text>
+              </View>
+            </AnimatedListItem>
+          ) : (
+            <>
+              {/* Podium */}
+              <AnimatedListItem index={0}>
+                <View style={styles.podiumRow}>
+                  <PodiumCard player={p2} rank={2} />
+                  <PodiumCard player={p1} rank={1} />
+                  <PodiumCard player={p3} rank={3} />
+                </View>
+              </AnimatedListItem>
 
-          {/* Ranks 4-20 */}
-          {LEADERBOARD_DATA.slice(3).map((player, i) => {
-            const trophyDisplay = player.trophies.toLocaleString();
-            return (
-              <AnimatedListItem key={player.rank} index={2 + i}>
-                <View style={styles.leaderRow}>
-                  <View style={styles.rankWrap}>
-                    <Text style={styles.rankText}>{player.rank}</Text>
+              {/* My rank highlight */}
+              <AnimatedListItem index={1}>
+                <View style={[styles.myRankCard, myRank !== null && { borderColor: `${COLORS.primary}55` }]}>
+                  <View style={styles.myRankLeft}>
+                    <Text style={styles.myRankLabel}>YOUR RANK</Text>
+                    <Text style={styles.myRankNum}>#{displayRank}</Text>
                   </View>
-                  <View style={styles.leaderAvatar}>
-                    <Text style={styles.leaderAvatarText}>{player.name.charAt(0)}</Text>
-                  </View>
-                  <View style={styles.leaderInfo}>
-                    <Text style={styles.leaderName} numberOfLines={1}>{player.name}</Text>
-                    <LeagueBadge trophies={player.trophies} size="sm" />
-                  </View>
-                  <View style={styles.leaderTrophyWrap}>
-                    <Trophy size={13} color={COLORS.gold} strokeWidth={2} />
-                    <Text style={styles.leaderTrophies}>{trophyDisplay}</Text>
+                  <View style={styles.myRankRight}>
+                    <View style={styles.myRankTrophyRow}>
+                      <Trophy size={14} color={COLORS.gold} strokeWidth={2} />
+                      <Text style={styles.myRankTrophies}>{myTrophies.toLocaleString()}</Text>
+                    </View>
+                    <LeagueBadge trophies={myTrophies} size="sm" />
                   </View>
                 </View>
               </AnimatedListItem>
-            );
-          })}
+
+              {/* Ranks 4+ */}
+              {rest.map((player, i) => {
+                const trophyDisplay = player.trophies.toLocaleString();
+                const isMe = player.isMe;
+                return (
+                  <AnimatedListItem key={player.id} index={2 + i}>
+                    <View style={[styles.leaderRow, isMe && styles.leaderRowMe]}>
+                      <View style={styles.rankWrap}>
+                        <Text style={styles.rankText}>{player.rank}</Text>
+                      </View>
+                      <View style={styles.leaderAvatar}>
+                        <Text style={styles.leaderAvatarText}>{player.name.charAt(0)}</Text>
+                      </View>
+                      <View style={styles.leaderInfo}>
+                        <Text style={[styles.leaderName, isMe && { color: COLORS.primary }]} numberOfLines={1}>
+                          {player.name}
+                          {isMe ? ' (You)' : ''}
+                        </Text>
+                        <LeagueBadge trophies={player.trophies} size="sm" />
+                      </View>
+                      <View style={styles.leaderTrophyWrap}>
+                        <Trophy size={13} color={COLORS.gold} strokeWidth={2} />
+                        <Text style={styles.leaderTrophies}>{trophyDisplay}</Text>
+                      </View>
+                    </View>
+                  </AnimatedListItem>
+                );
+              })}
+            </>
+          )}
         </ScrollView>
       )}
 
@@ -396,7 +636,23 @@ export default function SocialScreen() {
             </AnimatedPressable>
           </AnimatedListItem>
 
-          {friends.length === 0 ? (
+          {friendsError ? (
+            <AnimatedListItem index={1}>
+              <View style={styles.emptyState}>
+                <View style={styles.emptyIconWrap}>
+                  <Users size={32} color={COLORS.textTertiary} strokeWidth={1.5} />
+                </View>
+                <Text style={styles.emptyTitle}>Friends feature coming soon</Text>
+                <Text style={styles.emptySub}>Social features will be available shortly</Text>
+              </View>
+            </AnimatedListItem>
+          ) : friendsLoading ? (
+            <AnimatedListItem index={1}>
+              <View style={styles.loadingWrap}>
+                <ActivityIndicator color={COLORS.primary} />
+              </View>
+            </AnimatedListItem>
+          ) : friends.length === 0 ? (
             <AnimatedListItem index={1}>
               <View style={styles.emptyState}>
                 <View style={styles.emptyIconWrap}>
@@ -412,36 +668,30 @@ export default function SocialScreen() {
                 <Text style={styles.sectionLabel}>FRIENDS ({friends.length})</Text>
               </AnimatedListItem>
               {friends.map((friend, i) => {
-                const statusColor = STATUS_COLORS[friend.status] ?? COLORS.textTertiary;
-                const statusLabel = STATUS_LABELS[friend.status] ?? friend.status;
                 const trophyDisplay = friend.trophies.toLocaleString();
                 return (
-                  <AnimatedListItem key={friend.name} index={2 + i}>
+                  <AnimatedListItem key={friend.id} index={2 + i}>
                     <View style={styles.friendRow}>
                       <View style={styles.friendAvatarWrap}>
                         <View style={styles.friendAvatar}>
                           <Text style={styles.friendAvatarText}>{friend.name.charAt(0)}</Text>
                         </View>
-                        <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
                       </View>
                       <View style={styles.friendInfo}>
                         <Text style={styles.friendName}>{friend.name}</Text>
-                        <Text style={[styles.friendStatus, { color: statusColor }]}>{statusLabel}</Text>
                       </View>
                       <View style={styles.friendRight}>
                         <View style={styles.friendTrophyRow}>
                           <Trophy size={12} color={COLORS.gold} strokeWidth={2} />
                           <Text style={styles.friendTrophies}>{trophyDisplay}</Text>
                         </View>
-                        {friend.status === 'online' && (
-                          <AnimatedPressable
-                            style={styles.inviteBtn}
-                            onPress={() => handleInviteToMatch(friend.name)}
-                          >
-                            <Swords size={12} color={COLORS.primary} strokeWidth={2} />
-                            <Text style={styles.inviteBtnText}>Invite</Text>
-                          </AnimatedPressable>
-                        )}
+                        <AnimatedPressable
+                          style={styles.inviteBtn}
+                          onPress={() => handleInviteToMatch(friend.name)}
+                        >
+                          <Swords size={12} color={COLORS.primary} strokeWidth={2} />
+                          <Text style={styles.inviteBtnText}>Invite</Text>
+                        </AnimatedPressable>
                       </View>
                     </View>
                   </AnimatedListItem>
@@ -458,7 +708,7 @@ export default function SocialScreen() {
           contentContainerStyle={[styles.listContent, { paddingBottom: 120 }]}
           showsVerticalScrollIndicator={false}
         >
-          {inbox.length === 0 ? (
+          {incomingRequests.length === 0 && inbox.length === 0 ? (
             <AnimatedListItem index={0}>
               <View style={styles.emptyState}>
                 <View style={styles.emptyIconWrap}>
@@ -469,59 +719,36 @@ export default function SocialScreen() {
               </View>
             </AnimatedListItem>
           ) : (
-            inbox.map((item, i) => (
-              <AnimatedListItem key={item.id} index={i}>
-                {item.type === 'friend_request' ? (
+            <>
+              {incomingRequests.map((req, i) => (
+                <AnimatedListItem key={req.id} index={i}>
                   <View style={styles.inboxCard}>
                     <View style={[styles.inboxIconWrap, { backgroundColor: COLORS.primaryMuted }]}>
                       <UserPlus size={18} color={COLORS.primary} strokeWidth={2} />
                     </View>
                     <View style={styles.inboxInfo}>
-                      <Text style={styles.inboxFrom}>{item.from}</Text>
-                      <Text style={styles.inboxMsg}>{item.message}</Text>
-                      <Text style={styles.inboxTime}>{item.time}</Text>
+                      <Text style={styles.inboxFrom}>{req.senderName}</Text>
+                      <Text style={styles.inboxMsg}>wants to be your friend</Text>
                     </View>
                     <View style={styles.inboxActions}>
                       <AnimatedPressable
                         style={styles.acceptBtn}
-                        onPress={() => handleAcceptFriendRequest(item.id, item.from ?? '')}
+                        onPress={() => handleAcceptRequest(req)}
                       >
                         <Check size={16} color="#FFFFFF" strokeWidth={2.5} />
                       </AnimatedPressable>
                       <AnimatedPressable
                         style={styles.declineBtn}
-                        onPress={() => handleDeclineFriendRequest(item.id)}
+                        onPress={() => handleDeclineRequest(req)}
                       >
                         <X size={16} color={COLORS.danger} strokeWidth={2.5} />
                       </AnimatedPressable>
                     </View>
                   </View>
-                ) : item.type === 'game_invite' ? (
-                  <View style={styles.inboxCard}>
-                    <View style={[styles.inboxIconWrap, { backgroundColor: COLORS.accentMuted }]}>
-                      <Swords size={18} color={COLORS.accent} strokeWidth={2} />
-                    </View>
-                    <View style={styles.inboxInfo}>
-                      <Text style={styles.inboxFrom}>{item.from}</Text>
-                      <Text style={styles.inboxMsg}>{item.message}</Text>
-                      <Text style={styles.inboxTime}>{item.time}</Text>
-                    </View>
-                    <View style={styles.inboxActions}>
-                      <AnimatedPressable
-                        style={styles.acceptBtn}
-                        onPress={() => handleAcceptGameInvite(item.id, item.from ?? '')}
-                      >
-                        <Check size={16} color="#FFFFFF" strokeWidth={2.5} />
-                      </AnimatedPressable>
-                      <AnimatedPressable
-                        style={styles.declineBtn}
-                        onPress={() => handleDeclineGameInvite(item.id)}
-                      >
-                        <X size={16} color={COLORS.danger} strokeWidth={2.5} />
-                      </AnimatedPressable>
-                    </View>
-                  </View>
-                ) : (
+                </AnimatedListItem>
+              ))}
+              {inbox.map((item, i) => (
+                <AnimatedListItem key={item.id} index={incomingRequests.length + i}>
                   <View style={styles.systemCard}>
                     <View style={[styles.inboxIconWrap, { backgroundColor: 'rgba(245,158,11,0.12)' }]}>
                       <Star size={18} color={COLORS.gold} strokeWidth={2} />
@@ -531,9 +758,9 @@ export default function SocialScreen() {
                       <Text style={styles.inboxTime}>{item.time}</Text>
                     </View>
                   </View>
-                )}
-              </AnimatedListItem>
-            ))
+                </AnimatedListItem>
+              ))}
+            </>
           )}
         </ScrollView>
       )}
@@ -563,19 +790,20 @@ export default function SocialScreen() {
                 autoCapitalize="none"
                 autoFocus
               />
+              {searchLoading && <ActivityIndicator size="small" color={COLORS.primary} />}
             </View>
-            {searchQuery.length >= 2 && filteredSearchResults.length === 0 && (
+            {searchQuery.length >= 2 && !searchLoading && searchResults.length === 0 && (
               <View style={searchStyles.noResults}>
                 <Text style={searchStyles.noResultsText}>No players found for "{searchQuery}"</Text>
               </View>
             )}
-            {filteredSearchResults.map((result) => (
-              <View key={result.name} style={searchStyles.resultRow}>
+            {searchResults.map((result) => (
+              <View key={result.id} style={searchStyles.resultRow}>
                 <View style={searchStyles.resultAvatar}>
-                  <Text style={searchStyles.resultAvatarText}>{result.name.charAt(0)}</Text>
+                  <Text style={searchStyles.resultAvatarText}>{result.display_name.charAt(0)}</Text>
                 </View>
                 <View style={searchStyles.resultInfo}>
-                  <Text style={searchStyles.resultName}>{result.name}</Text>
+                  <Text style={searchStyles.resultName}>{result.display_name}</Text>
                   <View style={searchStyles.resultMeta}>
                     <Trophy size={12} color={COLORS.gold} strokeWidth={2} />
                     <Text style={searchStyles.resultTrophies}>{result.trophies.toLocaleString()}</Text>
@@ -583,11 +811,18 @@ export default function SocialScreen() {
                   </View>
                 </View>
                 <AnimatedPressable
-                  style={searchStyles.addBtn}
-                  onPress={() => handleAddFriend(result.name)}
+                  style={[searchStyles.addBtn, addingFriend === result.id && { opacity: 0.6 }]}
+                  onPress={() => handleAddFriend(result.id, result.display_name)}
+                  disabled={addingFriend === result.id}
                 >
-                  <UserPlus size={16} color="#fff" strokeWidth={2} />
-                  <Text style={searchStyles.addBtnText}>Add</Text>
+                  {addingFriend === result.id ? (
+                    <ActivityIndicator size="small" color="#fff" />
+                  ) : (
+                    <>
+                      <UserPlus size={16} color="#fff" strokeWidth={2} />
+                      <Text style={searchStyles.addBtnText}>Add</Text>
+                    </>
+                  )}
                 </AnimatedPressable>
               </View>
             ))}
@@ -718,6 +953,8 @@ const searchStyles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 9,
     borderRadius: 10,
+    minWidth: 70,
+    justifyContent: 'center',
   },
   addBtnText: {
     fontSize: 13,
@@ -796,6 +1033,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     gap: 10,
   },
+  loadingWrap: {
+    paddingVertical: 40,
+    alignItems: 'center',
+  },
   podiumRow: {
     flexDirection: 'row',
     gap: 10,
@@ -852,6 +1093,10 @@ const styles = StyleSheet.create({
     gap: 10,
     borderWidth: 1,
     borderColor: COLORS.border,
+  },
+  leaderRowMe: {
+    borderColor: `${COLORS.primary}55`,
+    backgroundColor: COLORS.primaryMuted,
   },
   rankWrap: {
     width: 28,
@@ -952,16 +1197,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: COLORS.text,
   },
-  statusDot: {
-    position: 'absolute',
-    bottom: 1,
-    right: 1,
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    borderWidth: 2,
-    borderColor: COLORS.surface,
-  },
   friendInfo: {
     flex: 1,
     gap: 3,
@@ -970,10 +1205,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '700',
     color: COLORS.text,
-  },
-  friendStatus: {
-    fontSize: 12,
-    fontWeight: '500',
   },
   friendRight: {
     alignItems: 'flex-end',
