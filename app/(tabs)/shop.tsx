@@ -1,310 +1,408 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import {
   View,
   Text,
   ScrollView,
   StyleSheet,
+  Pressable,
   TextInput,
-  TouchableOpacity,
   Alert,
+  Animated,
+  Modal,
+  ActivityIndicator,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Package } from 'lucide-react-native';
+import { router } from 'expo-router';
 import { COLORS } from '@/constants/Colors';
 import { AnimatedPressable } from '@/components/AnimatedPressable';
+import { CrateIcon } from '@/components/CrateIcon';
 import { useProfile } from '@/contexts/ProfileContext';
 import { supabase } from '@/utils/supabase';
+import { CRATE_TYPES, GEM_EXCHANGE_OPTIONS, GEM_TO_COIN_RATE } from '@/game/constants';
 
-const GEM_EXCHANGE_OPTIONS = [
-  { gems: 1, coins: 10 },
-  { gems: 5, coins: 50 },
-  { gems: 10, coins: 100 },
-];
+type CrateTone = 'wood' | 'gold' | 'crystal' | 'silver' | 'legendary' | 'emerald';
 
-const CRATE_OPTIONS = [
-  { id: 'basic', name: 'Basic Crate', emoji: '📦', cost: 50, costType: 'coins' as const, desc: '3 random cards + coins' },
-  { id: 'premium', name: 'Premium Crate', emoji: '💎', cost: 5, costType: 'gems' as const, desc: '8 cards + bonus gems' },
-  { id: 'legendary', name: 'Legendary Crate', emoji: '🌟', cost: 20, costType: 'gems' as const, desc: '15 cards + rare skin chance' },
-];
+const CRATE_ORDER = ['wooden', 'silver', 'gold', 'mythical', 'legendary', 'discovery'];
 
-function SectionHeader({ title }: { title: string }) {
-  return <Text style={styles.sectionTitle}>{title}</Text>;
+const CRATE_SUBLABELS: Record<string, string> = {
+  wooden: 'Free daily crate',
+  silver: 'Better odds',
+  gold: 'Guaranteed card',
+  mythical: 'Epic+ cards',
+  legendary: 'Best odds',
+  discovery: 'Guaranteed new card',
+};
+
+type CrateReward = {
+  type: string;
+  name?: string;
+  rarity?: string;
+  amount?: number;
+};
+
+function FloatBob({ children }: { children: React.ReactNode }) {
+  const anim = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(anim, { toValue: -6, duration: 1200, useNativeDriver: true }),
+        Animated.timing(anim, { toValue: 0, duration: 1200, useNativeDriver: true }),
+      ])
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [anim]);
+  return (
+    <Animated.View style={{ transform: [{ translateY: anim }] }}>
+      {children}
+    </Animated.View>
+  );
 }
 
 export default function ShopScreen() {
   const insets = useSafeAreaInsets();
-  const { profile, updateProfile } = useProfile();
+  const { profile, refreshProfile } = useProfile();
+
   const [voucherCode, setVoucherCode] = useState('');
-  const [isRedeeming, setIsRedeeming] = useState(false);
-  const [dailyFreeClaimed, setDailyFreeClaimed] = useState(false);
-  const [dailyGemClaimed, setDailyGemClaimed] = useState(false);
-  const [loadingAction, setLoadingAction] = useState<string | null>(null);
+  const [voucherResult, setVoucherResult] = useState<{ success: boolean; message: string } | null>(null);
+  const [redeemingVoucher, setRedeemingVoucher] = useState(false);
+  const [openingCrate, setOpeningCrate] = useState<string | null>(null);
+  const [crateRewards, setCrateRewards] = useState<CrateReward[] | null>(null);
+  const [showRewardsModal, setShowRewardsModal] = useState(false);
+  const [exchangingGems, setExchangingGems] = useState<number | null>(null);
 
-  const coinsDisplay = profile.coins.toLocaleString();
-  const gemsDisplay = profile.gems.toLocaleString();
-  const shardsDisplay = profile.shards.toLocaleString();
+  const coinsDisplay = (profile.coins ?? 0).toLocaleString();
+  const gemsDisplay = (profile.gems ?? 0).toLocaleString();
+  const shardsDisplay = (profile.shards ?? 0).toLocaleString();
 
-  const handleExchangeGems = useCallback(async (gems: number, coins: number) => {
-    console.log('[Shop] Exchange gems pressed', { gems, coins });
-    if (profile.gems < gems) {
-      Alert.alert('Not enough gems', `You need ${gems} gems but only have ${profile.gems}.`);
+  const lastFreeCrate = profile.last_free_crate ?? null;
+  const freeCrateAvailable = !lastFreeCrate || (Date.now() - new Date(lastFreeCrate).getTime() > 24 * 60 * 60 * 1000);
+
+  const handleExchangeGems = useCallback(async (amount: number) => {
+    if (exchangingGems !== null) return;
+    const cost = amount;
+    const coins = amount * GEM_TO_COIN_RATE;
+    console.log(`[Shop] Exchange gems pressed: ${cost}💎 → ${coins}🪙`);
+    if ((profile.gems ?? 0) < cost) {
+      Alert.alert('Not enough gems', `You need ${cost} gems.`);
       return;
     }
-    setLoadingAction(`exchange_${gems}`);
+    setExchangingGems(amount);
     try {
-      const { data, error } = await supabase.functions.invoke('exchangeGems', {
-        body: { gems },
+      const { data, error } = await supabase.functions.invoke('exchange-gems', {
+        body: { gems: amount },
       });
-      if (error) throw error;
-      console.log('[Shop] exchangeGems success', data);
-      await updateProfile({ gems: profile.gems - gems, coins: profile.coins + coins });
-      Alert.alert('Success!', `Exchanged ${gems} gems for ${coins} coins.`);
-    } catch (e) {
-      console.warn('[Shop] exchangeGems failed', e);
-      // Optimistic update anyway for demo
-      await updateProfile({ gems: profile.gems - gems, coins: profile.coins + coins });
-    } finally {
-      setLoadingAction(null);
-    }
-  }, [profile, updateProfile]);
-
-  const handleClaimDailyFree = useCallback(async () => {
-    console.log('[Shop] Claim daily free crate pressed');
-    if (dailyFreeClaimed) return;
-    setLoadingAction('daily_free');
-    try {
-      const { data, error } = await supabase.functions.invoke('claimDailyCrate', {});
-      if (error) throw error;
-      console.log('[Shop] claimDailyCrate success', data);
-      setDailyFreeClaimed(true);
-      Alert.alert('Daily Crate!', 'You received your daily free crate rewards!');
-    } catch (e) {
-      console.warn('[Shop] claimDailyCrate failed', e);
-      setDailyFreeClaimed(true);
-      Alert.alert('Daily Crate!', 'You received your daily free crate rewards!');
-    } finally {
-      setLoadingAction(null);
-    }
-  }, [dailyFreeClaimed]);
-
-  const handleClaimDailyGem = useCallback(async () => {
-    console.log('[Shop] Claim daily gem crate pressed');
-    if (dailyGemClaimed) return;
-    setLoadingAction('daily_gem');
-    try {
-      const { data, error } = await supabase.functions.invoke('claimDailyGemCrate', {});
-      if (error) throw error;
-      console.log('[Shop] claimDailyGemCrate success', data);
-      setDailyGemClaimed(true);
-      await updateProfile({ gems: profile.gems + 5 });
-      Alert.alert('Gem Crate!', 'You received 5 gems!');
-    } catch (e) {
-      console.warn('[Shop] claimDailyGemCrate failed', e);
-      setDailyGemClaimed(true);
-      await updateProfile({ gems: profile.gems + 5 });
-      Alert.alert('Gem Crate!', 'You received 5 gems!');
-    } finally {
-      setLoadingAction(null);
-    }
-  }, [dailyGemClaimed, profile, updateProfile]);
-
-  const handleOpenCrate = useCallback(async (crateId: string, costType: 'coins' | 'gems', cost: number) => {
-    console.log('[Shop] Open crate pressed', { crateId, costType, cost });
-    const balance = costType === 'coins' ? profile.coins : profile.gems;
-    if (balance < cost) {
-      Alert.alert('Not enough!', `You need ${cost} ${costType} to open this crate.`);
-      return;
-    }
-    setLoadingAction(`crate_${crateId}`);
-    try {
-      const { data, error } = await supabase.functions.invoke('openCrate', {
-        body: { crateType: crateId },
-      });
-      if (error) throw error;
-      console.log('[Shop] openCrate success', data);
-      if (costType === 'coins') {
-        await updateProfile({ coins: profile.coins - cost });
-      } else {
-        await updateProfile({ gems: profile.gems - cost });
+      if (error || data?.error) {
+        console.warn('[Shop] exchange-gems error', error?.message ?? data?.error);
+        Alert.alert('Error', data?.error ?? error?.message ?? 'Something went wrong');
+        return;
       }
-      Alert.alert('Crate Opened!', 'Check your collection for new cards!');
+      console.log('[Shop] Gems exchanged successfully', { amount, coins });
+      await refreshProfile();
     } catch (e) {
-      console.warn('[Shop] openCrate failed', e);
-      Alert.alert('Crate Opened!', 'Check your collection for new cards!');
+      console.warn('[Shop] exchange-gems exception', e);
+      Alert.alert('Error', 'Network error. Please try again.');
     } finally {
-      setLoadingAction(null);
+      setExchangingGems(null);
     }
-  }, [profile, updateProfile]);
+  }, [exchangingGems, profile.gems, refreshProfile]);
+
+  const handleOpenCrate = useCallback(async (crateId: string) => {
+    if (openingCrate !== null) return;
+    const crate = CRATE_TYPES[crateId];
+    if (!crate) return;
+
+    const isFree = crateId === 'wooden';
+    if (isFree && !freeCrateAvailable) {
+      Alert.alert('Already claimed', 'Come back tomorrow for your free crate!');
+      return;
+    }
+    if (!isFree && crate.currency === 'coins' && (profile.coins ?? 0) < crate.cost) {
+      Alert.alert('Not enough coins', `You need ${crate.cost} coins.`);
+      return;
+    }
+    if (!isFree && crate.currency === 'gems' && (profile.gems ?? 0) < crate.cost) {
+      Alert.alert('Not enough gems', `You need ${crate.cost} gems.`);
+      return;
+    }
+
+    console.log(`[Shop] Open crate pressed: ${crateId}`, { isFree, cost: crate.cost, currency: crate.currency });
+    setOpeningCrate(crateId);
+    try {
+      const { data, error } = await supabase.functions.invoke('open-crate', {
+        body: { crateId, claimFree: isFree },
+      });
+      if (error || data?.error) {
+        console.warn('[Shop] open-crate error', error?.message ?? data?.error);
+        Alert.alert('Error', data?.error ?? error?.message ?? 'Something went wrong');
+        return;
+      }
+      console.log('[Shop] Crate opened, rewards:', data?.rewards);
+      setCrateRewards(data?.rewards ?? []);
+      setShowRewardsModal(true);
+    } catch (e) {
+      console.warn('[Shop] open-crate exception', e);
+      Alert.alert('Error', 'Network error. Please try again.');
+    } finally {
+      setOpeningCrate(null);
+    }
+  }, [openingCrate, freeCrateAvailable, profile.coins, profile.gems]);
 
   const handleRedeemVoucher = useCallback(async () => {
-    if (!voucherCode.trim()) return;
-    console.log('[Shop] Redeem voucher pressed', { code: voucherCode });
-    setIsRedeeming(true);
+    const code = voucherCode.trim().toUpperCase();
+    if (!code) return;
+    console.log(`[Shop] Redeem voucher pressed: ${code}`);
+    setRedeemingVoucher(true);
+    setVoucherResult(null);
     try {
-      const { data, error } = await supabase.functions.invoke('redeemVoucher', {
-        body: { code: voucherCode.trim() },
+      const { data, error } = await supabase.functions.invoke('redeem-voucher', {
+        body: { code },
       });
-      if (error) throw error;
-      console.log('[Shop] redeemVoucher success', data);
+      if (error || data?.error) {
+        console.warn('[Shop] redeem-voucher error', error?.message ?? data?.error);
+        setVoucherResult({ success: false, message: data?.error ?? error?.message ?? 'Invalid code' });
+        return;
+      }
+      console.log('[Shop] Voucher redeemed', data);
+      setVoucherResult({ success: true, message: data?.message ?? 'Rewards claimed!' });
       setVoucherCode('');
-      Alert.alert('Voucher Redeemed!', 'Your rewards have been added to your account.');
+      await refreshProfile();
     } catch (e) {
-      console.warn('[Shop] redeemVoucher failed', e);
-      Alert.alert('Invalid Code', 'This voucher code is invalid or has already been used.');
+      console.warn('[Shop] redeem-voucher exception', e);
+      setVoucherResult({ success: false, message: 'Network error. Please try again.' });
     } finally {
-      setIsRedeeming(false);
+      setRedeemingVoucher(false);
     }
-  }, [voucherCode]);
+  }, [voucherCode, refreshProfile]);
+
+  const handleDismissRewards = useCallback(async () => {
+    console.log('[Shop] Rewards modal dismissed');
+    setShowRewardsModal(false);
+    setCrateRewards(null);
+    await refreshProfile();
+  }, [refreshProfile]);
 
   return (
     <View style={[styles.root, { paddingTop: insets.top }]}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.screenTitle}>Shop</Text>
-        <View style={styles.balanceRow}>
-          <View style={styles.balanceChip}>
-            <Text style={styles.balanceEmoji}>💎</Text>
-            <Text style={[styles.balanceValue, { color: '#8B5CF6' }]}>{gemsDisplay}</Text>
-          </View>
-          <View style={styles.balanceChip}>
-            <Text style={styles.balanceEmoji}>🪙</Text>
-            <Text style={[styles.balanceValue, { color: '#F59E0B' }]}>{coinsDisplay}</Text>
-          </View>
-        </View>
-      </View>
-
       <ScrollView
-        contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 120 }]}
+        style={styles.scroll}
+        contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 100 }]}
         showsVerticalScrollIndicator={false}
       >
-        {/* Shard balance */}
-        <View style={styles.shardCard}>
-          <View style={styles.shardLeft}>
-            <Text style={styles.shardEmoji}>🔷</Text>
-            <View>
-              <Text style={styles.shardLabel}>Splitter</Text>
-              <Text style={styles.shardSub}>Use in the Lab to upgrade cards</Text>
+        {/* Header */}
+        <View style={styles.header}>
+          <Text style={styles.title}>Shop</Text>
+          <View style={styles.currencyRow}>
+            <View style={styles.currencyChip}>
+              <Text style={styles.currencyEmoji}>🪙</Text>
+              <Text style={[styles.currencyValue, { color: COLORS.coin }]}>{coinsDisplay}</Text>
+            </View>
+            <View style={styles.currencyChip}>
+              <Text style={styles.currencyEmoji}>💎</Text>
+              <Text style={[styles.currencyValue, { color: COLORS.gem }]}>{gemsDisplay}</Text>
             </View>
           </View>
-          <Text style={styles.shardValue}>{shardsDisplay}</Text>
         </View>
 
-        {/* Gem exchange */}
-        <SectionHeader title="Gem Exchange" />
-        <View style={styles.exchangeRow}>
-          {GEM_EXCHANGE_OPTIONS.map(({ gems, coins }) => {
-            const isLoading = loadingAction === `exchange_${gems}`;
-            const canAfford = profile.gems >= gems;
-            return (
-              <AnimatedPressable
-                key={gems}
-                style={[styles.exchangeBtn, !canAfford && styles.exchangeBtnDisabled]}
-                onPress={() => handleExchangeGems(gems, coins)}
-              >
-                <Text style={styles.exchangeGems}>{gems} 💎</Text>
-                <Text style={styles.exchangeArrow}>→</Text>
-                <Text style={styles.exchangeCoins}>{coins} 🪙</Text>
-              </AnimatedPressable>
-            );
-          })}
+        {/* Gem exchange card */}
+        <View style={styles.exchangeCard}>
+          <View style={styles.exchangeHeader}>
+            <Text style={styles.exchangeTitle}>Exchange Gems</Text>
+            <View style={styles.gemPill}>
+              <Text style={styles.gemPillText}>💎 {gemsDisplay}</Text>
+            </View>
+          </View>
+          <Text style={styles.exchangeRate}>1 💎 = {GEM_TO_COIN_RATE} 🪙</Text>
+          <View style={styles.exchangeBtns}>
+            {GEM_EXCHANGE_OPTIONS.map((amount) => {
+              const coins = amount * GEM_TO_COIN_RATE;
+              const canAfford = (profile.gems ?? 0) >= amount;
+              const isLoading = exchangingGems === amount;
+              return (
+                <Pressable
+                  key={amount}
+                  style={[styles.exchangeBtn, canAfford ? styles.exchangeBtnActive : styles.exchangeBtnDisabled]}
+                  onPress={() => handleExchangeGems(amount)}
+                  disabled={!canAfford || exchangingGems !== null}
+                >
+                  {isLoading ? (
+                    <ActivityIndicator size="small" color="#fff" />
+                  ) : (
+                    <>
+                      <Text style={[styles.exchangeBtnText, !canAfford && styles.exchangeBtnTextDisabled]}>
+                        💎{amount}
+                      </Text>
+                      <Text style={[styles.exchangeBtnSub, !canAfford && styles.exchangeBtnTextDisabled]}>
+                        → 🪙{coins}
+                      </Text>
+                    </>
+                  )}
+                </Pressable>
+              );
+            })}
+          </View>
         </View>
 
-        {/* Daily crates */}
-        <SectionHeader title="Daily Rewards" />
-        <View style={styles.dailyRow}>
-          <TouchableOpacity
-            style={[styles.dailyCrateBtn, dailyFreeClaimed && styles.dailyCrateClaimed]}
-            onPress={handleClaimDailyFree}
-            disabled={dailyFreeClaimed || loadingAction === 'daily_free'}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.dailyCrateEmoji}>📦</Text>
-            <Text style={styles.dailyCrateName}>Free Crate</Text>
-            <Text style={styles.dailyCrateDesc}>3 cards + coins</Text>
-            {dailyFreeClaimed ? (
-              <View style={styles.claimedBadge}>
-                <Text style={styles.claimedText}>CLAIMED</Text>
-              </View>
-            ) : (
-              <View style={styles.claimBadge}>
-                <Text style={styles.claimText}>CLAIM</Text>
-              </View>
-            )}
-          </TouchableOpacity>
+        {/* Shard balance */}
+        <Pressable
+          style={styles.shardPill}
+          onPress={() => {
+            console.log('[Shop] Use in Lab pressed');
+            router.push('/(tabs)/collection' as never);
+          }}
+        >
+          <Text style={styles.shardText}>🔮 {shardsDisplay} shards</Text>
+          <Text style={styles.shardLink}>Use in Lab →</Text>
+        </Pressable>
 
-          <TouchableOpacity
-            style={[styles.dailyCrateBtn, styles.dailyCrateBtnGem, dailyGemClaimed && styles.dailyCrateClaimed]}
-            onPress={handleClaimDailyGem}
-            disabled={dailyGemClaimed || loadingAction === 'daily_gem'}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.dailyCrateEmoji}>💎</Text>
-            <Text style={styles.dailyCrateName}>Gem Crate</Text>
-            <Text style={styles.dailyCrateDesc}>+5 gems</Text>
-            {dailyGemClaimed ? (
-              <View style={styles.claimedBadge}>
-                <Text style={styles.claimedText}>CLAIMED</Text>
-              </View>
-            ) : (
-              <View style={[styles.claimBadge, { backgroundColor: '#8B5CF6' }]}>
-                <Text style={styles.claimText}>CLAIM</Text>
-              </View>
-            )}
-          </TouchableOpacity>
-        </View>
+        {/* Crates section */}
+        <Text style={styles.cratesHeading}>Crates</Text>
+        {CRATE_ORDER.map((crateId) => {
+          const crate = CRATE_TYPES[crateId];
+          if (!crate) return null;
+          const isFree = crateId === 'wooden';
+          const isLoading = openingCrate === crateId;
+          const isAvailable = isFree ? freeCrateAvailable : true;
+          const canAfford = isFree
+            ? freeCrateAvailable
+            : crate.currency === 'coins'
+            ? (profile.coins ?? 0) >= crate.cost
+            : (profile.gems ?? 0) >= crate.cost;
 
-        {/* Paid crates */}
-        <SectionHeader title="Crates" />
-        {CRATE_OPTIONS.map((crate) => {
-          const isLoading = loadingAction === `crate_${crate.id}`;
-          const balance = crate.costType === 'coins' ? profile.coins : profile.gems;
-          const canAfford = balance >= crate.cost;
+          const btnLabel = isFree
+            ? freeCrateAvailable ? 'Free Daily' : 'Claimed'
+            : crate.currency === 'coins'
+            ? `${crate.cost} 🪙`
+            : `${crate.cost} 💎`;
+
+          const skinPct = Math.round(crate.skinChance * 100);
+          const itemsLabel = `${crate.itemCount} items`;
+
           return (
-            <View key={crate.id} style={styles.crateRow}>
-              <Text style={styles.crateEmoji}>{crate.emoji}</Text>
+            <View key={crateId} style={styles.crateCard}>
+              <FloatBob>
+                <CrateIcon size={56} tone={crate.tone as CrateTone} />
+              </FloatBob>
               <View style={styles.crateInfo}>
-                <Text style={styles.crateName}>{crate.name}</Text>
-                <Text style={styles.crateDesc}>{crate.desc}</Text>
+                <Text style={styles.crateName}>{crate.name} Crate</Text>
+                <Text style={styles.crateSub}>{CRATE_SUBLABELS[crateId]}</Text>
+                <View style={styles.crateBadges}>
+                  <View style={styles.badge}>
+                    <Text style={styles.badgeText}>{itemsLabel}</Text>
+                  </View>
+                  {skinPct > 0 && (
+                    <View style={[styles.badge, styles.badgeSkin]}>
+                      <Text style={[styles.badgeText, styles.badgeTextSkin]}>{skinPct}% skin</Text>
+                    </View>
+                  )}
+                  {crate.guaranteedCards > 0 && (
+                    <View style={[styles.badge, styles.badgeCard]}>
+                      <Text style={[styles.badgeText, styles.badgeTextCard]}>
+                        {crate.guaranteedCards} card{crate.guaranteedCards > 1 ? 's' : ''}
+                      </Text>
+                    </View>
+                  )}
+                  {crate.gemChance > 0 && (
+                    <View style={[styles.badge, styles.badgeGem]}>
+                      <Text style={[styles.badgeText, styles.badgeTextGem]}>💎 chance</Text>
+                    </View>
+                  )}
+                </View>
               </View>
-              <TouchableOpacity
-                style={[styles.crateOpenBtn, !canAfford && styles.crateOpenBtnDisabled]}
-                onPress={() => handleOpenCrate(crate.id, crate.costType, crate.cost)}
-                disabled={!canAfford || isLoading}
-                activeOpacity={0.8}
+              <AnimatedPressable
+                style={[
+                  styles.crateBtn,
+                  canAfford && isAvailable ? styles.crateBtnActive : styles.crateBtnDisabled,
+                ]}
+                onPress={() => handleOpenCrate(crateId)}
+                disabled={!canAfford || !isAvailable || openingCrate !== null}
               >
-                <Text style={styles.crateOpenBtnText}>
-                  {crate.cost} {crate.costType === 'coins' ? '🪙' : '💎'}
-                </Text>
-              </TouchableOpacity>
+                {isLoading ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Text style={[styles.crateBtnText, (!canAfford || !isAvailable) && styles.crateBtnTextDisabled]}>
+                    {btnLabel}
+                  </Text>
+                )}
+              </AnimatedPressable>
             </View>
           );
         })}
 
-        {/* Voucher */}
-        <SectionHeader title="Voucher Code" />
-        <View style={styles.voucherRow}>
-          <TextInput
-            style={styles.voucherInput}
-            placeholder="Enter code..."
-            placeholderTextColor="#94A3B8"
-            value={voucherCode}
-            onChangeText={(text) => {
-              console.log('[Shop] Voucher code input changed', { length: text.length });
-              setVoucherCode(text.toUpperCase());
-            }}
-            autoCapitalize="characters"
-            autoCorrect={false}
-          />
-          <TouchableOpacity
-            style={[styles.voucherBtn, (!voucherCode.trim() || isRedeeming) && styles.voucherBtnDisabled]}
-            onPress={handleRedeemVoucher}
-            disabled={!voucherCode.trim() || isRedeeming}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.voucherBtnText}>Redeem</Text>
-          </TouchableOpacity>
+        {/* Voucher section */}
+        <View style={styles.voucherCard}>
+          <Text style={styles.voucherTitle}>Redeem Voucher</Text>
+          <View style={styles.voucherRow}>
+            <TextInput
+              style={styles.voucherInput}
+              placeholder="ENTER CODE"
+              placeholderTextColor="#94a3b8"
+              value={voucherCode}
+              onChangeText={(t) => setVoucherCode(t.toUpperCase())}
+              autoCapitalize="characters"
+              autoCorrect={false}
+            />
+            <AnimatedPressable
+              style={[styles.redeemBtn, !voucherCode.trim() && styles.redeemBtnDisabled]}
+              onPress={handleRedeemVoucher}
+              disabled={!voucherCode.trim() || redeemingVoucher}
+            >
+              {redeemingVoucher ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <Text style={styles.redeemBtnText}>Redeem</Text>
+              )}
+            </AnimatedPressable>
+          </View>
+          {voucherResult && (
+            <View style={[styles.voucherFeedback, voucherResult.success ? styles.voucherSuccess : styles.voucherError]}>
+              <Text style={[styles.voucherFeedbackText, voucherResult.success ? styles.voucherSuccessText : styles.voucherErrorText]}>
+                {voucherResult.message}
+              </Text>
+            </View>
+          )}
         </View>
       </ScrollView>
+
+      {/* Rewards modal */}
+      <Modal visible={showRewardsModal} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>🎉 Crate Opened!</Text>
+            {crateRewards && crateRewards.length > 0 ? (
+              crateRewards.map((r, i) => {
+                let rewardLabel = '';
+                if (r.type === 'coins') {
+                  rewardLabel = `🪙 +${r.amount} coins`;
+                } else if (r.type === 'gems') {
+                  rewardLabel = `💎 +${r.amount} gems`;
+                } else if (r.type === 'shards') {
+                  rewardLabel = `🔷 +${r.amount} shards`;
+                } else if (r.type === 'card') {
+                  rewardLabel = r.rarity ? `🃏 ${r.name} (${r.rarity})` : `🃏 ${r.name}`;
+                } else if (r.type === 'skin') {
+                  rewardLabel = `✨ ${r.name}`;
+                } else {
+                  rewardLabel = r.name ? `🃏 ${r.name}` : r.type;
+                }
+                return (
+                  <View key={i} style={styles.rewardRow}>
+                    <Text style={styles.rewardText}>{rewardLabel}</Text>
+                  </View>
+                );
+              })
+            ) : (
+              <Text style={styles.rewardText}>Rewards added to your account!</Text>
+            )}
+            <AnimatedPressable
+              style={styles.modalCloseBtn}
+              onPress={handleDismissRewards}
+            >
+              <Text style={styles.modalCloseBtnText}>Awesome!</Text>
+            </AnimatedPressable>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -312,248 +410,348 @@ export default function ShopScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: '#F8FAFC',
+  },
+  scroll: {
+    flex: 1,
+  },
+  content: {
+    paddingHorizontal: 16,
+    gap: 12,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 14,
+    paddingVertical: 8,
   },
-  screenTitle: {
+  title: {
     fontSize: 28,
     fontWeight: '900',
-    color: COLORS.text,
+    color: '#0f172a',
     letterSpacing: -0.5,
   },
-  balanceRow: {
+  currencyRow: {
     flexDirection: 'row',
     gap: 8,
   },
-  balanceChip: {
+  currencyChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
-    backgroundColor: COLORS.surface,
-    borderRadius: 20,
-    paddingHorizontal: 12,
+    gap: 4,
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 10,
     paddingVertical: 6,
+    borderRadius: 20,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: '#e2e8f0',
   },
-  balanceEmoji: {
-    fontSize: 14,
+  currencyEmoji: {
+    fontSize: 12,
   },
-  balanceValue: {
-    fontSize: 14,
-    fontWeight: '800',
-    fontFamily: 'SpaceMono',
+  currencyValue: {
+    fontSize: 12,
+    fontWeight: '700',
+    fontVariant: ['tabular-nums'],
   },
-  content: {
-    paddingHorizontal: 20,
-    gap: 12,
-  },
-  shardCard: {
-    backgroundColor: '#7C3AED',
-    borderRadius: 16,
+  exchangeCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
     padding: 16,
+    gap: 12,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  exchangeHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  shardLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  shardEmoji: {
-    fontSize: 28,
-  },
-  shardLabel: {
+  exchangeTitle: {
     fontSize: 16,
     fontWeight: '800',
-    color: '#FFFFFF',
+    color: '#0f172a',
   },
-  shardSub: {
+  gemPill: {
+    backgroundColor: '#ecfdf5',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#a7f3d0',
+  },
+  gemPillText: {
     fontSize: 12,
-    color: 'rgba(255,255,255,0.7)',
+    fontWeight: '700',
+    color: '#065f46',
+  },
+  exchangeRate: {
+    fontSize: 13,
+    color: '#64748b',
     fontWeight: '500',
-    marginTop: 2,
   },
-  shardValue: {
-    fontSize: 24,
-    fontWeight: '900',
-    color: '#FFFFFF',
-    fontFamily: 'SpaceMono',
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: COLORS.text,
-    letterSpacing: -0.2,
-    marginTop: 8,
-  },
-  exchangeRow: {
+  exchangeBtns: {
     flexDirection: 'row',
     gap: 8,
   },
   exchangeBtn: {
     flex: 1,
-    backgroundColor: COLORS.surface,
-    borderRadius: 14,
-    padding: 12,
+    borderRadius: 12,
+    paddingVertical: 10,
     alignItems: 'center',
-    gap: 4,
-    borderWidth: 1,
-    borderColor: COLORS.border,
+    gap: 2,
+    minHeight: 52,
+    justifyContent: 'center',
+  },
+  exchangeBtnActive: {
+    backgroundColor: '#f59e0b',
   },
   exchangeBtnDisabled: {
-    opacity: 0.5,
+    backgroundColor: '#f1f5f9',
   },
-  exchangeGems: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#8B5CF6',
-  },
-  exchangeArrow: {
-    fontSize: 12,
-    color: COLORS.textTertiary,
-  },
-  exchangeCoins: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#F59E0B',
-  },
-  dailyRow: {
-    flexDirection: 'row',
-    gap: 10,
-  },
-  dailyCrateBtn: {
-    flex: 1,
-    backgroundColor: COLORS.surface,
-    borderRadius: 16,
-    padding: 16,
-    alignItems: 'center',
-    gap: 6,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-  dailyCrateBtnGem: {
-    borderColor: 'rgba(139,92,246,0.3)',
-    backgroundColor: 'rgba(139,92,246,0.06)',
-  },
-  dailyCrateClaimed: {
-    opacity: 0.6,
-  },
-  dailyCrateEmoji: {
-    fontSize: 32,
-  },
-  dailyCrateName: {
-    fontSize: 14,
-    fontWeight: '800',
-    color: COLORS.text,
-  },
-  dailyCrateDesc: {
-    fontSize: 12,
-    color: COLORS.textSecondary,
-    fontWeight: '500',
-  },
-  claimedBadge: {
-    backgroundColor: COLORS.surfaceSecondary,
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-  },
-  claimedText: {
-    fontSize: 11,
-    fontWeight: '800',
-    color: COLORS.textTertiary,
-    letterSpacing: 0.5,
-  },
-  claimBadge: {
-    backgroundColor: '#22C55E',
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-  },
-  claimText: {
-    fontSize: 11,
+  exchangeBtnText: {
+    fontSize: 13,
     fontWeight: '800',
     color: '#FFFFFF',
-    letterSpacing: 0.5,
   },
-  crateRow: {
-    backgroundColor: COLORS.surface,
-    borderRadius: 16,
+  exchangeBtnSub: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.8)',
+  },
+  exchangeBtnTextDisabled: {
+    color: '#94a3b8',
+  },
+  shardPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#f5f3ff',
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderWidth: 1,
+    borderColor: '#ddd6fe',
+  },
+  shardText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#5b21b6',
+  },
+  shardLink: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#7c3aed',
+  },
+  cratesHeading: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#0f172a',
+    marginTop: 4,
+  },
+  crateCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 18,
     padding: 14,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
     borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-  crateEmoji: {
-    fontSize: 32,
+    borderColor: '#e2e8f0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 1,
   },
   crateInfo: {
     flex: 1,
-    gap: 3,
+    gap: 4,
   },
   crateName: {
     fontSize: 15,
     fontWeight: '800',
-    color: COLORS.text,
+    color: '#0f172a',
   },
-  crateDesc: {
+  crateSub: {
     fontSize: 12,
-    color: COLORS.textSecondary,
+    color: '#64748b',
     fontWeight: '500',
   },
-  crateOpenBtn: {
-    backgroundColor: COLORS.primary,
+  crateBadges: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 4,
+    marginTop: 2,
+  },
+  badge: {
+    backgroundColor: '#f1f5f9',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  badgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#64748b',
+  },
+  badgeSkin: {
+    backgroundColor: '#fdf4ff',
+  },
+  badgeTextSkin: {
+    color: '#7e22ce',
+  },
+  badgeCard: {
+    backgroundColor: '#f0fdf4',
+  },
+  badgeTextCard: {
+    color: '#15803d',
+  },
+  badgeGem: {
+    backgroundColor: '#ecfeff',
+  },
+  badgeTextGem: {
+    color: '#0e7490',
+  },
+  crateBtn: {
     borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: 10,
+    minWidth: 80,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 40,
   },
-  crateOpenBtnDisabled: {
-    backgroundColor: COLORS.surfaceSecondary,
+  crateBtnActive: {
+    backgroundColor: '#22c55e',
   },
-  crateOpenBtnText: {
+  crateBtnDisabled: {
+    backgroundColor: '#e2e8f0',
+  },
+  crateBtnText: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
+  crateBtnTextDisabled: {
+    color: '#94a3b8',
+  },
+  voucherCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 18,
+    padding: 16,
+    gap: 12,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  voucherTitle: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#0f172a',
+  },
+  voucherRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  voucherInput: {
+    flex: 1,
+    backgroundColor: '#f8fafc',
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#0f172a',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    letterSpacing: 1,
+  },
+  redeemBtn: {
+    backgroundColor: '#3b82f6',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 80,
+  },
+  redeemBtnDisabled: {
+    backgroundColor: '#e2e8f0',
+  },
+  redeemBtnText: {
     fontSize: 13,
     fontWeight: '800',
     color: '#FFFFFF',
   },
-  voucherRow: {
-    flexDirection: 'row',
-    gap: 10,
+  voucherFeedback: {
+    borderRadius: 10,
+    padding: 10,
   },
-  voucherInput: {
-    flex: 1,
-    backgroundColor: COLORS.surface,
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    fontSize: 15,
-    color: COLORS.text,
+  voucherSuccess: {
+    backgroundColor: '#f0fdf4',
     borderWidth: 1,
-    borderColor: COLORS.border,
-    fontWeight: '600',
-    letterSpacing: 1,
+    borderColor: '#bbf7d0',
   },
-  voucherBtn: {
-    backgroundColor: COLORS.primary,
-    borderRadius: 12,
-    paddingHorizontal: 18,
-    paddingVertical: 12,
+  voucherError: {
+    backgroundColor: '#fff1f2',
+    borderWidth: 1,
+    borderColor: '#fecdd3',
+  },
+  voucherFeedbackText: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  voucherSuccessText: {
+    color: '#15803d',
+  },
+  voucherErrorText: {
+    color: '#be123c',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.7)',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  voucherBtnDisabled: {
-    backgroundColor: COLORS.surfaceSecondary,
+  modalCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    padding: 28,
+    width: '80%',
+    gap: 12,
+    alignItems: 'center',
   },
-  voucherBtnText: {
-    fontSize: 14,
+  modalTitle: {
+    fontSize: 22,
+    fontWeight: '900',
+    color: '#0f172a',
+  },
+  rewardRow: {
+    width: '100%',
+    backgroundColor: '#f8fafc',
+    borderRadius: 10,
+    padding: 10,
+    alignItems: 'center',
+  },
+  rewardText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#0f172a',
+  },
+  modalCloseBtn: {
+    backgroundColor: '#3b82f6',
+    borderRadius: 14,
+    paddingVertical: 12,
+    paddingHorizontal: 32,
+    marginTop: 4,
+  },
+  modalCloseBtnText: {
+    fontSize: 15,
     fontWeight: '800',
     color: '#FFFFFF',
   },

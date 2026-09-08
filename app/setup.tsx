@@ -337,31 +337,33 @@ export default function SetupScreen() {
                 return (
                   <Pressable
                     key={t}
-                    style={[
-                      styles.cardItem,
-                      isSelected && styles.cardItemSelected,
-                      !isUnlocked && styles.cardItemLocked,
-                    ]}
+                    style={styles.cardItem}
                     onPress={() => {
                       if (!isUnlocked) return;
                       toggleTower(t);
                     }}
                   >
-                    {isSelected && (
-                      <View style={styles.selBadge}>
-                        <Text style={styles.selBadgeText}>{selIdx + 1}</Text>
-                      </View>
-                    )}
-                    <TowerIcon type={t} size={32} level={1} />
-                    <Text style={styles.cardName} numberOfLines={1}>{def.name}</Text>
-                    {isUnlocked ? (
-                      <Text style={styles.cardCost}>{def.cost}🪙</Text>
-                    ) : (
-                      <View style={styles.lockRow}>
-                        <Lock size={10} color="#94a3b8" strokeWidth={2} />
-                        <Text style={styles.lockText}>{lockLabel}</Text>
-                      </View>
-                    )}
+                    <View style={[
+                      styles.cardItemInner,
+                      isSelected && styles.cardItemSelected,
+                      !isUnlocked && styles.cardItemLocked,
+                    ]}>
+                      {isSelected && (
+                        <View style={styles.selBadge}>
+                          <Text style={styles.selBadgeText}>{selIdx + 1}</Text>
+                        </View>
+                      )}
+                      <TowerIcon type={t} size={32} level={1} />
+                      <Text style={styles.cardName} numberOfLines={1}>{def.name}</Text>
+                      {isUnlocked ? (
+                        <Text style={styles.cardCost}>{def.cost}🪙</Text>
+                      ) : (
+                        <View style={styles.lockRow}>
+                          <Lock size={10} color="#94a3b8" strokeWidth={2} />
+                          <Text style={styles.lockText}>{lockLabel}</Text>
+                        </View>
+                      )}
+                    </View>
                   </Pressable>
                 );
               })}
@@ -386,33 +388,35 @@ export default function SetupScreen() {
                 return (
                   <Pressable
                     key={o}
-                    style={[
-                      styles.cardItem,
-                      isSelected && styles.cardItemOrbSelected,
-                      !isUnlocked && styles.cardItemLocked,
-                    ]}
+                    style={styles.cardItem}
                     onPress={() => {
                       if (!isUnlocked) return;
                       toggleOrb(o);
                     }}
                   >
-                    {isSelected && (
-                      <View style={[styles.selBadge, styles.selBadgeOrb]}>
-                        <Text style={styles.selBadgeText}>{selIdx + 1}</Text>
+                    <View style={[
+                      styles.cardItemInner,
+                      isSelected && styles.cardItemOrbSelected,
+                      !isUnlocked && styles.cardItemLocked,
+                    ]}>
+                      {isSelected && (
+                        <View style={[styles.selBadge, styles.selBadgeOrb]}>
+                          <Text style={styles.selBadgeText}>{selIdx + 1}</Text>
+                        </View>
+                      )}
+                      <View style={[styles.orbCircle, { backgroundColor: def.color }]}>
+                        <Text style={styles.orbHpText}>{def.hp}</Text>
                       </View>
-                    )}
-                    <View style={[styles.orbCircle, { backgroundColor: def.color }]}>
-                      <Text style={styles.orbHpText}>{def.hp}</Text>
+                      <Text style={styles.cardName} numberOfLines={1}>{def.name}</Text>
+                      {isUnlocked ? (
+                        <Text style={styles.cardCost}>{def.cost}🪙</Text>
+                      ) : (
+                        <View style={styles.lockRow}>
+                          <Lock size={10} color="#94a3b8" strokeWidth={2} />
+                          <Text style={styles.lockText}>{lockLabel}</Text>
+                        </View>
+                      )}
                     </View>
-                    <Text style={styles.cardName} numberOfLines={1}>{def.name}</Text>
-                    {isUnlocked ? (
-                      <Text style={styles.cardCost}>{def.cost}🪙</Text>
-                    ) : (
-                      <View style={styles.lockRow}>
-                        <Lock size={10} color="#94a3b8" strokeWidth={2} />
-                        <Text style={styles.lockText}>{lockLabel}</Text>
-                      </View>
-                    )}
                   </Pressable>
                 );
               })}
@@ -628,10 +632,14 @@ const styles = StyleSheet.create({
   cardGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
+    marginHorizontal: -4,
   },
   cardItem: {
-    width: '30%',
+    width: '33.333%',
+    paddingHorizontal: 4,
+    paddingVertical: 4,
+  },
+  cardItemInner: {
     backgroundColor: '#FFFFFF',
     borderRadius: 14,
     padding: 10,
