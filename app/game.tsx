@@ -1,4 +1,4 @@
-import React, { useRef, useState, useCallback } from 'react';
+import React, { useRef, useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -128,6 +128,9 @@ export default function GameScreen() {
     abilities?: string;
     sessionId?: string;
     seed?: string;
+    opponentName?: string;
+    opponentTrophies?: string;
+    role?: string;
   }>();
 
   const uiMode = params.mode ?? 'casual';
@@ -145,7 +148,7 @@ export default function GameScreen() {
     cardLevels: DEFAULT_LOADOUT.cardLevels,
   };
 
-  const opponentName = AI_NAMES[difficulty] ?? 'Opponent';
+  const opponentName = params.opponentName ?? AI_NAMES[difficulty] ?? 'Opponent';
 
   const [isPaused, setIsPaused] = useState(false);
   const [selectedTowerMenu, setSelectedTowerMenu] = useState<Tower | null>(null);
@@ -153,49 +156,97 @@ export default function GameScreen() {
 
   const initialState = useRef(createInitialState(engineMode, 0, seed, loadout)).current;
 
+  // Notify backend that match has started
+  useEffect(() => {
+    if (isAiMode || uiMode === 'ranked') {
+      console.log('[Game] Calling start-ai-match on game start', { mode: uiMode });
+      supabase.functions.invoke('start-ai-match', {}).catch((e) => {
+        console.warn('[Game] start-ai-match exception', e);
+      });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const handleGameEnd = useCallback(async (state: GameState) => {
     const isWin = state.winner === 'player';
-    console.log(`[Game] Game finished winner=${state.winner} mode=${uiMode} difficulty=${difficulty}`);
-    const trophiesChange = isWin ? 25 : -15;
-    const coinsEarned = isWin ? 45 : 20;
-    const shardsEarned = isWin ? 10 : 0;
+    const elapsedSeconds = Math.floor(state.time / 1000);
+    const sessionId = params.sessionId;
+    const isMultiplayer = !!sessionId;
+    const isAiGame = engineMode.startsWith('ai_');
 
-    // Call Supabase edge function to finalize match
-    try {
-      console.log('[Game] Calling finalizeAiMatch edge function');
-      const { data, error } = await supabase.functions.invoke('finalizeAiMatch', {
-        body: {
-          result: isWin ? 'win' : 'loss',
-          mode: uiMode,
-          difficulty,
-          trophiesChange,
-          coinsEarned,
-          shardsEarned,
-          gameDuration: Math.floor(state.time / 1000),
-        },
-      });
-      if (error) {
-        console.warn('[Game] finalizeAiMatch error:', error.message);
-      } else {
-        console.log('[Game] finalizeAiMatch response:', data);
+    console.log(`[Game] Game finished winner=${state.winner} mode=${uiMode} difficulty=${difficulty} elapsed=${elapsedSeconds}s multiplayer=${isMultiplayer}`);
+
+    let trophyChange = isWin ? 25 : -15;
+    let coinsEarned = isWin ? 45 : 20;
+    let newTrophies: number | undefined;
+
+    if (isMultiplayer && sessionId) {
+      // Multiplayer finalize
+      const myHp = state.player.station.hp;
+      const oppHp = state.opponent.station.hp;
+      try {
+        console.log('[Game] Calling finalize-match edge function', { sessionId, outcome: isWin ? 'win' : 'loss' });
+        const { data, error } = await supabase.functions.invoke('finalize-match', {
+          body: {
+            sessionId,
+            outcome: isWin ? 'win' : 'loss',
+            gameTime: elapsedSeconds,
+            myHp,
+            oppHp,
+          },
+        });
+        if (error) {
+          console.warn('[Game] finalize-match error:', error.message);
+        } else {
+          console.log('[Game] finalize-match response:', data);
+          if (data?.trophyChange !== undefined) trophyChange = Number(data.trophyChange);
+          if (data?.newTrophies !== undefined) newTrophies = Number(data.newTrophies);
+          if (data?.coinsEarned !== undefined) coinsEarned = Number(data.coinsEarned);
+        }
+      } catch (err) {
+        console.warn('[Game] finalize-match exception:', err);
       }
-    } catch (err) {
-      console.warn('[Game] finalizeAiMatch exception:', err);
+    } else if (isAiGame) {
+      // AI finalize
+      const aiDifficulty = difficulty;
+      try {
+        console.log('[Game] Calling finalize-ai-match edge function', { outcome: isWin ? 'win' : 'loss', aiDifficulty });
+        const { data, error } = await supabase.functions.invoke('finalize-ai-match', {
+          body: {
+            outcome: isWin ? 'win' : 'loss',
+            gameTime: elapsedSeconds,
+            difficulty: aiDifficulty,
+          },
+        });
+        if (error) {
+          console.warn('[Game] finalize-ai-match error:', error.message);
+        } else {
+          console.log('[Game] finalize-ai-match response:', data);
+          if (data?.trophyChange !== undefined) trophyChange = Number(data.trophyChange);
+          if (data?.newTrophies !== undefined) newTrophies = Number(data.newTrophies);
+          if (data?.coinsEarned !== undefined) coinsEarned = Number(data.coinsEarned);
+        }
+      } catch (err) {
+        console.warn('[Game] finalize-ai-match exception:', err);
+      }
     }
+
+    const opponentName = params.opponentName ?? AI_NAMES[difficulty] ?? 'Opponent';
 
     setTimeout(() => {
       router.replace({
         pathname: '/match-result',
         params: {
-          result: isWin ? 'win' : 'loss',
-          trophiesChange: String(trophiesChange),
-          newTrophies: '125',
+          outcome: isWin ? 'WIN' : 'LOSS',
+          trophyChange: (trophyChange >= 0 ? '+' : '') + String(trophyChange),
+          newTrophies: String(newTrophies ?? 0),
           coinsEarned: String(coinsEarned),
-          shardsEarned: String(shardsEarned),
+          opponentName,
+          mode: uiMode,
         },
       });
     }, 800);
-  }, [uiMode, difficulty]);
+  }, [uiMode, difficulty, engineMode, params.sessionId, params.opponentName]);
 
   const { renderState, stateRef: gameStateRef, dispatch, pause, resume } = useGameLoop({
     initialState,

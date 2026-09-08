@@ -36,6 +36,10 @@ export interface PlayerProfile {
   account_type: 'guest' | 'email' | 'google' | 'apple';
   avatar_color: string;
   daily_missions?: unknown[];
+  last_free_crate?: string | null;
+  banned?: boolean;
+  ban_until?: string | null;
+  ban_reason?: string | null;
 }
 
 export const DEFAULT_PROFILE: PlayerProfile = {
@@ -73,12 +77,13 @@ export const DEFAULT_PROFILE: PlayerProfile = {
   account_type: 'guest',
   avatar_color: '#4F8EF7',
   daily_missions: [],
+  last_free_crate: null,
 };
 
 interface ProfileContextType {
   profile: PlayerProfile;
   setProfile: (p: PlayerProfile) => void;
-  updateProfile: (partial: Partial<PlayerProfile>) => void;
+  updateProfile: (partial: Partial<PlayerProfile>) => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
 
@@ -124,9 +129,10 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
     if (!user) return;
     const { error } = await supabase
       .from('player_profiles')
-      .upsert({ id: user.id, ...partial });
+      .update(partial)
+      .eq('id', user.id);
     if (error) {
-      console.warn('[Profile] updateProfile upsert error', error.message);
+      console.warn('[Profile] updateProfile error', error.message);
     }
   }, []);
 

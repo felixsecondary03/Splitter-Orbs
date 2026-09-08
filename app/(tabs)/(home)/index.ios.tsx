@@ -7,6 +7,7 @@ import {
   Modal,
   StyleSheet,
   Dimensions,
+  Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -25,6 +26,8 @@ import { LeagueBadge } from '@/components/LeagueBadge';
 import { CrateButton } from '@/components/CrateButton';
 import { MatchHistoryItem } from '@/components/MatchHistoryItem';
 import { useProfile } from '@/contexts/ProfileContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/utils/supabase';
 import { getLeague, LEAGUES } from '@/game/constants';
 import { getDailyMissions } from '@/game/missions';
 
@@ -57,43 +60,56 @@ const LEAGUE_COLORS: Record<string, string> = {
   Legend: COLORS.leagueLegend,
 };
 
-const MOCK_MATCHES = [
-  { opponentName: 'ShadowOrb99', result: 'win' as const, trophyChange: 30, coinsEarned: 120, timeAgo: '5m ago', mode: 'ranked' },
-  { opponentName: 'BlasterKing', result: 'loss' as const, trophyChange: -20, coinsEarned: 40, timeAgo: '1h ago', mode: 'ranked' },
-  { opponentName: 'FrostQueen', result: 'win' as const, trophyChange: 30, coinsEarned: 110, timeAgo: '3h ago', mode: 'casual' },
-  { opponentName: 'VenomBurst', result: 'win' as const, trophyChange: 28, coinsEarned: 100, timeAgo: '5h ago', mode: 'ranked' },
-  { opponentName: 'CryoStrike', result: 'loss' as const, trophyChange: -22, coinsEarned: 35, timeAgo: 'Yesterday', mode: 'casual' },
-];
-
-const MOCK_OPPONENTS = [
-  { name: 'ArcFlash', trophies: 3200, league: 'Champion' },
-  { name: 'TowerLord', trophies: 3980, league: 'Master' },
-  { name: 'PyreFist', trophies: 2700, league: 'Champion' },
-];
+type MatchRecord = {
+  id: string;
+  opponent_name?: string;
+  result?: string;
+  trophy_change?: number;
+  coins_earned?: number;
+  created_at?: string;
+  mode?: string;
+};
 
 type MatchmakingState = 'idle' | 'searching' | 'found';
+
+type MatchmakingOpponent = {
+  name: string;
+  trophies: number;
+  league: string;
+};
 
 function MatchmakingModal({
   visible,
   mode,
   onCancel,
-  onMatchFound,
 }: {
   visible: boolean;
   mode: string;
   onCancel: () => void;
-  onMatchFound: (opponent: { name: string; trophies: number; league: string }) => void;
 }) {
+  const router = useRouter();
   const [state, setState] = useState<MatchmakingState>('searching');
+  const [opponent, setOpponent] = useState<MatchmakingOpponent | null>(null);
   const pulseAnim = useRef(new Animated.Value(1)).current;
-  const opponentRef = useRef(MOCK_OPPONENTS[Math.floor(Math.random() * MOCK_OPPONENTS.length)]);
-  const opponent = opponentRef.current;
+  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const mountedRef = useRef(true);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; };
+  }, []);
 
   useEffect(() => {
     if (!visible) {
       setState('searching');
+      setOpponent(null);
+      if (pollingRef.current) {
+        clearInterval(pollingRef.current);
+        pollingRef.current = null;
+      }
       return;
     }
+
     const pulse = Animated.loop(
       Animated.sequence([
         Animated.timing(pulseAnim, { toValue: 1.2, duration: 700, useNativeDriver: true }),
@@ -102,18 +118,73 @@ function MatchmakingModal({
     );
     pulse.start();
 
-    const timer = setTimeout(() => {
-      pulse.stop();
-      pulseAnim.setValue(1);
-      setState('found');
-      setTimeout(() => onMatchFound(opponentRef.current), 1500);
-    }, 3000);
+    const poll = async () => {
+      console.log(`[Matchmaking] Polling matchmake mode=${mode}`);
+      try {
+        const { data, error } = await supabase.functions.invoke('matchmake', { body: { mode } });
+        if (error) {
+          console.warn('[Matchmaking] matchmake error', error.message);
+          const errCode = (data as Record<string, unknown> | null)?.error as string | undefined;
+          if (errCode === 'rate_limit_exceeded') {
+            Alert.alert('Too many requests', 'Too many requests, please wait.');
+          } else if (errCode === 'eula_required') {
+            router.replace('/onboarding');
+          }
+          return;
+        }
+        if (!mountedRef.current) return;
+        if (data?.matched) {
+          console.log('[Matchmaking] Match found!', data);
+          if (pollingRef.current) {
+            clearInterval(pollingRef.current);
+            pollingRef.current = null;
+          }
+          pulse.stop();
+          pulseAnim.setValue(1);
+
+          const opp = data.opponent as { name: string; trophies: number } | undefined;
+          const oppName = opp?.name ?? 'Opponent';
+          const oppTrophies = opp?.trophies ?? 0;
+          const oppLeague = getLeague(oppTrophies).name;
+
+          setOpponent({ name: oppName, trophies: oppTrophies, league: oppLeague });
+          setState('found');
+
+          setTimeout(() => {
+            if (!mountedRef.current) return;
+            console.log('[Matchmaking] Navigating to game', { sessionId: data.sessionId, mode });
+            router.push({
+              pathname: '/game',
+              params: {
+                sessionId: data.sessionId as string,
+                role: data.role as string,
+                seed: String(data.seed ?? Date.now()),
+                opponentName: oppName,
+                opponentTrophies: String(oppTrophies),
+                mode,
+              },
+            });
+          }, 1500);
+        } else {
+          console.log('[Matchmaking] No match yet, still searching...');
+        }
+      } catch (e) {
+        console.warn('[Matchmaking] poll exception', e);
+      }
+    };
+
+    poll();
+    pollingRef.current = setInterval(poll, 2000);
 
     return () => {
-      clearTimeout(timer);
       pulse.stop();
+      if (pollingRef.current) {
+        clearInterval(pollingRef.current);
+        pollingRef.current = null;
+      }
     };
-  }, [visible, onMatchFound, pulseAnim]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visible, mode]);
 
   const modeLabel = mode === 'ranked' ? 'Ranked Match' : mode === 'casual' ? 'Casual Match' : `vs AI (${mode})`;
 
@@ -144,19 +215,21 @@ function MatchmakingModal({
                 <Swords size={36} color={COLORS.success} strokeWidth={2} />
               </View>
               <Text style={mmStyles.foundText}>Match Found!</Text>
-              <View style={mmStyles.opponentCard}>
-                <View style={mmStyles.opponentAvatar}>
-                  <Text style={mmStyles.opponentAvatarText}>{opponent.name.charAt(0)}</Text>
-                </View>
-                <View>
-                  <Text style={mmStyles.opponentName}>{opponent.name}</Text>
-                  <View style={mmStyles.opponentMeta}>
-                    <Trophy size={12} color={COLORS.gold} strokeWidth={2} />
-                    <Text style={mmStyles.opponentTrophies}>{opponent.trophies.toLocaleString()}</Text>
-                    <Text style={mmStyles.opponentLeague}>{opponent.league}</Text>
+              {opponent && (
+                <View style={mmStyles.opponentCard}>
+                  <View style={mmStyles.opponentAvatar}>
+                    <Text style={mmStyles.opponentAvatarText}>{opponent.name.charAt(0)}</Text>
+                  </View>
+                  <View>
+                    <Text style={mmStyles.opponentName}>{opponent.name}</Text>
+                    <View style={mmStyles.opponentMeta}>
+                      <Trophy size={12} color={COLORS.gold} strokeWidth={2} />
+                      <Text style={mmStyles.opponentTrophies}>{opponent.trophies.toLocaleString()}</Text>
+                      <Text style={mmStyles.opponentLeague}>{opponent.league}</Text>
+                    </View>
                   </View>
                 </View>
-              </View>
+              )}
               <Text style={mmStyles.loadingText}>Loading arena...</Text>
             </>
           )}
@@ -316,12 +389,12 @@ const mmStyles = StyleSheet.create({
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { profile } = useProfile();
+  const { profile, refreshProfile } = useProfile();
+  const { user } = useAuth();
 
   const [matchmakingVisible, setMatchmakingVisible] = useState(false);
   const [matchmakingMode, setMatchmakingMode] = useState('casual');
-  const [freeCrateClaimed, setFreeCrateClaimed] = useState<string | null>(null);
-  const [gemCrateClaimed, setGemCrateClaimed] = useState<string | null>(null);
+  const [matchHistory, setMatchHistory] = useState<MatchRecord[]>([]);
 
   const league = getLeague(profile.trophies);
   const leagueColor = LEAGUE_COLORS[league.name] ?? COLORS.primary;
@@ -349,6 +422,31 @@ export default function HomeScreen() {
   const todaySeed = Math.floor(Date.now() / (1000 * 60 * 60 * 24));
   const dailyMissions = getDailyMissions(todaySeed);
 
+  const profileMissions = Array.isArray(profile.daily_missions) ? profile.daily_missions : [];
+
+  const lastFreeCrate = profile.last_free_crate ?? null;
+  const freeCrateAvailable = !lastFreeCrate || (Date.now() - new Date(lastFreeCrate).getTime() > 24 * 60 * 60 * 1000);
+  const freeCrateLastClaimed = freeCrateAvailable ? null : lastFreeCrate;
+
+  useEffect(() => {
+    if (!user) return;
+    console.log('[Home] Loading match history for user', user.id);
+    supabase
+      .from('match_records')
+      .select('*')
+      .eq('player_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(5)
+      .then(({ data, error }) => {
+        if (error) {
+          console.warn('[Home] match_records error', error.message);
+          return;
+        }
+        console.log('[Home] Match history loaded', { count: data?.length ?? 0 });
+        setMatchHistory(data ?? []);
+      });
+  }, [user]);
+
   const startMatchmaking = useCallback((mode: string) => {
     console.log(`[Home] Matchmaking started mode=${mode}`);
     setMatchmakingMode(mode);
@@ -356,23 +454,14 @@ export default function HomeScreen() {
   }, []);
 
   const cancelMatchmaking = useCallback(() => {
-    console.log('[Home] Matchmaking cancelled');
+    console.log('[Home] Matchmaking cancelled — stopping poll');
     setMatchmakingVisible(false);
   }, []);
 
-  const handleMatchFound = useCallback(
-    (opponent: { name: string; trophies: number; league: string }) => {
-      console.log('[Home] Match found, navigating to game', { opponent, mode: matchmakingMode });
-      setMatchmakingVisible(false);
-      router.push({ pathname: '/game', params: { mode: matchmakingMode, seed: String(Date.now()) } });
-    },
-    [matchmakingMode, router]
-  );
-
   const handleQuickPlay = useCallback(() => {
-    console.log('[Home] Quick Play button pressed');
-    startMatchmaking('casual');
-  }, [startMatchmaking]);
+    console.log('[Home] PLAY NOW button pressed — navigating to /setup');
+    router.push('/setup');
+  }, [router]);
 
   const handleRanked = useCallback(() => {
     console.log('[Home] Ranked button pressed');
@@ -384,14 +473,40 @@ export default function HomeScreen() {
     router.push({ pathname: '/game', params: { mode: `ai_${difficulty}`, seed: String(Date.now()) } });
   }, [router]);
 
-  const handleClaimFreeCrate = useCallback(() => {
-    console.log('[Home] Free crate claimed');
-    setFreeCrateClaimed(new Date().toISOString());
-  }, []);
+  const handleClaimFreeCrate = useCallback(async () => {
+    console.log('[Home] Free crate claim button pressed');
+    try {
+      const { data, error } = await supabase.functions.invoke('claim-daily-crate', {});
+      if (error) {
+        console.warn('[Home] claim-daily-crate error', error.message);
+        Alert.alert('Error', (data as Record<string, unknown> | null)?.error as string || 'Something went wrong');
+        return;
+      }
+      const errCode = (data as Record<string, unknown> | null)?.error as string | undefined;
+      if (errCode === 'eula_required') {
+        router.replace('/onboarding');
+        return;
+      }
+      if (errCode === 'rate_limit_exceeded') {
+        Alert.alert('Too many requests', 'Too many requests, please wait.');
+        return;
+      }
+      if (errCode) {
+        Alert.alert('Error', errCode || 'Something went wrong');
+        return;
+      }
+      if (data?.success) {
+        console.log('[Home] Daily crate claimed, rewards:', data.rewards);
+        await refreshProfile();
+      }
+    } catch (e) {
+      console.warn('[Home] claim-daily-crate exception', e);
+      Alert.alert('Error', 'Network error. Please try again.');
+    }
+  }, [refreshProfile, router]);
 
   const handleClaimGemCrate = useCallback(() => {
-    console.log('[Home] Gem crate claimed');
-    setGemCrateClaimed(new Date().toISOString());
+    console.log('[Home] Gem crate claimed (local)');
   }, []);
 
   const handleClaimMission = useCallback((missionId: string) => {
@@ -526,8 +641,8 @@ export default function HomeScreen() {
             <Text style={styles.sectionTitle}>Daily Rewards</Text>
           </View>
           <View style={styles.cratesRow}>
-            <CrateButton type="free" lastClaimed={freeCrateClaimed} onClaim={handleClaimFreeCrate} />
-            <CrateButton type="gem" lastClaimed={gemCrateClaimed} onClaim={handleClaimGemCrate} />
+            <CrateButton type="free" lastClaimed={freeCrateLastClaimed} onClaim={handleClaimFreeCrate} />
+            <CrateButton type="gem" lastClaimed={null} onClaim={handleClaimGemCrate} />
           </View>
         </AnimatedListItem>
 
@@ -542,9 +657,12 @@ export default function HomeScreen() {
         </AnimatedListItem>
 
         {dailyMissions.map((mission, i) => {
-          const mockProgress = Math.floor(Math.random() * mission.target);
-          const isComplete = mockProgress >= mission.target;
-          const progressFraction = Math.min(1, mockProgress / mission.target);
+          const profileMission = (profileMissions as { id: string; progress?: number }[]).find(
+            (m) => m.id === mission.id
+          );
+          const missionProgress = profileMission?.progress ?? 0;
+          const isComplete = missionProgress >= mission.target;
+          const progressFraction = Math.min(1, missionProgress / mission.target);
           const progressWidth = `${Math.round(progressFraction * 100)}%` as `${number}%`;
           return (
             <AnimatedListItem key={mission.id} index={6 + i}>
@@ -566,7 +684,7 @@ export default function HomeScreen() {
                     />
                   </View>
                   <Text style={styles.missionProgress}>
-                    {mockProgress}/{mission.target}
+                    {missionProgress}/{mission.target}
                   </Text>
                 </View>
                 <View style={styles.missionReward}>
@@ -618,18 +736,45 @@ export default function HomeScreen() {
           </View>
         </AnimatedListItem>
 
-        {MOCK_MATCHES.map((match, i) => (
-          <AnimatedListItem key={i} index={11 + i}>
-            <MatchHistoryItem {...match} />
+        {matchHistory.length > 0 ? (
+          matchHistory.map((match, i) => {
+            const timeAgo = match.created_at
+              ? (() => {
+                  const diff = Date.now() - new Date(match.created_at).getTime();
+                  const mins = Math.floor(diff / 60000);
+                  if (mins < 60) return `${mins}m ago`;
+                  const hrs = Math.floor(mins / 60);
+                  if (hrs < 24) return `${hrs}h ago`;
+                  return 'Yesterday';
+                })()
+              : '';
+            const result = (match.result === 'win' ? 'win' : 'loss') as 'win' | 'loss';
+            return (
+              <AnimatedListItem key={match.id} index={11 + i}>
+                <MatchHistoryItem
+                  opponentName={match.opponent_name ?? 'Unknown'}
+                  result={result}
+                  trophyChange={match.trophy_change ?? 0}
+                  coinsEarned={match.coins_earned ?? 0}
+                  timeAgo={timeAgo}
+                  mode={match.mode ?? 'casual'}
+                />
+              </AnimatedListItem>
+            );
+          })
+        ) : (
+          <AnimatedListItem index={11}>
+            <View style={styles.emptyMatches}>
+              <Text style={styles.emptyMatchesText}>No matches yet. Play your first game!</Text>
+            </View>
           </AnimatedListItem>
-        ))}
+        )}
       </ScrollView>
 
       <MatchmakingModal
         visible={matchmakingVisible}
         mode={matchmakingMode}
         onCancel={cancelMatchmaking}
-        onMatchFound={handleMatchFound}
       />
     </>
   );
@@ -996,5 +1141,14 @@ const styles = StyleSheet.create({
     width: 1,
     height: 32,
     backgroundColor: COLORS.divider,
+  },
+  emptyMatches: {
+    padding: 20,
+    alignItems: 'center',
+  },
+  emptyMatchesText: {
+    fontSize: 14,
+    color: COLORS.textTertiary,
+    fontWeight: '500',
   },
 });

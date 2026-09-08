@@ -243,11 +243,12 @@ export default function SetupScreen() {
     setIsStarting(true);
 
     try {
-      await supabase.functions.invoke('setLoadout', {
+      console.log('[Setup] Calling set-loadout edge function', { towers, orbs, abilities });
+      await supabase.functions.invoke('set-loadout', {
         body: { towers, orbs, abilities },
       });
     } catch (e) {
-      console.warn('[Setup] setLoadout edge function failed', e);
+      console.warn('[Setup] set-loadout edge function failed', e);
     }
 
     router.push({
@@ -269,7 +270,8 @@ export default function SetupScreen() {
     setIsStarting(true);
 
     try {
-      await supabase.functions.invoke('setLoadout', {
+      console.log('[Setup] Calling set-loadout edge function (quick play)');
+      await supabase.functions.invoke('set-loadout', {
         body: {
           towers: DEFAULT_TOWERS,
           orbs: DEFAULT_ORBS,
@@ -277,7 +279,7 @@ export default function SetupScreen() {
         },
       });
     } catch (e) {
-      console.warn('[Setup] setLoadout edge function failed', e);
+      console.warn('[Setup] set-loadout edge function failed', e);
     }
 
     router.push({

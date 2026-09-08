@@ -8,6 +8,8 @@ import {
   StyleSheet,
   TouchableOpacity,
   Dimensions,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { X, TrendingUp, Info } from 'lucide-react-native';
@@ -121,7 +123,10 @@ function CardDetailModal({
 }: {
   cardId: string | null; category: LabTab; onClose: () => void;
 }) {
-  const { profile, updateProfile } = useProfile();
+  const { profile, refreshProfile } = useProfile();
+  const [levelingUp, setLevelingUp] = useState(false);
+  const [buyingCopy, setBuyingCopy] = useState(false);
+
   if (!cardId) return null;
 
   const cardMap =
@@ -138,18 +143,62 @@ function CardDetailModal({
   const displayName = cardId.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
   const description = CARD_DESCRIPTIONS[cardId] ?? 'A powerful card for your loadout.';
 
-  const handleLevelUp = () => {
-    console.log(`[Lab] Level up card cardId=${cardId} category=${category}`);
-    const newState = { ...cardState, level: cardState.level + 1, copies: cardState.copies - copiesNeeded };
-    const key = category === 'towers' ? 'tower_cards' : category === 'orbs' ? 'orb_cards' : 'ability_cards';
-    updateProfile({ [key]: { ...cardMap, [cardId]: newState } });
+  const handleLevelUp = async () => {
+    console.log(`[Lab] Level up card pressed cardId=${cardId} category=${category}`);
+    setLevelingUp(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('level-up-card', {
+        body: { kind: category, cardId },
+      });
+      if (error) {
+        console.warn('[Lab] level-up-card error', error.message);
+        Alert.alert('Error', (data as Record<string, unknown> | null)?.error as string || 'Something went wrong');
+        return;
+      }
+      const errCode = (data as Record<string, unknown> | null)?.error as string | undefined;
+      if (errCode) {
+        Alert.alert('Error', errCode || 'Something went wrong');
+        return;
+      }
+      if (data?.success) {
+        console.log('[Lab] level-up-card success', data);
+        await refreshProfile();
+      }
+    } catch (e) {
+      console.warn('[Lab] level-up-card exception', e);
+      Alert.alert('Error', 'Network error. Please try again.');
+    } finally {
+      setLevelingUp(false);
+    }
   };
 
-  const handleBuyWithShards = () => {
-    console.log(`[Lab] Buy copy with shards cardId=${cardId} cost=${shardCost}`);
-    const newState = { ...cardState, copies: cardState.copies + 1, boughtCopies: cardState.boughtCopies + 1 };
-    const key = category === 'towers' ? 'tower_cards' : category === 'orbs' ? 'orb_cards' : 'ability_cards';
-    updateProfile({ shards: profile.shards - shardCost, [key]: { ...cardMap, [cardId]: newState } });
+  const handleBuyWithShards = async () => {
+    console.log(`[Lab] Buy copy with shards pressed cardId=${cardId} cost=${shardCost}`);
+    setBuyingCopy(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('buy-card-copy', {
+        body: { kind: category, cardId },
+      });
+      if (error) {
+        console.warn('[Lab] buy-card-copy error', error.message);
+        Alert.alert('Error', (data as Record<string, unknown> | null)?.error as string || 'Something went wrong');
+        return;
+      }
+      const errCode = (data as Record<string, unknown> | null)?.error as string | undefined;
+      if (errCode) {
+        Alert.alert('Error', errCode || 'Something went wrong');
+        return;
+      }
+      if (data?.success) {
+        console.log('[Lab] buy-card-copy success', data);
+        await refreshProfile();
+      }
+    } catch (e) {
+      console.warn('[Lab] buy-card-copy exception', e);
+      Alert.alert('Error', 'Network error. Please try again.');
+    } finally {
+      setBuyingCopy(false);
+    }
   };
 
   return (
@@ -166,21 +215,29 @@ function CardDetailModal({
           <Text style={detailStyles.description}>{description}</Text>
           <View style={detailStyles.actions}>
             <AnimatedPressable
-              style={[detailStyles.actionBtn, !canLevel && detailStyles.actionBtnDisabled]}
+              style={[detailStyles.actionBtn, (!canLevel || levelingUp) && detailStyles.actionBtnDisabled]}
               onPress={handleLevelUp}
-              disabled={!canLevel}
+              disabled={!canLevel || levelingUp}
             >
-              <TrendingUp size={18} color={canLevel ? '#FFFFFF' : COLORS.textTertiary} strokeWidth={2} />
+              {levelingUp ? (
+                <ActivityIndicator size="small" color="#FFFFFF" />
+              ) : (
+                <TrendingUp size={18} color={canLevel ? '#FFFFFF' : COLORS.textTertiary} strokeWidth={2} />
+              )}
               <Text style={[detailStyles.actionBtnText, !canLevel && { color: COLORS.textTertiary }]}>
                 Level Up
               </Text>
             </AnimatedPressable>
             <AnimatedPressable
-              style={[detailStyles.shardBtn, !canBuy && detailStyles.actionBtnDisabled]}
+              style={[detailStyles.shardBtn, (!canBuy || buyingCopy) && detailStyles.actionBtnDisabled]}
               onPress={handleBuyWithShards}
-              disabled={!canBuy}
+              disabled={!canBuy || buyingCopy}
             >
-              <Text style={detailStyles.shardEmoji}>🔷</Text>
+              {buyingCopy ? (
+                <ActivityIndicator size="small" color="#7C3AED" />
+              ) : (
+                <Text style={detailStyles.shardEmoji}>🔷</Text>
+              )}
               <Text style={[detailStyles.shardBtnText, !canBuy && { color: COLORS.textTertiary }]}>
                 {shardCost} Splitter
               </Text>
@@ -232,7 +289,7 @@ function LabCard({
 }: {
   cardId: string; category: LabTab; onPress: () => void; onInfo: () => void;
 }) {
-  const { profile, updateProfile } = useProfile();
+  const { profile, refreshProfile } = useProfile();
   const cardMap =
     category === 'towers' ? profile.tower_cards
     : category === 'orbs' ? profile.orb_cards
@@ -257,16 +314,36 @@ function LabCard({
 
   const levelDots = Array.from({ length: MAX_CARD_LEVEL }, (_, i) => i < cardState.level);
 
-  const handleBuyCopy = () => {
+  const [buyingCopy, setBuyingCopy] = useState(false);
+
+  const handleBuyCopy = async () => {
     console.log(`[Lab] Buy copy pressed cardId=${cardId} cost=${COPY_SHARD_PRICE}`);
-    if (!canBuyCopy) return;
-    const newState = { ...cardState, copies: cardState.copies + 1, boughtCopies: cardState.boughtCopies + 1 };
-    const key = category === 'towers' ? 'tower_cards' : category === 'orbs' ? 'orb_cards' : 'ability_cards';
-    updateProfile({ shards: profile.shards - COPY_SHARD_PRICE, [key]: { ...cardMap, [cardId]: newState } });
-    // Also call edge function
-    supabase.functions.invoke('buyCardCopy', { body: { cardId, category } }).catch((e) => {
-      console.warn('[Lab] buyCardCopy failed', e);
-    });
+    if (!canBuyCopy || buyingCopy) return;
+    setBuyingCopy(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('buy-card-copy', {
+        body: { kind: category, cardId },
+      });
+      if (error) {
+        console.warn('[Lab] buy-card-copy error', error.message);
+        Alert.alert('Error', (data as Record<string, unknown> | null)?.error as string || 'Something went wrong');
+        return;
+      }
+      const errCode = (data as Record<string, unknown> | null)?.error as string | undefined;
+      if (errCode) {
+        Alert.alert('Error', errCode || 'Something went wrong');
+        return;
+      }
+      if (data?.success) {
+        console.log('[Lab] buy-card-copy success', data);
+        await refreshProfile();
+      }
+    } catch (e) {
+      console.warn('[Lab] buy-card-copy exception', e);
+      Alert.alert('Error', 'Network error. Please try again.');
+    } finally {
+      setBuyingCopy(false);
+    }
   };
 
   return (
@@ -337,14 +414,18 @@ function LabCard({
         </TouchableOpacity>
       ) : (
         <TouchableOpacity
-          style={[labCardStyles.buyBtn, !canBuyCopy && labCardStyles.buyBtnDisabled]}
+          style={[labCardStyles.buyBtn, (!canBuyCopy || buyingCopy) && labCardStyles.buyBtnDisabled]}
           onPress={handleBuyCopy}
-          disabled={!canBuyCopy}
+          disabled={!canBuyCopy || buyingCopy}
           activeOpacity={0.8}
         >
-          <Text style={labCardStyles.buyBtnText}>
-            Kopie kaufen 🔷 {COPY_SHARD_PRICE}
-          </Text>
+          {buyingCopy ? (
+            <ActivityIndicator size="small" color="#FFFFFF" />
+          ) : (
+            <Text style={labCardStyles.buyBtnText}>
+              Kopie kaufen 🔷 {COPY_SHARD_PRICE}
+            </Text>
+          )}
         </TouchableOpacity>
       )}
     </TouchableOpacity>
@@ -417,22 +498,66 @@ const labCardStyles = StyleSheet.create({
 
 // ─── Upgrades Tab ─────────────────────────────────────────────────────────────
 function UpgradesTab() {
-  const { profile, updateProfile } = useProfile();
+  const { profile, refreshProfile } = useProfile();
+  const [upgradingHand, setUpgradingHand] = useState(false);
+  const [upgradingSide, setUpgradingSide] = useState(false);
 
-  const handleUpgradeHand = () => {
+  const handleUpgradeHand = async () => {
     console.log('[Lab] Upgrade hand level pressed', { current: profile.hand_level });
-    updateProfile({ hand_level: profile.hand_level + 1 });
-    supabase.functions.invoke('levelUpCard', { body: { cardType: 'hand' } }).catch((e) => {
-      console.warn('[Lab] levelUpCard hand failed', e);
-    });
+    setUpgradingHand(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('level-up-card', {
+        body: { kind: 'hand', cardId: 'hand' },
+      });
+      if (error) {
+        console.warn('[Lab] level-up-card hand error', error.message);
+        Alert.alert('Error', (data as Record<string, unknown> | null)?.error as string || 'Something went wrong');
+        return;
+      }
+      const errCode = (data as Record<string, unknown> | null)?.error as string | undefined;
+      if (errCode) {
+        Alert.alert('Error', errCode || 'Something went wrong');
+        return;
+      }
+      if (data?.success) {
+        console.log('[Lab] level-up-card hand success');
+        await refreshProfile();
+      }
+    } catch (e) {
+      console.warn('[Lab] level-up-card hand exception', e);
+      Alert.alert('Error', 'Network error. Please try again.');
+    } finally {
+      setUpgradingHand(false);
+    }
   };
 
-  const handleUpgradeSideTower = () => {
+  const handleUpgradeSideTower = async () => {
     console.log('[Lab] Upgrade side tower pressed', { current: profile.side_tower_level });
-    updateProfile({ side_tower_level: profile.side_tower_level + 1 });
-    supabase.functions.invoke('levelUpCard', { body: { cardType: 'side_tower' } }).catch((e) => {
-      console.warn('[Lab] levelUpCard side_tower failed', e);
-    });
+    setUpgradingSide(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('level-up-card', {
+        body: { kind: 'side_tower', cardId: 'side_tower' },
+      });
+      if (error) {
+        console.warn('[Lab] level-up-card side_tower error', error.message);
+        Alert.alert('Error', (data as Record<string, unknown> | null)?.error as string || 'Something went wrong');
+        return;
+      }
+      const errCode = (data as Record<string, unknown> | null)?.error as string | undefined;
+      if (errCode) {
+        Alert.alert('Error', errCode || 'Something went wrong');
+        return;
+      }
+      if (data?.success) {
+        console.log('[Lab] level-up-card side_tower success');
+        await refreshProfile();
+      }
+    } catch (e) {
+      console.warn('[Lab] level-up-card side_tower exception', e);
+      Alert.alert('Error', 'Network error. Please try again.');
+    } finally {
+      setUpgradingSide(false);
+    }
   };
 
   return (
@@ -442,7 +567,7 @@ function UpgradesTab() {
         Höhere Türme starten stärker im Match.
       </Text>
 
-      <TouchableOpacity style={upgradeStyles.card} onPress={handleUpgradeHand} activeOpacity={0.85}>
+      <TouchableOpacity style={upgradeStyles.card} onPress={handleUpgradeHand} activeOpacity={0.85} disabled={upgradingHand}>
         <View style={upgradeStyles.cardLeft}>
           <Text style={upgradeStyles.cardEmoji}>👆</Text>
           <View>
@@ -450,12 +575,16 @@ function UpgradesTab() {
             <Text style={upgradeStyles.cardSub}>More clicks per round</Text>
           </View>
         </View>
-        <View style={upgradeStyles.levelBadge}>
-          <Text style={upgradeStyles.levelText}>L{profile.hand_level + 1}</Text>
-        </View>
+        {upgradingHand ? (
+          <ActivityIndicator size="small" color={COLORS.primary} />
+        ) : (
+          <View style={upgradeStyles.levelBadge}>
+            <Text style={upgradeStyles.levelText}>L{profile.hand_level + 1}</Text>
+          </View>
+        )}
       </TouchableOpacity>
 
-      <TouchableOpacity style={upgradeStyles.card} onPress={handleUpgradeSideTower} activeOpacity={0.85}>
+      <TouchableOpacity style={upgradeStyles.card} onPress={handleUpgradeSideTower} activeOpacity={0.85} disabled={upgradingSide}>
         <View style={upgradeStyles.cardLeft}>
           <Text style={upgradeStyles.cardEmoji}>🏰</Text>
           <View>
@@ -463,9 +592,13 @@ function UpgradesTab() {
             <Text style={upgradeStyles.cardSub}>Stronger side defenses</Text>
           </View>
         </View>
-        <View style={upgradeStyles.levelBadge}>
-          <Text style={upgradeStyles.levelText}>L{profile.side_tower_level + 1}</Text>
-        </View>
+        {upgradingSide ? (
+          <ActivityIndicator size="small" color={COLORS.primary} />
+        ) : (
+          <View style={upgradeStyles.levelBadge}>
+            <Text style={upgradeStyles.levelText}>L{profile.side_tower_level + 1}</Text>
+          </View>
+        )}
       </TouchableOpacity>
     </View>
   );
