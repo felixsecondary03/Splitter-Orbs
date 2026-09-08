@@ -26,26 +26,55 @@ const ABILITY_ICONS: Record<AbilityType, React.ComponentType<{ size: number; col
   burner: Flame,
 } as const;
 
-const ABILITY_COLORS: Record<AbilityType, string> = {
-  meteor: '#F97316',
-  freeze: '#BAE6FD',
-  rage: '#EF4444',
-  shield: '#60A5FA',
-  overclock: '#FCD34D',
-  glue: '#78716C',
-  zone: '#A855F7',
-  portal: '#34D399',
-  burner: '#F59E0B',
+// Background colors per ability type (light theme)
+const ABILITY_BG_COLORS: Record<AbilityType, string> = {
+  meteor: '#F97316',   // orange
+  freeze: '#0EA5E9',   // sky
+  rage: '#F43F5E',     // rose
+  shield: '#3B82F6',   // blue
+  overclock: '#F59E0B', // amber
+  glue: '#94A3B8',     // slate
+  zone: '#8B5CF6',     // purple
+  portal: '#4F46E5',   // indigo
+  burner: '#F59E0B',   // amber
 };
 
-export function AbilityButton({ abilityType, cooldown, maxCooldown, onPress, size = 52 }: AbilityButtonProps) {
+const ABILITY_LABELS: Record<AbilityType, string> = {
+  meteor: 'METEOR',
+  freeze: 'FREEZE',
+  rage: 'RAGE',
+  shield: 'SHIELD',
+  overclock: 'CLOCK',
+  glue: 'GLUE',
+  zone: 'ZONE',
+  portal: 'PORTAL',
+  burner: 'BURN',
+};
+
+export function AbilityButton({ abilityType, cooldown, maxCooldown, onPress, size = 64 }: AbilityButtonProps) {
   const scaleAnim = useRef(new Animated.Value(1)).current;
+  const glowAnim = useRef(new Animated.Value(0)).current;
   const isReady = cooldown <= 0;
   const pct = maxCooldown > 0 ? Math.max(0, Math.min(1, cooldown / maxCooldown)) : 0;
-  const color = ABILITY_COLORS[abilityType] ?? COLORS.primary;
+  const bgColor = ABILITY_BG_COLORS[abilityType] ?? COLORS.primary;
   const IconComponent = ABILITY_ICONS[abilityType] ?? Zap;
   const iconSize = Math.round(size * 0.38);
   const cdSeconds = Math.ceil(cooldown / 1000);
+  const label = ABILITY_LABELS[abilityType] ?? abilityType.toUpperCase();
+
+  useEffect(() => {
+    if (isReady) {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(glowAnim, { toValue: 1, duration: 800, useNativeDriver: true }),
+          Animated.timing(glowAnim, { toValue: 0, duration: 800, useNativeDriver: true }),
+        ])
+      ).start();
+    } else {
+      glowAnim.stopAnimation();
+      glowAnim.setValue(0);
+    }
+  }, [isReady]);
 
   const handlePress = () => {
     console.log(`[AbilityButton] Pressed ability=${abilityType} cooldown=${cooldown}`);
@@ -57,70 +86,105 @@ export function AbilityButton({ abilityType, cooldown, maxCooldown, onPress, siz
     onPress();
   };
 
+  const glowOpacity = glowAnim.interpolate({ inputRange: [0, 1], outputRange: [0.3, 0.8] });
+
   return (
-    <Pressable onPress={handlePress} style={{ alignItems: 'center', gap: 3 }}>
-      <Animated.View
-        style={[
-          styles.button,
-          {
-            width: size,
-            height: size,
-            borderRadius: size / 2,
-            borderColor: isReady ? color : 'rgba(255,255,255,0.1)',
-            backgroundColor: isReady ? `${color}18` : 'rgba(255,255,255,0.04)',
-            transform: [{ scale: scaleAnim }],
-          },
-        ]}
-      >
-        <IconComponent size={iconSize} color={isReady ? color : COLORS.textTertiary} strokeWidth={2} />
-        {!isReady && (
-          <View
+    <Pressable onPress={handlePress} style={styles.wrapper}>
+      <Animated.View style={{ transform: [{ scale: scaleAnim }], alignItems: 'center' }}>
+        {/* Ready glow ring */}
+        {isReady && (
+          <Animated.View
             style={[
-              styles.cooldownOverlay,
+              styles.glowRing,
               {
-                width: size,
-                height: size,
-                borderRadius: size / 2,
-                opacity: pct * 0.65,
+                width: size + 12,
+                height: size + 12,
+                borderRadius: (size + 12) / 2,
+                borderColor: COLORS.success,
+                opacity: glowOpacity,
               },
             ]}
           />
         )}
-        {isReady && (
-          <View style={[styles.readyGlow, { width: size, height: size, borderRadius: size / 2, borderColor: color }]} />
-        )}
+        <View
+          style={[
+            styles.button,
+            {
+              width: size,
+              height: size,
+              borderRadius: size / 2,
+              backgroundColor: isReady ? bgColor : `${bgColor}55`,
+            },
+          ]}
+        >
+          <IconComponent size={iconSize} color="#FFFFFF" strokeWidth={2.5} />
+          {/* Cooldown overlay */}
+          {!isReady && (
+            <View
+              style={[
+                styles.cooldownOverlay,
+                {
+                  width: size,
+                  height: size,
+                  borderRadius: size / 2,
+                  opacity: pct * 0.55,
+                },
+              ]}
+            />
+          )}
+          {/* Countdown text */}
+          {!isReady && (
+            <View style={styles.cdOverlay}>
+              <Text style={styles.cdNumber}>{cdSeconds}</Text>
+            </View>
+          )}
+        </View>
       </Animated.View>
-      {!isReady && (
-        <Text style={styles.cdText}>{cdSeconds}s</Text>
-      )}
-      {isReady && (
-        <Text style={[styles.cdText, { color }]}>READY</Text>
-      )}
+      <Text style={[styles.label, isReady && { color: COLORS.text }]}>{label}</Text>
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
+  wrapper: {
+    alignItems: 'center',
+    gap: 4,
+  },
   button: {
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1.5,
     overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  glowRing: {
+    position: 'absolute',
+    top: -6,
+    borderWidth: 2,
+    zIndex: -1,
   },
   cooldownOverlay: {
     position: 'absolute',
     backgroundColor: '#000000',
   },
-  readyGlow: {
+  cdOverlay: {
     position: 'absolute',
-    borderWidth: 1,
-    opacity: 0.4,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  cdText: {
-    fontSize: 9,
-    fontWeight: '700',
-    color: COLORS.textTertiary,
+  cdNumber: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#FFFFFF',
     fontFamily: 'SpaceMono',
+  },
+  label: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: COLORS.textSecondary,
     letterSpacing: 0.3,
   },
 });

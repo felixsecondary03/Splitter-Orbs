@@ -486,7 +486,7 @@ export default function SocialScreen() {
                         style={styles.acceptBtn}
                         onPress={() => handleAcceptFriendRequest(item.id, item.from ?? '')}
                       >
-                        <Check size={16} color="#0A0E1A" strokeWidth={2.5} />
+                        <Check size={16} color="#FFFFFF" strokeWidth={2.5} />
                       </AnimatedPressable>
                       <AnimatedPressable
                         style={styles.declineBtn}
@@ -511,7 +511,7 @@ export default function SocialScreen() {
                         style={styles.acceptBtn}
                         onPress={() => handleAcceptGameInvite(item.id, item.from ?? '')}
                       >
-                        <Check size={16} color="#0A0E1A" strokeWidth={2.5} />
+                        <Check size={16} color="#FFFFFF" strokeWidth={2.5} />
                       </AnimatedPressable>
                       <AnimatedPressable
                         style={styles.declineBtn}

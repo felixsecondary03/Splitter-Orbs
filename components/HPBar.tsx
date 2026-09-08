@@ -46,14 +46,14 @@ export function HPBar({ current, max, width, height = 6, showText = false }: HPB
 
 const styles = StyleSheet.create({
   track: {
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: '#E2E8F0',
     padding: 1,
     overflow: 'hidden',
   },
   fill: {
-    shadowColor: '#22C55E',
+    shadowColor: '#10B981',
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.6,
+    shadowOpacity: 0.4,
     shadowRadius: 3,
   },
   text: {

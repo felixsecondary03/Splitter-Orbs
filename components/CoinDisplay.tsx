@@ -23,11 +23,21 @@ export function CoinDisplay({ coins, size = 'md' }: CoinDisplayProps) {
   }, [coins, scaleAnim]);
 
   const fontSize = size === 'sm' ? 12 : size === 'lg' ? 18 : 14;
-  const dotSize = size === 'sm' ? 8 : size === 'lg' ? 12 : 10;
+  const pillPadH = size === 'sm' ? 8 : size === 'lg' ? 14 : 10;
+  const pillPadV = size === 'sm' ? 3 : size === 'lg' ? 7 : 5;
 
   return (
-    <Animated.View style={[styles.container, { transform: [{ scale: scaleAnim }] }]}>
-      <View style={[styles.coinDot, { width: dotSize, height: dotSize, borderRadius: dotSize / 2 }]} />
+    <Animated.View
+      style={[
+        styles.container,
+        {
+          paddingHorizontal: pillPadH,
+          paddingVertical: pillPadV,
+          transform: [{ scale: scaleAnim }],
+        },
+      ]}
+    >
+      <Text style={styles.coinEmoji}>🪙</Text>
       <Text style={[styles.text, { fontSize }]}>{coins}</Text>
     </Animated.View>
   );
@@ -38,13 +48,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    borderWidth: 1.5,
+    borderColor: '#F59E0B',
   },
-  coinDot: {
-    backgroundColor: COLORS.coin,
-    shadowColor: COLORS.coin,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.8,
-    shadowRadius: 4,
+  coinEmoji: {
+    fontSize: 12,
   },
   text: {
     color: COLORS.coin,

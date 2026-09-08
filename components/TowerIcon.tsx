@@ -1,7 +1,38 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { TowerType } from '@/game/constants';
-import { getTowerColor } from '@/game/engine-helpers';
+
+// Tower gem colors per type (light theme)
+const TOWER_GEM_COLORS: Partial<Record<TowerType, string>> = {
+  blaster: '#3B82F6',      // blue
+  vulcan: '#F59E0B',       // amber
+  lancer: '#8B5CF6',       // purple
+  piercer: '#10B981',      // emerald
+  mortar: '#F43F5E',       // rose
+  orb_mortar: '#F43F5E',
+  lava_mortar: '#F97316',
+  bouncer: '#06B6D4',      // cyan
+  boomerang: '#06B6D4',
+  glacier: '#0EA5E9',      // sky
+  cryo: '#38BDF8',         // light blue
+  pyre: '#F97316',         // orange
+  detonator: '#F97316',
+  venom: '#84CC16',        // lime
+  siege: '#475569',        // slate
+  arc: '#F59E0B',
+  tesla: '#F59E0B',
+  repulsor: '#8B5CF6',
+  magnet: '#8B5CF6',
+  seeker: '#10B981',
+  prism_lance: '#8B5CF6',
+  flak: '#94A3B8',
+  harpoon: '#06B6D4',
+  twin: '#3B82F6',
+};
+
+function getGemColor(type: TowerType): string {
+  return TOWER_GEM_COLORS[type] ?? '#3B82F6';
+}
 
 interface TowerIconProps {
   type: TowerType;
@@ -9,9 +40,12 @@ interface TowerIconProps {
   selected?: boolean;
 }
 
-export function TowerIcon({ type, size = 32, selected = false }: TowerIconProps) {
-  const color = getTowerColor(type);
-  const shape = getTowerShape(type, color, size);
+export function TowerIcon({ type, size = 48, selected = false }: TowerIconProps) {
+  const gemColor = getGemColor(type);
+  const baseWidth = size * 0.65;
+  const baseHeight = size * 0.45;
+  const gemSize = size * 0.22;
+  const topWidth = size * 0.38;
 
   return (
     <View
@@ -20,159 +54,71 @@ export function TowerIcon({ type, size = 32, selected = false }: TowerIconProps)
         {
           width: size,
           height: size,
-          borderRadius: 6,
-          backgroundColor: selected ? `${color}22` : 'rgba(255,255,255,0.04)',
-          borderColor: selected ? color : 'rgba(255,255,255,0.1)',
-          borderWidth: selected ? 1.5 : 1,
+          borderRadius: 8,
+          backgroundColor: selected ? `${gemColor}18` : 'transparent',
+          borderColor: selected ? gemColor : 'transparent',
+          borderWidth: selected ? 1.5 : 0,
         },
       ]}
     >
-      {shape}
+      {/* Tower body — trapezoid using nested views */}
+      <View style={styles.towerWrap}>
+        {/* Top platform (narrower) */}
+        <View
+          style={[
+            styles.towerTop,
+            {
+              width: topWidth,
+              height: size * 0.12,
+              backgroundColor: '#94A3B8',
+              borderRadius: 2,
+            },
+          ]}
+        />
+        {/* Gem on top */}
+        <View
+          style={[
+            styles.gem,
+            {
+              width: gemSize,
+              height: gemSize,
+              borderRadius: gemSize / 2,
+              backgroundColor: gemColor,
+              marginTop: -(gemSize * 0.5),
+              shadowColor: gemColor,
+              shadowOffset: { width: 0, height: 0 },
+              shadowOpacity: 0.6,
+              shadowRadius: 4,
+            },
+          ]}
+        />
+        {/* Main body */}
+        <View
+          style={[
+            styles.towerBody,
+            {
+              width: baseWidth,
+              height: baseHeight,
+              backgroundColor: '#CBD5E1',
+              borderRadius: 3,
+              borderTopWidth: 0,
+            },
+          ]}
+        />
+        {/* Base */}
+        <View
+          style={[
+            styles.towerBase,
+            {
+              width: baseWidth * 1.1,
+              height: size * 0.1,
+              backgroundColor: '#94A3B8',
+              borderRadius: 2,
+            },
+          ]}
+        />
+      </View>
     </View>
-  );
-}
-
-function getTowerShape(type: TowerType, color: string, size: number) {
-  const s = size * 0.55;
-  const half = s / 2;
-
-  switch (type) {
-    case 'blaster':
-      return (
-        <View style={[styles.circle, { width: s, height: s, borderRadius: s / 2, borderColor: color, borderWidth: 2 }]}>
-          <View style={[styles.crossH, { backgroundColor: color, width: s * 0.6, height: 2 }]} />
-          <View style={[styles.crossV, { backgroundColor: color, width: 2, height: s * 0.6 }]} />
-        </View>
-      );
-    case 'vulcan':
-      return (
-        <View style={{ gap: 2, alignItems: 'center' }}>
-          {[0, 1, 2].map(i => (
-            <View key={i} style={{ width: s * 0.7, height: 3, backgroundColor: color, borderRadius: 1.5 }} />
-          ))}
-        </View>
-      );
-    case 'lancer':
-    case 'piercer':
-      return (
-        <View style={{ width: 4, height: s, backgroundColor: color, borderRadius: 2 }} />
-      );
-    case 'mortar':
-    case 'orb_mortar':
-    case 'lava_mortar':
-      return (
-        <View style={[styles.dome, { width: s, height: half, borderTopLeftRadius: half, borderTopRightRadius: half, backgroundColor: color }]} />
-      );
-    case 'glacier':
-    case 'cryo':
-      return <SnowflakeShape color={color} size={s} />;
-    case 'arc':
-    case 'tesla':
-      return <LightningShape color={color} size={s} />;
-    case 'pyre':
-    case 'detonator':
-      return <TriangleShape color={color} size={s} />;
-    case 'venom':
-      return (
-        <View style={[styles.teardrop, { width: s * 0.7, height: s, borderRadius: s * 0.35, borderTopLeftRadius: s * 0.35, borderTopRightRadius: s * 0.35, borderBottomLeftRadius: s * 0.5, borderBottomRightRadius: s * 0.5, backgroundColor: color }]} />
-      );
-    case 'siege':
-      return (
-        <View style={{ width: s, height: s, backgroundColor: color, borderRadius: 3, opacity: 0.9 }}>
-          <View style={{ position: 'absolute', top: 2, left: 2, right: 2, bottom: 2, borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.3)', borderRadius: 2 }} />
-        </View>
-      );
-    case 'boomerang':
-      return (
-        <View style={{ width: s, height: s * 0.5, borderTopLeftRadius: s * 0.5, borderTopRightRadius: s * 0.5, borderWidth: 2.5, borderColor: color, borderBottomWidth: 0 }} />
-      );
-    case 'bouncer':
-      return (
-        <View style={[styles.circle, { width: s, height: s, borderRadius: s / 2, backgroundColor: color, opacity: 0.85 }]} />
-      );
-    case 'repulsor':
-    case 'magnet':
-      return (
-        <View style={{ alignItems: 'center', gap: 3 }}>
-          <View style={{ width: s * 0.8, height: 3, backgroundColor: color, borderRadius: 1.5 }} />
-          <View style={{ width: s * 0.5, height: 3, backgroundColor: color, borderRadius: 1.5, opacity: 0.6 }} />
-          <View style={{ width: s * 0.3, height: 3, backgroundColor: color, borderRadius: 1.5, opacity: 0.3 }} />
-        </View>
-      );
-    case 'seeker':
-      return (
-        <View style={{ width: s * 0.5, height: s, backgroundColor: color, borderRadius: s * 0.25, borderTopLeftRadius: s * 0.5, borderTopRightRadius: s * 0.5 }} />
-      );
-    case 'prism_lance':
-      return (
-        <View style={{ flexDirection: 'row', gap: 2 }}>
-          <View style={{ width: 3, height: s, backgroundColor: color, borderRadius: 1.5 }} />
-          <View style={{ width: 3, height: s * 0.7, backgroundColor: color, borderRadius: 1.5, marginTop: s * 0.15, opacity: 0.6 }} />
-        </View>
-      );
-    case 'flak':
-      return (
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', width: s, gap: 2 }}>
-          {[0, 1, 2, 3].map(i => (
-            <View key={i} style={{ width: s * 0.4, height: s * 0.4, borderRadius: s * 0.2, backgroundColor: color, opacity: 0.8 }} />
-          ))}
-        </View>
-      );
-    case 'harpoon':
-      return (
-        <View style={{ alignItems: 'center' }}>
-          <View style={{ width: 3, height: s * 0.7, backgroundColor: color, borderRadius: 1.5 }} />
-          <View style={{ width: s * 0.5, height: 3, backgroundColor: color, borderRadius: 1.5 }} />
-        </View>
-      );
-    case 'twin':
-      return (
-        <View style={{ flexDirection: 'row', gap: 4 }}>
-          <View style={{ width: 4, height: s, backgroundColor: color, borderRadius: 2 }} />
-          <View style={{ width: 4, height: s, backgroundColor: color, borderRadius: 2 }} />
-        </View>
-      );
-    default:
-      return (
-        <View style={{ width: s * 0.8, height: s * 0.8, borderRadius: 4, backgroundColor: color, opacity: 0.8 }} />
-      );
-  }
-}
-
-function SnowflakeShape({ color, size }: { color: string; size: number }) {
-  return (
-    <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
-      <View style={{ position: 'absolute', width: size, height: 2, backgroundColor: color, borderRadius: 1 }} />
-      <View style={{ position: 'absolute', width: 2, height: size, backgroundColor: color, borderRadius: 1 }} />
-      <View style={{ position: 'absolute', width: size * 0.7, height: 2, backgroundColor: color, borderRadius: 1, transform: [{ rotate: '45deg' }] }} />
-      <View style={{ position: 'absolute', width: size * 0.7, height: 2, backgroundColor: color, borderRadius: 1, transform: [{ rotate: '-45deg' }] }} />
-    </View>
-  );
-}
-
-function LightningShape({ color, size }: { color: string; size: number }) {
-  return (
-    <View style={{ width: size * 0.6, height: size, alignItems: 'center' }}>
-      <View style={{ width: size * 0.5, height: size * 0.5, borderRightWidth: 3, borderBottomWidth: 3, borderColor: color, transform: [{ rotate: '30deg' }] }} />
-      <View style={{ width: size * 0.5, height: size * 0.5, borderLeftWidth: 3, borderTopWidth: 3, borderColor: color, transform: [{ rotate: '30deg' }], marginTop: -size * 0.15 }} />
-    </View>
-  );
-}
-
-function TriangleShape({ color, size }: { color: string; size: number }) {
-  return (
-    <View
-      style={{
-        width: 0,
-        height: 0,
-        borderLeftWidth: size / 2,
-        borderRightWidth: size / 2,
-        borderBottomWidth: size,
-        borderLeftColor: 'transparent',
-        borderRightColor: 'transparent',
-        borderBottomColor: color,
-      }}
-    />
   );
 }
 
@@ -180,18 +126,16 @@ const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
     justifyContent: 'center',
-    overflow: 'hidden',
+    overflow: 'visible',
   },
-  circle: {
+  towerWrap: {
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'flex-end',
   },
-  crossH: {
-    position: 'absolute',
+  towerTop: {},
+  gem: {
+    zIndex: 2,
   },
-  crossV: {
-    position: 'absolute',
-  },
-  dome: {},
-  teardrop: {},
+  towerBody: {},
+  towerBase: {},
 });

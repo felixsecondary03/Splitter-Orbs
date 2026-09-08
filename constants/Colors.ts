@@ -1,69 +1,79 @@
-// Orb Clash — Dark game theme with electric blue/purple primary
-const PRIMARY = '#4F8EF7'; // Electric blue
-const PRIMARY_MUTED = 'rgba(79, 142, 247, 0.12)';
-const ACCENT = '#A855F7'; // Purple accent
-const DANGER = '#EF4444';
-const WARNING = '#F59E0B';
-const SUCCESS = '#22C55E';
-
+// Orb Clash — Light modern theme matching original web app
 export const COLORS = {
   // Backgrounds
-  background: '#0A0E1A',        // Deep navy-black
-  surface: '#111827',           // Dark card surface
-  surfaceSecondary: '#1F2937',  // Input backgrounds
-  surfaceElevated: '#1A2235',   // Slightly elevated surface
+  background: '#F8FAFC',       // slate-50
+  card: '#FFFFFF',             // white
+  surface: '#FFFFFF',          // white (alias for card)
+  surfaceSecondary: '#F1F5F9', // slate-100
+  surfaceElevated: '#F8FAFC',  // slate-50
+  cardBorder: '#E2E8F0',       // slate-200
 
   // Text
-  text: '#F1F5F9',              // Off-white
-  textSecondary: '#94A3B8',     // Blue-tinted gray
-  textTertiary: '#4B5563',      // Dim placeholder
+  text: '#0F172A',             // slate-900
+  textSecondary: '#64748B',    // slate-500
+  textTertiary: '#94A3B8',     // slate-400
+  textMuted: '#94A3B8',        // slate-400
 
   // Brand
-  primary: PRIMARY,
-  primaryMuted: PRIMARY_MUTED,
-  accent: ACCENT,
-  accentMuted: 'rgba(168, 85, 247, 0.12)',
+  primary: '#3B82F6',          // blue-500
+  primaryMuted: 'rgba(59,130,246,0.10)',
+  primaryGradient: ['#3B82F6', '#4F46E5'] as [string, string],
+  accent: '#4F46E5',           // indigo-600
 
   // Semantic
-  success: SUCCESS,
-  warning: WARNING,
-  danger: DANGER,
-  dangerMuted: 'rgba(239, 68, 68, 0.12)',
+  success: '#10B981',          // emerald-500
+  win: '#10B981',
+  warning: '#F59E0B',          // amber-500
+  danger: '#F43F5E',           // rose-500
+  loss: '#F43F5E',
+  dangerMuted: 'rgba(244,63,94,0.10)',
 
   // Structural
-  border: 'rgba(255, 255, 255, 0.06)',
-  divider: 'rgba(255, 255, 255, 0.04)',
+  border: '#E2E8F0',           // slate-200
+  cardBorderWidth: 2,
+  divider: '#F1F5F9',          // slate-100
 
   // Game-specific
-  gold: '#F59E0B',
-  silver: '#94A3B8',
+  coin: '#F59E0B',             // amber-500
+  shard: '#10B981',            // emerald-500
+  gem: '#10B981',              // emerald-500
+  gold: '#F59E0B',             // amber-500
+  silver: '#94A3B8',           // slate-400
   bronze: '#CD7F32',
-  coin: '#FCD34D',
-  gem: '#60A5FA',
-  shard: '#C084FC',
 
-  // League colors
-  leagueBeginner: '#6B7280',
-  leagueRookie: '#22C55E',
-  leagueCadet: '#3B82F6',
-  leagueVeteran: '#8B5CF6',
-  leagueChampion: '#F59E0B',
-  leagueMaster: '#EF4444',
-  leagueLegend: '#F97316',
-
-  // HP bars
-  hpGreen: '#22C55E',
-  hpYellow: '#F59E0B',
-  hpRed: '#EF4444',
+  // Selected border (loadout)
+  selectedBorder: '#F59E0B',   // amber-500
 
   // Tab bar
-  tabActive: PRIMARY,
-  tabInactive: '#4B5563',
+  tabActive: '#3B82F6',        // blue-500
+  tabInactive: '#94A3B8',      // slate-400
+  tabBar: '#FFFFFF',
+
+  // Game halves
+  enemyHalf: '#FFF1F2',        // rose-50
+  playerHalf: '#FFFFFF',       // white
+  wall: '#334155',             // slate-700
+
+  // League colors
+  leagueBeginner: '#CD7F32',   // bronze
+  leagueRookie: '#94A3B8',     // silver
+  leagueCadet: '#F59E0B',      // gold
+  leagueVeteran: '#06B6D4',    // platinum/cyan
+  leagueChampion: '#3B82F6',   // diamond/blue
+  leagueMaster: '#8B5CF6',     // master/purple
+  leagueLegend: '#F43F5E',     // legend/rose
+
+  // HP bars
+  hpGreen: '#10B981',
+  hpYellow: '#F59E0B',
+  hpRed: '#F43F5E',
+
+  // Compat aliases
+  accentMuted: 'rgba(79,70,229,0.10)',
 };
 
 export type ColorKey = keyof typeof COLORS;
 
-// Dark theme only (game app)
 export default {
   light: COLORS,
   dark: COLORS,

@@ -72,20 +72,20 @@ export function GameCanvas({ state, width, height }: GameCanvasProps) {
       <Group transform={[{ translateX: shakeX }, { translateY: shakeY }]}>
 
         {/* ── Layer 1: Field background ── */}
-        {/* Opponent side (top) */}
+        {/* Opponent side (top) — rose-50 */}
         <Rect x={0} y={0} width={width} height={wallY}>
           <LinearGradient
             start={vec(0, 0)}
             end={vec(0, wallY)}
-            colors={['#0D0A1A', '#1A0F29']}
+            colors={['#FFF1F2', '#FFE4E6']}
           />
         </Rect>
-        {/* Player side (bottom) */}
+        {/* Player side (bottom) — white */}
         <Rect x={0} y={wallY} width={width} height={height - wallY}>
           <LinearGradient
             start={vec(0, wallY)}
             end={vec(0, height)}
-            colors={['#0A0E1A', '#0F1629']}
+            colors={['#FFFFFF', '#F8FAFC']}
           />
         </Rect>
 
@@ -272,7 +272,7 @@ export function GameCanvas({ state, width, height }: GameCanvasProps) {
 function GridLines({ width, height, scaleX, scaleY }: { width: number; height: number; scaleX: number; scaleY: number }) {
   const lines: React.ReactNode[] = [];
   const step = 60;
-  const color = 'rgba(255,255,255,0.025)';
+  const color = 'rgba(148,163,184,0.12)';
 
   for (let gx = step; gx < GAME_WIDTH; gx += step) {
     const px = gx * scaleX;
@@ -300,7 +300,7 @@ function WallLayer({ wallY, width, scaleX }: { wallY: number; width: number; sca
         y={wallY - wallH / 2 + 1}
         width={bw - 2}
         height={wallH - 2}
-        color={col % 2 === 0 ? '#374151' : '#2D3748'}
+        color={col % 2 === 0 ? '#334155' : '#3D4F63'}
       />
     );
     offset += brickW;
@@ -309,16 +309,16 @@ function WallLayer({ wallY, width, scaleX }: { wallY: number; width: number; sca
 
   return (
     <>
-      {/* Glow above */}
-      <Rect x={0} y={wallY - wallH / 2 - 3} width={width} height={3} color="rgba(79,142,247,0.2)" />
-      {/* Wall body */}
-      <Rect x={0} y={wallY - wallH / 2} width={width} height={wallH} color="#374151" />
+      {/* Shadow above */}
+      <Rect x={0} y={wallY - wallH / 2 - 3} width={width} height={3} color="rgba(51,65,85,0.15)" />
+      {/* Wall body — slate-700 */}
+      <Rect x={0} y={wallY - wallH / 2} width={width} height={wallH} color="#334155" />
       {/* Bricks */}
       {bricks}
       {/* Top edge highlight */}
-      <Rect x={0} y={wallY - wallH / 2} width={width} height={2} color="#4B5563" />
-      {/* Glow below */}
-      <Rect x={0} y={wallY + wallH / 2} width={width} height={3} color="rgba(79,142,247,0.2)" />
+      <Rect x={0} y={wallY - wallH / 2} width={width} height={2} color="#475569" />
+      {/* Shadow below */}
+      <Rect x={0} y={wallY + wallH / 2} width={width} height={3} color="rgba(51,65,85,0.15)" />
     </>
   );
 }

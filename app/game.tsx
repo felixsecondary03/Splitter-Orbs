@@ -300,7 +300,7 @@ export default function GameScreen() {
   };
 
   return (
-    <View style={[styles.root, { backgroundColor: '#050810' }]}>
+    <View style={[styles.root, { backgroundColor: COLORS.background }]}>
       {/* ── Top HUD ── */}
       <View style={[styles.topHud, { paddingTop: insets.top + 8 }]}>
         {/* Opponent row */}
@@ -377,7 +377,7 @@ export default function GameScreen() {
                 key={i}
                 style={[
                   styles.clickDot,
-                  { backgroundColor: i < clicksLeft ? COLORS.primary : 'rgba(255,255,255,0.1)' },
+                  { backgroundColor: i < clicksLeft ? COLORS.primary : '#E2E8F0' },
                 ]}
               />
             ))}
@@ -536,9 +536,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingBottom: 6,
     gap: 4,
-    backgroundColor: 'rgba(5,8,16,0.95)',
+    backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
+    borderBottomColor: '#E2E8F0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 3,
   },
   hudRow: {
     flexDirection: 'row',
@@ -550,9 +555,9 @@ const styles = StyleSheet.create({
     gap: 1,
   },
   hudName: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '700',
-    color: COLORS.text,
+    color: '#0F172A',
     letterSpacing: -0.2,
   },
   hudTrophies: {
@@ -571,17 +576,19 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
   },
   pauseBtn: {
-    width: 24,
-    height: 24,
-    borderRadius: 6,
-    backgroundColor: COLORS.surface,
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
   },
   timerText: {
     fontSize: 15,
     fontWeight: '700',
-    color: COLORS.text,
+    color: '#334155',
     fontFamily: 'SpaceMono',
     letterSpacing: 1,
   },
@@ -601,9 +608,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingTop: 8,
     gap: 6,
-    backgroundColor: 'rgba(5,8,16,0.95)',
+    backgroundColor: '#FFFFFF',
     borderTopWidth: 1,
-    borderTopColor: COLORS.border,
+    borderTopColor: '#E2E8F0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 3,
   },
   clickRow: {
     flexDirection: 'row',
@@ -626,6 +638,8 @@ const styles = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 5,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
   },
   towerBar: {
     flexGrow: 0,
@@ -637,25 +651,31 @@ const styles = StyleSheet.create({
   towerCard: {
     alignItems: 'center',
     gap: 3,
-    paddingHorizontal: 6,
-    paddingVertical: 4,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    backgroundColor: COLORS.surface,
-    minWidth: 46,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
+    backgroundColor: '#FFFFFF',
+    minWidth: 56,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 2,
+    elevation: 1,
   },
   towerCardSelected: {
-    borderColor: COLORS.primary,
-    backgroundColor: COLORS.primaryMuted,
+    borderColor: '#F59E0B',
+    borderWidth: 2,
+    backgroundColor: 'rgba(245,158,11,0.08)',
   },
   towerCardDisabled: {
     opacity: 0.45,
   },
   towerCost: {
-    fontSize: 9,
+    fontSize: 10,
     fontWeight: '700',
-    color: COLORS.coin,
+    color: '#F59E0B',
     fontFamily: 'SpaceMono',
   },
   abilityBar: {

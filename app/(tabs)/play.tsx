@@ -543,20 +543,25 @@ const styles = StyleSheet.create({
   // Matchmaking modal
   matchmakingBackdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.8)',
+    backgroundColor: 'rgba(15,23,42,0.6)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 32,
   },
   matchmakingCard: {
-    backgroundColor: COLORS.surface,
+    backgroundColor: '#FFFFFF',
     borderRadius: 24,
     padding: 36,
     width: '100%',
     alignItems: 'center',
     gap: 16,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: '#E2E8F0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.12,
+    shadowRadius: 24,
+    elevation: 8,
   },
   pulsingOrb: {
     width: 64,

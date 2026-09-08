@@ -357,7 +357,7 @@ const detailStyles = StyleSheet.create({
   actionBtnText: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#0A0E1A',
+    color: '#FFFFFF',
   },
   shardBtn: {
     flex: 1,
