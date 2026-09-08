@@ -92,7 +92,7 @@ export function CardThumbnail({
         {locked ? (
           <Lock size={24} color={COLORS.textTertiary} strokeWidth={2} />
         ) : isTower && isTowerType(cardId) ? (
-          <TowerIcon type={cardId} size={52} selected={false} />
+          <TowerIcon type={cardId} size={52} />
         ) : (
           <Text style={styles.emoji}>
             {category === 'orb' || category === 'orbs' ? '⚡' : category === 'ability' || category === 'abilities' ? '✨' : '🏰'}

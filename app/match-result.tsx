@@ -186,7 +186,7 @@ export default function MatchResultScreen() {
   const currentLeagueIdx = LEAGUES.findIndex(l => l.name === newLeague.name);
   const nextLeague = currentLeagueIdx < LEAGUES.length - 1 ? LEAGUES[currentLeagueIdx + 1] : null;
   const progressInLeague = nextLeague
-    ? Math.min(1, (newTrophies - newLeague.minTrophies) / (nextLeague.minTrophies - newLeague.minTrophies))
+    ? Math.min(1, (newTrophies - newLeague.min) / (nextLeague.min - newLeague.min))
     : 1;
 
   const scaleAnim = useRef(new Animated.Value(0.5)).current;
@@ -278,7 +278,7 @@ export default function MatchResultScreen() {
           </View>
           {nextLeague && (
             <Text style={styles.progressLabel}>
-              {nextLeague.minTrophies - newTrophies} trophies to {nextLeague.name}
+              {nextLeague.min - newTrophies} trophies to {nextLeague.name}
             </Text>
           )}
         </Animated.View>

@@ -1,769 +1,394 @@
-import React, { useRef, useEffect, useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import {
   View,
   Text,
   ScrollView,
+  StyleSheet,
+  Pressable,
+  TextInput,
+  Alert,
   Animated,
   Modal,
-  StyleSheet,
-  TouchableOpacity,
-  Dimensions,
-  Alert,
   ActivityIndicator,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { X, TrendingUp, Info } from 'lucide-react-native';
+import { router } from 'expo-router';
 import { COLORS } from '@/constants/Colors';
 import { AnimatedPressable } from '@/components/AnimatedPressable';
-import { TowerIcon } from '@/components/TowerIcon';
+import { CrateIcon } from '@/components/CrateIcon';
 import { useProfile } from '@/contexts/ProfileContext';
 import { supabase } from '@/utils/supabase';
-import {
-  TOWER_TYPES, ORB_TYPES, ABILITY_TYPES,
-  MAX_CARD_LEVEL, CARD_COPIES_NEEDED,
-} from '@/game/constants';
-import type { TowerType } from '@/game/constants';
-import { canLevelUp, getShardCost } from '@/game/progression';
+import { CRATE_TYPES, GEM_EXCHANGE_OPTIONS, GEM_TO_COIN_RATE } from '@/game/constants';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+type CrateTone = 'wood' | 'gold' | 'crystal' | 'silver' | 'legendary' | 'emerald';
 
-type LabTab = 'towers' | 'orbs' | 'abilities' | 'skins' | 'upgrades';
+const CRATE_ORDER = ['wooden', 'silver', 'gold', 'mythical', 'legendary', 'discovery'];
 
-const LAB_TABS: { key: LabTab; label: string }[] = [
-  { key: 'towers', label: 'Türme' },
-  { key: 'orbs', label: 'Orbs' },
-  { key: 'abilities', label: 'Kräfte' },
-  { key: 'skins', label: 'Skins' },
-  { key: 'upgrades', label: 'Upgrades' },
-];
-
-// ─── Starter cards ────────────────────────────────────────────────────────────
-const STARTER_TOWER_IDS = ['blaster', 'vulcan', 'piercer', 'mortar', 'bouncer', 'glacier', 'pyre', 'venom'];
-const STARTER_ORB_IDS = ['normal', 'fast', 'bomb', 'splitter', 'tank'];
-const STARTER_ABILITY_IDS = ['meteor', 'freeze', 'rage', 'shield', 'overclock'];
-
-const TROPHY_TOWER_IDS = TOWER_TYPES.filter((t) => !STARTER_TOWER_IDS.includes(t));
-const TROPHY_ORB_IDS = ORB_TYPES.filter((o) => !STARTER_ORB_IDS.includes(o));
-const TROPHY_ABILITY_IDS = ABILITY_TYPES.filter((a) => !STARTER_ABILITY_IDS.includes(a));
-
-// ─── Display names ────────────────────────────────────────────────────────────
-const TOWER_NAMES: Record<string, string> = {
-  blaster: 'Blaster', vulcan: 'Vulcan', lancer: 'Lancer', piercer: 'Piercer',
-  boomerang: 'Bouncer', mortar: 'Mortar', bouncer: 'Bouncer', glacier: 'Glacier',
-  arc: 'Arc', pyre: 'Pyre', venom: 'Venom', siege: 'Siege',
-  orb_mortar: 'Orb Mortar', lava_mortar: 'Lava Mortar', repulsor: 'Repulsor',
-  cryo: 'Kryo-Kanone', seeker: 'Seeker', prism_lance: 'Prism Lance',
-  flak: 'Flak', harpoon: 'Harpoon', twin: 'Twin', tesla: 'Tesla',
-  detonator: 'Detonator', magnet: 'Magnet',
+const CRATE_SUBLABELS: Record<string, string> = {
+  wooden: 'Free daily crate',
+  silver: 'Better odds',
+  gold: 'Guaranteed card',
+  mythical: 'Epic+ cards',
+  legendary: 'Best odds',
+  discovery: 'Guaranteed new card',
 };
 
-const ORB_NAMES: Record<string, string> = {
-  normal: 'Normal', fast: 'Fast', bomb: 'Bomb', splitter: 'Splitter', tank: 'Tank',
-  carrier: 'Carrier', sprint: 'Sprint', swarmer: 'Swarmer', shielder: 'Shielder',
-  healer: 'Healer', radioactive: 'Radioactive', shadow: 'Shadow', ice: 'Ice',
-  fog: 'Fog', zap: 'Zap', armored: 'Armored', growth: 'Growth',
-  shield_bubble: 'Shield', berserker: 'Berserker', phantom: 'Phantom',
-  leech: 'Leech', summoner: 'Summoner', mine: 'Mine',
+type CrateReward = {
+  type: string;
+  name?: string;
+  amount?: number;
 };
 
-const ABILITY_NAMES: Record<string, string> = {
-  meteor: 'Meteor', freeze: 'Freeze', rage: 'Rage', shield: 'Shield',
-  overclock: 'Overclock', glue: 'Glue', zone: 'Zone', portal: 'Portal', burner: 'Burner',
-};
-
-const CARD_DESCRIPTIONS: Record<string, string> = {
-  blaster: 'Fires rapid energy bolts at nearby orbs. Reliable all-rounder.',
-  vulcan: 'High fire-rate minigun. Shreds fast orbs with sustained damage.',
-  lancer: 'Charges up and fires a powerful piercing lance.',
-  piercer: 'Shots pierce through multiple orbs in a line.',
-  boomerang: 'Throws a boomerang that hits orbs on the way out and back.',
-  mortar: 'Lobs explosive shells that deal area damage on impact.',
-  bouncer: 'Fires bouncing projectiles that ricochet off walls.',
-  glacier: 'Slows orbs with icy blasts, making them easier to destroy.',
-  arc: 'Chains lightning between nearby orbs for multi-target damage.',
-  pyre: 'Burns orbs over time with persistent fire damage.',
-  normal: 'Standard orb with balanced stats. The backbone of any loadout.',
-  fast: 'Moves at high speed. Hard to hit but fragile.',
-  bomb: 'Explodes on death, dealing splash damage to nearby towers.',
-  splitter: 'Splits into smaller orbs when destroyed.',
-  tank: 'Heavily armored orb with massive HP. Slow but durable.',
-  meteor: 'Calls down a meteor strike dealing massive area damage.',
-  freeze: 'Freezes all enemy orbs in place for a few seconds.',
-  rage: 'Doubles your coin income for a short duration.',
-  shield: 'Grants your station a temporary damage shield.',
-  overclock: 'Doubles all tower fire rates for a short burst.',
-};
-
-const RARITY_LABELS: Record<number, string> = { 0: 'Common', 1: 'Common', 2: 'Rare', 3: 'Rare', 4: 'Epic', 5: 'Epic' };
-const RARITY_COLORS: Record<string, string> = { Common: '#64748B', Rare: '#3B82F6', Epic: '#8B5CF6' };
-
-// ─── Shard prices per copy ────────────────────────────────────────────────────
-const COPY_SHARD_PRICE = 4;
-
-function AnimatedListItem({ index, children }: { index: number; children: React.ReactNode }) {
-  const opacity = useRef(new Animated.Value(0)).current;
-  const translateY = useRef(new Animated.Value(12)).current;
+function FloatBob({ children }: { children: React.ReactNode }) {
+  const anim = useRef(new Animated.Value(0)).current;
   useEffect(() => {
-    Animated.parallel([
-      Animated.timing(opacity, { toValue: 1, duration: 300, delay: index * 40, useNativeDriver: true }),
-      Animated.timing(translateY, { toValue: 0, duration: 300, delay: index * 40, useNativeDriver: true }),
-    ]).start();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(anim, { toValue: -6, duration: 1200, useNativeDriver: true }),
+        Animated.timing(anim, { toValue: 0, duration: 1200, useNativeDriver: true }),
+      ])
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [anim]);
   return (
-    <Animated.View style={{ opacity, transform: [{ translateY }] }}>
+    <Animated.View style={{ transform: [{ translateY: anim }] }}>
       {children}
     </Animated.View>
   );
 }
 
-// ─── Card Detail Modal ────────────────────────────────────────────────────────
-function CardDetailModal({
-  cardId, category, onClose,
-}: {
-  cardId: string | null; category: LabTab; onClose: () => void;
-}) {
-  const { profile, refreshProfile } = useProfile();
-  const [levelingUp, setLevelingUp] = useState(false);
-  const [buyingCopy, setBuyingCopy] = useState(false);
-
-  if (!cardId) return null;
-
-  const cardMap =
-    category === 'towers' ? profile.tower_cards
-    : category === 'orbs' ? profile.orb_cards
-    : profile.ability_cards;
-
-  const cardState = cardMap[cardId] ?? { level: 0, copies: 0, boughtCopies: 0 };
-  const isMax = cardState.level >= MAX_CARD_LEVEL;
-  const copiesNeeded = CARD_COPIES_NEEDED[cardState.level] ?? 999;
-  const shardCost = getShardCost(cardState.level);
-  const canLevel = canLevelUp(cardState);
-  const canBuy = profile.shards >= shardCost && !isMax;
-  const displayName = cardId.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
-  const description = CARD_DESCRIPTIONS[cardId] ?? 'A powerful card for your loadout.';
-
-  const handleLevelUp = async () => {
-    console.log(`[Lab] Level up card pressed cardId=${cardId} category=${category}`);
-    setLevelingUp(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('level-up-card', {
-        body: { kind: category, cardId },
-      });
-      if (error) {
-        console.warn('[Lab] level-up-card error', error.message);
-        Alert.alert('Error', (data as Record<string, unknown> | null)?.error as string || 'Something went wrong');
-        return;
-      }
-      const errCode = (data as Record<string, unknown> | null)?.error as string | undefined;
-      if (errCode) {
-        Alert.alert('Error', errCode || 'Something went wrong');
-        return;
-      }
-      if (data?.success) {
-        console.log('[Lab] level-up-card success', data);
-        await refreshProfile();
-      }
-    } catch (e) {
-      console.warn('[Lab] level-up-card exception', e);
-      Alert.alert('Error', 'Network error. Please try again.');
-    } finally {
-      setLevelingUp(false);
-    }
-  };
-
-  const handleBuyWithShards = async () => {
-    console.log(`[Lab] Buy copy with shards pressed cardId=${cardId} cost=${shardCost}`);
-    setBuyingCopy(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('buy-card-copy', {
-        body: { kind: category, cardId },
-      });
-      if (error) {
-        console.warn('[Lab] buy-card-copy error', error.message);
-        Alert.alert('Error', (data as Record<string, unknown> | null)?.error as string || 'Something went wrong');
-        return;
-      }
-      const errCode = (data as Record<string, unknown> | null)?.error as string | undefined;
-      if (errCode) {
-        Alert.alert('Error', errCode || 'Something went wrong');
-        return;
-      }
-      if (data?.success) {
-        console.log('[Lab] buy-card-copy success', data);
-        await refreshProfile();
-      }
-    } catch (e) {
-      console.warn('[Lab] buy-card-copy exception', e);
-      Alert.alert('Error', 'Network error. Please try again.');
-    } finally {
-      setBuyingCopy(false);
-    }
-  };
-
-  return (
-    <Modal visible={!!cardId} transparent animationType="slide">
-      <View style={detailStyles.overlay}>
-        <View style={detailStyles.sheet}>
-          <View style={detailStyles.handle} />
-          <View style={detailStyles.header}>
-            <Text style={detailStyles.cardName}>{displayName}</Text>
-            <AnimatedPressable style={detailStyles.closeBtn} onPress={onClose}>
-              <X size={20} color={COLORS.textSecondary} strokeWidth={2} />
-            </AnimatedPressable>
-          </View>
-          <Text style={detailStyles.description}>{description}</Text>
-          <View style={detailStyles.actions}>
-            <AnimatedPressable
-              style={[detailStyles.actionBtn, (!canLevel || levelingUp) && detailStyles.actionBtnDisabled]}
-              onPress={handleLevelUp}
-              disabled={!canLevel || levelingUp}
-            >
-              {levelingUp ? (
-                <ActivityIndicator size="small" color="#FFFFFF" />
-              ) : (
-                <TrendingUp size={18} color={canLevel ? '#FFFFFF' : COLORS.textTertiary} strokeWidth={2} />
-              )}
-              <Text style={[detailStyles.actionBtnText, !canLevel && { color: COLORS.textTertiary }]}>
-                Level Up
-              </Text>
-            </AnimatedPressable>
-            <AnimatedPressable
-              style={[detailStyles.shardBtn, (!canBuy || buyingCopy) && detailStyles.actionBtnDisabled]}
-              onPress={handleBuyWithShards}
-              disabled={!canBuy || buyingCopy}
-            >
-              {buyingCopy ? (
-                <ActivityIndicator size="small" color="#7C3AED" />
-              ) : (
-                <Text style={detailStyles.shardEmoji}>🔷</Text>
-              )}
-              <Text style={[detailStyles.shardBtnText, !canBuy && { color: COLORS.textTertiary }]}>
-                {shardCost} Splitter
-              </Text>
-            </AnimatedPressable>
-          </View>
-          <Text style={detailStyles.shardsInfo}>Your Splitter: {profile.shards.toLocaleString()} 🔷</Text>
-        </View>
-      </View>
-    </Modal>
-  );
-}
-
-const detailStyles = StyleSheet.create({
-  overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'flex-end' },
-  sheet: {
-    backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    padding: 24,
-    gap: 16,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    borderBottomWidth: 0,
-  },
-  handle: { width: 36, height: 4, borderRadius: 2, backgroundColor: '#CBD5E1', alignSelf: 'center', marginBottom: 4 },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  cardName: { fontSize: 20, fontWeight: '800', color: '#0F172A', letterSpacing: -0.3 },
-  closeBtn: { width: 36, height: 36, borderRadius: 10, backgroundColor: '#F1F5F9', alignItems: 'center', justifyContent: 'center' },
-  description: { fontSize: 14, color: '#64748B', lineHeight: 20 },
-  actions: { flexDirection: 'row', gap: 12 },
-  actionBtn: {
-    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    gap: 8, backgroundColor: '#22C55E', borderRadius: 14, paddingVertical: 14,
-  },
-  actionBtnDisabled: { backgroundColor: '#F1F5F9' },
-  actionBtnText: { fontSize: 15, fontWeight: '700', color: '#FFFFFF' },
-  shardBtn: {
-    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    gap: 8, backgroundColor: '#EDE9FE', borderRadius: 14, paddingVertical: 14,
-  },
-  shardEmoji: { fontSize: 16 },
-  shardBtnText: { fontSize: 15, fontWeight: '700', color: '#7C3AED' },
-  shardsInfo: { fontSize: 13, color: '#94A3B8', textAlign: 'center', fontWeight: '500' },
-});
-
-// ─── Lab Card (2-column) ──────────────────────────────────────────────────────
-function LabCard({
-  cardId, category, onPress, onInfo,
-}: {
-  cardId: string; category: LabTab; onPress: () => void; onInfo: () => void;
-}) {
-  const { profile, refreshProfile } = useProfile();
-  const cardMap =
-    category === 'towers' ? profile.tower_cards
-    : category === 'orbs' ? profile.orb_cards
-    : profile.ability_cards;
-
-  const cardState = cardMap[cardId] ?? { level: 0, copies: 0, boughtCopies: 0 };
-  const isMax = cardState.level >= MAX_CARD_LEVEL;
-  const copiesNeeded = CARD_COPIES_NEEDED[cardState.level] ?? 999;
-  const canLevel = canLevelUp(cardState);
-  const canBuyCopy = profile.shards >= COPY_SHARD_PRICE && !isMax;
-
-  const displayName =
-    category === 'towers' ? (TOWER_NAMES[cardId] ?? cardId)
-    : category === 'orbs' ? (ORB_NAMES[cardId] ?? cardId)
-    : (ABILITY_NAMES[cardId] ?? cardId);
-
-  const rarity = RARITY_LABELS[cardState.level] ?? 'Common';
-  const rarityColor = RARITY_COLORS[rarity] ?? '#64748B';
-
-  const progressPct = isMax ? 1 : Math.min(1, cardState.copies / copiesNeeded);
-  const progressWidth = `${Math.round(progressPct * 100)}%` as `${number}%`;
-
-  const levelDots = Array.from({ length: MAX_CARD_LEVEL }, (_, i) => i < cardState.level);
-
-  const [buyingCopy, setBuyingCopy] = useState(false);
-
-  const handleBuyCopy = async () => {
-    console.log(`[Lab] Buy copy pressed cardId=${cardId} cost=${COPY_SHARD_PRICE}`);
-    if (!canBuyCopy || buyingCopy) return;
-    setBuyingCopy(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('buy-card-copy', {
-        body: { kind: category, cardId },
-      });
-      if (error) {
-        console.warn('[Lab] buy-card-copy error', error.message);
-        Alert.alert('Error', (data as Record<string, unknown> | null)?.error as string || 'Something went wrong');
-        return;
-      }
-      const errCode = (data as Record<string, unknown> | null)?.error as string | undefined;
-      if (errCode) {
-        Alert.alert('Error', errCode || 'Something went wrong');
-        return;
-      }
-      if (data?.success) {
-        console.log('[Lab] buy-card-copy success', data);
-        await refreshProfile();
-      }
-    } catch (e) {
-      console.warn('[Lab] buy-card-copy exception', e);
-      Alert.alert('Error', 'Network error. Please try again.');
-    } finally {
-      setBuyingCopy(false);
-    }
-  };
-
-  return (
-    <TouchableOpacity style={labCardStyles.card} onPress={onPress} activeOpacity={0.85}>
-      {/* Info button */}
-      <TouchableOpacity style={labCardStyles.infoBtn} onPress={onInfo} hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}>
-        <Text style={labCardStyles.infoBtnText}>i</Text>
-      </TouchableOpacity>
-
-      <View style={labCardStyles.topRow}>
-        {category === 'towers' ? (
-          <TowerIcon type={cardId as TowerType} size={52} />
-        ) : (
-          <View style={labCardStyles.emojiIcon}>
-            <Text style={labCardStyles.emojiText}>
-              {category === 'orbs' ? '⚡' : '✨'}
-            </Text>
-          </View>
-        )}
-        <View style={labCardStyles.nameSection}>
-          <Text style={labCardStyles.cardName}>{displayName}</Text>
-          <View style={[labCardStyles.rarityBadge, { backgroundColor: `${rarityColor}18` }]}>
-            <Text style={[labCardStyles.rarityText, { color: rarityColor }]}>{rarity}</Text>
-          </View>
-          <View style={labCardStyles.levelDots}>
-            {levelDots.map((filled, i) => (
-              <View
-                key={i}
-                style={[labCardStyles.dot, { backgroundColor: filled ? '#F59E0B' : '#E2E8F0' }]}
-              />
-            ))}
-          </View>
-        </View>
-      </View>
-
-      {/* Progress */}
-      <View style={labCardStyles.progressSection}>
-        <View style={labCardStyles.progressLabelRow}>
-          <Text style={labCardStyles.progressLabel}>Kopien</Text>
-          <Text style={labCardStyles.progressValue}>
-            {isMax ? 'MAX' : `${cardState.copies}/${copiesNeeded}`}
-          </Text>
-        </View>
-        <View style={labCardStyles.progressTrack}>
-          <View style={[labCardStyles.progressFill, { width: progressWidth }]} />
-        </View>
-        <Text style={labCardStyles.boughtText}>
-          gekauft {cardState.boughtCopies}/{Math.max(cardState.boughtCopies, copiesNeeded)}
-        </Text>
-      </View>
-
-      {/* Action button */}
-      {canLevel ? (
-        <TouchableOpacity
-          style={labCardStyles.levelUpBtn}
-          onPress={() => {
-            console.log(`[Lab] Level up pressed cardId=${cardId}`);
-            onPress();
-          }}
-          activeOpacity={0.8}
-        >
-          <TrendingUp size={14} color="#FFFFFF" strokeWidth={2.5} />
-          <Text style={labCardStyles.levelUpBtnText}>Level Up</Text>
-        </TouchableOpacity>
-      ) : isMax ? (
-        <TouchableOpacity style={labCardStyles.collectBtn} activeOpacity={0.8}>
-          <Text style={labCardStyles.collectBtnText}>📦 Mehr sammeln</Text>
-        </TouchableOpacity>
-      ) : (
-        <TouchableOpacity
-          style={[labCardStyles.buyBtn, (!canBuyCopy || buyingCopy) && labCardStyles.buyBtnDisabled]}
-          onPress={handleBuyCopy}
-          disabled={!canBuyCopy || buyingCopy}
-          activeOpacity={0.8}
-        >
-          {buyingCopy ? (
-            <ActivityIndicator size="small" color="#FFFFFF" />
-          ) : (
-            <Text style={labCardStyles.buyBtnText}>
-              Kopie kaufen 🔷 {COPY_SHARD_PRICE}
-            </Text>
-          )}
-        </TouchableOpacity>
-      )}
-    </TouchableOpacity>
-  );
-}
-
-const labCardStyles = StyleSheet.create({
-  card: {
-    width: (SCREEN_WIDTH - 48) / 2,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    padding: 16,
-    gap: 12,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    position: 'relative',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  infoBtn: {
-    position: 'absolute',
-    top: 10,
-    right: 10,
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: '#F1F5F9',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 5,
-  },
-  infoBtnText: { fontSize: 12, fontWeight: '700', color: '#94A3B8', fontStyle: 'italic' },
-  topRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  emojiIcon: {
-    width: 52, height: 52, borderRadius: 14,
-    backgroundColor: '#F1F5F9', alignItems: 'center', justifyContent: 'center',
-  },
-  emojiText: { fontSize: 26 },
-  nameSection: { flex: 1, gap: 5 },
-  cardName: { fontSize: 16, fontWeight: '800', color: '#0F172A', letterSpacing: -0.2 },
-  rarityBadge: { alignSelf: 'flex-start', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
-  rarityText: { fontSize: 11, fontWeight: '700' },
-  levelDots: { flexDirection: 'row', gap: 4, marginTop: 2 },
-  dot: { width: 10, height: 10, borderRadius: 5 },
-  progressSection: { gap: 5 },
-  progressLabelRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  progressLabel: { fontSize: 12, color: '#94A3B8', fontWeight: '500' },
-  progressValue: { fontSize: 12, fontWeight: '700', color: '#475569' },
-  progressTrack: { height: 6, backgroundColor: '#F1F5F9', borderRadius: 3, overflow: 'hidden' },
-  progressFill: { height: '100%', backgroundColor: '#3B82F6', borderRadius: 3 },
-  boughtText: { fontSize: 11, color: '#94A3B8', fontWeight: '500', textAlign: 'right' },
-  levelUpBtn: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    gap: 6, backgroundColor: '#22C55E', borderRadius: 12, paddingVertical: 10,
-  },
-  levelUpBtnText: { fontSize: 13, fontWeight: '800', color: '#FFFFFF' },
-  collectBtn: {
-    backgroundColor: '#F1F5F9', borderRadius: 12, paddingVertical: 10, alignItems: 'center',
-  },
-  collectBtnText: { fontSize: 13, fontWeight: '700', color: '#64748B' },
-  buyBtn: {
-    backgroundColor: '#22C55E', borderRadius: 12, paddingVertical: 10, alignItems: 'center',
-  },
-  buyBtnDisabled: { backgroundColor: '#F1F5F9' },
-  buyBtnText: { fontSize: 13, fontWeight: '800', color: '#FFFFFF' },
-});
-
-// ─── Upgrades Tab ─────────────────────────────────────────────────────────────
-function UpgradesTab() {
-  const { profile, refreshProfile } = useProfile();
-  const [upgradingHand, setUpgradingHand] = useState(false);
-  const [upgradingSide, setUpgradingSide] = useState(false);
-
-  const handleUpgradeHand = async () => {
-    console.log('[Lab] Upgrade hand level pressed', { current: profile.hand_level });
-    setUpgradingHand(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('level-up-card', {
-        body: { kind: 'hand', cardId: 'hand' },
-      });
-      if (error) {
-        console.warn('[Lab] level-up-card hand error', error.message);
-        Alert.alert('Error', (data as Record<string, unknown> | null)?.error as string || 'Something went wrong');
-        return;
-      }
-      const errCode = (data as Record<string, unknown> | null)?.error as string | undefined;
-      if (errCode) {
-        Alert.alert('Error', errCode || 'Something went wrong');
-        return;
-      }
-      if (data?.success) {
-        console.log('[Lab] level-up-card hand success');
-        await refreshProfile();
-      }
-    } catch (e) {
-      console.warn('[Lab] level-up-card hand exception', e);
-      Alert.alert('Error', 'Network error. Please try again.');
-    } finally {
-      setUpgradingHand(false);
-    }
-  };
-
-  const handleUpgradeSideTower = async () => {
-    console.log('[Lab] Upgrade side tower pressed', { current: profile.side_tower_level });
-    setUpgradingSide(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('level-up-card', {
-        body: { kind: 'side_tower', cardId: 'side_tower' },
-      });
-      if (error) {
-        console.warn('[Lab] level-up-card side_tower error', error.message);
-        Alert.alert('Error', (data as Record<string, unknown> | null)?.error as string || 'Something went wrong');
-        return;
-      }
-      const errCode = (data as Record<string, unknown> | null)?.error as string | undefined;
-      if (errCode) {
-        Alert.alert('Error', errCode || 'Something went wrong');
-        return;
-      }
-      if (data?.success) {
-        console.log('[Lab] level-up-card side_tower success');
-        await refreshProfile();
-      }
-    } catch (e) {
-      console.warn('[Lab] level-up-card side_tower exception', e);
-      Alert.alert('Error', 'Network error. Please try again.');
-    } finally {
-      setUpgradingSide(false);
-    }
-  };
-
-  return (
-    <View style={upgradeStyles.container}>
-      <Text style={upgradeStyles.desc}>
-        Werte Karten mit Kopien aus Kisten auf oder nutze Splitter.{'\n'}
-        Höhere Türme starten stärker im Match.
-      </Text>
-
-      <TouchableOpacity style={upgradeStyles.card} onPress={handleUpgradeHand} activeOpacity={0.85} disabled={upgradingHand}>
-        <View style={upgradeStyles.cardLeft}>
-          <Text style={upgradeStyles.cardEmoji}>👆</Text>
-          <View>
-            <Text style={upgradeStyles.cardTitle}>Hand Level</Text>
-            <Text style={upgradeStyles.cardSub}>More clicks per round</Text>
-          </View>
-        </View>
-        {upgradingHand ? (
-          <ActivityIndicator size="small" color={COLORS.primary} />
-        ) : (
-          <View style={upgradeStyles.levelBadge}>
-            <Text style={upgradeStyles.levelText}>L{profile.hand_level + 1}</Text>
-          </View>
-        )}
-      </TouchableOpacity>
-
-      <TouchableOpacity style={upgradeStyles.card} onPress={handleUpgradeSideTower} activeOpacity={0.85} disabled={upgradingSide}>
-        <View style={upgradeStyles.cardLeft}>
-          <Text style={upgradeStyles.cardEmoji}>🏰</Text>
-          <View>
-            <Text style={upgradeStyles.cardTitle}>Side Tower</Text>
-            <Text style={upgradeStyles.cardSub}>Stronger side defenses</Text>
-          </View>
-        </View>
-        {upgradingSide ? (
-          <ActivityIndicator size="small" color={COLORS.primary} />
-        ) : (
-          <View style={upgradeStyles.levelBadge}>
-            <Text style={upgradeStyles.levelText}>L{profile.side_tower_level + 1}</Text>
-          </View>
-        )}
-      </TouchableOpacity>
-    </View>
-  );
-}
-
-const upgradeStyles = StyleSheet.create({
-  container: { padding: 16, gap: 12 },
-  desc: { fontSize: 14, color: '#64748B', lineHeight: 20, fontWeight: '400' },
-  card: {
-    backgroundColor: '#FFFFFF', borderRadius: 16, padding: 16,
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    borderWidth: 1, borderColor: '#E2E8F0',
-  },
-  cardLeft: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  cardEmoji: { fontSize: 28 },
-  cardTitle: { fontSize: 16, fontWeight: '800', color: '#0F172A' },
-  cardSub: { fontSize: 12, color: '#64748B', fontWeight: '500', marginTop: 2 },
-  levelBadge: {
-    backgroundColor: '#EFF6FF', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 6,
-  },
-  levelText: { fontSize: 14, fontWeight: '800', color: '#3B82F6' },
-});
-
-// ─── Main Screen ──────────────────────────────────────────────────────────────
-export default function CollectionScreen() {
+export default function ShopScreen() {
   const insets = useSafeAreaInsets();
-  const { profile } = useProfile();
-  const [activeTab, setActiveTab] = useState<LabTab>('towers');
-  const [selectedCard, setSelectedCard] = useState<string | null>(null);
+  const { profile, refreshProfile } = useProfile();
 
-  const handleTabChange = useCallback((tab: LabTab) => {
-    console.log('[Lab] Tab changed', { tab });
-    setActiveTab(tab);
-  }, []);
+  const [voucherCode, setVoucherCode] = useState('');
+  const [voucherResult, setVoucherResult] = useState<{ success: boolean; message: string } | null>(null);
+  const [redeemingVoucher, setRedeemingVoucher] = useState(false);
+  const [openingCrate, setOpeningCrate] = useState<string | null>(null);
+  const [crateRewards, setCrateRewards] = useState<CrateReward[] | null>(null);
+  const [showRewardsModal, setShowRewardsModal] = useState(false);
+  const [exchangingGems, setExchangingGems] = useState<number | null>(null);
 
-  const handleCardPress = useCallback((cardId: string) => {
-    console.log('[Lab] Card pressed', { cardId, tab: activeTab });
-    setSelectedCard(cardId);
-  }, [activeTab]);
+  const coinsDisplay = (profile.coins ?? 0).toLocaleString();
+  const gemsDisplay = (profile.gems ?? 0).toLocaleString();
+  const shardsDisplay = (profile.shards ?? 0).toLocaleString();
 
-  const handleCloseDetail = useCallback(() => {
-    console.log('[Lab] Card detail closed');
-    setSelectedCard(null);
-  }, []);
+  const lastFreeCrate = profile.last_free_crate ?? null;
+  const freeCrateAvailable = !lastFreeCrate || (Date.now() - new Date(lastFreeCrate).getTime() > 24 * 60 * 60 * 1000);
 
-  const shardsDisplay = profile.shards.toLocaleString();
+  const handleExchangeGems = useCallback(async (amount: number) => {
+    if (exchangingGems !== null) return;
+    const cost = amount;
+    const coins = amount * GEM_TO_COIN_RATE;
+    console.log(`[Shop] Exchange gems pressed: ${cost}💎 → ${coins}🪙`);
+    if ((profile.gems ?? 0) < cost) {
+      Alert.alert('Not enough gems', `You need ${cost} gems.`);
+      return;
+    }
+    setExchangingGems(amount);
+    try {
+      const { data, error } = await supabase.functions.invoke('exchange-gems', {
+        body: { gems: amount },
+      });
+      if (error || data?.error) {
+        console.warn('[Shop] exchange-gems error', error?.message ?? data?.error);
+        Alert.alert('Error', data?.error ?? error?.message ?? 'Something went wrong');
+        return;
+      }
+      console.log('[Shop] Gems exchanged successfully', { amount, coins });
+      await refreshProfile();
+    } catch (e) {
+      console.warn('[Shop] exchange-gems exception', e);
+      Alert.alert('Error', 'Network error. Please try again.');
+    } finally {
+      setExchangingGems(null);
+    }
+  }, [exchangingGems, profile.gems, refreshProfile]);
 
-  const starterIds =
-    activeTab === 'towers' ? STARTER_TOWER_IDS
-    : activeTab === 'orbs' ? STARTER_ORB_IDS
-    : STARTER_ABILITY_IDS;
+  const handleOpenCrate = useCallback(async (crateId: string) => {
+    if (openingCrate !== null) return;
+    const crate = CRATE_TYPES[crateId];
+    if (!crate) return;
 
-  const trophyIds =
-    activeTab === 'towers' ? TROPHY_TOWER_IDS
-    : activeTab === 'orbs' ? TROPHY_ORB_IDS
-    : TROPHY_ABILITY_IDS;
+    const isFree = crateId === 'wooden';
+    if (isFree && !freeCrateAvailable) {
+      Alert.alert('Already claimed', 'Come back tomorrow for your free crate!');
+      return;
+    }
+    if (!isFree && crate.currency === 'coins' && (profile.coins ?? 0) < crate.cost) {
+      Alert.alert('Not enough coins', `You need ${crate.cost} coins.`);
+      return;
+    }
+    if (!isFree && crate.currency === 'gems' && (profile.gems ?? 0) < crate.cost) {
+      Alert.alert('Not enough gems', `You need ${crate.cost} gems.`);
+      return;
+    }
 
-  const cardCategory: 'towers' | 'orbs' | 'abilities' =
-    activeTab === 'towers' ? 'towers'
-    : activeTab === 'orbs' ? 'orbs'
-    : 'abilities';
+    console.log(`[Shop] Open crate pressed: ${crateId}`, { isFree, cost: crate.cost, currency: crate.currency });
+    setOpeningCrate(crateId);
+    try {
+      const { data, error } = await supabase.functions.invoke('open-crate', {
+        body: { crateId, claimFree: isFree },
+      });
+      if (error || data?.error) {
+        console.warn('[Shop] open-crate error', error?.message ?? data?.error);
+        Alert.alert('Error', data?.error ?? error?.message ?? 'Something went wrong');
+        return;
+      }
+      console.log('[Shop] Crate opened, rewards:', data?.rewards);
+      setCrateRewards(data?.rewards ?? []);
+      setShowRewardsModal(true);
+      await refreshProfile();
+    } catch (e) {
+      console.warn('[Shop] open-crate exception', e);
+      Alert.alert('Error', 'Network error. Please try again.');
+    } finally {
+      setOpeningCrate(null);
+    }
+  }, [openingCrate, freeCrateAvailable, profile.coins, profile.gems, refreshProfile]);
+
+  const handleRedeemVoucher = useCallback(async () => {
+    const code = voucherCode.trim().toUpperCase();
+    if (!code) return;
+    console.log(`[Shop] Redeem voucher pressed: ${code}`);
+    setRedeemingVoucher(true);
+    setVoucherResult(null);
+    try {
+      const { data, error } = await supabase.functions.invoke('redeem-voucher', {
+        body: { code },
+      });
+      if (error || data?.error) {
+        console.warn('[Shop] redeem-voucher error', error?.message ?? data?.error);
+        setVoucherResult({ success: false, message: data?.error ?? error?.message ?? 'Invalid code' });
+        return;
+      }
+      console.log('[Shop] Voucher redeemed', data);
+      setVoucherResult({ success: true, message: data?.message ?? 'Rewards claimed!' });
+      setVoucherCode('');
+      await refreshProfile();
+    } catch (e) {
+      console.warn('[Shop] redeem-voucher exception', e);
+      setVoucherResult({ success: false, message: 'Network error. Please try again.' });
+    } finally {
+      setRedeemingVoucher(false);
+    }
+  }, [voucherCode, refreshProfile]);
 
   return (
     <View style={[styles.root, { paddingTop: insets.top }]}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.screenTitle}>Lab</Text>
-        <View style={styles.shardsChip}>
-          <Text style={styles.shardsEmoji}>🔷</Text>
-          <Text style={styles.shardsValue}>{shardsDisplay}</Text>
-        </View>
-      </View>
-
-      {/* Tab bar */}
       <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={styles.tabBarScroll}
-        contentContainerStyle={styles.tabBarContent}
+        style={styles.scroll}
+        contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 100 }]}
+        showsVerticalScrollIndicator={false}
       >
-        {LAB_TABS.map((tab) => {
-          const isActive = activeTab === tab.key;
+        {/* Header */}
+        <View style={styles.header}>
+          <Text style={styles.title}>Shop</Text>
+          <View style={styles.currencyRow}>
+            <View style={styles.currencyChip}>
+              <Text style={styles.currencyEmoji}>🪙</Text>
+              <Text style={[styles.currencyValue, { color: COLORS.coin }]}>{coinsDisplay}</Text>
+            </View>
+            <View style={styles.currencyChip}>
+              <Text style={styles.currencyEmoji}>💎</Text>
+              <Text style={[styles.currencyValue, { color: COLORS.gem }]}>{gemsDisplay}</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Gem exchange card */}
+        <View style={styles.exchangeCard}>
+          <View style={styles.exchangeHeader}>
+            <Text style={styles.exchangeTitle}>Exchange Gems</Text>
+            <View style={styles.gemPill}>
+              <Text style={styles.gemPillText}>💎 {gemsDisplay}</Text>
+            </View>
+          </View>
+          <Text style={styles.exchangeRate}>1 💎 = {GEM_TO_COIN_RATE} 🪙</Text>
+          <View style={styles.exchangeBtns}>
+            {GEM_EXCHANGE_OPTIONS.map((amount) => {
+              const coins = amount * GEM_TO_COIN_RATE;
+              const canAfford = (profile.gems ?? 0) >= amount;
+              const isLoading = exchangingGems === amount;
+              return (
+                <Pressable
+                  key={amount}
+                  style={[styles.exchangeBtn, canAfford ? styles.exchangeBtnActive : styles.exchangeBtnDisabled]}
+                  onPress={() => handleExchangeGems(amount)}
+                  disabled={!canAfford || exchangingGems !== null}
+                >
+                  {isLoading ? (
+                    <ActivityIndicator size="small" color="#fff" />
+                  ) : (
+                    <>
+                      <Text style={[styles.exchangeBtnText, !canAfford && styles.exchangeBtnTextDisabled]}>
+                        💎{amount}
+                      </Text>
+                      <Text style={[styles.exchangeBtnSub, !canAfford && styles.exchangeBtnTextDisabled]}>
+                        → 🪙{coins}
+                      </Text>
+                    </>
+                  )}
+                </Pressable>
+              );
+            })}
+          </View>
+        </View>
+
+        {/* Shard balance */}
+        <Pressable
+          style={styles.shardPill}
+          onPress={() => {
+            console.log('[Shop] Use in Lab pressed');
+            router.push('/(tabs)/lab' as never);
+          }}
+        >
+          <Text style={styles.shardText}>🔮 {shardsDisplay} shards</Text>
+          <Text style={styles.shardLink}>Use in Lab →</Text>
+        </Pressable>
+
+        {/* Crates section */}
+        <Text style={styles.cratesHeading}>Crates</Text>
+        {CRATE_ORDER.map((crateId) => {
+          const crate = CRATE_TYPES[crateId];
+          if (!crate) return null;
+          const isFree = crateId === 'wooden';
+          const isLoading = openingCrate === crateId;
+          const isAvailable = isFree ? freeCrateAvailable : true;
+          const canAfford = isFree
+            ? freeCrateAvailable
+            : crate.currency === 'coins'
+            ? (profile.coins ?? 0) >= crate.cost
+            : (profile.gems ?? 0) >= crate.cost;
+
+          const btnLabel = isFree
+            ? freeCrateAvailable ? 'Free Daily' : 'Claimed'
+            : crate.currency === 'coins'
+            ? `${crate.cost} 🪙`
+            : `${crate.cost} 💎`;
+
+          const skinPct = Math.round(crate.skinChance * 100);
+          const itemsLabel = `${crate.itemCount} items`;
+
           return (
-            <TouchableOpacity
-              key={tab.key}
-              style={[styles.tabBtn, isActive && styles.tabBtnActive]}
-              onPress={() => handleTabChange(tab.key)}
-              activeOpacity={0.8}
-            >
-              <Text style={[styles.tabLabel, isActive && styles.tabLabelActive]}>
-                {tab.label}
-              </Text>
-            </TouchableOpacity>
+            <View key={crateId} style={styles.crateCard}>
+              <FloatBob>
+                <CrateIcon size={56} tone={crate.tone as CrateTone} />
+              </FloatBob>
+              <View style={styles.crateInfo}>
+                <Text style={styles.crateName}>{crate.name} Crate</Text>
+                <Text style={styles.crateSub}>{CRATE_SUBLABELS[crateId]}</Text>
+                <View style={styles.crateBadges}>
+                  <View style={styles.badge}>
+                    <Text style={styles.badgeText}>{itemsLabel}</Text>
+                  </View>
+                  {skinPct > 0 && (
+                    <View style={[styles.badge, styles.badgeSkin]}>
+                      <Text style={[styles.badgeText, styles.badgeTextSkin]}>{skinPct}% skin</Text>
+                    </View>
+                  )}
+                  {crate.guaranteedCards > 0 && (
+                    <View style={[styles.badge, styles.badgeCard]}>
+                      <Text style={[styles.badgeText, styles.badgeTextCard]}>
+                        {crate.guaranteedCards} card{crate.guaranteedCards > 1 ? 's' : ''}
+                      </Text>
+                    </View>
+                  )}
+                  {crate.gemChance > 0 && (
+                    <View style={[styles.badge, styles.badgeGem]}>
+                      <Text style={[styles.badgeText, styles.badgeTextGem]}>💎 chance</Text>
+                    </View>
+                  )}
+                </View>
+              </View>
+              <AnimatedPressable
+                style={[
+                  styles.crateBtn,
+                  canAfford && isAvailable ? styles.crateBtnActive : styles.crateBtnDisabled,
+                ]}
+                onPress={() => handleOpenCrate(crateId)}
+                disabled={!canAfford || !isAvailable || openingCrate !== null}
+              >
+                {isLoading ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Text style={[styles.crateBtnText, (!canAfford || !isAvailable) && styles.crateBtnTextDisabled]}>
+                    {btnLabel}
+                  </Text>
+                )}
+              </AnimatedPressable>
+            </View>
           );
         })}
+
+        {/* Voucher section */}
+        <View style={styles.voucherCard}>
+          <Text style={styles.voucherTitle}>Redeem Voucher</Text>
+          <View style={styles.voucherRow}>
+            <TextInput
+              style={styles.voucherInput}
+              placeholder="ENTER CODE"
+              placeholderTextColor="#94a3b8"
+              value={voucherCode}
+              onChangeText={(t) => setVoucherCode(t.toUpperCase())}
+              autoCapitalize="characters"
+              autoCorrect={false}
+            />
+            <AnimatedPressable
+              style={[styles.redeemBtn, !voucherCode.trim() && styles.redeemBtnDisabled]}
+              onPress={handleRedeemVoucher}
+              disabled={!voucherCode.trim() || redeemingVoucher}
+            >
+              {redeemingVoucher ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <Text style={styles.redeemBtnText}>Redeem</Text>
+              )}
+            </AnimatedPressable>
+          </View>
+          {voucherResult && (
+            <View style={[styles.voucherFeedback, voucherResult.success ? styles.voucherSuccess : styles.voucherError]}>
+              <Text style={[styles.voucherFeedbackText, voucherResult.success ? styles.voucherSuccessText : styles.voucherErrorText]}>
+                {voucherResult.message}
+              </Text>
+            </View>
+          )}
+        </View>
       </ScrollView>
 
-      {activeTab === 'upgrades' ? (
-        <ScrollView contentContainerStyle={{ paddingBottom: 120 }} showsVerticalScrollIndicator={false}>
-          <UpgradesTab />
-        </ScrollView>
-      ) : activeTab === 'skins' ? (
-        <View style={styles.emptyState}>
-          <Text style={styles.emptyEmoji}>🎨</Text>
-          <Text style={styles.emptyTitle}>Skins coming soon</Text>
-          <Text style={styles.emptySub}>Unlock cosmetic skins for your towers and orbs.</Text>
-        </View>
-      ) : (
-        <ScrollView
-          contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 120 }]}
-          showsVerticalScrollIndicator={false}
-        >
-          {/* Description */}
-          <Text style={styles.desc}>
-            Werte Karten mit Kopien aus Kisten auf oder nutze Splitter.{'\n'}
-            Höhere Türme starten stärker im Match.
-          </Text>
-
-          {/* Startkarten */}
-          <Text style={styles.sectionTitle}>Startkarten</Text>
-          <View style={styles.cardGrid}>
-            {starterIds.map((id, i) => (
-              <AnimatedListItem key={id} index={i}>
-                <LabCard
-                  cardId={id}
-                  category={cardCategory}
-                  onPress={() => handleCardPress(id)}
-                  onInfo={() => {
-                    console.log('[Lab] Info button pressed', { cardId: id });
-                    handleCardPress(id);
-                  }}
-                />
-              </AnimatedListItem>
-            ))}
+      {/* Rewards modal */}
+      <Modal visible={showRewardsModal} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>🎉 Crate Opened!</Text>
+            {crateRewards && crateRewards.length > 0 ? (
+              crateRewards.map((r, i) => (
+                <View key={i} style={styles.rewardRow}>
+                  <Text style={styles.rewardText}>
+                    {r.type === 'coins' ? `🪙 ${r.amount} coins` :
+                     r.type === 'gems' ? `💎 ${r.amount} gems` :
+                     r.type === 'shards' ? `🔮 ${r.amount} shards` :
+                     r.name ? `🃏 ${r.name}` : `${r.type}`}
+                  </Text>
+                </View>
+              ))
+            ) : (
+              <Text style={styles.rewardText}>Rewards added to your account!</Text>
+            )}
+            <AnimatedPressable
+              style={styles.modalCloseBtn}
+              onPress={() => {
+                console.log('[Shop] Rewards modal closed');
+                setShowRewardsModal(false);
+                setCrateRewards(null);
+              }}
+            >
+              <Text style={styles.modalCloseBtnText}>Awesome!</Text>
+            </AnimatedPressable>
           </View>
-
-          {/* Trophäen-Freischaltungen */}
-          {trophyIds.length > 0 && (
-            <>
-              <Text style={styles.sectionTitle}>Trophäen-Freischaltungen</Text>
-              <View style={styles.cardGrid}>
-                {trophyIds.map((id, i) => (
-                  <AnimatedListItem key={id} index={starterIds.length + i}>
-                    <LabCard
-                      cardId={id}
-                      category={cardCategory}
-                      onPress={() => handleCardPress(id)}
-                      onInfo={() => {
-                        console.log('[Lab] Info button pressed', { cardId: id });
-                        handleCardPress(id);
-                      }}
-                    />
-                  </AnimatedListItem>
-                ))}
-              </View>
-            </>
-          )}
-        </ScrollView>
-      )}
-
-      <CardDetailModal
-        cardId={selectedCard}
-        category={cardCategory}
-        onClose={handleCloseDetail}
-      />
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -771,99 +396,349 @@ export default function CollectionScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: '#F8FAFC',
+  },
+  scroll: {
+    flex: 1,
+  },
+  content: {
+    paddingHorizontal: 16,
+    gap: 12,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 14,
+    paddingVertical: 8,
   },
-  screenTitle: {
-    fontSize: 32,
+  title: {
+    fontSize: 28,
     fontWeight: '900',
-    color: '#0F172A',
+    color: '#0f172a',
     letterSpacing: -0.5,
   },
-  shardsChip: {
+  currencyRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  currencyChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  shardsEmoji: { fontSize: 14 },
-  shardsValue: {
-    fontSize: 15,
-    fontWeight: '800',
-    color: '#7C3AED',
-    fontFamily: 'SpaceMono',
-  },
-  tabBarScroll: {
-    flexGrow: 0,
-    marginHorizontal: 16,
-    marginBottom: 4,
-  },
-  tabBarContent: {
     gap: 4,
     backgroundColor: '#FFFFFF',
-    borderRadius: 14,
-    padding: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 20,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: '#e2e8f0',
   },
-  tabBtn: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 10,
+  currencyEmoji: {
+    fontSize: 12,
   },
-  tabBtnActive: {
-    backgroundColor: '#0F172A',
-  },
-  tabLabel: {
-    fontSize: 14,
+  currencyValue: {
+    fontSize: 12,
     fontWeight: '700',
-    color: '#64748B',
+    fontVariant: ['tabular-nums'],
   },
-  tabLabelActive: {
+  exchangeCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 16,
+    gap: 12,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  exchangeHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  exchangeTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#0f172a',
+  },
+  gemPill: {
+    backgroundColor: '#ecfdf5',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#a7f3d0',
+  },
+  gemPillText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#065f46',
+  },
+  exchangeRate: {
+    fontSize: 13,
+    color: '#64748b',
+    fontWeight: '500',
+  },
+  exchangeBtns: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  exchangeBtn: {
+    flex: 1,
+    borderRadius: 12,
+    paddingVertical: 10,
+    alignItems: 'center',
+    gap: 2,
+    minHeight: 52,
+    justifyContent: 'center',
+  },
+  exchangeBtnActive: {
+    backgroundColor: '#f59e0b',
+  },
+  exchangeBtnDisabled: {
+    backgroundColor: '#f1f5f9',
+  },
+  exchangeBtnText: {
+    fontSize: 13,
+    fontWeight: '800',
     color: '#FFFFFF',
   },
-  content: {
-    paddingHorizontal: 16,
-    paddingTop: 8,
-    gap: 12,
+  exchangeBtnSub: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.8)',
   },
-  desc: {
+  exchangeBtnTextDisabled: {
+    color: '#94a3b8',
+  },
+  shardPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#f5f3ff',
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderWidth: 1,
+    borderColor: '#ddd6fe',
+  },
+  shardText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#5b21b6',
+  },
+  shardLink: {
     fontSize: 13,
-    color: '#64748B',
-    lineHeight: 19,
-    fontWeight: '400',
+    fontWeight: '700',
+    color: '#7c3aed',
   },
-  sectionTitle: {
+  cratesHeading: {
     fontSize: 18,
     fontWeight: '800',
-    color: '#0F172A',
-    letterSpacing: -0.2,
+    color: '#0f172a',
     marginTop: 4,
   },
-  cardGrid: {
+  crateCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 18,
+    padding: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 1,
+  },
+  crateInfo: {
+    flex: 1,
+    gap: 4,
+  },
+  crateName: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#0f172a',
+  },
+  crateSub: {
+    fontSize: 12,
+    color: '#64748b',
+    fontWeight: '500',
+  },
+  crateBadges: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 12,
+    gap: 4,
+    marginTop: 2,
   },
-  emptyState: {
-    flex: 1,
+  badge: {
+    backgroundColor: '#f1f5f9',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  badgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#64748b',
+  },
+  badgeSkin: {
+    backgroundColor: '#fdf4ff',
+  },
+  badgeTextSkin: {
+    color: '#7e22ce',
+  },
+  badgeCard: {
+    backgroundColor: '#f0fdf4',
+  },
+  badgeTextCard: {
+    color: '#15803d',
+  },
+  badgeGem: {
+    backgroundColor: '#ecfeff',
+  },
+  badgeTextGem: {
+    color: '#0e7490',
+  },
+  crateBtn: {
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    minWidth: 80,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 12,
-    padding: 32,
+    minHeight: 40,
   },
-  emptyEmoji: { fontSize: 48 },
-  emptyTitle: { fontSize: 18, fontWeight: '800', color: '#0F172A' },
-  emptySub: { fontSize: 14, color: '#64748B', textAlign: 'center', lineHeight: 20 },
+  crateBtnActive: {
+    backgroundColor: '#22c55e',
+  },
+  crateBtnDisabled: {
+    backgroundColor: '#e2e8f0',
+  },
+  crateBtnText: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
+  crateBtnTextDisabled: {
+    color: '#94a3b8',
+  },
+  voucherCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 18,
+    padding: 16,
+    gap: 12,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  voucherTitle: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#0f172a',
+  },
+  voucherRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  voucherInput: {
+    flex: 1,
+    backgroundColor: '#f8fafc',
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#0f172a',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    letterSpacing: 1,
+  },
+  redeemBtn: {
+    backgroundColor: '#3b82f6',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 80,
+  },
+  redeemBtnDisabled: {
+    backgroundColor: '#e2e8f0',
+  },
+  redeemBtnText: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
+  voucherFeedback: {
+    borderRadius: 10,
+    padding: 10,
+  },
+  voucherSuccess: {
+    backgroundColor: '#f0fdf4',
+    borderWidth: 1,
+    borderColor: '#bbf7d0',
+  },
+  voucherError: {
+    backgroundColor: '#fff1f2',
+    borderWidth: 1,
+    borderColor: '#fecdd3',
+  },
+  voucherFeedbackText: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  voucherSuccessText: {
+    color: '#15803d',
+  },
+  voucherErrorText: {
+    color: '#be123c',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    padding: 28,
+    width: '80%',
+    gap: 12,
+    alignItems: 'center',
+  },
+  modalTitle: {
+    fontSize: 22,
+    fontWeight: '900',
+    color: '#0f172a',
+  },
+  rewardRow: {
+    width: '100%',
+    backgroundColor: '#f8fafc',
+    borderRadius: 10,
+    padding: 10,
+    alignItems: 'center',
+  },
+  rewardText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#0f172a',
+  },
+  modalCloseBtn: {
+    backgroundColor: '#3b82f6',
+    borderRadius: 14,
+    paddingVertical: 12,
+    paddingHorizontal: 32,
+    marginTop: 4,
+  },
+  modalCloseBtnText: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
 });

@@ -14,41 +14,56 @@ interface AbilityButtonProps {
   size?: number;
 }
 
-const ABILITY_ICONS: Record<AbilityType, React.ComponentType<{ size: number; color: string; strokeWidth: number }>> = {
+const ABILITY_ICONS: Partial<Record<AbilityType, React.ComponentType<{ size: number; color: string; strokeWidth: number }>>> = {
   meteor: Flame,
   freeze: Snowflake,
   rage: Swords,
   shield: Shield,
   overclock: Cpu,
   glue: Droplets,
-  zone: Circle,
+  speed_zone: Circle,
+  damage_zone: Circle,
+  frost_zone: Snowflake,
+  deep_freeze: Snowflake,
   portal: Zap,
   burner: Flame,
-} as const;
-
-// Background colors per ability type (light theme)
-const ABILITY_BG_COLORS: Record<AbilityType, string> = {
-  meteor: '#F97316',   // orange
-  freeze: '#0EA5E9',   // sky
-  rage: '#F43F5E',     // rose
-  shield: '#3B82F6',   // blue
-  overclock: '#F59E0B', // amber
-  glue: '#94A3B8',     // slate
-  zone: '#8B5CF6',     // purple
-  portal: '#4F46E5',   // indigo
-  burner: '#F59E0B',   // amber
+  zap: Zap,
+  repair: Cpu,
 };
 
-const ABILITY_LABELS: Record<AbilityType, string> = {
+// Background colors per ability type (light theme)
+const ABILITY_BG_COLORS: Partial<Record<AbilityType, string>> = {
+  meteor: '#F97316',
+  freeze: '#0EA5E9',
+  rage: '#F43F5E',
+  shield: '#3B82F6',
+  overclock: '#F59E0B',
+  glue: '#94A3B8',
+  speed_zone: '#22d3ee',
+  damage_zone: '#f43f5e',
+  frost_zone: '#38bdf8',
+  deep_freeze: '#0ea5e9',
+  portal: '#4F46E5',
+  burner: '#F59E0B',
+  zap: '#fbbf24',
+  repair: '#10b981',
+};
+
+const ABILITY_LABELS: Partial<Record<AbilityType, string>> = {
   meteor: 'METEOR',
   freeze: 'FREEZE',
   rage: 'RAGE',
   shield: 'SHIELD',
   overclock: 'CLOCK',
   glue: 'GLUE',
-  zone: 'ZONE',
+  speed_zone: 'SPEED',
+  damage_zone: 'DMG',
+  frost_zone: 'FROST',
+  deep_freeze: 'DEEP',
   portal: 'PORTAL',
   burner: 'BURN',
+  zap: 'ZAP',
+  repair: 'REPAIR',
 };
 
 export function AbilityButton({ abilityType, cooldown, maxCooldown, onPress, size = 64 }: AbilityButtonProps) {

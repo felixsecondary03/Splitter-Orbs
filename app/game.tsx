@@ -13,6 +13,7 @@ import { useLocalSearchParams, router } from 'expo-router';
 import { GestureDetector, Gesture } from 'react-native-gesture-handler';
 import { X, Pause, Play, Flag } from 'lucide-react-native';
 import { COLORS } from '@/constants/Colors';
+import { useProfile } from '@/contexts/ProfileContext';
 import { GameCanvas } from '@/components/GameCanvas';
 import { HPBar } from '@/components/HPBar';
 import { CoinDisplay } from '@/components/CoinDisplay';
@@ -33,7 +34,7 @@ import {
 } from '@/game/engine';
 import type { GameState, Tower, Loadout } from '@/game/engine-types';
 import type { TowerType, AbilityType, OrbType } from '@/game/constants';
-import { TOWER_COSTS, UPGRADE_COST_MULT, SELL_RATIO, GAME_WIDTH, GAME_HEIGHT, WALL_Y } from '@/game/constants';
+import { TOWER_COSTS, UPGRADE_COST_MULT_ARRAY, SELL_RATIO, GAME_WIDTH, GAME_HEIGHT, WALL_Y } from '@/game/constants';
 import { distance } from '@/game/engine-helpers';
 import type { MatchMode } from '@/game/engine-types';
 import { useGameLoop } from '@/hooks/useGameLoop';
@@ -41,11 +42,11 @@ import { supabase } from '@/utils/supabase';
 
 // ─── Default loadout ──────────────────────────────────────────────────────────
 const DEFAULT_LOADOUT: Loadout = {
-  towers: ['blaster', 'vulcan', 'glacier', 'mortar'],
-  orbs: ['normal', 'fast', 'bomb', 'splitter', 'tank'],
-  abilities: ['meteor', 'freeze', 'rage'],
-  sideTowerLevel: 1,
-  handLevel: 1,
+  towers: ['basic', 'machinegun', 'boomerang', 'bomb'] as TowerType[],
+  orbs: ['normal', 'fast', 'bomb', 'splitter', 'tank'] as OrbType[],
+  abilities: ['zap', 'portal', 'repair'] as AbilityType[],
+  sideTowerLevel: 0,
+  handLevel: 0,
   cardLevels: {},
 };
 
@@ -104,14 +105,14 @@ function formatTime(ms: number): string {
 
 function getTowerUpgradeCost(tower: Tower): number {
   const base = TOWER_COSTS[tower.type] ?? 60;
-  return Math.round(base * (UPGRADE_COST_MULT[tower.level] ?? 1));
+  return Math.round(base * (UPGRADE_COST_MULT_ARRAY[tower.level] ?? 1));
 }
 
 function getTowerSellValue(tower: Tower): number {
   const base = TOWER_COSTS[tower.type] ?? 60;
   let total = base;
   for (let l = 1; l < tower.level; l++) {
-    total += Math.round(base * (UPGRADE_COST_MULT[l] ?? 1));
+    total += Math.round(base * (UPGRADE_COST_MULT_ARRAY[l] ?? 1));
   }
   return Math.round(total * SELL_RATIO);
 }
@@ -120,6 +121,7 @@ function getTowerSellValue(tower: Tower): number {
 export default function GameScreen() {
   const insets = useSafeAreaInsets();
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
+  const { profile } = useProfile();
   const params = useLocalSearchParams<{
     mode?: string;
     difficulty?: string;
@@ -140,16 +142,17 @@ export default function GameScreen() {
 
   // Parse loadout from params or fall back to defaults
   const loadout: Loadout = {
-    towers: params.towers ? (JSON.parse(params.towers) as TowerType[]) : DEFAULT_LOADOUT.towers,
-    orbs: params.orbs ? (JSON.parse(params.orbs) as OrbType[]) : DEFAULT_LOADOUT.orbs,
-    abilities: params.abilities ? (JSON.parse(params.abilities) as AbilityType[]) : DEFAULT_LOADOUT.abilities,
-    sideTowerLevel: DEFAULT_LOADOUT.sideTowerLevel,
-    handLevel: DEFAULT_LOADOUT.handLevel,
-    cardLevels: DEFAULT_LOADOUT.cardLevels,
+    towers: params.towers ? JSON.parse(params.towers) as TowerType[] : DEFAULT_LOADOUT.towers,
+    orbs: params.orbs ? JSON.parse(params.orbs) as OrbType[] : DEFAULT_LOADOUT.orbs,
+    abilities: params.abilities ? JSON.parse(params.abilities) as AbilityType[] : DEFAULT_LOADOUT.abilities,
+    sideTowerLevel: profile?.side_tower_level ?? 0,
+    handLevel: profile?.hand_level ?? 0,
+    cardLevels: {},
   };
 
   const opponentName = params.opponentName ?? AI_NAMES[difficulty] ?? 'Opponent';
 
+  const isAiMode = engineMode.startsWith('ai_');
   const [isPaused, setIsPaused] = useState(false);
   const [selectedTowerMenu, setSelectedTowerMenu] = useState<Tower | null>(null);
   const [showPauseMenu, setShowPauseMenu] = useState(false);
@@ -413,8 +416,6 @@ export default function GameScreen() {
     tower_bleed: '#7F1D1D',
   };
 
-  const isAiMode = engineMode.startsWith('ai_');
-
   return (
     <View style={[styles.root, { backgroundColor: COLORS.background }]}>
       {/* ── Top HUD ── */}
@@ -547,7 +548,7 @@ export default function GameScreen() {
                   handleSelectTower(isSelected ? null : towerType);
                 }}
               >
-                <TowerIcon type={towerType} size={30} selected={isSelected} />
+                <TowerIcon type={towerType} size={30} />
                 <Text style={[styles.towerCost, !canAfford && { color: COLORS.textTertiary }]}>
                   {cost}
                 </Text>
@@ -583,7 +584,7 @@ export default function GameScreen() {
             {selectedTowerMenu && (
               <>
                 <View style={styles.towerMenuHeader}>
-                  <TowerIcon type={selectedTowerMenu.type} size={36} selected />
+                  <TowerIcon type={selectedTowerMenu.type} size={36} />
                   <View style={{ flex: 1 }}>
                     <Text style={styles.towerMenuName}>
                       {selectedTowerMenu.type.replace(/_/g, ' ').toUpperCase()}

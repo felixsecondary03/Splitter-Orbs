@@ -1,5 +1,5 @@
 // Pure TypeScript — no React, no RN imports
-import { AI_DIFFICULTY, TOWER_COSTS, TowerType, TOWER_TYPES } from './constants';
+import { AI_DIFFICULTY, TOWER_COSTS, TowerType, TOWER_TYPES, STARTER_TOWERS } from './constants';
 import { GameState, AiAction } from './engine-types';
 import { getTowerRange, distance } from './engine-helpers';
 
@@ -33,7 +33,8 @@ export function computeAiAction(state: GameState, difficulty: 'easy' | 'normal' 
   }
 
   // Place a tower if we have enough coins and few towers
-  const affordableTowers = (TOWER_TYPES as readonly TowerType[]).filter(
+  const allTowerTypes = Object.keys(TOWER_TYPES) as TowerType[];
+  const affordableTowers = allTowerTypes.filter(
     t => (TOWER_COSTS[t] ?? 60) <= coins,
   );
 

@@ -145,7 +145,7 @@ export function updateOrb(orb: Orb, dt: number, state: GameState): Orb {
   }
 
   // Zap: jump between towers (handled in main loop)
-  if (updated.type === 'zap') {
+  if (updated.type === 'zap_orb') {
     return {
       ...updated,
       x: updated.x + updated.vx * dtSec,
@@ -309,13 +309,13 @@ export function spawnOrb(state: GameState, side: 0 | 1): Orb {
     { type: 'carrier',      weight: 8,  minTime: 0.25 },
     { type: 'sprint',       weight: 10, minTime: 0.25 },
     { type: 'swarmer',      weight: 8,  minTime: 0.3 },
-    { type: 'shielder',     weight: 6,  minTime: 0.35 },
+    { type: 'shield',       weight: 6,  minTime: 0.35 },
     { type: 'healer',       weight: 5,  minTime: 0.35 },
     { type: 'radioactive',  weight: 5,  minTime: 0.4 },
     { type: 'shadow',       weight: 4,  minTime: 0.45 },
     { type: 'ice',          weight: 5,  minTime: 0.4 },
     { type: 'fog',          weight: 3,  minTime: 0.5 },
-    { type: 'zap',          weight: 4,  minTime: 0.5 },
+    { type: 'zap_orb',      weight: 4,  minTime: 0.5 },
     { type: 'armored',      weight: 5,  minTime: 0.45 },
     { type: 'growth',       weight: 4,  minTime: 0.55 },
     { type: 'shield_bubble',weight: 3,  minTime: 0.55 },
@@ -360,7 +360,7 @@ export function spawnOrb(state: GameState, side: 0 | 1): Orb {
   };
 
   // Type-specific init
-  if (chosenType === 'shielder') {
+  if (chosenType === 'shield') {
     return { ...orb, shieldHp: hp * 0.5 };
   }
   if (chosenType === 'shield_bubble') {

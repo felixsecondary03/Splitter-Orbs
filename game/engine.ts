@@ -5,7 +5,7 @@ import {
   SIDE_TOWER_POSITIONS, STATION_HP, STARTING_COINS, COIN_CAP,
   SPAWN_INTERVAL_START, SPAWN_INTERVAL_MIN, SPAWN_RAMP_DURATION,
   ESCALATION_CASUAL, ESCALATION_RANKED,
-  TOWER_COSTS, UPGRADE_COST_MULT, SELL_RATIO,
+  TOWER_COSTS, UPGRADE_COST_MULT_ARRAY, SELL_RATIO,
   GAME_WIDTH,
   CRIT_CHANCE, CRIT_MULT, COMBO_WINDOW, COMBO_GRACE,
   COMEBACK_HP_THRESHOLD, COMEBACK_COIN_RATE,
@@ -42,16 +42,21 @@ export {
 } from './engine-helpers';
 
 // ─── Ability cooldowns (ms) ───────────────────────────────────────────────────
-const ABILITY_COOLDOWNS: Record<AbilityType, number> = {
-  meteor:   30000,
-  freeze:   25000,
-  rage:     20000,
-  shield:   35000,
-  overclock:15000,
-  glue:     20000,
-  zone:     25000,
-  portal:   40000,
-  burner:   18000,
+const ABILITY_COOLDOWNS: Partial<Record<AbilityType, number>> = {
+  zap:         16000,
+  portal:      22000,
+  repair:      30000,
+  freeze:      24000,
+  rage:        28000,
+  shield:      26000,
+  burner:      16000,
+  meteor:      24000,
+  glue:        22000,
+  overclock:   28000,
+  speed_zone:  22000,
+  damage_zone: 24000,
+  frost_zone:  26000,
+  deep_freeze: 32000,
 };
 
 // ─── createInitialState ───────────────────────────────────────────────────────
@@ -865,10 +870,10 @@ export function upgradeTower(state: GameState, towerId: string): GameState {
 
   const tower = state.player.towers[towerIndex];
   const league = getLeague(state.playerTrophies);
-  if (tower.level >= league.maxTowerLevel) return state;
+  if (tower.level >= (league.maxLevel ?? 5)) return state;
 
   const baseCost = TOWER_COSTS[tower.type] ?? 60;
-  const upgradeCost = Math.round(baseCost * (UPGRADE_COST_MULT[tower.level] ?? 1));
+  const upgradeCost = Math.round(baseCost * (UPGRADE_COST_MULT_ARRAY[tower.level] ?? 1));
 
   if (state.player.coins < upgradeCost) return state;
 
@@ -907,7 +912,7 @@ export function sellTower(state: GameState, towerId: string): GameState {
   const baseCost = TOWER_COSTS[tower.type] ?? 60;
   let totalSpent = baseCost;
   for (let l = 1; l < tower.level; l++) {
-    totalSpent += Math.round(baseCost * (UPGRADE_COST_MULT[l] ?? 1));
+    totalSpent += Math.round(baseCost * (UPGRADE_COST_MULT_ARRAY[l] ?? 1));
   }
   const sellValue = Math.round(totalSpent * SELL_RATIO);
 
@@ -940,7 +945,7 @@ export function activateAbility(state: GameState, abilityType: AbilityType): Gam
   if (ability.cooldown > 0) return state;
 
   // Targeted abilities: set aiming state
-  if (abilityType === 'meteor' || abilityType === 'glue' || abilityType === 'zone') {
+  if (abilityType === 'meteor' || abilityType === 'glue' || abilityType === 'speed_zone' || abilityType === 'damage_zone' || abilityType === 'frost_zone') {
     return {
       ...state,
       aiming: { abilityType, x: GAME_WIDTH / 2, y: WALL_Y - 100 },
@@ -961,7 +966,7 @@ export function activateAbility(state: GameState, abilityType: AbilityType): Gam
 
 function applyInstantAbility(state: GameState, abilityType: AbilityType, abilityIndex: number): GameState {
   const abilities = [...state.player.abilities];
-  abilities[abilityIndex] = { ...abilities[abilityIndex], cooldown: ABILITY_COOLDOWNS[abilityType] };
+  abilities[abilityIndex] = { ...abilities[abilityIndex], cooldown: ABILITY_COOLDOWNS[abilityType] ?? 0 };
 
   let newState = { ...state, player: { ...state.player, abilities } };
 
@@ -1044,7 +1049,7 @@ export function confirmAim(state: GameState, x: number, y: number): GameState {
   if (abilityIndex < 0) return { ...state, aiming: null };
 
   const abilities = [...state.player.abilities];
-  abilities[abilityIndex] = { ...abilities[abilityIndex], cooldown: ABILITY_COOLDOWNS[abilityType] };
+  abilities[abilityIndex] = { ...abilities[abilityIndex], cooldown: ABILITY_COOLDOWNS[abilityType] ?? 0 };
 
   let newState = { ...state, aiming: null, player: { ...state.player, abilities } };
 
@@ -1075,7 +1080,7 @@ export function confirmAim(state: GameState, x: number, y: number): GameState {
       newState = { ...newState, glues: [...newState.glues, glue] };
       break;
     }
-    case 'zone': {
+    case 'damage_zone': {
       const zone = {
         id: generateId(),
         x,

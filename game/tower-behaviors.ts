@@ -74,34 +74,34 @@ export function fireTower(tower: Tower, enemyOrbs: Orb[], state: GameState): Tow
   const type = tower.type as TowerType;
 
   switch (type) {
-    case 'blaster': {
+    case 'basic': {
       result.projectiles.push(makeProjectile(tower, target));
       break;
     }
 
-    case 'vulcan': {
+    case 'machinegun': {
       // Rapid fire single bullet
       result.projectiles.push(makeProjectile(tower, target, { radius: 4, type: 'bullet' }));
       break;
     }
 
-    case 'lancer': {
+    case 'sniper': {
       // High damage, slow, long range
       result.projectiles.push(makeProjectile(tower, target, { radius: 7, type: 'bullet', color: '#8B5CF6' }));
       break;
     }
 
-    case 'piercer': {
+    case 'boomerang': {
       result.projectiles.push(makeProjectile(tower, target, { piercing: true, type: 'bullet' }));
       break;
     }
 
-    case 'boomerang': {
+    case 'rebound': {
       result.projectiles.push(makeProjectile(tower, target, { bounces: 1, type: 'boomerang' }));
       break;
     }
 
-    case 'mortar': {
+    case 'bomb': {
       result.projectiles.push(makeProjectile(tower, target, { aoe: 55, type: 'mortar', radius: 8 }));
       break;
     }
@@ -220,7 +220,7 @@ export function fireTower(tower: Tower, enemyOrbs: Orb[], state: GameState): Tow
       break;
     }
 
-    case 'prism_lance': {
+    case 'prism': {
       result.projectiles.push(makeProjectile(tower, target, {
         piercing: true,
         type: 'beam',
