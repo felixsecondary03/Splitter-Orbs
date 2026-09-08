@@ -35,6 +35,16 @@ export default function CollectionScreen() {
   const [tab, setTab] = useState<LabTab>('towers');
   const [busy, setBusy] = useState<string | null>(null);
 
+  if (!profile || !profile.id) {
+    return (
+      <SafeAreaView style={styles.safe}>
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+          <Text style={{ color: COLORS.textSecondary }}>Loading...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   const getCardData = (
     category: 'tower_cards' | 'orb_cards' | 'ability_cards',
     id: string
@@ -178,7 +188,7 @@ export default function CollectionScreen() {
         'tower_cards',
         def.id,
         <TowerIcon type={def.id as TowerType} size={36} />,
-        t(`towers.${def.id}.name`)
+        def.name
       )
     );
 
@@ -191,7 +201,7 @@ export default function CollectionScreen() {
           <Text style={styles.orbDotText}>{def.hp}</Text>
         </View>
       );
-      return renderCard('orb_cards', id, orbVisual, t(`orbs.${id}.name`));
+      return renderCard('orb_cards', id, orbVisual, def.name);
     });
 
   const renderPowers = () =>
@@ -203,7 +213,7 @@ export default function CollectionScreen() {
           <Text style={{ fontSize: 20 }}>{icon}</Text>
         </View>
       );
-      return renderCard('ability_cards', def.id, abilityVisual, t(`abilities.${def.id}.name`));
+      return renderCard('ability_cards', def.id, abilityVisual, def.name);
     });
 
   const renderUpgrades = () => {

@@ -531,7 +531,7 @@ export default function GameScreen() {
           style={styles.towerBar}
           contentContainerStyle={styles.towerBarContent}
         >
-          {DEFAULT_LOADOUT.towers.map((towerType) => {
+          {loadout.towers.map((towerType) => {
             const cost = TOWER_COSTS[towerType] ?? 60;
             const isSelected = selectedTowerType === towerType;
             const canAfford = playerCoins >= cost;

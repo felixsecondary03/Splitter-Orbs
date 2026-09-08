@@ -14,9 +14,9 @@ import { useProfile } from '@/contexts/ProfileContext';
 import { useTranslation } from '@/i18n/LanguageContext';
 import { TowerIcon } from '@/components/TowerIcon';
 import {
-  TOWER_TYPES, TOWER_LOADOUT_SIZE,
-  ORB_TYPES, SENDABLE_ORBS, ORB_LOADOUT_SIZE,
-  ABILITIES, AI_LEVELS,
+  TOWER_TYPES, TOWER_LOADOUT_SIZE, STARTER_TOWERS,
+  ORB_TYPES, SENDABLE_ORBS, ORB_LOADOUT_SIZE, STARTER_ORBS,
+  ABILITIES, STARTER_ABILITIES, AI_LEVELS,
 } from '@/game/constants';
 import type { TowerType, OrbType, AbilityType } from '@/game/constants';
 
@@ -41,15 +41,14 @@ export default function SetupScreen() {
 
   useEffect(() => {
     if (profile) {
-      if (profile.selected_towers?.length) {
-        setTowers(profile.selected_towers as TowerType[]);
-      }
-      if (profile.selected_orbs?.length) {
-        setOrbs(profile.selected_orbs as OrbType[]);
-      }
-      if (profile.selected_abilities?.length === 3) {
-        setAbilities(profile.selected_abilities as AbilityType[]);
-      }
+      const validTowers = (profile.selected_towers || []).filter((t) => t in TOWER_TYPES) as TowerType[];
+      setTowers(validTowers.length >= 1 ? validTowers : [...STARTER_TOWERS]);
+
+      const validOrbs = (profile.selected_orbs || []).filter((o) => SENDABLE_ORBS.includes(o as OrbType)) as OrbType[];
+      setOrbs(validOrbs.length >= 1 ? validOrbs : [...STARTER_ORBS]);
+
+      const validAbilities = (profile.selected_abilities || []).filter((a) => a in ABILITIES) as AbilityType[];
+      setAbilities(validAbilities.length >= 1 ? validAbilities : [...STARTER_ABILITIES]);
     }
   }, [profile]);
 

@@ -42,7 +42,7 @@ export const ABILITY_LOADOUT_SIZE = 3;
 // ─── Card progression ─────────────────────────────────────────────────────────
 export const MAX_CARD_LEVEL = 5;
 export const MAX_TOWER_LEVEL = 5; // 6 in Legend league (super upgrade)
-export const CARD_COPIES_NEEDED: Record<number, number> = { 1: 2, 2: 3, 3: 8, 4: 12 };
+export const CARD_COPIES_NEEDED: Record<number, number> = { 0: 2, 1: 2, 2: 3, 3: 8, 4: 12 };
 export const SHARDS_PER_OVERFLOW = 5;
 export const COPY_SHARD_COST_BY_RARITY: Record<string, number> = {
   common: 4, rare: 10, epic: 36, legendary: 128, mythical: 512,
@@ -344,7 +344,7 @@ export const AI_DIFFICULTY = {
 } as const;
 
 // Economy
-export const SHARD_CARD_PRICES: Record<number, number> = { 1: 50, 2: 100, 3: 200, 4: 400 };
+export const SHARD_CARD_PRICES: Record<number, number> = { 0: 0, 1: 50, 2: 100, 3: 200, 4: 400 };
 
 // Trophy changes
 export const TROPHY_WIN_BASE = 30;
