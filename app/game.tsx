@@ -31,12 +31,13 @@ import {
   collectCoin,
   selectTower,
 } from '@/game/engine';
-import type { GameState, Tower } from '@/game/engine-types';
+import type { GameState, Tower, Loadout } from '@/game/engine-types';
 import type { TowerType, AbilityType } from '@/game/constants';
 import { TOWER_COSTS, UPGRADE_COST_MULT, SELL_RATIO, GAME_WIDTH, GAME_HEIGHT, WALL_Y } from '@/game/constants';
 import { distance } from '@/game/engine-helpers';
-import type { Loadout } from '@/game/engine-types';
+import type { MatchMode } from '@/game/engine-types';
 import { useGameLoop } from '@/hooks/useGameLoop';
+import { supabase } from '@/utils/supabase';
 
 // ─── Default loadout ──────────────────────────────────────────────────────────
 const DEFAULT_LOADOUT: Loadout = {
@@ -47,6 +48,23 @@ const DEFAULT_LOADOUT: Loadout = {
   handLevel: 1,
   cardLevels: {},
 };
+
+// ─── AI name by difficulty ────────────────────────────────────────────────────
+const AI_NAMES: Record<string, string> = {
+  easy: 'Rookie Bot',
+  normal: 'Veteran Bot',
+  hard: 'Elite Bot',
+};
+
+// ─── Map UI mode+difficulty → engine MatchMode ───────────────────────────────
+function resolveEngineMode(mode: string, difficulty: string): MatchMode {
+  if (mode === 'ranked') return 'ranked';
+  if (mode === 'private') return 'private';
+  if (mode === 'tutorial') return 'tutorial';
+  // training / casual → ai_*
+  const diff = difficulty === 'hard' ? 'hard' : difficulty === 'easy' ? 'easy' : 'normal';
+  return `ai_${diff}` as MatchMode;
+}
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function findOrbAtPosition(state: GameState, gx: number, gy: number): { id: string } | null {
@@ -104,39 +122,84 @@ export default function GameScreen() {
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const params = useLocalSearchParams<{
     mode?: string;
+    difficulty?: string;
+    towers?: string;
+    orbs?: string;
+    abilities?: string;
+    sessionId?: string;
     seed?: string;
-    opponentName?: string;
-    opponentTrophies?: string;
   }>();
 
-  const mode = (params.mode ?? 'ai_normal') as GameState['matchMode'];
+  const uiMode = params.mode ?? 'casual';
+  const difficulty = params.difficulty ?? 'normal';
+  const engineMode = resolveEngineMode(uiMode, difficulty);
   const seed = parseInt(params.seed ?? String(Date.now()), 10);
-  const opponentName = params.opponentName ?? 'Opponent';
-  const opponentTrophies = parseInt(params.opponentTrophies ?? '0', 10);
+
+  // Parse loadout from params or fall back to defaults
+  const loadout: Loadout = {
+    towers: params.towers ? (JSON.parse(params.towers) as TowerType[]) : DEFAULT_LOADOUT.towers,
+    orbs: params.orbs ? (JSON.parse(params.orbs) as string[]) : DEFAULT_LOADOUT.orbs,
+    abilities: params.abilities ? (JSON.parse(params.abilities) as AbilityType[]) : DEFAULT_LOADOUT.abilities,
+    sideTowerLevel: DEFAULT_LOADOUT.sideTowerLevel,
+    handLevel: DEFAULT_LOADOUT.handLevel,
+    cardLevels: DEFAULT_LOADOUT.cardLevels,
+  };
+
+  const opponentName = AI_NAMES[difficulty] ?? 'Opponent';
 
   const [isPaused, setIsPaused] = useState(false);
   const [selectedTowerMenu, setSelectedTowerMenu] = useState<Tower | null>(null);
   const [showPauseMenu, setShowPauseMenu] = useState(false);
 
-  const initialState = useRef(createInitialState(mode, 0, seed, DEFAULT_LOADOUT)).current;
+  const initialState = useRef(createInitialState(engineMode, 0, seed, loadout)).current;
 
-  const handleGameEnd = useCallback((state: GameState) => {
-    console.log(`[Game] Game finished winner=${state.winner}`);
+  const handleGameEnd = useCallback(async (state: GameState) => {
+    const isWin = state.winner === 'player';
+    console.log(`[Game] Game finished winner=${state.winner} mode=${uiMode} difficulty=${difficulty}`);
+    const trophiesChange = isWin ? 25 : -15;
+    const coinsEarned = isWin ? 45 : 20;
+    const shardsEarned = isWin ? 10 : 0;
+
+    // Call Supabase edge function to finalize match
+    try {
+      console.log('[Game] Calling finalizeAiMatch edge function');
+      const { data, error } = await supabase.functions.invoke('finalizeAiMatch', {
+        body: {
+          result: isWin ? 'win' : 'loss',
+          mode: uiMode,
+          difficulty,
+          trophiesChange,
+          coinsEarned,
+          shardsEarned,
+          gameDuration: Math.floor(state.time / 1000),
+        },
+      });
+      if (error) {
+        console.warn('[Game] finalizeAiMatch error:', error.message);
+      } else {
+        console.log('[Game] finalizeAiMatch response:', data);
+      }
+    } catch (err) {
+      console.warn('[Game] finalizeAiMatch exception:', err);
+    }
+
     setTimeout(() => {
       router.replace({
         pathname: '/match-result',
         params: {
-          winner: state.winner ?? 'opponent',
-          mode,
-          opponentName,
+          result: isWin ? 'win' : 'loss',
+          trophiesChange: String(trophiesChange),
+          newTrophies: '125',
+          coinsEarned: String(coinsEarned),
+          shardsEarned: String(shardsEarned),
         },
       });
     }, 800);
-  }, [mode, opponentName]);
+  }, [uiMode, difficulty]);
 
   const { renderState, stateRef: gameStateRef, dispatch, pause, resume } = useGameLoop({
     initialState,
-    mode,
+    mode: engineMode,
     onGameEnd: handleGameEnd,
   });
 
@@ -261,9 +324,9 @@ export default function GameScreen() {
     console.log('[Game] Forfeit pressed');
     router.replace({
       pathname: '/match-result',
-      params: { winner: 'opponent', mode, opponentName },
+      params: { result: 'loss', trophiesChange: '-15', newTrophies: '85', coinsEarned: '10', shardsEarned: '0' },
     });
-  }, [mode, opponentName]);
+  }, []);
 
   const handleCancelAim = useCallback(() => {
     console.log('[Game] Cancel aim pressed');
@@ -299,38 +362,63 @@ export default function GameScreen() {
     tower_bleed: '#7F1D1D',
   };
 
+  const isAiMode = engineMode.startsWith('ai_');
+
   return (
     <View style={[styles.root, { backgroundColor: COLORS.background }]}>
       {/* ── Top HUD ── */}
       <View style={[styles.topHud, { paddingTop: insets.top + 8 }]}>
-        {/* Opponent row */}
-        <View style={styles.hudRow}>
-          <View style={styles.hudPlayerInfo}>
-            <Text style={styles.hudName} numberOfLines={1}>{opponentName}</Text>
-            {opponentTrophies > 0 && (
-              <Text style={styles.hudTrophies}>🏆 {opponentTrophies}</Text>
-            )}
-          </View>
-          <View style={styles.hudHpBarWrap}>
-            <HPBar current={oppHp} max={oppMaxHp} width={screenWidth - 160} height={7} />
-          </View>
-          <CoinDisplay coins={oppCoins} size="sm" />
-        </View>
-
-        {/* Timer row */}
-        <View style={styles.timerRow}>
+        {/* Opponent name + timer row */}
+        <View style={styles.hudTopRow}>
           <Pressable style={styles.pauseBtn} onPress={handlePause}>
             <Pause size={14} color={COLORS.textSecondary} strokeWidth={2} />
           </Pressable>
-          <Text style={styles.timerText}>{timeDisplay}</Text>
-          {escalationTier !== 'none' && (
+
+          <View style={styles.hudCenterBlock}>
+            <View style={styles.opponentNameRow}>
+              <Text style={styles.hudName} numberOfLines={1}>{opponentName}</Text>
+              {isAiMode && (
+                <View style={styles.kiBadge}>
+                  <Text style={styles.kiBadgeText}>KI</Text>
+                </View>
+              )}
+            </View>
+            <Text style={styles.timerText}>{timeDisplay}</Text>
+          </View>
+
+          <View style={styles.hudPills}>
+            <View style={styles.clicksPill}>
+              <Text style={styles.pillText}>👆 {clicksLeft}/{maxClicks}</Text>
+            </View>
+            <View style={styles.coinsPill}>
+              <Text style={styles.pillText}>🪙 {playerCoins}</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* HP bars */}
+        <View style={styles.hpBarsRow}>
+          <View style={styles.hpBarBlock}>
+            <Text style={styles.hpLabel}>OPP</Text>
+            <HPBar current={oppHp} max={oppMaxHp} width={screenWidth - 100} height={6} />
+          </View>
+        </View>
+        <View style={styles.hpBarsRow}>
+          <View style={styles.hpBarBlock}>
+            <Text style={styles.hpLabel}>YOU</Text>
+            <HPBar current={playerHp} max={playerMaxHp} width={screenWidth - 100} height={6} />
+          </View>
+        </View>
+
+        {escalationTier !== 'none' && (
+          <View style={styles.timerRow}>
             <View style={[styles.escalationBadge, { borderColor: escalationColor[escalationTier] ?? COLORS.danger }]}>
               <Text style={[styles.escalationText, { color: escalationColor[escalationTier] ?? COLORS.danger }]}>
                 {escalationLabel[escalationTier] ?? escalationTier.toUpperCase()}
               </Text>
             </View>
-          )}
-        </View>
+          </View>
+        )}
       </View>
 
       {/* ── Game Canvas ── */}

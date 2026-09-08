@@ -4,11 +4,11 @@ import FloatingTabBar, { TabBarItem } from '@/components/FloatingTabBar';
 import { COLORS } from '@/constants/Colors';
 
 const TABS: TabBarItem[] = [
-  { name: '(home)', route: '/(tabs)/(home)', icon: 'home', label: 'Home' },
+  { name: '(home)', route: '/(tabs)/(home)', icon: 'home', label: 'Start' },
+  { name: 'shop', route: '/(tabs)/shop', icon: 'inventory-2', label: 'Laden' },
+  { name: 'play', route: '/setup', icon: 'sports-esports', label: 'Spielen', isCenter: true },
   { name: 'collection', route: '/(tabs)/collection', icon: 'layers', label: 'Lab' },
-  { name: 'play', route: '/(tabs)/play', icon: 'sports-esports', label: 'Play', isCenter: true },
-  { name: 'social', route: '/(tabs)/social', icon: 'emoji-events', label: 'Ranks' },
-  { name: 'settings', route: '/(tabs)/settings', icon: 'settings', label: 'More' },
+  { name: 'social', route: '/(tabs)/social', icon: 'emoji-events', label: 'Ränge' },
 ];
 
 export default function TabLayout() {
@@ -20,11 +20,12 @@ export default function TabLayout() {
         tabBarStyle: { backgroundColor: COLORS.tabBar },
       }}
     >
-      <Tabs.Screen name="(home)" options={{ title: 'Home' }} />
+      <Tabs.Screen name="(home)" options={{ title: 'Start' }} />
+      <Tabs.Screen name="shop" options={{ title: 'Laden' }} />
+      <Tabs.Screen name="play" options={{ title: 'Spielen' }} />
       <Tabs.Screen name="collection" options={{ title: 'Lab' }} />
-      <Tabs.Screen name="play" options={{ title: 'Play' }} />
-      <Tabs.Screen name="social" options={{ title: 'Ranks' }} />
-      <Tabs.Screen name="settings" options={{ title: 'More' }} />
+      <Tabs.Screen name="social" options={{ title: 'Ränge' }} />
+      <Tabs.Screen name="settings" options={{ href: null }} />
     </Tabs>
   );
 }

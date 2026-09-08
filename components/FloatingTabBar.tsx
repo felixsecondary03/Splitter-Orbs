@@ -36,6 +36,7 @@ export default function FloatingTabBar({ tabs }: FloatingTabBarProps) {
     let bestMatch = -1;
     let bestMatchScore = 0;
     tabs.forEach((tab, index) => {
+      if (tab.isCenter) return; // center button is never "active"
       let score = 0;
       if (pathname === tab.route) {
         score = 100;
@@ -54,9 +55,14 @@ export default function FloatingTabBar({ tabs }: FloatingTabBarProps) {
     return bestMatch >= 0 ? bestMatch : 0;
   }, [pathname, tabs]);
 
-  const handleTabPress = (route: Href, label: string) => {
-    console.log(`[TabBar] Tab pressed: ${label}`);
-    router.push(route);
+  const handleTabPress = (tab: TabBarItem) => {
+    console.log(`[TabBar] Tab pressed: ${tab.label}`);
+    if (tab.isCenter) {
+      // Center "Spielen" button always navigates to /setup
+      router.push('/setup' as Href);
+    } else {
+      router.push(tab.route);
+    }
   };
 
   const bottomPad = insets.bottom > 0 ? insets.bottom : 8;
@@ -72,7 +78,7 @@ export default function FloatingTabBar({ tabs }: FloatingTabBarProps) {
             <TouchableOpacity
               key={index}
               style={styles.centerTabWrap}
-              onPress={() => handleTabPress(tab.route, tab.label)}
+              onPress={() => handleTabPress(tab)}
               activeOpacity={0.85}
             >
               <View style={styles.centerButton}>
@@ -87,7 +93,7 @@ export default function FloatingTabBar({ tabs }: FloatingTabBarProps) {
           <TouchableOpacity
             key={index}
             style={styles.tab}
-            onPress={() => handleTabPress(tab.route, tab.label)}
+            onPress={() => handleTabPress(tab)}
             activeOpacity={0.7}
           >
             <MaterialIcons

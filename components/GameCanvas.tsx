@@ -53,6 +53,16 @@ interface GameCanvasProps {
 }
 
 export function GameCanvas({ state, width, height }: GameCanvasProps) {
+  // Guard against Skia not being ready (web WASM async init)
+  // On web, Skia loads its WASM asynchronously; calling Skia.Path.Make() before
+  // it's ready throws a plain object {} which crashes the ErrorBoundary.
+  try {
+    const testPath = Skia.Path.Make();
+    testPath.close();
+  } catch {
+    return null;
+  }
+
   const scaleX = width / GAME_WIDTH;
   const scaleY = height / GAME_HEIGHT;
 

@@ -4,47 +4,69 @@ import {
   Text,
   ScrollView,
   Animated,
-  FlatList,
   Modal,
   StyleSheet,
+  TouchableOpacity,
+  Dimensions,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Layers, Shield, Zap, Star, X, TrendingUp, Package } from 'lucide-react-native';
+import { X, TrendingUp, Info } from 'lucide-react-native';
 import { COLORS } from '@/constants/Colors';
 import { AnimatedPressable } from '@/components/AnimatedPressable';
-import { CardThumbnail } from '@/components/CardThumbnail';
+import { TowerIcon } from '@/components/TowerIcon';
 import { useProfile } from '@/contexts/ProfileContext';
-import { TOWER_TYPES, ORB_TYPES, ABILITY_TYPES, MAX_CARD_LEVEL, CARD_COPIES_NEEDED } from '@/game/constants';
+import { supabase } from '@/utils/supabase';
+import {
+  TOWER_TYPES, ORB_TYPES, ABILITY_TYPES,
+  MAX_CARD_LEVEL, CARD_COPIES_NEEDED,
+} from '@/game/constants';
+import type { TowerType } from '@/game/constants';
 import { canLevelUp, getShardCost } from '@/game/progression';
 
-type CollectionTab = 'towers' | 'orbs' | 'abilities';
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
-function AnimatedListItem({ index, children }: { index: number; children: React.ReactNode }) {
-  const opacity = useRef(new Animated.Value(0)).current;
-  const translateY = useRef(new Animated.Value(12)).current;
-  useEffect(() => {
-    Animated.parallel([
-      Animated.timing(opacity, { toValue: 1, duration: 300, delay: index * 35, useNativeDriver: true }),
-      Animated.timing(translateY, { toValue: 0, duration: 300, delay: index * 35, useNativeDriver: true }),
-    ]).start();
-  }, []);
-  return (
-    <Animated.View style={{ opacity, transform: [{ translateY }] }}>
-      {children}
-    </Animated.View>
-  );
-}
+type LabTab = 'towers' | 'orbs' | 'abilities' | 'skins' | 'upgrades';
 
-const TAB_CONFIG: { key: CollectionTab; label: string }[] = [
-  { key: 'towers', label: 'Towers' },
+const LAB_TABS: { key: LabTab; label: string }[] = [
+  { key: 'towers', label: 'Türme' },
   { key: 'orbs', label: 'Orbs' },
-  { key: 'abilities', label: 'Abilities' },
+  { key: 'abilities', label: 'Kräfte' },
+  { key: 'skins', label: 'Skins' },
+  { key: 'upgrades', label: 'Upgrades' },
 ];
 
-const CATEGORY_COLORS: Record<CollectionTab, string> = {
-  towers: COLORS.primary,
-  orbs: COLORS.accent,
-  abilities: COLORS.gold,
+// ─── Starter cards ────────────────────────────────────────────────────────────
+const STARTER_TOWER_IDS = ['blaster', 'vulcan', 'piercer', 'mortar', 'bouncer', 'glacier', 'pyre', 'venom'];
+const STARTER_ORB_IDS = ['normal', 'fast', 'bomb', 'splitter', 'tank'];
+const STARTER_ABILITY_IDS = ['meteor', 'freeze', 'rage', 'shield', 'overclock'];
+
+const TROPHY_TOWER_IDS = TOWER_TYPES.filter((t) => !STARTER_TOWER_IDS.includes(t));
+const TROPHY_ORB_IDS = ORB_TYPES.filter((o) => !STARTER_ORB_IDS.includes(o));
+const TROPHY_ABILITY_IDS = ABILITY_TYPES.filter((a) => !STARTER_ABILITY_IDS.includes(a));
+
+// ─── Display names ────────────────────────────────────────────────────────────
+const TOWER_NAMES: Record<string, string> = {
+  blaster: 'Blaster', vulcan: 'Vulcan', lancer: 'Lancer', piercer: 'Piercer',
+  boomerang: 'Bouncer', mortar: 'Mortar', bouncer: 'Bouncer', glacier: 'Glacier',
+  arc: 'Arc', pyre: 'Pyre', venom: 'Venom', siege: 'Siege',
+  orb_mortar: 'Orb Mortar', lava_mortar: 'Lava Mortar', repulsor: 'Repulsor',
+  cryo: 'Kryo-Kanone', seeker: 'Seeker', prism_lance: 'Prism Lance',
+  flak: 'Flak', harpoon: 'Harpoon', twin: 'Twin', tesla: 'Tesla',
+  detonator: 'Detonator', magnet: 'Magnet',
+};
+
+const ORB_NAMES: Record<string, string> = {
+  normal: 'Normal', fast: 'Fast', bomb: 'Bomb', splitter: 'Splitter', tank: 'Tank',
+  carrier: 'Carrier', sprint: 'Sprint', swarmer: 'Swarmer', shielder: 'Shielder',
+  healer: 'Healer', radioactive: 'Radioactive', shadow: 'Shadow', ice: 'Ice',
+  fog: 'Fog', zap: 'Zap', armored: 'Armored', growth: 'Growth',
+  shield_bubble: 'Shield', berserker: 'Berserker', phantom: 'Phantom',
+  leech: 'Leech', summoner: 'Summoner', mine: 'Mine',
+};
+
+const ABILITY_NAMES: Record<string, string> = {
+  meteor: 'Meteor', freeze: 'Freeze', rage: 'Rage', shield: 'Shield',
+  overclock: 'Overclock', glue: 'Glue', zone: 'Zone', portal: 'Portal', burner: 'Burner',
 };
 
 const CARD_DESCRIPTIONS: Record<string, string> = {
@@ -70,22 +92,41 @@ const CARD_DESCRIPTIONS: Record<string, string> = {
   overclock: 'Doubles all tower fire rates for a short burst.',
 };
 
-interface CardDetailModalProps {
-  cardId: string | null;
-  category: CollectionTab;
-  onClose: () => void;
+const RARITY_LABELS: Record<number, string> = { 0: 'Common', 1: 'Common', 2: 'Rare', 3: 'Rare', 4: 'Epic', 5: 'Epic' };
+const RARITY_COLORS: Record<string, string> = { Common: '#64748B', Rare: '#3B82F6', Epic: '#8B5CF6' };
+
+// ─── Shard prices per copy ────────────────────────────────────────────────────
+const COPY_SHARD_PRICE = 4;
+
+function AnimatedListItem({ index, children }: { index: number; children: React.ReactNode }) {
+  const opacity = useRef(new Animated.Value(0)).current;
+  const translateY = useRef(new Animated.Value(12)).current;
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(opacity, { toValue: 1, duration: 300, delay: index * 40, useNativeDriver: true }),
+      Animated.timing(translateY, { toValue: 0, duration: 300, delay: index * 40, useNativeDriver: true }),
+    ]).start();
+  }, []);
+  return (
+    <Animated.View style={{ opacity, transform: [{ translateY }] }}>
+      {children}
+    </Animated.View>
+  );
 }
 
-function CardDetailModal({ cardId, category, onClose }: CardDetailModalProps) {
+// ─── Card Detail Modal ────────────────────────────────────────────────────────
+function CardDetailModal({
+  cardId, category, onClose,
+}: {
+  cardId: string | null; category: LabTab; onClose: () => void;
+}) {
   const { profile, updateProfile } = useProfile();
   if (!cardId) return null;
 
   const cardMap =
-    category === 'towers'
-      ? profile.tower_cards
-      : category === 'orbs'
-      ? profile.orb_cards
-      : profile.ability_cards;
+    category === 'towers' ? profile.tower_cards
+    : category === 'orbs' ? profile.orb_cards
+    : profile.ability_cards;
 
   const cardState = cardMap[cardId] ?? { level: 0, copies: 0, boughtCopies: 0 };
   const isMax = cardState.level >= MAX_CARD_LEVEL;
@@ -95,130 +136,56 @@ function CardDetailModal({ cardId, category, onClose }: CardDetailModalProps) {
   const canBuy = profile.shards >= shardCost && !isMax;
   const displayName = cardId.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
   const description = CARD_DESCRIPTIONS[cardId] ?? 'A powerful card for your loadout.';
-  const accentColor = CATEGORY_COLORS[category];
 
   const handleLevelUp = () => {
-    console.log(`[Collection] Level up card cardId=${cardId} category=${category}`);
-    const newState = {
-      ...cardState,
-      level: cardState.level + 1,
-      copies: cardState.copies - copiesNeeded,
-    };
+    console.log(`[Lab] Level up card cardId=${cardId} category=${category}`);
+    const newState = { ...cardState, level: cardState.level + 1, copies: cardState.copies - copiesNeeded };
     const key = category === 'towers' ? 'tower_cards' : category === 'orbs' ? 'orb_cards' : 'ability_cards';
     updateProfile({ [key]: { ...cardMap, [cardId]: newState } });
   };
 
   const handleBuyWithShards = () => {
-    console.log(`[Collection] Buy copy with shards cardId=${cardId} cost=${shardCost}`);
+    console.log(`[Lab] Buy copy with shards cardId=${cardId} cost=${shardCost}`);
     const newState = { ...cardState, copies: cardState.copies + 1, boughtCopies: cardState.boughtCopies + 1 };
     const key = category === 'towers' ? 'tower_cards' : category === 'orbs' ? 'orb_cards' : 'ability_cards';
-    updateProfile({
-      shards: profile.shards - shardCost,
-      [key]: { ...cardMap, [cardId]: newState },
-    });
+    updateProfile({ shards: profile.shards - shardCost, [key]: { ...cardMap, [cardId]: newState } });
   };
-
-  const levelStars = Array.from({ length: MAX_CARD_LEVEL }, (_, i) => i < cardState.level);
 
   return (
     <Modal visible={!!cardId} transparent animationType="slide">
       <View style={detailStyles.overlay}>
         <View style={detailStyles.sheet}>
           <View style={detailStyles.handle} />
-
           <View style={detailStyles.header}>
-            <View style={[detailStyles.iconWrap, { backgroundColor: `${accentColor}18` }]}>
-              <Text style={detailStyles.iconEmoji}>
-                {category === 'towers' ? '🏰' : category === 'orbs' ? '⚡' : '✨'}
-              </Text>
-            </View>
-            <View style={detailStyles.headerInfo}>
-              <Text style={detailStyles.cardName}>{displayName}</Text>
-              <View style={detailStyles.starsRow}>
-                {levelStars.map((filled, i) => (
-                  <Star
-                    key={i}
-                    size={14}
-                    color={filled ? COLORS.gold : COLORS.textTertiary}
-                    fill={filled ? COLORS.gold : 'transparent'}
-                    strokeWidth={2}
-                  />
-                ))}
-              </View>
-            </View>
+            <Text style={detailStyles.cardName}>{displayName}</Text>
             <AnimatedPressable style={detailStyles.closeBtn} onPress={onClose}>
               <X size={20} color={COLORS.textSecondary} strokeWidth={2} />
             </AnimatedPressable>
           </View>
-
           <Text style={detailStyles.description}>{description}</Text>
-
-          <View style={detailStyles.statsRow}>
-            <View style={detailStyles.statBox}>
-              <Text style={[detailStyles.statVal, { color: accentColor }]}>
-                {isMax ? 'MAX' : `L${cardState.level}`}
-              </Text>
-              <Text style={detailStyles.statLbl}>Level</Text>
-            </View>
-            <View style={detailStyles.statBox}>
-              <Text style={detailStyles.statVal}>{cardState.copies}</Text>
-              <Text style={detailStyles.statLbl}>Copies</Text>
-            </View>
-            <View style={detailStyles.statBox}>
-              <Text style={detailStyles.statVal}>{isMax ? '—' : String(copiesNeeded)}</Text>
-              <Text style={detailStyles.statLbl}>Needed</Text>
-            </View>
-          </View>
-
-          {!isMax && (
-            <View style={detailStyles.progressSection}>
-              <View style={detailStyles.progressLabelRow}>
-                <Text style={detailStyles.progressLabel}>
-                  {cardState.copies}/{copiesNeeded} copies to level up
-                </Text>
-              </View>
-              <View style={detailStyles.progressTrack}>
-                <View
-                  style={[
-                    detailStyles.progressFill,
-                    {
-                      width: `${Math.min(100, Math.round((cardState.copies / copiesNeeded) * 100))}%`,
-                      backgroundColor: accentColor,
-                    },
-                  ]}
-                />
-              </View>
-            </View>
-          )}
-
           <View style={detailStyles.actions}>
             <AnimatedPressable
               style={[detailStyles.actionBtn, !canLevel && detailStyles.actionBtnDisabled]}
               onPress={handleLevelUp}
               disabled={!canLevel}
             >
-              <TrendingUp size={18} color={canLevel ? '#0A0E1A' : COLORS.textTertiary} strokeWidth={2} />
+              <TrendingUp size={18} color={canLevel ? '#FFFFFF' : COLORS.textTertiary} strokeWidth={2} />
               <Text style={[detailStyles.actionBtnText, !canLevel && { color: COLORS.textTertiary }]}>
                 Level Up
               </Text>
             </AnimatedPressable>
-
             <AnimatedPressable
               style={[detailStyles.shardBtn, !canBuy && detailStyles.actionBtnDisabled]}
               onPress={handleBuyWithShards}
               disabled={!canBuy}
             >
-              <Text style={detailStyles.shardEmoji}>💜</Text>
+              <Text style={detailStyles.shardEmoji}>🔷</Text>
               <Text style={[detailStyles.shardBtnText, !canBuy && { color: COLORS.textTertiary }]}>
-                {shardCost} shards
+                {shardCost} Splitter
               </Text>
             </AnimatedPressable>
           </View>
-
-          <View style={detailStyles.shardsRow}>
-            <Text style={detailStyles.shardsLabel}>Your shards:</Text>
-            <Text style={detailStyles.shardsValue}>{profile.shards.toLocaleString()} 💜</Text>
-          </View>
+          <Text style={detailStyles.shardsInfo}>Your Splitter: {profile.shards.toLocaleString()} 🔷</Text>
         </View>
       </View>
     </Modal>
@@ -226,421 +193,441 @@ function CardDetailModal({ cardId, category, onClose }: CardDetailModalProps) {
 }
 
 const detailStyles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    justifyContent: 'flex-end',
-  },
+  overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'flex-end' },
   sheet: {
-    backgroundColor: COLORS.surface,
+    backgroundColor: '#FFFFFF',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 24,
     gap: 16,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: '#E2E8F0',
     borderBottomWidth: 0,
   },
-  handle: {
-    width: 36,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: COLORS.textTertiary,
-    alignSelf: 'center',
-    marginBottom: 4,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-  },
-  iconWrap: {
-    width: 56,
-    height: 56,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  iconEmoji: {
-    fontSize: 26,
-  },
-  headerInfo: {
-    flex: 1,
-    gap: 6,
-  },
-  cardName: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: COLORS.text,
-    letterSpacing: -0.3,
-  },
-  starsRow: {
-    flexDirection: 'row',
-    gap: 3,
-  },
-  closeBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    backgroundColor: COLORS.surfaceSecondary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  description: {
-    fontSize: 14,
-    color: COLORS.textSecondary,
-    lineHeight: 20,
-    fontWeight: '400',
-  },
-  statsRow: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  statBox: {
-    flex: 1,
-    backgroundColor: COLORS.surfaceSecondary,
-    borderRadius: 12,
-    padding: 12,
-    alignItems: 'center',
-    gap: 4,
-  },
-  statVal: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: COLORS.text,
-    fontFamily: 'SpaceMono',
-  },
-  statLbl: {
-    fontSize: 11,
-    color: COLORS.textTertiary,
-    fontWeight: '600',
-  },
-  progressSection: {
-    gap: 6,
-  },
-  progressLabelRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  progressLabel: {
-    fontSize: 12,
-    color: COLORS.textSecondary,
-    fontWeight: '500',
-  },
-  progressTrack: {
-    height: 6,
-    backgroundColor: COLORS.surfaceSecondary,
-    borderRadius: 3,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
-    borderRadius: 3,
-  },
-  actions: {
-    flexDirection: 'row',
-    gap: 12,
-  },
+  handle: { width: 36, height: 4, borderRadius: 2, backgroundColor: '#CBD5E1', alignSelf: 'center', marginBottom: 4 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  cardName: { fontSize: 20, fontWeight: '800', color: '#0F172A', letterSpacing: -0.3 },
+  closeBtn: { width: 36, height: 36, borderRadius: 10, backgroundColor: '#F1F5F9', alignItems: 'center', justifyContent: 'center' },
+  description: { fontSize: 14, color: '#64748B', lineHeight: 20 },
+  actions: { flexDirection: 'row', gap: 12 },
   actionBtn: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    backgroundColor: COLORS.gold,
-    borderRadius: 14,
-    paddingVertical: 14,
+    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: 8, backgroundColor: '#22C55E', borderRadius: 14, paddingVertical: 14,
   },
-  actionBtnDisabled: {
-    backgroundColor: COLORS.surfaceSecondary,
-  },
-  actionBtnText: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#FFFFFF',
-  },
+  actionBtnDisabled: { backgroundColor: '#F1F5F9' },
+  actionBtnText: { fontSize: 15, fontWeight: '700', color: '#FFFFFF' },
   shardBtn: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    backgroundColor: COLORS.accentMuted,
-    borderRadius: 14,
-    paddingVertical: 14,
-    borderWidth: 1,
-    borderColor: `${COLORS.accent}33`,
+    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: 8, backgroundColor: '#EDE9FE', borderRadius: 14, paddingVertical: 14,
   },
-  shardEmoji: {
-    fontSize: 16,
-  },
-  shardBtnText: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: COLORS.accent,
-  },
-  shardsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-  },
-  shardsLabel: {
-    fontSize: 13,
-    color: COLORS.textTertiary,
-    fontWeight: '500',
-  },
-  shardsValue: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: COLORS.shard,
-  },
+  shardEmoji: { fontSize: 16 },
+  shardBtnText: { fontSize: 15, fontWeight: '700', color: '#7C3AED' },
+  shardsInfo: { fontSize: 13, color: '#94A3B8', textAlign: 'center', fontWeight: '500' },
 });
 
-interface LoadoutSlotProps {
-  cardId: string;
-  category: CollectionTab;
-  level: number;
-  onPress: () => void;
-}
+// ─── Lab Card (2-column) ──────────────────────────────────────────────────────
+function LabCard({
+  cardId, category, onPress, onInfo,
+}: {
+  cardId: string; category: LabTab; onPress: () => void; onInfo: () => void;
+}) {
+  const { profile, updateProfile } = useProfile();
+  const cardMap =
+    category === 'towers' ? profile.tower_cards
+    : category === 'orbs' ? profile.orb_cards
+    : profile.ability_cards;
 
-function LoadoutSlot({ cardId, category, level, onPress }: LoadoutSlotProps) {
-  const accentColor = CATEGORY_COLORS[category];
-  const displayName = cardId.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+  const cardState = cardMap[cardId] ?? { level: 0, copies: 0, boughtCopies: 0 };
+  const isMax = cardState.level >= MAX_CARD_LEVEL;
+  const copiesNeeded = CARD_COPIES_NEEDED[cardState.level] ?? 999;
+  const canLevel = canLevelUp(cardState);
+  const canBuyCopy = profile.shards >= COPY_SHARD_PRICE && !isMax;
+
+  const displayName =
+    category === 'towers' ? (TOWER_NAMES[cardId] ?? cardId)
+    : category === 'orbs' ? (ORB_NAMES[cardId] ?? cardId)
+    : (ABILITY_NAMES[cardId] ?? cardId);
+
+  const rarity = RARITY_LABELS[cardState.level] ?? 'Common';
+  const rarityColor = RARITY_COLORS[rarity] ?? '#64748B';
+
+  const progressPct = isMax ? 1 : Math.min(1, cardState.copies / copiesNeeded);
+  const progressWidth = `${Math.round(progressPct * 100)}%` as `${number}%`;
+
+  const levelDots = Array.from({ length: MAX_CARD_LEVEL }, (_, i) => i < cardState.level);
+
+  const handleBuyCopy = () => {
+    console.log(`[Lab] Buy copy pressed cardId=${cardId} cost=${COPY_SHARD_PRICE}`);
+    if (!canBuyCopy) return;
+    const newState = { ...cardState, copies: cardState.copies + 1, boughtCopies: cardState.boughtCopies + 1 };
+    const key = category === 'towers' ? 'tower_cards' : category === 'orbs' ? 'orb_cards' : 'ability_cards';
+    updateProfile({ shards: profile.shards - COPY_SHARD_PRICE, [key]: { ...cardMap, [cardId]: newState } });
+    // Also call edge function
+    supabase.functions.invoke('buyCardCopy', { body: { cardId, category } }).catch((e) => {
+      console.warn('[Lab] buyCardCopy failed', e);
+    });
+  };
+
   return (
-    <AnimatedPressable style={[loadoutStyles.slot, { borderColor: `${accentColor}44` }]} onPress={onPress}>
-      <View style={[loadoutStyles.slotIcon, { backgroundColor: `${accentColor}18` }]}>
-        <Text style={loadoutStyles.slotEmoji}>
-          {category === 'towers' ? '🏰' : category === 'orbs' ? '⚡' : '✨'}
+    <TouchableOpacity style={labCardStyles.card} onPress={onPress} activeOpacity={0.85}>
+      {/* Info button */}
+      <TouchableOpacity style={labCardStyles.infoBtn} onPress={onInfo} hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}>
+        <Text style={labCardStyles.infoBtnText}>i</Text>
+      </TouchableOpacity>
+
+      <View style={labCardStyles.topRow}>
+        {category === 'towers' ? (
+          <TowerIcon type={cardId as TowerType} size={52} />
+        ) : (
+          <View style={labCardStyles.emojiIcon}>
+            <Text style={labCardStyles.emojiText}>
+              {category === 'orbs' ? '⚡' : '✨'}
+            </Text>
+          </View>
+        )}
+        <View style={labCardStyles.nameSection}>
+          <Text style={labCardStyles.cardName}>{displayName}</Text>
+          <View style={[labCardStyles.rarityBadge, { backgroundColor: `${rarityColor}18` }]}>
+            <Text style={[labCardStyles.rarityText, { color: rarityColor }]}>{rarity}</Text>
+          </View>
+          <View style={labCardStyles.levelDots}>
+            {levelDots.map((filled, i) => (
+              <View
+                key={i}
+                style={[labCardStyles.dot, { backgroundColor: filled ? '#F59E0B' : '#E2E8F0' }]}
+              />
+            ))}
+          </View>
+        </View>
+      </View>
+
+      {/* Progress */}
+      <View style={labCardStyles.progressSection}>
+        <View style={labCardStyles.progressLabelRow}>
+          <Text style={labCardStyles.progressLabel}>Kopien</Text>
+          <Text style={labCardStyles.progressValue}>
+            {isMax ? 'MAX' : `${cardState.copies}/${copiesNeeded}`}
+          </Text>
+        </View>
+        <View style={labCardStyles.progressTrack}>
+          <View style={[labCardStyles.progressFill, { width: progressWidth }]} />
+        </View>
+        <Text style={labCardStyles.boughtText}>
+          gekauft {cardState.boughtCopies}/{Math.max(cardState.boughtCopies, copiesNeeded)}
         </Text>
       </View>
-      <Text style={loadoutStyles.slotName} numberOfLines={1}>{displayName}</Text>
-      <View style={[loadoutStyles.levelBadge, { backgroundColor: `${accentColor}22` }]}>
-        <Text style={[loadoutStyles.levelText, { color: accentColor }]}>L{level}</Text>
-      </View>
-    </AnimatedPressable>
+
+      {/* Action button */}
+      {canLevel ? (
+        <TouchableOpacity
+          style={labCardStyles.levelUpBtn}
+          onPress={() => {
+            console.log(`[Lab] Level up pressed cardId=${cardId}`);
+            onPress();
+          }}
+          activeOpacity={0.8}
+        >
+          <TrendingUp size={14} color="#FFFFFF" strokeWidth={2.5} />
+          <Text style={labCardStyles.levelUpBtnText}>Level Up</Text>
+        </TouchableOpacity>
+      ) : isMax ? (
+        <TouchableOpacity style={labCardStyles.collectBtn} activeOpacity={0.8}>
+          <Text style={labCardStyles.collectBtnText}>📦 Mehr sammeln</Text>
+        </TouchableOpacity>
+      ) : (
+        <TouchableOpacity
+          style={[labCardStyles.buyBtn, !canBuyCopy && labCardStyles.buyBtnDisabled]}
+          onPress={handleBuyCopy}
+          disabled={!canBuyCopy}
+          activeOpacity={0.8}
+        >
+          <Text style={labCardStyles.buyBtnText}>
+            Kopie kaufen 🔷 {COPY_SHARD_PRICE}
+          </Text>
+        </TouchableOpacity>
+      )}
+    </TouchableOpacity>
   );
 }
 
-const loadoutStyles = StyleSheet.create({
-  slot: {
-    width: 72,
-    backgroundColor: COLORS.surface,
-    borderRadius: 12,
-    padding: 8,
-    alignItems: 'center',
-    gap: 5,
+const labCardStyles = StyleSheet.create({
+  card: {
+    width: (SCREEN_WIDTH - 48) / 2,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 16,
+    gap: 12,
     borderWidth: 1,
+    borderColor: '#E2E8F0',
+    position: 'relative',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 2,
   },
-  slotIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
+  infoBtn: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#F1F5F9',
     alignItems: 'center',
     justifyContent: 'center',
+    zIndex: 5,
   },
-  slotEmoji: {
-    fontSize: 18,
+  infoBtnText: { fontSize: 12, fontWeight: '700', color: '#94A3B8', fontStyle: 'italic' },
+  topRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  emojiIcon: {
+    width: 52, height: 52, borderRadius: 14,
+    backgroundColor: '#F1F5F9', alignItems: 'center', justifyContent: 'center',
   },
-  slotName: {
-    fontSize: 9,
-    fontWeight: '600',
-    color: COLORS.text,
-    textAlign: 'center',
+  emojiText: { fontSize: 26 },
+  nameSection: { flex: 1, gap: 5 },
+  cardName: { fontSize: 16, fontWeight: '800', color: '#0F172A', letterSpacing: -0.2 },
+  rarityBadge: { alignSelf: 'flex-start', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
+  rarityText: { fontSize: 11, fontWeight: '700' },
+  levelDots: { flexDirection: 'row', gap: 4, marginTop: 2 },
+  dot: { width: 10, height: 10, borderRadius: 5 },
+  progressSection: { gap: 5 },
+  progressLabelRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  progressLabel: { fontSize: 12, color: '#94A3B8', fontWeight: '500' },
+  progressValue: { fontSize: 12, fontWeight: '700', color: '#475569' },
+  progressTrack: { height: 6, backgroundColor: '#F1F5F9', borderRadius: 3, overflow: 'hidden' },
+  progressFill: { height: '100%', backgroundColor: '#3B82F6', borderRadius: 3 },
+  boughtText: { fontSize: 11, color: '#94A3B8', fontWeight: '500', textAlign: 'right' },
+  levelUpBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: 6, backgroundColor: '#22C55E', borderRadius: 12, paddingVertical: 10,
   },
-  levelBadge: {
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 5,
+  levelUpBtnText: { fontSize: 13, fontWeight: '800', color: '#FFFFFF' },
+  collectBtn: {
+    backgroundColor: '#F1F5F9', borderRadius: 12, paddingVertical: 10, alignItems: 'center',
   },
-  levelText: {
-    fontSize: 9,
-    fontWeight: '700',
+  collectBtnText: { fontSize: 13, fontWeight: '700', color: '#64748B' },
+  buyBtn: {
+    backgroundColor: '#22C55E', borderRadius: 12, paddingVertical: 10, alignItems: 'center',
   },
+  buyBtnDisabled: { backgroundColor: '#F1F5F9' },
+  buyBtnText: { fontSize: 13, fontWeight: '800', color: '#FFFFFF' },
 });
 
+// ─── Upgrades Tab ─────────────────────────────────────────────────────────────
+function UpgradesTab() {
+  const { profile, updateProfile } = useProfile();
+
+  const handleUpgradeHand = () => {
+    console.log('[Lab] Upgrade hand level pressed', { current: profile.hand_level });
+    updateProfile({ hand_level: profile.hand_level + 1 });
+    supabase.functions.invoke('levelUpCard', { body: { cardType: 'hand' } }).catch((e) => {
+      console.warn('[Lab] levelUpCard hand failed', e);
+    });
+  };
+
+  const handleUpgradeSideTower = () => {
+    console.log('[Lab] Upgrade side tower pressed', { current: profile.side_tower_level });
+    updateProfile({ side_tower_level: profile.side_tower_level + 1 });
+    supabase.functions.invoke('levelUpCard', { body: { cardType: 'side_tower' } }).catch((e) => {
+      console.warn('[Lab] levelUpCard side_tower failed', e);
+    });
+  };
+
+  return (
+    <View style={upgradeStyles.container}>
+      <Text style={upgradeStyles.desc}>
+        Werte Karten mit Kopien aus Kisten auf oder nutze Splitter.{'\n'}
+        Höhere Türme starten stärker im Match.
+      </Text>
+
+      <TouchableOpacity style={upgradeStyles.card} onPress={handleUpgradeHand} activeOpacity={0.85}>
+        <View style={upgradeStyles.cardLeft}>
+          <Text style={upgradeStyles.cardEmoji}>👆</Text>
+          <View>
+            <Text style={upgradeStyles.cardTitle}>Hand Level</Text>
+            <Text style={upgradeStyles.cardSub}>More clicks per round</Text>
+          </View>
+        </View>
+        <View style={upgradeStyles.levelBadge}>
+          <Text style={upgradeStyles.levelText}>L{profile.hand_level + 1}</Text>
+        </View>
+      </TouchableOpacity>
+
+      <TouchableOpacity style={upgradeStyles.card} onPress={handleUpgradeSideTower} activeOpacity={0.85}>
+        <View style={upgradeStyles.cardLeft}>
+          <Text style={upgradeStyles.cardEmoji}>🏰</Text>
+          <View>
+            <Text style={upgradeStyles.cardTitle}>Side Tower</Text>
+            <Text style={upgradeStyles.cardSub}>Stronger side defenses</Text>
+          </View>
+        </View>
+        <View style={upgradeStyles.levelBadge}>
+          <Text style={upgradeStyles.levelText}>L{profile.side_tower_level + 1}</Text>
+        </View>
+      </TouchableOpacity>
+    </View>
+  );
+}
+
+const upgradeStyles = StyleSheet.create({
+  container: { padding: 16, gap: 12 },
+  desc: { fontSize: 14, color: '#64748B', lineHeight: 20, fontWeight: '400' },
+  card: {
+    backgroundColor: '#FFFFFF', borderRadius: 16, padding: 16,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    borderWidth: 1, borderColor: '#E2E8F0',
+  },
+  cardLeft: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  cardEmoji: { fontSize: 28 },
+  cardTitle: { fontSize: 16, fontWeight: '800', color: '#0F172A' },
+  cardSub: { fontSize: 12, color: '#64748B', fontWeight: '500', marginTop: 2 },
+  levelBadge: {
+    backgroundColor: '#EFF6FF', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 6,
+  },
+  levelText: { fontSize: 14, fontWeight: '800', color: '#3B82F6' },
+});
+
+// ─── Main Screen ──────────────────────────────────────────────────────────────
 export default function CollectionScreen() {
   const insets = useSafeAreaInsets();
   const { profile } = useProfile();
-  const [activeTab, setActiveTab] = useState<CollectionTab>('towers');
+  const [activeTab, setActiveTab] = useState<LabTab>('towers');
   const [selectedCard, setSelectedCard] = useState<string | null>(null);
 
-  const handleTabChange = useCallback((tab: CollectionTab) => {
-    console.log('[Collection] Tab changed', { tab });
+  const handleTabChange = useCallback((tab: LabTab) => {
+    console.log('[Lab] Tab changed', { tab });
     setActiveTab(tab);
   }, []);
 
-  const handleCardPress = useCallback((cardId: string, category: CollectionTab) => {
-    console.log('[Collection] Card pressed', { cardId, category });
+  const handleCardPress = useCallback((cardId: string) => {
+    console.log('[Lab] Card pressed', { cardId, tab: activeTab });
     setSelectedCard(cardId);
-  }, []);
+  }, [activeTab]);
 
   const handleCloseDetail = useCallback(() => {
-    console.log('[Collection] Card detail closed');
+    console.log('[Lab] Card detail closed');
     setSelectedCard(null);
   }, []);
 
-  const items = activeTab === 'towers'
-    ? (TOWER_TYPES as readonly string[])
-    : activeTab === 'orbs'
-    ? (ORB_TYPES as readonly string[])
-    : (ABILITY_TYPES as readonly string[]);
-
-  const selectedItems = activeTab === 'towers'
-    ? profile.selected_towers
-    : activeTab === 'orbs'
-    ? profile.selected_orbs
-    : profile.selected_abilities;
-
-  const unlockedItems = activeTab === 'towers'
-    ? profile.unlocked_towers
-    : activeTab === 'orbs'
-    ? (ORB_TYPES.slice(0, 5) as readonly string[])
-    : profile.unlocked_abilities;
-
-  const cardMap = activeTab === 'towers'
-    ? profile.tower_cards
-    : activeTab === 'orbs'
-    ? profile.orb_cards
-    : profile.ability_cards;
-
-  const accentColor = CATEGORY_COLORS[activeTab];
-
   const shardsDisplay = profile.shards.toLocaleString();
 
+  const starterIds =
+    activeTab === 'towers' ? STARTER_TOWER_IDS
+    : activeTab === 'orbs' ? STARTER_ORB_IDS
+    : STARTER_ABILITY_IDS;
+
+  const trophyIds =
+    activeTab === 'towers' ? TROPHY_TOWER_IDS
+    : activeTab === 'orbs' ? TROPHY_ORB_IDS
+    : TROPHY_ABILITY_IDS;
+
+  const cardCategory: 'towers' | 'orbs' | 'abilities' =
+    activeTab === 'towers' ? 'towers'
+    : activeTab === 'orbs' ? 'orbs'
+    : 'abilities';
+
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
+    <View style={[styles.root, { paddingTop: insets.top }]}>
       {/* Header */}
       <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          <Layers size={22} color={COLORS.primary} strokeWidth={2} />
-          <Text style={styles.screenTitle}>Collection</Text>
-        </View>
+        <Text style={styles.screenTitle}>Lab</Text>
         <View style={styles.shardsChip}>
-          <Text style={styles.shardsEmoji}>💜</Text>
+          <Text style={styles.shardsEmoji}>🔷</Text>
           <Text style={styles.shardsValue}>{shardsDisplay}</Text>
         </View>
       </View>
 
-      {/* Loadout section */}
-      <View style={styles.loadoutSection}>
-        <Text style={styles.loadoutSectionTitle}>YOUR LOADOUT</Text>
-        <View style={styles.loadoutRows}>
-          {/* Towers row */}
-          <View style={styles.loadoutRow}>
-            <View style={styles.loadoutRowLabel}>
-              <Shield size={13} color={COLORS.primary} strokeWidth={2} />
-              <Text style={[styles.loadoutRowLabelText, { color: COLORS.primary }]}>Towers</Text>
-            </View>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.loadoutScroll}>
-              {profile.selected_towers.map((id) => (
-                <LoadoutSlot
-                  key={id}
-                  cardId={id}
-                  category="towers"
-                  level={profile.tower_cards[id]?.level ?? 1}
-                  onPress={() => { setActiveTab('towers'); handleCardPress(id, 'towers'); }}
-                />
-              ))}
-            </ScrollView>
-          </View>
-          {/* Orbs row */}
-          <View style={styles.loadoutRow}>
-            <View style={styles.loadoutRowLabel}>
-              <Zap size={13} color={COLORS.accent} strokeWidth={2} />
-              <Text style={[styles.loadoutRowLabelText, { color: COLORS.accent }]}>Orbs</Text>
-            </View>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.loadoutScroll}>
-              {profile.selected_orbs.map((id) => (
-                <LoadoutSlot
-                  key={id}
-                  cardId={id}
-                  category="orbs"
-                  level={profile.orb_cards[id]?.level ?? 1}
-                  onPress={() => { setActiveTab('orbs'); handleCardPress(id, 'orbs'); }}
-                />
-              ))}
-            </ScrollView>
-          </View>
-          {/* Abilities row */}
-          <View style={styles.loadoutRow}>
-            <View style={styles.loadoutRowLabel}>
-              <Star size={13} color={COLORS.gold} strokeWidth={2} />
-              <Text style={[styles.loadoutRowLabelText, { color: COLORS.gold }]}>Abilities</Text>
-            </View>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.loadoutScroll}>
-              {profile.selected_abilities.map((id) => (
-                <LoadoutSlot
-                  key={id}
-                  cardId={id}
-                  category="abilities"
-                  level={profile.ability_cards[id]?.level ?? 1}
-                  onPress={() => { setActiveTab('abilities'); handleCardPress(id, 'abilities'); }}
-                />
-              ))}
-            </ScrollView>
-          </View>
-        </View>
-      </View>
-
       {/* Tab bar */}
-      <View style={styles.tabBar}>
-        {TAB_CONFIG.map((tab) => {
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.tabBarScroll}
+        contentContainerStyle={styles.tabBarContent}
+      >
+        {LAB_TABS.map((tab) => {
           const isActive = activeTab === tab.key;
-          const tabColor = CATEGORY_COLORS[tab.key];
           return (
-            <AnimatedPressable
+            <TouchableOpacity
               key={tab.key}
-              style={[styles.tabBtn, isActive && { backgroundColor: `${tabColor}18`, borderColor: `${tabColor}33` }]}
+              style={[styles.tabBtn, isActive && styles.tabBtnActive]}
               onPress={() => handleTabChange(tab.key)}
+              activeOpacity={0.8}
             >
-              <Text style={[styles.tabLabel, isActive && { color: tabColor }]}>{tab.label}</Text>
-            </AnimatedPressable>
+              <Text style={[styles.tabLabel, isActive && styles.tabLabelActive]}>
+                {tab.label}
+              </Text>
+            </TouchableOpacity>
           );
         })}
-      </View>
+      </ScrollView>
 
-      {/* Card count */}
-      <View style={styles.cardCountRow}>
-        <Package size={14} color={COLORS.textTertiary} strokeWidth={2} />
-        <Text style={styles.cardCountText}>
-          {items.length} cards · {unlockedItems.length} unlocked
-        </Text>
-      </View>
+      {activeTab === 'upgrades' ? (
+        <ScrollView contentContainerStyle={{ paddingBottom: 120 }} showsVerticalScrollIndicator={false}>
+          <UpgradesTab />
+        </ScrollView>
+      ) : activeTab === 'skins' ? (
+        <View style={styles.emptyState}>
+          <Text style={styles.emptyEmoji}>🎨</Text>
+          <Text style={styles.emptyTitle}>Skins coming soon</Text>
+          <Text style={styles.emptySub}>Unlock cosmetic skins for your towers and orbs.</Text>
+        </View>
+      ) : (
+        <ScrollView
+          contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 120 }]}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Description */}
+          <Text style={styles.desc}>
+            Werte Karten mit Kopien aus Kisten auf oder nutze Splitter.{'\n'}
+            Höhere Türme starten stärker im Match.
+          </Text>
 
-      {/* Card grid */}
-      <FlatList
-        key={activeTab}
-        data={items}
-        keyExtractor={(item) => item}
-        numColumns={3}
-        contentContainerStyle={[styles.grid, { paddingBottom: 120 }]}
-        columnWrapperStyle={styles.gridRow}
-        renderItem={({ item, index }) => {
-          const cardState = cardMap[item] ?? { level: 0, copies: 0, boughtCopies: 0 };
-          const isUnlocked = unlockedItems.includes(item);
-          const isSelected = selectedItems.includes(item);
-          const copiesNeeded = CARD_COPIES_NEEDED[cardState.level] ?? 999;
-          return (
-            <AnimatedListItem index={index}>
-              <CardThumbnail
-                cardId={item}
-                category={activeTab}
-                level={isUnlocked ? Math.max(1, cardState.level) : 0}
-                copies={cardState.copies}
-                copiesNeeded={copiesNeeded}
-                selected={isSelected}
-                locked={!isUnlocked}
-                onPress={() => handleCardPress(item, activeTab)}
-              />
-            </AnimatedListItem>
-          );
-        }}
-      />
+          {/* Startkarten */}
+          <Text style={styles.sectionTitle}>Startkarten</Text>
+          <View style={styles.cardGrid}>
+            {starterIds.map((id, i) => (
+              <AnimatedListItem key={id} index={i}>
+                <LabCard
+                  cardId={id}
+                  category={cardCategory}
+                  onPress={() => handleCardPress(id)}
+                  onInfo={() => {
+                    console.log('[Lab] Info button pressed', { cardId: id });
+                    handleCardPress(id);
+                  }}
+                />
+              </AnimatedListItem>
+            ))}
+          </View>
+
+          {/* Trophäen-Freischaltungen */}
+          {trophyIds.length > 0 && (
+            <>
+              <Text style={styles.sectionTitle}>Trophäen-Freischaltungen</Text>
+              <View style={styles.cardGrid}>
+                {trophyIds.map((id, i) => (
+                  <AnimatedListItem key={id} index={starterIds.length + i}>
+                    <LabCard
+                      cardId={id}
+                      category={cardCategory}
+                      onPress={() => handleCardPress(id)}
+                      onInfo={() => {
+                        console.log('[Lab] Info button pressed', { cardId: id });
+                        handleCardPress(id);
+                      }}
+                    />
+                  </AnimatedListItem>
+                ))}
+              </View>
+            </>
+          )}
+        </ScrollView>
+      )}
 
       <CardDetailModal
         cardId={selectedCard}
-        category={activeTab}
+        category={cardCategory}
         onClose={handleCloseDetail}
       />
     </View>
@@ -648,9 +635,9 @@ export default function CollectionScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
+  root: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: '#F1F5F9',
   },
   header: {
     flexDirection: 'row',
@@ -659,114 +646,90 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 14,
   },
-  headerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
   screenTitle: {
-    fontSize: 24,
-    fontWeight: '800',
-    color: COLORS.text,
-    letterSpacing: -0.4,
+    fontSize: 32,
+    fontWeight: '900',
+    color: '#0F172A',
+    letterSpacing: -0.5,
   },
   shardsChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
-    backgroundColor: COLORS.surface,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
+    gap: 6,
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: `${COLORS.shard}33`,
+    borderColor: '#E2E8F0',
   },
-  shardsEmoji: {
-    fontSize: 14,
-  },
+  shardsEmoji: { fontSize: 14 },
   shardsValue: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: COLORS.shard,
-    fontVariant: ['tabular-nums'],
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#7C3AED',
+    fontFamily: 'SpaceMono',
   },
-  loadoutSection: {
-    paddingHorizontal: 20,
-    gap: 10,
+  tabBarScroll: {
+    flexGrow: 0,
+    marginHorizontal: 16,
     marginBottom: 4,
   },
-  loadoutSectionTitle: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: COLORS.textTertiary,
-    letterSpacing: 1.2,
-  },
-  loadoutRows: {
-    gap: 8,
-  },
-  loadoutRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  loadoutRowLabel: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  tabBarContent: {
     gap: 4,
-    width: 64,
-    flexShrink: 0,
-  },
-  loadoutRowLabelText: {
-    fontSize: 11,
-    fontWeight: '700',
-  },
-  loadoutScroll: {
-    gap: 8,
-    paddingRight: 4,
-  },
-  tabBar: {
-    flexDirection: 'row',
-    marginHorizontal: 20,
-    backgroundColor: COLORS.surface,
-    borderRadius: 12,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
     padding: 4,
-    marginBottom: 8,
-    gap: 4,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: '#E2E8F0',
   },
   tabBtn: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 10,
+  },
+  tabBtnActive: {
+    backgroundColor: '#0F172A',
+  },
+  tabLabel: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#64748B',
+  },
+  tabLabelActive: {
+    color: '#FFFFFF',
+  },
+  content: {
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    gap: 12,
+  },
+  desc: {
+    fontSize: 13,
+    color: '#64748B',
+    lineHeight: 19,
+    fontWeight: '400',
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#0F172A',
+    letterSpacing: -0.2,
+    marginTop: 4,
+  },
+  cardGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  emptyState: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 10,
-    borderRadius: 9,
-    borderWidth: 1,
-    borderColor: 'transparent',
+    gap: 12,
+    padding: 32,
   },
-  tabLabel: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: COLORS.textSecondary,
-  },
-  cardCountRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    paddingHorizontal: 20,
-    marginBottom: 8,
-  },
-  cardCountText: {
-    fontSize: 12,
-    color: COLORS.textTertiary,
-    fontWeight: '500',
-  },
-  grid: {
-    paddingHorizontal: 16,
-    gap: 10,
-  },
-  gridRow: {
-    gap: 10,
-    marginBottom: 10,
-  },
+  emptyEmoji: { fontSize: 48 },
+  emptyTitle: { fontSize: 18, fontWeight: '800', color: '#0F172A' },
+  emptySub: { fontSize: 14, color: '#64748B', textAlign: 'center', lineHeight: 20 },
 });

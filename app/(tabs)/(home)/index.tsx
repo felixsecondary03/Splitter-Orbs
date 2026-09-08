@@ -368,9 +368,9 @@ export default function HomeScreen() {
   );
 
   const handleQuickPlay = useCallback(() => {
-    console.log('[Home] Quick Play button pressed');
-    startMatchmaking('casual');
-  }, [startMatchmaking]);
+    console.log('[Home] PLAY NOW button pressed — navigating to /setup');
+    router.push('/setup');
+  }, [router]);
 
   const handleRanked = useCallback(() => {
     console.log('[Home] Ranked button pressed');

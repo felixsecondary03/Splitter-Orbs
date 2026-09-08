@@ -1,4 +1,5 @@
-import React, { createContext, useState } from 'react';
+import React, { createContext, useState, useEffect, useCallback } from 'react';
+import { supabase } from '@/utils/supabase';
 
 export interface PlayerProfile {
   id: string;
@@ -34,9 +35,10 @@ export interface PlayerProfile {
   tower_menu_anytime: boolean;
   account_type: 'guest' | 'email' | 'google' | 'apple';
   avatar_color: string;
+  daily_missions?: unknown[];
 }
 
-const DEFAULT_PROFILE: PlayerProfile = {
+export const DEFAULT_PROFILE: PlayerProfile = {
   id: '',
   display_name: 'Player',
   language: 'en',
@@ -70,12 +72,14 @@ const DEFAULT_PROFILE: PlayerProfile = {
   tower_menu_anytime: false,
   account_type: 'guest',
   avatar_color: '#4F8EF7',
+  daily_missions: [],
 };
 
 interface ProfileContextType {
   profile: PlayerProfile;
   setProfile: (p: PlayerProfile) => void;
   updateProfile: (partial: Partial<PlayerProfile>) => void;
+  refreshProfile: () => Promise<void>;
 }
 
 const ProfileContext = createContext<ProfileContextType | null>(null);
@@ -83,12 +87,51 @@ const ProfileContext = createContext<ProfileContextType | null>(null);
 export function ProfileProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<PlayerProfile>(DEFAULT_PROFILE);
 
-  const updateProfile = (partial: Partial<PlayerProfile>) => {
+  const refreshProfile = useCallback(async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    console.log('[Profile] Refreshing profile for user', user.id);
+    const { data, error } = await supabase
+      .from('player_profiles')
+      .select('*')
+      .eq('id', user.id)
+      .single();
+    if (error) {
+      console.warn('[Profile] Could not load profile', error.message);
+      return;
+    }
+    if (data) {
+      console.log('[Profile] Profile loaded', { display_name: data.display_name, trophies: data.trophies });
+      setProfile({ ...DEFAULT_PROFILE, ...data });
+    }
+  }, []);
+
+  useEffect(() => {
+    const { data: listener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session?.user) {
+        await refreshProfile();
+      } else {
+        setProfile(DEFAULT_PROFILE);
+      }
+    });
+    return () => listener.subscription.unsubscribe();
+  }, [refreshProfile]);
+
+  const updateProfile = useCallback(async (partial: Partial<PlayerProfile>) => {
+    console.log('[Profile] updateProfile called', Object.keys(partial));
     setProfile((prev) => ({ ...prev, ...partial }));
-  };
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    const { error } = await supabase
+      .from('player_profiles')
+      .upsert({ id: user.id, ...partial });
+    if (error) {
+      console.warn('[Profile] updateProfile upsert error', error.message);
+    }
+  }, []);
 
   return (
-    <ProfileContext.Provider value={{ profile, setProfile, updateProfile }}>
+    <ProfileContext.Provider value={{ profile, setProfile, updateProfile, refreshProfile }}>
       {children}
     </ProfileContext.Provider>
   );
