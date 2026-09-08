@@ -56,15 +56,23 @@ export function GameCanvas({ state, width, height }: GameCanvasProps) {
   // Guard against Skia not being ready (web WASM async init).
   // useIsReady() is the canonical hook but is not available in this Skia version (2.2.12).
   // We probe Skia.Path.Make() safely — if it throws or returns a non-object, Skia isn't ready.
-  const skiaReady = React.useMemo(() => {
-    try {
-      const p = Skia.Path.Make();
-      p.close();
-      return true;
-    } catch {
-      return false;
-    }
-  }, []);
+  const [skiaReady, setSkiaReady] = React.useState(() => {
+    try { const p = Skia.Path.Make(); p.close(); return true; } catch { return false; }
+  });
+  React.useEffect(() => {
+    if (skiaReady) return;
+    let cancelled = false;
+    const check = () => {
+      try {
+        const p = Skia.Path.Make(); p.close();
+        if (!cancelled) setSkiaReady(true);
+      } catch {
+        if (!cancelled) setTimeout(check, 100);
+      }
+    };
+    check();
+    return () => { cancelled = true; };
+  }, [skiaReady]);
   if (!skiaReady) return null;
 
   const scaleX = width / GAME_WIDTH;

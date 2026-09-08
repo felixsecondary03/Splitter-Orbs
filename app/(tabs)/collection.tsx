@@ -39,8 +39,12 @@ export default function CollectionScreen() {
     category: 'tower_cards' | 'orb_cards' | 'ability_cards',
     id: string
   ) => {
-    const cards = profile[category] || {};
-    return cards[id] || { level: 0, copies: 0, boughtCopies: 0 };
+    const cards =
+      category === 'tower_cards' ? profile.tower_cards :
+      category === 'orb_cards' ? profile.orb_cards :
+      profile.ability_cards;
+    return (cards as Record<string, { level: number; copies: number; boughtCopies: number }>)?.[id]
+      || { level: 0, copies: 0, boughtCopies: 0 };
   };
 
   const handleLevelUp = async (category: string, id: string) => {
@@ -104,9 +108,9 @@ export default function CollectionScreen() {
     const copies = cardData.copies;
     const maxLevel = MAX_CARD_LEVEL;
     const isMaxed = level >= maxLevel;
-    const copiesNeeded = CARD_COPIES_NEEDED[level] || 999;
+    const copiesNeeded = CARD_COPIES_NEEDED[level] ?? (level === 0 ? 2 : 999);
     const canLevel = copies >= copiesNeeded && level < maxLevel;
-    const shardCost = SHARD_CARD_PRICES[level] || 0;
+    const shardCost = SHARD_CARD_PRICES[level] ?? 0;
     const isBusy = busy === id;
     const isBuyBusy = busy === id + '_buy';
     const buyCopyCost = SHARD_CARD_PRICES[0] || 4;
