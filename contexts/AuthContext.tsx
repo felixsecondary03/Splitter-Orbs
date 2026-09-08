@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect } from 'react';
+import React, { createContext, useState, useEffect, useContext } from 'react';
 import { Alert, View, Text, StyleSheet, Pressable } from 'react-native';
 import { router } from 'expo-router';
 import { supabase } from '@/utils/supabase';
@@ -295,7 +295,7 @@ const banStyles = StyleSheet.create({
 });
 
 export function useAuth() {
-  const ctx = React.use(AuthContext);
+  const ctx = useContext(AuthContext);
   if (!ctx) throw new Error('useAuth must be used within AuthProvider');
   return ctx;
 }

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Platform, View } from 'react-native';
+import { GameCanvasInner } from './GameCanvasInner';
 import type { GameCanvasProps } from './GameCanvasInner';
 
 export type { GameCanvasProps };
@@ -21,24 +22,14 @@ export function GameCanvas(props: GameCanvasProps) {
       }
     }
     probe();
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, []);
 
   if (!skiaReady) {
     return (
-      <View
-        style={{
-          width: props.width,
-          height: props.height,
-          backgroundColor: '#0A0E1A',
-        }}
-      />
+      <View style={{ width: props.width, height: props.height, backgroundColor: '#0A0E1A' }} />
     );
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { GameCanvasInner } = require('./GameCanvasInner');
   return <GameCanvasInner {...props} />;
 }
