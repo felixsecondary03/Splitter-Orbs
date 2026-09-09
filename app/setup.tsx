@@ -17,7 +17,6 @@ import {
   ORB_TYPES, SENDABLE_ORBS, ORB_LOADOUT_SIZE, STARTER_ORBS,
   ABILITIES, STARTER_ABILITIES, AI_LEVELS,
 } from '@/game/constants';
-import { TowerIcon } from '@/components/TowerIcon';
 import type { TowerType, OrbType, AbilityType } from '@/game/constants';
 
 const ABILITY_ICONS: Record<string, string> = {
@@ -306,7 +305,16 @@ export default function SetupScreen() {
                           <Text style={styles.selBadgeText}>{selIdx + 1}</Text>
                         </View>
                       )}
-                      <TowerIcon type={def.id as TowerType} size={40} />
+                      <View style={{
+                        width: 36, height: 36, borderRadius: 7,
+                        backgroundColor: TOWER_TYPES[def.id].color + '33',
+                        borderWidth: 1.5, borderColor: TOWER_TYPES[def.id].color,
+                        alignItems: 'center', justifyContent: 'center',
+                      }}>
+                        <Text style={{ fontSize: 12, color: TOWER_TYPES[def.id].color, fontWeight: '700' }}>
+                          {def.name.slice(0, 2).toUpperCase()}
+                        </Text>
+                      </View>
                       <Text style={styles.cardName} numberOfLines={1}>
                         {t(`towers.${def.id}.name`)}
                       </Text>

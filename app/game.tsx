@@ -206,8 +206,8 @@ export default function GameScreen() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const sessionIdParam = paramsReady ? params.sessionId : undefined;
-  const opponentNameParam = paramsReady ? params.opponentName : undefined;
+  const sessionIdParam = params?.mode ? (params.sessionId as string | undefined) : undefined;
+  const opponentNameParam = params?.mode ? (params.opponentName as string | undefined) : undefined;
 
   const handleGameEnd = useCallback(async (state: GameState) => {
     const isWin = state.winner === 'player';
@@ -457,7 +457,7 @@ export default function GameScreen() {
 
   // Guard: on web, Expo Router may not have initialized route params yet
   if (!params?.mode) {
-    return <View style={{ flex: 1, backgroundColor: '#0A0E1A' }} />;
+    return <View style={{ flex: 1, backgroundColor: '#0f172a' }} />;
   }
 
   return (
