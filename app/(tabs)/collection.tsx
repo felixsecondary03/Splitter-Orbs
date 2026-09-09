@@ -122,7 +122,6 @@ export default function CollectionScreen() {
     visual: React.ReactNode,
     name: string
   ) => {
-    try {
       const cardData = getCardData(category, id);
       const level = cardData.level;
       const copies = cardData.copies;
@@ -189,12 +188,6 @@ export default function CollectionScreen() {
           </View>
         </View>
       );
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
-      const stack = e instanceof Error ? e.stack : '';
-      console.error('[Lab] renderCard ERROR:', msg, stack);
-      return null;
-    }
   };
 
   const renderTowers = () =>

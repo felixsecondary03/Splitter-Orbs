@@ -52,14 +52,14 @@ export default function SetupScreen() {
     }
   }, [profile]);
 
-  const unlockedTowers = Object.keys(profile.tower_cards || {}).filter(
-    (id) => (profile.tower_cards[id]?.level || 0) >= 1
+  const unlockedTowers = Object.keys(profile.tower_cards ?? {}).filter(
+    (id) => ((profile.tower_cards ?? {})[id]?.level ?? 0) >= 1
   );
-  const unlockedOrbs = Object.keys(profile.orb_cards || {}).filter(
-    (id) => (profile.orb_cards[id]?.level || 0) >= 1
+  const unlockedOrbs = Object.keys(profile.orb_cards ?? {}).filter(
+    (id) => ((profile.orb_cards ?? {})[id]?.level ?? 0) >= 1
   );
-  const unlockedAbilities = Object.keys(profile.ability_cards || {}).filter(
-    (id) => (profile.ability_cards[id]?.level || 0) >= 1
+  const unlockedAbilities = Object.keys(profile.ability_cards ?? {}).filter(
+    (id) => ((profile.ability_cards ?? {})[id]?.level ?? 0) >= 1
   );
 
   // Fall back to starter sets if profile has no cards yet

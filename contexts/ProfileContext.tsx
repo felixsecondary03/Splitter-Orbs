@@ -109,7 +109,19 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
     }
     if (data) {
       console.log('[Profile] Profile loaded', { display_name: data.display_name, trophies: data.trophies });
-      setProfile({ ...DEFAULT_PROFILE, ...data });
+      setProfile({
+        ...DEFAULT_PROFILE,
+        ...data,
+        tower_cards:        data.tower_cards        ?? DEFAULT_PROFILE.tower_cards,
+        orb_cards:          data.orb_cards          ?? DEFAULT_PROFILE.orb_cards,
+        ability_cards:      data.ability_cards      ?? DEFAULT_PROFILE.ability_cards,
+        selected_towers:    data.selected_towers    ?? DEFAULT_PROFILE.selected_towers,
+        selected_orbs:      data.selected_orbs      ?? DEFAULT_PROFILE.selected_orbs,
+        selected_abilities: data.selected_abilities ?? DEFAULT_PROFILE.selected_abilities,
+        unlocked_towers:    data.unlocked_towers    ?? DEFAULT_PROFILE.unlocked_towers,
+        unlocked_abilities: data.unlocked_abilities ?? DEFAULT_PROFILE.unlocked_abilities,
+        sound_categories:   data.sound_categories   ?? DEFAULT_PROFILE.sound_categories,
+      });
     }
   }, []);
 
