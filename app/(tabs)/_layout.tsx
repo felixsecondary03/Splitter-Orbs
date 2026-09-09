@@ -1,7 +1,8 @@
-import React from 'react';
-import { Tabs } from 'expo-router';
+import React, { useEffect } from 'react';
+import { Tabs, useRouter } from 'expo-router';
 import FloatingTabBar, { TabBarItem } from '@/components/FloatingTabBar';
 import { COLORS } from '@/constants/Colors';
+import { useAuth } from '@/contexts/AuthContext';
 
 const TABS: TabBarItem[] = [
   { name: '(home)', route: '/(tabs)/(home)', icon: 'home', label: 'Start' },
@@ -12,6 +13,19 @@ const TABS: TabBarItem[] = [
 ];
 
 export default function TabLayout() {
+  const { user, isLoading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isLoading && !user) {
+      console.log('[TabLayout] No authenticated user, redirecting to auth/welcome');
+      router.replace('/auth/welcome');
+    }
+  }, [user, isLoading]);
+
+  if (isLoading) return null;
+  if (!user) return null;
+
   return (
     <Tabs
       tabBar={() => <FloatingTabBar tabs={TABS} />}
