@@ -106,7 +106,7 @@ export default function LoginScreen() {
         showsVerticalScrollIndicator={false}
       >
         <Text style={styles.title}>Welcome back</Text>
-        <Text style={styles.subtitle}>Sign in to your Orb Clash account</Text>
+        <Text style={styles.subtitle}>Sign in to your Splitter Orbs account</Text>
 
         {/* Email */}
         <View style={styles.fieldGroup}>

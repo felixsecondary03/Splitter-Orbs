@@ -18,7 +18,7 @@ import { useAuth } from '@/contexts/AuthContext';
 export default function RegisterScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { signIn } = useAuth();
+  const { signUp } = useAuth();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -64,7 +64,7 @@ export default function RegisterScreen() {
     console.log('[Register] Create Account button pressed', { email });
     setIsLoading(true);
     try {
-      await signIn(email, password);
+      await signUp(email, password);
       console.log('[Register] Account created successfully');
       router.replace('/onboarding');
     } catch (err) {
@@ -99,7 +99,7 @@ export default function RegisterScreen() {
         showsVerticalScrollIndicator={false}
       >
         <Text style={styles.title}>Create account</Text>
-        <Text style={styles.subtitle}>Join Orb Clash and start battling</Text>
+        <Text style={styles.subtitle}>Join Splitter Orbs and start battling</Text>
 
         {/* Email */}
         <View style={styles.fieldGroup}>
