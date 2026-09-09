@@ -1,5 +1,5 @@
 import React from 'react';
-import { Platform } from 'react-native';
+import { Platform, View, Text } from 'react-native';
 import Svg, {
   Defs, LinearGradient, RadialGradient, Stop,
   Ellipse, Polygon, Rect, Line, Circle, Path, G,
@@ -16,6 +16,28 @@ interface TowerIconProps {
 export function TowerIcon({ type, size = 36, level = 1 }: TowerIconProps) {
   const def = TOWER_TYPES[type];
   const c = def?.color || '#64748b';
+
+  // On web, react-native-svg crashes inside Expo Router — use plain View
+  if (Platform.OS === 'web') {
+    const initials = (def?.name ?? type).slice(0, 2).toUpperCase();
+    return (
+      <View style={{
+        width: size,
+        height: size,
+        borderRadius: size * 0.2,
+        backgroundColor: c + '33',
+        borderWidth: 1.5,
+        borderColor: c,
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}>
+        <Text style={{ fontSize: size * 0.35, color: c, fontWeight: '700' }}>
+          {initials}
+        </Text>
+      </View>
+    );
+  }
+
   const isBouncer = def?.bouncer;
   const top = 30 - (level - 1) * 4;
   const h = (size * 64) / 48;
@@ -26,27 +48,21 @@ export function TowerIcon({ type, size = 36, level = 1 }: TowerIconProps) {
 
   const levelPips = Array.from({ length: level });
 
-  // On web, gradients crash — use solid fallback colors
-  const isWeb = Platform.OS === 'web';
-  const stoneFill = isWeb ? '#94a3b8' : `url(#${stoneId})`;
-  const glowFill = isWeb ? c : `url(#${glowId})`;
+  const stoneFill = `url(#${stoneId})`;
+  const glowFill = `url(#${glowId})`;
 
   return (
     <Svg viewBox="0 0 48 64" width={size} height={h}>
       <Defs>
-        {!isWeb ? (
-          <LinearGradient id={stoneId} x1="0" x2="1" y1="0" y2="0">
-            <Stop offset="0" stopColor="#cbd5e1" />
-            <Stop offset="0.5" stopColor="#94a3b8" />
-            <Stop offset="1" stopColor="#64748b" />
-          </LinearGradient>
-        ) : null}
-        {!isWeb ? (
-          <RadialGradient id={glowId} cx="50%" cy="50%" r="50%">
-            <Stop offset="0" stopColor={c} stopOpacity="0.9" />
-            <Stop offset="1" stopColor={c} stopOpacity="0" />
-          </RadialGradient>
-        ) : null}
+        <LinearGradient id={stoneId} x1="0" x2="1" y1="0" y2="0">
+          <Stop offset="0" stopColor="#cbd5e1" />
+          <Stop offset="0.5" stopColor="#94a3b8" />
+          <Stop offset="1" stopColor="#64748b" />
+        </LinearGradient>
+        <RadialGradient id={glowId} cx="50%" cy="50%" r="50%">
+          <Stop offset="0" stopColor={c} stopOpacity="0.9" />
+          <Stop offset="1" stopColor={c} stopOpacity="0" />
+        </RadialGradient>
       </Defs>
 
       {/* Shadow */}
