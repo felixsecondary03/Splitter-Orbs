@@ -456,7 +456,7 @@ export default function GameScreen() {
   };
 
   // Guard: on web, Expo Router may not have initialized route params yet
-  if (!paramsReady) {
+  if (!params?.mode) {
     return <View style={{ flex: 1, backgroundColor: '#0A0E1A' }} />;
   }
 

@@ -139,55 +139,64 @@ export default function CollectionScreen() {
         : t('collection.levelUpFree');
       const buyCopyLabel = t('collection.buyCopy', { n: buyCopyCost });
 
-      return (
-        <View key={id} style={styles.labCard}>
-          <View style={styles.labCardVisual}>{visual}</View>
-          <View style={styles.labCardInfo}>
-            <Text style={styles.labCardName}>{name}</Text>
-            <View style={styles.levelDots}>
-              {Array.from({ length: maxLevel }).map((_, i) => (
-                <View key={i} style={[styles.levelDot, i < level ? styles.levelDotFilled : null]} />
-              ))}
-            </View>
-            {!isMaxed && (
-              <Text style={styles.copiesText}>
-                {copies}/{copiesNeeded} {t('collection.copies')}
-              </Text>
-            )}
-          </View>
-          <View style={styles.labCardAction}>
-            {isMaxed ? (
-              <View style={styles.maxBadge}>
-                <Text style={styles.maxBadgeText}>{t('collection.maxLevel')}</Text>
+      try {
+        return (
+          <View key={id} style={styles.labCard}>
+            <View style={styles.labCardVisual}>{visual}</View>
+            <View style={styles.labCardInfo}>
+              <Text style={styles.labCardName}>{name}</Text>
+              <View style={styles.levelDots}>
+                {Array.from({ length: maxLevel }).map((_, i) => (
+                  <View key={i} style={[styles.levelDot, i < level ? styles.levelDotFilled : null]} />
+                ))}
               </View>
-            ) : canLevel ? (
-              <TouchableOpacity
-                onPress={() => handleLevelUp(category, id)}
-                disabled={!!isBusy}
-                style={styles.levelUpBtn}
-              >
-                {isBusy ? (
-                  <ActivityIndicator size="small" color="#fff" />
-                ) : (
-                  <Text style={styles.levelUpBtnText}>{levelUpLabel}</Text>
-                )}
-              </TouchableOpacity>
-            ) : (
-              <TouchableOpacity
-                onPress={() => handleBuyCopy(category, id)}
-                disabled={!!isBuyBusy}
-                style={styles.buyBtn}
-              >
-                {isBuyBusy ? (
-                  <ActivityIndicator size="small" color={COLORS.primary} />
-                ) : (
-                  <Text style={styles.buyBtnText}>{buyCopyLabel}</Text>
-                )}
-              </TouchableOpacity>
-            )}
+              {!isMaxed && (
+                <Text style={styles.copiesText}>
+                  {copies}/{copiesNeeded} {t('collection.copies')}
+                </Text>
+              )}
+            </View>
+            <View style={styles.labCardAction}>
+              {isMaxed ? (
+                <View style={styles.maxBadge}>
+                  <Text style={styles.maxBadgeText}>{t('collection.maxLevel')}</Text>
+                </View>
+              ) : canLevel ? (
+                <TouchableOpacity
+                  onPress={() => handleLevelUp(category, id)}
+                  disabled={!!isBusy}
+                  style={styles.levelUpBtn}
+                >
+                  {isBusy ? (
+                    <ActivityIndicator size="small" color="#fff" />
+                  ) : (
+                    <Text style={styles.levelUpBtnText}>{levelUpLabel}</Text>
+                  )}
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity
+                  onPress={() => handleBuyCopy(category, id)}
+                  disabled={!!isBuyBusy}
+                  style={styles.buyBtn}
+                >
+                  {isBuyBusy ? (
+                    <ActivityIndicator size="small" color={COLORS.primary} />
+                  ) : (
+                    <Text style={styles.buyBtnText}>{buyCopyLabel}</Text>
+                  )}
+                </TouchableOpacity>
+              )}
+            </View>
           </View>
-        </View>
-      );
+        );
+      } catch (err) {
+        console.warn('[Lab] renderCard error for', id, err);
+        return (
+          <View key={id} style={{ padding: 12 }}>
+            <Text style={{ color: 'red', fontSize: 11 }}>{id}: render error</Text>
+          </View>
+        );
+      }
   };
 
   const renderTowers = () =>

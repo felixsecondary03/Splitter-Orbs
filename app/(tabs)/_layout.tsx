@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { View, ActivityIndicator } from 'react-native';
 import { Tabs, useRouter } from 'expo-router';
 import FloatingTabBar, { TabBarItem } from '@/components/FloatingTabBar';
 import { COLORS } from '@/constants/Colors';
@@ -23,23 +24,27 @@ export default function TabLayout() {
     }
   }, [user, isLoading]);
 
-  if (isLoading) return null;
-  if (!user) return null;
-
   return (
-    <Tabs
-      tabBar={() => <FloatingTabBar tabs={TABS} />}
-      screenOptions={{
-        headerShown: false,
-        tabBarStyle: { backgroundColor: COLORS.tabBar },
-      }}
-    >
-      <Tabs.Screen name="(home)" options={{ title: 'Start' }} />
-      <Tabs.Screen name="shop" options={{ title: 'Laden' }} />
-      <Tabs.Screen name="play" options={{ title: 'Spielen' }} />
-      <Tabs.Screen name="collection" options={{ title: 'Lab' }} />
-      <Tabs.Screen name="social" options={{ title: 'Ränge' }} />
-      <Tabs.Screen name="settings" options={{ href: null }} />
-    </Tabs>
+    <>
+      <Tabs
+        tabBar={() => <FloatingTabBar tabs={TABS} />}
+        screenOptions={{
+          headerShown: false,
+          tabBarStyle: { backgroundColor: COLORS.tabBar },
+        }}
+      >
+        <Tabs.Screen name="(home)" options={{ title: 'Start' }} />
+        <Tabs.Screen name="shop" options={{ title: 'Laden' }} />
+        <Tabs.Screen name="play" options={{ title: 'Spielen' }} />
+        <Tabs.Screen name="collection" options={{ title: 'Lab' }} />
+        <Tabs.Screen name="social" options={{ title: 'Ränge' }} />
+        <Tabs.Screen name="settings" options={{ href: null }} />
+      </Tabs>
+      {isLoading && (
+        <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: COLORS.background, zIndex: 999, alignItems: 'center', justifyContent: 'center' }}>
+          <ActivityIndicator size="large" color={COLORS.primary} />
+        </View>
+      )}
+    </>
   );
 }
