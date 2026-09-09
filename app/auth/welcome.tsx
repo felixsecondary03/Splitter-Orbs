@@ -4,7 +4,9 @@ import {
   Text,
   Animated,
   StyleSheet,
+  Alert,
 } from 'react-native';
+import { useAuth } from '@/contexts/AuthContext';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import Svg, { Path, Circle, Defs, RadialGradient, Stop } from 'react-native-svg';
@@ -50,6 +52,7 @@ function OrbLogo({ size = 80 }: { size?: number }) {
 export default function WelcomeScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { signInWithGoogle, signInWithApple } = useAuth();
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
@@ -62,12 +65,24 @@ export default function WelcomeScreen() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleApple = () => {
+  const handleApple = async () => {
     console.log('[Welcome] Continue with Apple pressed');
+    try {
+      await signInWithApple();
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'Sign in failed';
+      Alert.alert('Sign in failed', msg);
+    }
   };
 
-  const handleGoogle = () => {
+  const handleGoogle = async () => {
     console.log('[Welcome] Continue with Google pressed');
+    try {
+      await signInWithGoogle();
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'Sign in failed';
+      Alert.alert('Sign in failed', msg);
+    }
   };
 
   const handleEmail = () => {
@@ -88,7 +103,7 @@ export default function WelcomeScreen() {
 
       <Animated.View style={[styles.heroSection, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
         <OrbLogo size={96} />
-        <Text style={styles.appTitle}>Orb Clash</Text>
+        <Text style={styles.appTitle}>Splitter Orbs</Text>
         <Text style={styles.appSubtitle}>Real-time 1v1 tower defense</Text>
         <Text style={styles.appTagline}>Destroy orbs. Build towers. Dominate.</Text>
       </Animated.View>
@@ -121,9 +136,13 @@ export default function WelcomeScreen() {
 
         <Text style={styles.termsText}>
           By continuing, you agree to our{' '}
-          <Text style={styles.termsLink}>Terms of Service</Text>
+          <Text style={styles.termsLink} onPress={() => router.push('/eula-screen')}>
+            Terms of Service
+          </Text>
           {' '}and{' '}
-          <Text style={styles.termsLink}>Privacy Policy</Text>
+          <Text style={styles.termsLink} onPress={() => router.push('/privacy')}>
+            Privacy Policy
+          </Text>
         </Text>
       </Animated.View>
     </View>

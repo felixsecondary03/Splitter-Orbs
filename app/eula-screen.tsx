@@ -1,34 +1,35 @@
 import React, { useState } from 'react';
-import { ScrollView, View, Text, TouchableOpacity, StyleSheet, SafeAreaView, Alert, ActivityIndicator } from 'react-native';
+import { ScrollView, View, Text, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '@/constants/Colors';
 import { supabase } from '@/utils/supabase';
 import { useTranslation } from '@/i18n/LanguageContext';
 
-const SECTIONS = [
-  { title: "1. Acceptance of Terms", body: "By downloading, installing, accessing, or using Splitter Orbs, you agree to be bound by this End User License Agreement. If you do not agree, do not use the App." },
-  { title: "2. License to Use", body: "Subject to your compliance with this EULA, the developer grants you a limited, non-exclusive, non-transferable, revocable license to install and use the App for personal, non-commercial purposes." },
-  { title: "3. Your Account", body: "You are responsible for maintaining the security of your account and for all activities that occur under your account." },
-  { title: "4. Acceptable Use", body: "You agree not to: (a) cheat, hack, or use unauthorized third-party software; (b) exploit bugs or vulnerabilities; (c) harass or harm other users; (d) use the App for illegal purposes; (e) reverse engineer the App; (f) create multiple accounts to circumvent restrictions." },
-  { title: "5. Virtual Items & Currency", body: "The App contains virtual items and currencies (coins, gems, shards) that have no real-world monetary value. Virtual items may be reset or removed at any time without compensation." },
-  { title: "6. No Gambling", body: "The App contains randomized reward systems (crates). These are not gambling. You always receive in-game items. Virtual items cannot be exchanged for real money." },
-  { title: "7. Intellectual Property", body: "All content in the App is owned by the developer or its licensors. You may not copy, distribute, or modify it without prior written permission." },
-  { title: "8. Disclaimer of Warranty", body: "THE APP IS PROVIDED 'AS IS' WITHOUT ANY WARRANTIES OF ANY KIND. THE DEVELOPER DOES NOT WARRANT THAT THE APP WILL BE UNINTERRUPTED OR ERROR-FREE." },
-  { title: "9. Limitation of Liability", body: "TO THE MAXIMUM EXTENT PERMITTED BY LAW, THE DEVELOPER SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, OR CONSEQUENTIAL DAMAGES. THE DEVELOPER'S TOTAL LIABILITY SHALL NOT EXCEED ZERO." },
-  { title: "10. Indemnification", body: "You agree to indemnify and hold harmless the developer from claims arising from your violation of this EULA or misuse of the App." },
-  { title: "11. Privacy & Data", body: "Your data is processed in accordance with the App's Privacy Policy. By using the App, you consent to the data practices described in the Privacy Policy." },
-  { title: "12. Age Requirement", body: "You must meet the minimum age requirement for your region: 13 in most countries, 14 in Spain/Italy/Austria, 15 in France, 16 in Germany/Netherlands/Ireland." },
-  { title: "13. Third-Party Services", body: "The App uses third-party services (Supabase, Google). The developer is not responsible for the practices of these third parties." },
-  { title: "14. Changes to Terms", body: "The developer may update this EULA at any time. Material changes will require you to accept the updated terms." },
-  { title: "15. Governing Law", body: "This EULA is governed by the laws of the Federal Republic of Germany." },
-  { title: "16. Contact", body: "For questions about this EULA, contact us at info@splitterorbs.com." },
-];
-
 export default function EulaScreen() {
   const router = useRouter();
   const { t } = useTranslation();
   const [downloading, setDownloading] = useState(false);
+
+  const sections = [
+    { title: t('eulaContent.s1t'), body: t('eulaContent.s1b') },
+    { title: t('eulaContent.s2t'), body: t('eulaContent.s2b') },
+    { title: t('eulaContent.s3t'), body: t('eulaContent.s3b') },
+    { title: t('eulaContent.s4t'), body: t('eulaContent.s4b') },
+    { title: t('eulaContent.s5t'), body: t('eulaContent.s5b') },
+    { title: t('eulaContent.s6t'), body: t('eulaContent.s6b') },
+    { title: t('eulaContent.s7t'), body: t('eulaContent.s7b') },
+    { title: t('eulaContent.s8t'), body: t('eulaContent.s8b') },
+    { title: t('eulaContent.s9t'), body: t('eulaContent.s9b') },
+    { title: t('eulaContent.s10t'), body: t('eulaContent.s10b') },
+    { title: t('eulaContent.s11t'), body: t('eulaContent.s11b') },
+    { title: t('eulaContent.s12t'), body: t('eulaContent.s12b') },
+    { title: t('eulaContent.s13t'), body: t('eulaContent.s13b') },
+    { title: t('eulaContent.s14t'), body: t('eulaContent.s14b') },
+    { title: t('eulaContent.s15t'), body: t('eulaContent.s15b') },
+    { title: t('eulaContent.s16t'), body: t('eulaContent.s16b') },
+  ];
 
   const handleDownloadData = async () => {
     console.log('[EULA] Download My Data pressed');
@@ -57,7 +58,7 @@ export default function EulaScreen() {
         <Text style={styles.title}>{t('eula.title')}</Text>
       </View>
       <ScrollView contentContainerStyle={styles.content}>
-        {SECTIONS.map((s, i) => (
+        {sections.map((s, i) => (
           <View key={i} style={styles.section}>
             <Text style={styles.sectionTitle}>{s.title}</Text>
             <Text style={styles.sectionBody}>{s.body}</Text>
