@@ -18,7 +18,8 @@ import {
   SHARD_CARD_PRICES, CARD_COPIES_NEEDED, MAX_CARD_LEVEL,
   HAND_UPGRADE_COSTS, SIDE_TOWER_UPGRADE_COSTS,
 } from '@/game/constants';
-import type { OrbType } from '@/game/constants';
+import type { OrbType, TowerType } from '@/game/constants';
+import { TowerIcon } from '@/components/TowerIcon';
 
 type LabTab = 'towers' | 'orbs' | 'powers' | 'upgrades';
 
@@ -199,19 +200,7 @@ export default function CollectionScreen() {
 
   const renderTowers = () =>
     Object.values(TOWER_TYPES).map((def) => {
-      const towerInitials = def.name.slice(0, 2).toUpperCase();
-      const towerVisual = (
-        <View style={{
-          width: 36, height: 36, borderRadius: 8,
-          backgroundColor: def.color + '33',
-          borderWidth: 1.5, borderColor: def.color,
-          alignItems: 'center', justifyContent: 'center',
-        }}>
-          <Text style={{ fontSize: 14, color: def.color, fontWeight: '700' }}>
-            {towerInitials}
-          </Text>
-        </View>
-      );
+      const towerVisual = <TowerIcon type={def.id as TowerType} size={36} />;
       return renderCard('tower_cards', def.id, towerVisual, def.name);
     });
 

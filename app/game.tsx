@@ -136,22 +136,46 @@ export default function GameScreen() {
     role?: string;
   }>();
 
-  const uiMode = params.mode ?? 'casual';
-  const difficulty = params.difficulty ?? 'normal';
+  // Safely parse params — on web, Expo Router may not have initialized route params yet
+  const paramsReady = !!params && typeof params === 'object';
+
+  const uiMode = paramsReady ? (params.mode ?? 'casual') : 'casual';
+  const difficulty = paramsReady ? (params.difficulty ?? 'normal') : 'normal';
   const engineMode = resolveEngineMode(uiMode, difficulty);
-  const seed = parseInt(params.seed ?? String(Date.now()), 10);
+  const seed = paramsReady ? parseInt(params.seed ?? String(Date.now()), 10) : Date.now();
 
   // Parse loadout from params or fall back to defaults
+  let parsedTowers: TowerType[] = DEFAULT_LOADOUT.towers;
+  try {
+    if (paramsReady && params.towers) parsedTowers = JSON.parse(params.towers) as TowerType[];
+  } catch {
+    parsedTowers = DEFAULT_LOADOUT.towers;
+  }
+
+  let parsedOrbs: OrbType[] = DEFAULT_LOADOUT.orbs;
+  try {
+    if (paramsReady && params.orbs) parsedOrbs = JSON.parse(params.orbs) as OrbType[];
+  } catch {
+    parsedOrbs = DEFAULT_LOADOUT.orbs;
+  }
+
+  let parsedAbilities: AbilityType[] = DEFAULT_LOADOUT.abilities;
+  try {
+    if (paramsReady && params.abilities) parsedAbilities = JSON.parse(params.abilities) as AbilityType[];
+  } catch {
+    parsedAbilities = DEFAULT_LOADOUT.abilities;
+  }
+
   const loadout: Loadout = {
-    towers: params.towers ? JSON.parse(params.towers) as TowerType[] : DEFAULT_LOADOUT.towers,
-    orbs: params.orbs ? JSON.parse(params.orbs) as OrbType[] : DEFAULT_LOADOUT.orbs,
-    abilities: params.abilities ? JSON.parse(params.abilities) as AbilityType[] : DEFAULT_LOADOUT.abilities,
+    towers: parsedTowers,
+    orbs: parsedOrbs,
+    abilities: parsedAbilities,
     sideTowerLevel: profile?.side_tower_level ?? 0,
     handLevel: profile?.hand_level ?? 0,
     cardLevels: {},
   };
 
-  const opponentName = params.opponentName ?? AI_NAMES[difficulty] ?? 'Opponent';
+  const opponentName = paramsReady ? (params.opponentName ?? AI_NAMES[difficulty] ?? 'Opponent') : 'Opponent';
 
   const isAiMode = engineMode.startsWith('ai_');
   const [isPaused, setIsPaused] = useState(false);
@@ -185,7 +209,7 @@ export default function GameScreen() {
   const handleGameEnd = useCallback(async (state: GameState) => {
     const isWin = state.winner === 'player';
     const elapsedSeconds = Math.floor(state.time / 1000);
-    const sessionId = params.sessionId;
+    const sessionId = paramsReady ? params.sessionId : undefined;
     const isMultiplayer = !!sessionId;
     const isAiGame = engineMode.startsWith('ai_');
 
@@ -246,7 +270,7 @@ export default function GameScreen() {
       }
     }
 
-    const opponentName = params.opponentName ?? AI_NAMES[difficulty] ?? 'Opponent';
+    const opponentName = (paramsReady ? params.opponentName : undefined) ?? AI_NAMES[difficulty] ?? 'Opponent';
 
     setTimeout(() => {
       router.replace({
@@ -261,7 +285,7 @@ export default function GameScreen() {
         },
       });
     }, 800);
-  }, [uiMode, difficulty, engineMode, params.sessionId, params.opponentName]);
+  }, [uiMode, difficulty, engineMode, paramsReady, params.sessionId, params.opponentName]);
 
   const { renderState, stateRef: gameStateRef, dispatch, pause, resume } = useGameLoop({
     initialState,
@@ -427,6 +451,11 @@ export default function GameScreen() {
     max_pressure: '#DC2626',
     tower_bleed: '#7F1D1D',
   };
+
+  // Guard: on web, Expo Router may not have initialized route params yet
+  if (!paramsReady) {
+    return <View style={{ flex: 1, backgroundColor: '#0A0E1A' }} />;
+  }
 
   return (
     <View style={[styles.root, { backgroundColor: COLORS.background }]}>
@@ -601,7 +630,7 @@ export default function GameScreen() {
           style={styles.towerBar}
           contentContainerStyle={styles.towerBarContent}
         >
-          {loadout.towers.map((towerType) => {
+          {(loadout.towers ?? []).map((towerType) => {
             const cost = TOWER_COSTS[towerType] ?? 60;
             const isSelected = selectedTowerType === towerType;
             const canAfford = playerCoins >= cost;
