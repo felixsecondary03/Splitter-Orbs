@@ -206,10 +206,13 @@ export default function GameScreen() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const sessionIdParam = paramsReady ? params.sessionId : undefined;
+  const opponentNameParam = paramsReady ? params.opponentName : undefined;
+
   const handleGameEnd = useCallback(async (state: GameState) => {
     const isWin = state.winner === 'player';
     const elapsedSeconds = Math.floor(state.time / 1000);
-    const sessionId = paramsReady ? params.sessionId : undefined;
+    const sessionId = sessionIdParam;
     const isMultiplayer = !!sessionId;
     const isAiGame = engineMode.startsWith('ai_');
 
@@ -270,7 +273,7 @@ export default function GameScreen() {
       }
     }
 
-    const opponentName = (paramsReady ? params.opponentName : undefined) ?? AI_NAMES[difficulty] ?? 'Opponent';
+    const opponentName = opponentNameParam ?? AI_NAMES[difficulty] ?? 'Opponent';
 
     setTimeout(() => {
       router.replace({
@@ -285,7 +288,7 @@ export default function GameScreen() {
         },
       });
     }, 800);
-  }, [uiMode, difficulty, engineMode, paramsReady, params.sessionId, params.opponentName]);
+  }, [uiMode, difficulty, engineMode, paramsReady, sessionIdParam, opponentNameParam]);
 
   const { renderState, stateRef: gameStateRef, dispatch, pause, resume } = useGameLoop({
     initialState,

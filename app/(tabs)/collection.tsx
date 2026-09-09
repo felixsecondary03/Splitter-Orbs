@@ -53,7 +53,7 @@ export default function CollectionScreen() {
 
   const handleLevelUp = async (category: string, id: string) => {
     console.log('[Lab] Level Up pressed:', category, id);
-    if (!profile.id) {
+    if (!profile?.id) {
       Alert.alert('Anmelden erforderlich', 'Melde dich an, um Karten zu verbessern.');
       return;
     }
@@ -75,7 +75,7 @@ export default function CollectionScreen() {
 
   const handleBuyCopy = async (category: string, id: string) => {
     console.log('[Lab] Buy Copy pressed:', category, id);
-    if (!profile.id) {
+    if (!profile?.id) {
       Alert.alert('Anmelden erforderlich', 'Melde dich an, um Karten zu verbessern.');
       return;
     }
@@ -97,7 +97,7 @@ export default function CollectionScreen() {
 
   const handleUpgradeMeta = async (type: 'hand' | 'side_tower') => {
     console.log('[Lab] Upgrade meta pressed:', type);
-    if (!profile.id) {
+    if (!profile?.id) {
       Alert.alert('Anmelden erforderlich', 'Melde dich an, um Karten zu verbessern.');
       return;
     }
@@ -241,6 +241,7 @@ export default function CollectionScreen() {
     });
 
   const renderUpgrades = () => {
+    if (!profile) return null;
     const handLevel = profile.hand_level || 0;
     const sideTowerLevel = profile.side_tower_level || 0;
     const handMaxed = handLevel >= HAND_UPGRADE_COSTS.length;
