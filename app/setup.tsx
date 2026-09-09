@@ -130,7 +130,7 @@ export default function SetupScreen() {
     }
     const engineMode =
       mode === 'training' ? `ai_${difficulty}` : mode === 'casual' ? 'ai_normal' : 'ranked';
-    router.push({
+    router.replace({
       pathname: '/game',
       params: {
         mode: engineMode,
