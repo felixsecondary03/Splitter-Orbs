@@ -2,7 +2,6 @@ import "react-native-reanimated";
 import React, { useEffect } from "react";
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
-import { supabase } from "@/utils/supabase";
 import * as SplashScreen from "expo-splash-screen";
 import { SystemBars } from "react-native-edge-to-edge";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -58,26 +57,6 @@ export default function RootLayout() {
       );
     }
   }, [networkState.isConnected, networkState.isInternetReachable]);
-
-  // Auto-login with admin account in dev mode
-  useEffect(() => {
-    if (!__DEV__) return;
-    supabase.auth.getSession().then(({ data }) => {
-      if (!data.session) {
-        console.log('[Dev] Auto-signing in with admin account');
-        supabase.auth.signInWithPassword({
-          email: 'admin@splitterorbs.com',
-          password: 'SplitterOrbs2025!',
-        }).then(({ error }) => {
-          if (error) {
-            console.warn('[Dev] Auto-login failed:', error.message);
-          } else {
-            console.log('[Dev] Auto-login successful');
-          }
-        });
-      }
-    });
-  }, []);
 
   const GameDarkTheme: Theme = {
     ...DarkTheme,

@@ -5,7 +5,6 @@ import {
   Animated,
   StyleSheet,
   Alert,
-  Platform,
 } from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -15,10 +14,6 @@ import { COLORS } from '@/constants/Colors';
 import { AnimatedPressable } from '@/components/AnimatedPressable';
 
 function AppleLogo({ size = 20, color = '#FFFFFF' }: { size?: number; color?: string }) {
-  if (Platform.OS === 'web') {
-    const lineHeight = size * 1.2;
-    return <Text style={{ fontSize: size, color, lineHeight }}>🍎</Text>;
-  }
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill={color}>
       <Path d="M18.71 19.5C17.88 20.74 17 21.95 15.66 21.97C14.32 22 13.89 21.18 12.37 21.18C10.84 21.18 10.37 21.95 9.09997 22C7.78997 22.05 6.79997 20.68 5.95997 19.47C4.24997 17 2.93997 12.45 4.69997 9.39C5.56997 7.87 7.12997 6.91 8.81997 6.88C10.1 6.86 11.32 7.75 12.11 7.75C12.89 7.75 14.37 6.68 15.92 6.84C16.57 6.87 18.39 7.1 19.56 8.82C19.47 8.88 17.39 10.1 17.41 12.63C17.44 15.65 20.06 16.66 20.09 16.67C20.06 16.74 19.67 18.11 18.71 19.5ZM13 3.5C13.73 2.67 14.94 2.04 15.94 2C16.07 3.17 15.6 4.35 14.9 5.19C14.21 6.04 13.07 6.7 11.95 6.61C11.8 5.46 12.36 4.26 13 3.5Z" />
@@ -27,15 +22,6 @@ function AppleLogo({ size = 20, color = '#FFFFFF' }: { size?: number; color?: st
 }
 
 function GoogleLogo({ size = 20 }: { size?: number }) {
-  if (Platform.OS === 'web') {
-    const innerFontSize = size * 0.7;
-    const innerLineHeight = size * 0.8;
-    return (
-      <View style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' }}>
-        <Text style={{ fontSize: innerFontSize, color: '#4285F4', fontWeight: '700', lineHeight: innerLineHeight }}>G</Text>
-      </View>
-    );
-  }
   return (
     <Svg width={size} height={size} viewBox="0 0 48 48">
       <Path d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z" fill="#FFC107" />
@@ -47,15 +33,6 @@ function GoogleLogo({ size = 20 }: { size?: number }) {
 }
 
 function OrbLogo({ size = 80 }: { size?: number }) {
-  if (Platform.OS === 'web') {
-    const innerSize = size * 0.35;
-    const innerRadius = size * 0.175;
-    return (
-      <View style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: '#4F8EF7', alignItems: 'center', justifyContent: 'center' }}>
-        <View style={{ width: innerSize, height: innerSize, borderRadius: innerRadius, backgroundColor: 'rgba(255,255,255,0.3)' }} />
-      </View>
-    );
-  }
   return (
     <Svg width={size} height={size} viewBox="0 0 80 80">
       <Defs>

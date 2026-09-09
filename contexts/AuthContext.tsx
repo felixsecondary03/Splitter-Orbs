@@ -81,12 +81,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     console.log('[Auth] Initializing auth state listener');
-    supabase.auth.getSession().then(({ data }) => {
+    supabase.auth.getSession().then(async ({ data }) => {
       if (data.session) {
         setSession(data.session);
         setUser(mapSupabaseUser(data.session.user));
+        setIsLoading(false);
+      } else if (__DEV__) {
+        // Auto-login with admin account in dev mode
+        console.log('[Auth] Dev mode — auto-signing in with admin account');
+        const { error } = await supabase.auth.signInWithPassword({
+          email: 'admin@splitterorbs.com',
+          password: 'SplitterOrbs2025!',
+        });
+        if (error) {
+          console.warn('[Auth] Dev auto-login failed:', error.message);
+          setIsLoading(false);
+        } else {
+          console.log('[Auth] Dev auto-login successful');
+          // onAuthStateChange will fire SIGNED_IN and set user/session
+          // setIsLoading(false) will be called by onAuthStateChange handler
+        }
+      } else {
+        setIsLoading(false);
       }
-      setIsLoading(false);
     });
 
     const { data: listener } = supabase.auth.onAuthStateChange(async (event, sess) => {
