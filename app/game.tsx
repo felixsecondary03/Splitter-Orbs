@@ -15,6 +15,7 @@ import { GestureDetector, Gesture } from 'react-native-gesture-handler';
 import { X, Pause, Play, Flag } from 'lucide-react-native';
 import { COLORS } from '@/constants/Colors';
 import { useProfile } from '@/contexts/ProfileContext';
+import { useTranslation } from '@/i18n/LanguageContext';
 import { GameCanvas } from '@/components/GameCanvas';
 import { HPBar } from '@/components/HPBar';
 import { CoinDisplay } from '@/components/CoinDisplay';
@@ -143,6 +144,7 @@ export default function GameScreen() {
   const insets = useSafeAreaInsets();
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const { profile } = useProfile();
+  const { t } = useTranslation();
   const params = useLocalSearchParams<{
     mode?: string;
     difficulty?: string;
@@ -650,59 +652,82 @@ export default function GameScreen() {
     );
   }
 
+  // ── Timer pill color based on escalation ──
+  const timerPillBg = escalationTier === 'tower_bleed'
+    ? '#7F1D1D'
+    : escalationTier === 'critical' || escalationTier === 'max_pressure'
+    ? '#FEE2E2'
+    : escalationTier === 'overtime' || escalationTier === 'intensifying'
+    ? '#FFEDD5'
+    : '#F1F5F9';
+  const timerPillTextColor = escalationTier === 'tower_bleed'
+    ? '#FEF2F2'
+    : escalationTier === 'critical' || escalationTier === 'max_pressure'
+    ? '#DC2626'
+    : escalationTier === 'overtime' || escalationTier === 'intensifying'
+    ? '#EA580C'
+    : '#334155';
+  const timerLabel = escalationTier !== 'none'
+    ? (escalationLabel[escalationTier] ?? escalationTier.toUpperCase())
+    : null;
+  const clicksPillBg = clicksLeft >= maxClicks
+    ? 'rgba(16,185,129,0.12)'
+    : clicksLeft === 0
+    ? 'rgba(244,63,94,0.12)'
+    : '#F1F5F9';
+  const clicksPillBorder = clicksLeft >= maxClicks
+    ? '#10B981'
+    : clicksLeft === 0
+    ? '#F43F5E'
+    : '#E2E8F0';
+  const firstPlacement = (renderState?.player as any)?.firstPlacement ?? false;
+
   return (
     <View style={[styles.root, { backgroundColor: COLORS.background }]}>
       {/* ── Top HUD ── */}
-      <View style={[styles.topHud, { paddingTop: insets.top + 8 }]}>
+      <View style={[styles.topHud, { paddingTop: insets.top + 4 }]}>
         <View style={styles.hudTopRow}>
-          <Pressable style={styles.pauseBtn} onPress={handlePause}>
-            <Pause size={14} color={COLORS.textSecondary} strokeWidth={2} />
+          {/* LEFT: back/forfeit button */}
+          <Pressable
+            style={styles.backBtn}
+            onPress={() => {
+              console.log('[Game] Back/forfeit button pressed');
+              setShowForfeitDialog(true);
+            }}
+          >
+            <Text style={styles.backBtnText}>←</Text>
           </Pressable>
 
+          {/* CENTER: opponent name + timer pill */}
           <View style={styles.hudCenterBlock}>
             <View style={styles.opponentNameRow}>
-              <Text style={styles.hudName} numberOfLines={1}>{opponentName}</Text>
+              <Text style={styles.hudOpponentName} numberOfLines={1}>{opponentName}</Text>
               {isAiMode && (
                 <View style={styles.kiBadge}>
                   <Text style={styles.kiBadgeText}>KI</Text>
                 </View>
               )}
             </View>
-            <Text style={styles.timerText}>{timeDisplay}</Text>
+            <View style={[styles.timerPill, { backgroundColor: timerPillBg }]}>
+              {timerLabel ? (
+                <Text style={[styles.timerPillText, { color: timerPillTextColor }]}>{timerLabel}</Text>
+              ) : (
+                <Text style={[styles.timerPillText, { color: timerPillTextColor }]}>{timeDisplay}</Text>
+              )}
+            </View>
           </View>
 
+          {/* RIGHT: clicks pill + coins pill */}
           <View style={styles.hudPills}>
-            <View style={styles.clicksPill}>
+            <View style={[styles.clicksPill, { backgroundColor: clicksPillBg, borderColor: clicksPillBorder }]}>
               <Text style={styles.pillText}>👆 {clicksLeft}/{maxClicks}</Text>
             </View>
             <View style={styles.coinsPill}>
-              <Text style={styles.pillText}>🪙 {playerCoins}</Text>
+              <View style={styles.coinDot} />
+              <Text style={styles.pillText}>{playerCoins}</Text>
             </View>
           </View>
         </View>
-
-        <View style={styles.hpBarsRow}>
-          <View style={styles.hpBarBlock}>
-            <Text style={styles.hpLabel}>OPP</Text>
-            <HPBar current={oppHp} max={oppMaxHp} width={screenWidth - 100} height={6} />
-          </View>
-        </View>
-        <View style={styles.hpBarsRow}>
-          <View style={styles.hpBarBlock}>
-            <Text style={styles.hpLabel}>YOU</Text>
-            <HPBar current={playerHp} max={playerMaxHp} width={screenWidth - 100} height={6} />
-          </View>
-        </View>
-
-        {escalationTier !== 'none' && (
-          <View style={styles.timerRow}>
-            <View style={[styles.escalationBadge, { borderColor: escalationColor[escalationTier] ?? COLORS.danger }]}>
-              <Text style={[styles.escalationText, { color: escalationColor[escalationTier] ?? COLORS.danger }]}>
-                {escalationLabel[escalationTier] ?? escalationTier.toUpperCase()}
-              </Text>
-            </View>
-          </View>
-        )}
       </View>
 
       {/* ── Game Canvas ── */}
@@ -901,17 +926,20 @@ export default function GameScreen() {
             ))}
           </View>
           <View style={styles.abilityRightBtns}>
-            <Pressable
-              style={styles.orbShopCircleBtn}
-              onPress={handleOpenOrbShop}
-            >
-              <Text style={styles.orbShopCircleBtnText}>🔮</Text>
-            </Pressable>
+            {!placementMode.active && (
+              <Pressable
+                style={styles.orbShopCircleBtn}
+                onPress={handleOpenOrbShop}
+              >
+                <Text style={styles.orbShopCircleBtnText}>🌀</Text>
+              </Pressable>
+            )}
+            {placementMode.active && <View style={{ width: 56, height: 56 }} />}
             <Pressable
               style={[styles.editToggleBtn, editMode && styles.editToggleBtnActive]}
               onPress={handleToggleEditMode}
             >
-              <Text style={styles.editToggleBtnText}>{editMode ? '✓' : '🔧'}</Text>
+              <Text style={styles.editToggleBtnText}>{editMode ? '✅' : '✏️'}</Text>
             </Pressable>
           </View>
         </View>
@@ -941,7 +969,7 @@ export default function GameScreen() {
                   handleSelectTower(isSelected ? null : towerType);
                 }}
               >
-                <TowerIcon type={towerType} size={32} />
+                <TowerIcon type={towerType} size={34} />
                 <Text style={styles.towerName} numberOfLines={1}>{towerName}</Text>
                 <View style={styles.towerCostRow}>
                   <Text style={[styles.towerCost, !canAfford && { color: COLORS.textTertiary }]}>
@@ -950,7 +978,9 @@ export default function GameScreen() {
                   <Text style={[styles.towerCost, !canAfford && { color: COLORS.textTertiary }]}>
                     {cost}
                   </Text>
-                  <Text style={styles.towerDiscount}>-20%</Text>
+                  {firstPlacement && (
+                    <Text style={styles.towerDiscount}>-20%</Text>
+                  )}
                 </View>
               </Pressable>
             );
@@ -1003,13 +1033,13 @@ export default function GameScreen() {
         <View style={styles.forfeitOverlay}>
           <View style={styles.forfeitCard}>
             <Text style={styles.forfeitEmoji}>🏳️</Text>
-            <Text style={styles.forfeitTitle}>Forfeit Match?</Text>
-            <Text style={styles.forfeitSubtitle}>vs {opponentName}</Text>
+            <Text style={styles.forfeitTitle}>{t('game.forfeitMatch')}</Text>
+            <Text style={styles.forfeitSubtitle}>{t('game.vs')} {opponentName}</Text>
             <Pressable style={styles.forfeitCancelBtn} onPress={() => { console.log('[Game] Forfeit cancelled'); setShowForfeitDialog(false); }}>
-              <Text style={styles.forfeitCancelBtnText}>Cancel</Text>
+              <Text style={styles.forfeitCancelBtnText}>{t('game.cancel')}</Text>
             </Pressable>
             <Pressable style={styles.forfeitYesBtn} onPress={handleForfeit}>
-              <Text style={styles.forfeitYesBtnText}>Forfeit</Text>
+              <Text style={styles.forfeitYesBtnText}>{t('game.forfeitMatch')}</Text>
             </Pressable>
           </View>
         </View>
@@ -1047,19 +1077,25 @@ export default function GameScreen() {
       {/* ── Searching Screen ── */}
       {searching && (
         <View style={[StyleSheet.absoluteFill, styles.searchingOverlay]}>
-          <Text style={styles.searchingEmoji}>🛰️</Text>
-          <Text style={styles.searchingTitle}>Finding opponent...</Text>
-          <Text style={styles.searchingTimer}>{searchTime}</Text>
+          <Text style={styles.searchingEmoji}>
+            {uiMode === 'training' || uiMode === 'tutorial' ? '🎯' : '🛰️'}
+          </Text>
+          <Text style={styles.searchingTitle}>{t('game.searching')}</Text>
+          {uiMode !== 'training' && uiMode !== 'tutorial' && (
+            <Text style={styles.searchingTimer}>{searchTime}</Text>
+          )}
           <Text style={styles.searchingHint}>Searching for a live match nearby</Text>
-          <Pressable
-            style={styles.searchVsAiBtn}
-            onPress={() => {
-              console.log('[Game] Play vs AI button pressed from searching screen');
-              beginMatch();
-            }}
-          >
-            <Text style={styles.searchVsAiBtnText}>Play vs AI</Text>
-          </Pressable>
+          {uiMode !== 'training' && uiMode !== 'tutorial' && (
+            <Pressable
+              style={styles.searchVsAiBtn}
+              onPress={() => {
+                console.log('[Game] Play vs AI button pressed from searching screen');
+                beginMatch();
+              }}
+            >
+              <Text style={styles.searchVsAiBtnText}>{t('game.playVsAi')}</Text>
+            </Pressable>
+          )}
           {searchToast.length > 0 && (
             <View style={styles.searchToast}>
               <Text style={styles.searchToastText}>{searchToast}</Text>
@@ -1074,36 +1110,22 @@ export default function GameScreen() {
           <ScrollView contentContainerStyle={styles.resultContent} showsVerticalScrollIndicator={false}>
             <Text style={styles.resultEmoji}>{resultEmoji}</Text>
             <Text style={[styles.resultTitle, resultWon ? styles.resultTitleWin : styles.resultTitleLoss]}>
-              {resultTitle}
+              {resultWon ? t('game.victory') : t('game.defeat')}
             </Text>
             <Text style={styles.resultVsText}>
-              vs
+              {t('game.vs')}
             </Text>
             <Text style={styles.resultOpponentText}>
               {resultData.opponent ?? 'Opponent'}
             </Text>
 
-            {!resultData.training && (
+            {!resultData.training && resultChange !== 0 && (
               <Text style={[styles.resultTrophyBig, { color: resultChange >= 0 ? '#10B981' : '#EF4444' }]}>
-                {resultChangeSign}
-                {resultChange}
+                {resultChangeSign}{resultChange}
               </Text>
             )}
 
             {!resultData.training && (
-              <View style={styles.resultTrophyRow}>
-                <View style={styles.resultTrophyBlock}>
-                  <Text style={styles.resultTrophyLabel}>Trophies</Text>
-                  <View style={styles.resultTrophyChange}>
-                    <Text style={styles.resultTrophyOld}>{resultOldTrophies}</Text>
-                    <Text style={styles.resultTrophyArrow}>→</Text>
-                    <Text style={styles.resultTrophyNew}>{resultNewTrophies}</Text>
-                  </View>
-                </View>
-              </View>
-            )}
-
-            {!resultData.training && (resultData.promoted || resultData.demoted) && (
               <View style={styles.resultLeagueRow}>
                 <LeagueBadge trophies={resultOldTrophies} size="md" />
                 <Text style={styles.resultLeagueArrow}>→</Text>
@@ -1141,7 +1163,7 @@ export default function GameScreen() {
                   router.push('/');
                 }}
               >
-                <Text style={styles.resultHomeBtnText}>Home</Text>
+                <Text style={styles.resultHomeBtnText}>{t('game.home')}</Text>
               </Pressable>
               <Pressable
                 style={styles.resultPlayAgainBtn}
@@ -1150,7 +1172,7 @@ export default function GameScreen() {
                   router.push('/setup');
                 }}
               >
-                <Text style={styles.resultPlayAgainBtnText}>Play Again</Text>
+                <Text style={styles.resultPlayAgainBtnText}>{t('game.playAgain')}</Text>
               </Pressable>
             </View>
           </ScrollView>
@@ -1737,11 +1759,19 @@ const styles = StyleSheet.create({
   hudCenterBlock: {
     flex: 1,
     alignItems: 'center',
+    gap: 3,
   },
   opponentNameRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
+  },
+  hudOpponentName: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#F43F5E',
+    letterSpacing: -0.2,
+    maxWidth: 120,
   },
   kiBadge: {
     backgroundColor: '#F1F5F9',
@@ -1754,15 +1784,24 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#475569',
   },
+  timerPill: {
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 20,
+  },
+  timerPillText: {
+    fontSize: 13,
+    fontWeight: '700',
+    fontFamily: 'SpaceMono',
+    letterSpacing: 0.5,
+  },
   hudPills: {
     flexDirection: 'row',
     gap: 4,
     alignItems: 'center',
   },
   clicksPill: {
-    backgroundColor: 'rgba(16,185,129,0.1)',
     borderWidth: 1,
-    borderColor: '#10B981',
     borderRadius: 8,
     paddingHorizontal: 6,
     paddingVertical: 2,
@@ -1774,6 +1813,15 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 6,
     paddingVertical: 2,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  coinDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#F59E0B',
   },
   pillText: {
     fontSize: 11,
@@ -1795,6 +1843,21 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#94A3B8',
     letterSpacing: 0.5,
+  },
+  backBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+    backgroundColor: '#F1F5F9',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  backBtnText: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#94A3B8',
   },
   // Searching screen
   searchingOverlay: {

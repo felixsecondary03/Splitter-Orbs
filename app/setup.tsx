@@ -1,14 +1,16 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
   ScrollView,
   StyleSheet,
+  Animated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { COLORS } from '@/constants/Colors';
+import { TowerIcon } from '@/components/TowerIcon';
 import { supabase } from '@/utils/supabase';
 import { useProfile } from '@/contexts/ProfileContext';
 import { useTranslation } from '@/i18n/LanguageContext';
@@ -29,6 +31,17 @@ export default function SetupScreen() {
   const router = useRouter();
   const { t } = useTranslation();
   const { profile } = useProfile();
+
+  // Animated bob for the sword emoji
+  const bobAnim = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(bobAnim, { toValue: -12, duration: 700, useNativeDriver: true }),
+        Animated.timing(bobAnim, { toValue: 0, duration: 700, useNativeDriver: true }),
+      ])
+    ).start();
+  }, [bobAnim]);
 
   const [mode, setMode] = useState<'training' | 'casual' | 'ranked'>('casual');
   const [difficulty, setDifficulty] = useState<'easy' | 'normal' | 'hard'>('normal');
@@ -165,7 +178,7 @@ export default function SetupScreen() {
           <Text style={styles.pageTitle}>{t('setup.title')}</Text>
           <Text style={styles.pageSubtitle}>{t('setup.quickPlayHint')}</Text>
 
-          <Text style={styles.bigEmoji}>⚔️</Text>
+          <Animated.Text style={[styles.bigEmoji, { transform: [{ translateY: bobAnim }] }]}>⚔️</Animated.Text>
 
           <View style={styles.modePills}>
             {MODES.map((m) => {
@@ -305,16 +318,7 @@ export default function SetupScreen() {
                           <Text style={styles.selBadgeText}>{selIdx + 1}</Text>
                         </View>
                       )}
-                      <View style={{
-                        width: 36, height: 36, borderRadius: 7,
-                        backgroundColor: TOWER_TYPES[def.id].color + '33',
-                        borderWidth: 1.5, borderColor: TOWER_TYPES[def.id].color,
-                        alignItems: 'center', justifyContent: 'center',
-                      }}>
-                        <Text style={{ fontSize: 12, color: TOWER_TYPES[def.id].color, fontWeight: '700' }}>
-                          {def.name.slice(0, 2).toUpperCase()}
-                        </Text>
-                      </View>
+                      <TowerIcon type={def.id as TowerType} size={32} />
                       <Text style={styles.cardName} numberOfLines={1}>
                         {t(`towers.${def.id}.name`)}
                       </Text>
