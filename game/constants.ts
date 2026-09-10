@@ -370,3 +370,27 @@ export const OVERTIME_SCALE_INTERVAL = 10000;
 
 // EULA
 export const CURRENT_EULA_VERSION = '1.0';
+
+// ─── Orb stat scaling ─────────────────────────────────────────────────────────
+export function getOrbScaleMultiplier(cardLevel: number = 1) {
+  const lvl = Math.max(1, Math.min(5, Math.round(cardLevel)));
+  const hpMult = [1.0, 1.25, 1.5, 1.75, 2.0][lvl - 1];
+  return {
+    hp: hpMult,
+    dmg: hpMult * 0.9,
+    speed: 1 + (hpMult - 1) * 0.6,
+  };
+}
+
+export function getOrbStats(typeId: string, cardLevel: number = 1) {
+  const base = ORB_TYPES[typeId as OrbType];
+  if (!base) return null;
+  const m = getOrbScaleMultiplier(cardLevel);
+  return {
+    ...base,
+    level: Math.max(1, Math.min(5, Math.round(cardLevel))),
+    hp: Math.round(base.hp * m.hp),
+    speed: Math.round(base.speed * m.speed),
+    damage: Math.round(base.damage * m.dmg),
+  };
+}

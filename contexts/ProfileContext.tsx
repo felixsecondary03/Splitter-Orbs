@@ -40,6 +40,15 @@ export interface PlayerProfile {
   banned?: boolean;
   ban_until?: string | null;
   ban_reason?: string | null;
+  owned_skins: string[];
+  equipped_orb_pattern: string;
+  equipped_station_skin: string;
+  equipped_tower_skin: string;
+  equipped_left_tower_skin: string;
+  equipped_right_tower_skin: string;
+  equipped_station_emblem: string;
+  equipped_left_tower_emblem: string;
+  equipped_right_tower_emblem: string;
 }
 
 export const DEFAULT_PROFILE: PlayerProfile = {
@@ -78,6 +87,15 @@ export const DEFAULT_PROFILE: PlayerProfile = {
   avatar_color: '#4F8EF7',
   daily_missions: [],
   last_free_crate: null,
+  owned_skins: [],
+  equipped_orb_pattern: 'default',
+  equipped_station_skin: 'default',
+  equipped_tower_skin: 'default',
+  equipped_left_tower_skin: 'default',
+  equipped_right_tower_skin: 'default',
+  equipped_station_emblem: 'default',
+  equipped_left_tower_emblem: 'default',
+  equipped_right_tower_emblem: 'default',
 };
 
 interface ProfileContextType {
@@ -120,7 +138,17 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
         selected_abilities: data.selected_abilities ?? DEFAULT_PROFILE.selected_abilities,
         unlocked_towers:    data.unlocked_towers    ?? DEFAULT_PROFILE.unlocked_towers,
         unlocked_abilities: data.unlocked_abilities ?? DEFAULT_PROFILE.unlocked_abilities,
-        sound_categories:   data.sound_categories   ?? DEFAULT_PROFILE.sound_categories,
+        sound_categories:          data.sound_categories          ?? DEFAULT_PROFILE.sound_categories,
+        owned_skins:               data.owned_skins               ?? [],
+        equipped_orb_pattern:      data.equipped_orb_pattern      ?? 'default',
+        equipped_station_skin:     data.equipped_station_skin     ?? 'default',
+        equipped_tower_skin:       data.equipped_tower_skin       ?? 'default',
+        equipped_left_tower_skin:  data.equipped_left_tower_skin  ?? 'default',
+        equipped_right_tower_skin: data.equipped_right_tower_skin ?? 'default',
+        equipped_station_emblem:   data.equipped_station_emblem   ?? 'default',
+        equipped_left_tower_emblem:  data.equipped_left_tower_emblem  ?? 'default',
+        equipped_right_tower_emblem: data.equipped_right_tower_emblem ?? 'default',
+        gems:                      data.gems                      ?? 0,
       });
     }
   }, []);

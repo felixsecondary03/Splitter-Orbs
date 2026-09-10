@@ -1,6 +1,10 @@
 // Pure TypeScript — no React, no RN imports
 import { CARD_COPIES_NEEDED, MAX_CARD_LEVEL, SHARD_CARD_PRICES } from './constants';
 
+export const STARTER_TOWERS = ['basic', 'machinegun', 'boomerang', 'bomb'];
+export const STARTER_ABILITIES = ['zap', 'portal', 'repair', 'freeze'];
+export const STARTER_ORBS = ['normal', 'fast', 'bomb', 'splitter', 'tank'];
+
 export interface CardState {
   level: number;
   copies: number;
