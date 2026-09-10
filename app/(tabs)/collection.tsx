@@ -16,6 +16,7 @@ import {
 } from '@/game/constants';
 import type { OrbType, TowerType } from '@/game/constants';
 import { STARTER_TOWERS, STARTER_ORBS, STARTER_ABILITIES } from '@/game/progression';
+import { TowerIcon } from '@/components/TowerIcon';
 import {
   ORB_PATTERNS, STATION_SKINS, TOWER_SKINS, EMBLEMS,
   EMBLEM_SLOTS, TOWER_SKIN_SLOTS, RARITIES, isSkinOwned,
@@ -238,16 +239,16 @@ export default function CollectionScreen() {
 
   // ─── Card renderer ─────────────────────────────────────────────────────────
   const renderCard = (kind: 'tower' | 'orb' | 'ability', def: any) => {
-    return <FlippableCard key={def.id} kind={kind} def={def} profile={profile} busy={busy} seenVersion={seenVersion} seenCardsRef={seenCardsRef} onLevelUp={handleLevelUp} onBuyCopy={handleBuyCopy} />;
+    return <FlippableCard key={def.id} kind={kind} def={def} profile={profile} busy={busy} seenVersion={seenVersion} seenCardsRef={seenCardsRef} onLevelUp={handleLevelUp} onBuyCopy={handleBuyCopy} t={t} />;
   };
 
   const renderSection = (kind: 'tower' | 'orb' | 'ability', defs: any[]) => {
     const buckets = bucketCards(kind, defs, profile);
     const sections = [
-      { key: 'starter' as const, label: 'Starter' },
-      { key: 'trophy' as const, label: 'Trophy Unlock' },
-      { key: 'crate' as const, label: 'From Crates' },
-      { key: 'locked' as const, label: 'Locked' },
+      { key: 'starter' as const, label: t('collection.sectionStarter') },
+      { key: 'trophy' as const, label: t('collection.sectionTrophy') },
+      { key: 'crate' as const, label: t('collection.sectionCrate') },
+      { key: 'locked' as const, label: t('collection.sectionLocked') },
     ];
     return sections.map(({ key, label }) => {
       const list = buckets[key];
@@ -548,9 +549,10 @@ interface FlippableCardProps {
   seenCardsRef: React.MutableRefObject<Set<string>>;
   onLevelUp: (category: string, id: string) => void;
   onBuyCopy: (category: string, id: string) => void;
+  t: (key: string, params?: Record<string, any>) => string;
 }
 
-function FlippableCard({ kind, def, profile, busy, seenVersion, seenCardsRef, onLevelUp, onBuyCopy }: FlippableCardProps) {
+function FlippableCard({ kind, def, profile, busy, seenVersion, seenCardsRef, onLevelUp, onBuyCopy, t }: FlippableCardProps) {
   const { flip, frontRotate, backRotate } = useFlipAnim();
   const info = getCardInfo(profile, kind, def.id);
   const { level, copies, needed, boughtCopies, buyableCopies, copyShardCost, rarity, canBuyCopy, canLevel, maxed, locked } = info;
@@ -566,12 +568,7 @@ function FlippableCard({ kind, def, profile, busy, seenVersion, seenCardsRef, on
 
   let visual: React.ReactNode;
   if (kind === 'tower') {
-    const towerLabel = def.name.slice(0, 2).toUpperCase();
-    visual = (
-      <View style={[styles.cardVisualBox, { backgroundColor: def.color + '33', borderColor: def.color }]}>
-        <Text style={[styles.cardVisualText, { color: def.color }]}>{towerLabel}</Text>
-      </View>
-    );
+    visual = <TowerIcon type={def.id as any} size={38} level={level} />;
   } else if (kind === 'orb') {
     visual = (
       <View style={[styles.orbCircle, { backgroundColor: def.color }]}>
@@ -678,13 +675,11 @@ function FlippableCard({ kind, def, profile, busy, seenVersion, seenCardsRef, on
         <View style={styles.cardBody}>
           {locked ? (
             <Text style={styles.lockedText}>
-              {kind === 'orb' && (ORB_TROPHY_UNLOCKS as any)[def.id]
-                ? `🏆 ${(ORB_TROPHY_UNLOCKS as any)[def.id]} trophies`
-                : kind === 'tower' && (TOWER_TROPHY_UNLOCKS as any)[def.id]
-                ? `🏆 ${(TOWER_TROPHY_UNLOCKS as any)[def.id]} trophies`
-                : kind === 'ability' && (ABILITY_TROPHY_UNLOCKS as any)[def.id]
-                ? `🏆 ${(ABILITY_TROPHY_UNLOCKS as any)[def.id]} trophies`
-                : '📦 Collect from crates'}
+              {(kind === 'orb' && (ORB_TROPHY_UNLOCKS as any)[def.id]) ||
+               (kind === 'tower' && (TOWER_TROPHY_UNLOCKS as any)[def.id]) ||
+               (kind === 'ability' && (ABILITY_TROPHY_UNLOCKS as any)[def.id])
+                ? t('collection.trophyLock', { n: (ORB_TROPHY_UNLOCKS as any)[def.id] || (TOWER_TROPHY_UNLOCKS as any)[def.id] || (ABILITY_TROPHY_UNLOCKS as any)[def.id] })
+                : t('collection.crateLock')}
             </Text>
           ) : maxed ? (
             <View style={styles.maxBadge}>

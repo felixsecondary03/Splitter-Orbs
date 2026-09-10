@@ -6,7 +6,6 @@ import {
   Pressable,
   ScrollView,
   Modal,
-  ActivityIndicator,
   useWindowDimensions,
   Platform,
 } from 'react-native';
@@ -645,8 +644,8 @@ export default function GameScreen() {
   // Guard: params not ready
   if (!params?.mode) {
     return (
-      <View style={{ flex: 1, backgroundColor: '#0f172a', alignItems: 'center', justifyContent: 'center' }}>
-        <ActivityIndicator size="large" color="#4F8EF7" />
+      <View style={{ flex: 1, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center' }}>
+        <Text style={{ fontSize: 32 }}>⏳</Text>
       </View>
     );
   }
@@ -887,48 +886,37 @@ export default function GameScreen() {
 
       {/* ── Bottom HUD ── */}
       <View style={[styles.bottomHud, { paddingBottom: insets.bottom + 4 }]}>
-        {/* Player HP + coins */}
-        <View style={styles.hudRow}>
-          <View style={styles.hudPlayerInfo}>
-            <Text style={styles.hudName} numberOfLines={1}>You</Text>
-          </View>
-          <View style={styles.hudHpBarWrap}>
-            <HPBar current={playerHp} max={playerMaxHp} width={screenWidth - 160} height={7} />
-          </View>
-          <CoinDisplay coins={playerCoins} size="sm" />
-        </View>
-
-        {/* Click stamina + action buttons row */}
-        <View style={styles.clickRow}>
-          <Text style={styles.clickLabel}>CLICKS</Text>
-          <View style={styles.clickDots}>
-            {Array.from({ length: maxClicks }, (_, i) => i).map((i) => (
-              <View
-                key={i}
-                style={[
-                  styles.clickDot,
-                  { backgroundColor: i < clicksLeft ? COLORS.primary : '#E2E8F0' },
-                ]}
+        {/* Row 1: Ability buttons + orb shop circle + edit toggle */}
+        <View style={styles.abilityRow}>
+          <View style={styles.abilityButtons}>
+            {(renderState?.player?.abilities ?? []).map((ability) => (
+              <AbilityButton
+                key={ability.type}
+                abilityType={ability.type}
+                cooldown={ability.cooldown}
+                maxCooldown={ability.maxCooldown}
+                onPress={() => handleAbility(ability.type)}
+                size={56}
               />
             ))}
           </View>
-          <View style={styles.hudActionBtns}>
+          <View style={styles.abilityRightBtns}>
             <Pressable
-              style={[styles.hudActionBtn, showOrbShop && styles.hudActionBtnActive]}
+              style={styles.orbShopCircleBtn}
               onPress={handleOpenOrbShop}
             >
-              <Text style={styles.hudActionBtnText}>⚔️ Orb</Text>
+              <Text style={styles.orbShopCircleBtnText}>🔮</Text>
             </Pressable>
             <Pressable
-              style={[styles.hudActionBtn, editMode && styles.hudActionBtnActive]}
+              style={[styles.editToggleBtn, editMode && styles.editToggleBtnActive]}
               onPress={handleToggleEditMode}
             >
-              <Text style={styles.hudActionBtnText}>{editMode ? '✅ Done' : '✏️ Edit'}</Text>
+              <Text style={styles.editToggleBtnText}>{editMode ? '✓' : '🔧'}</Text>
             </Pressable>
           </View>
         </View>
 
-        {/* Tower selection bar */}
+        {/* Row 2: Tower selection tray */}
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -937,6 +925,7 @@ export default function GameScreen() {
         >
           {(loadout.towers ?? []).map((towerType) => {
             const cost = TOWER_COSTS[towerType] ?? 60;
+            const towerName = TOWER_TYPES[towerType]?.name ?? String(towerType);
             const isSelected = selectedTowerType === towerType;
             const canAfford = playerCoins >= cost;
             return (
@@ -953,27 +942,20 @@ export default function GameScreen() {
                 }}
               >
                 <TowerIcon type={towerType} size={32} />
-                <Text style={[styles.towerCost, !canAfford && { color: COLORS.textTertiary }]}>
-                  {cost}
-                </Text>
+                <Text style={styles.towerName} numberOfLines={1}>{towerName}</Text>
+                <View style={styles.towerCostRow}>
+                  <Text style={[styles.towerCost, !canAfford && { color: COLORS.textTertiary }]}>
+                    🪙
+                  </Text>
+                  <Text style={[styles.towerCost, !canAfford && { color: COLORS.textTertiary }]}>
+                    {cost}
+                  </Text>
+                  <Text style={styles.towerDiscount}>-20%</Text>
+                </View>
               </Pressable>
             );
           })}
         </ScrollView>
-
-        {/* Ability bar */}
-        <View style={styles.abilityBar}>
-          {(renderState?.player?.abilities ?? []).map((ability) => (
-            <AbilityButton
-              key={ability.type}
-              abilityType={ability.type}
-              cooldown={ability.cooldown}
-              maxCooldown={ability.maxCooldown}
-              onPress={() => handleAbility(ability.type)}
-              size={48}
-            />
-          ))}
-        </View>
       </View>
 
       {/* ── Orb Shop Panel ── */}
@@ -1020,13 +1002,14 @@ export default function GameScreen() {
       {showForfeitDialog && (
         <View style={styles.forfeitOverlay}>
           <View style={styles.forfeitCard}>
-            <Text style={styles.forfeitTitle}>Forfeit?</Text>
-            <Text style={styles.forfeitSubtitle}>Are you sure you want to forfeit this match?</Text>
-            <Pressable style={styles.forfeitYesBtn} onPress={handleForfeit}>
-              <Text style={styles.forfeitYesBtnText}>Yes, Forfeit</Text>
-            </Pressable>
+            <Text style={styles.forfeitEmoji}>🏳️</Text>
+            <Text style={styles.forfeitTitle}>Forfeit Match?</Text>
+            <Text style={styles.forfeitSubtitle}>vs {opponentName}</Text>
             <Pressable style={styles.forfeitCancelBtn} onPress={() => { console.log('[Game] Forfeit cancelled'); setShowForfeitDialog(false); }}>
               <Text style={styles.forfeitCancelBtnText}>Cancel</Text>
+            </Pressable>
+            <Pressable style={styles.forfeitYesBtn} onPress={handleForfeit}>
+              <Text style={styles.forfeitYesBtnText}>Forfeit</Text>
             </Pressable>
           </View>
         </View>
@@ -1064,14 +1047,10 @@ export default function GameScreen() {
       {/* ── Searching Screen ── */}
       {searching && (
         <View style={[StyleSheet.absoluteFill, styles.searchingOverlay]}>
-          <ActivityIndicator size="large" color="#4F8EF7" style={{ marginBottom: 20 }} />
+          <Text style={styles.searchingEmoji}>🛰️</Text>
           <Text style={styles.searchingTitle}>Finding opponent...</Text>
-          <Text style={styles.searchingTimer}>{searchTime}s</Text>
-          {searchToast.length > 0 && (
-            <View style={styles.searchToast}>
-              <Text style={styles.searchToastText}>{searchToast}</Text>
-            </View>
-          )}
+          <Text style={styles.searchingTimer}>{searchTime}</Text>
+          <Text style={styles.searchingHint}>Searching for a live match nearby</Text>
           <Pressable
             style={styles.searchVsAiBtn}
             onPress={() => {
@@ -1081,6 +1060,11 @@ export default function GameScreen() {
           >
             <Text style={styles.searchVsAiBtnText}>Play vs AI</Text>
           </Pressable>
+          {searchToast.length > 0 && (
+            <View style={styles.searchToast}>
+              <Text style={styles.searchToastText}>{searchToast}</Text>
+            </View>
+          )}
         </View>
       )}
 
@@ -1092,6 +1076,19 @@ export default function GameScreen() {
             <Text style={[styles.resultTitle, resultWon ? styles.resultTitleWin : styles.resultTitleLoss]}>
               {resultTitle}
             </Text>
+            <Text style={styles.resultVsText}>
+              vs
+            </Text>
+            <Text style={styles.resultOpponentText}>
+              {resultData.opponent ?? 'Opponent'}
+            </Text>
+
+            {!resultData.training && (
+              <Text style={[styles.resultTrophyBig, { color: resultChange >= 0 ? '#10B981' : '#EF4444' }]}>
+                {resultChangeSign}
+                {resultChange}
+              </Text>
+            )}
 
             {!resultData.training && (
               <View style={styles.resultTrophyRow}>
@@ -1101,29 +1098,26 @@ export default function GameScreen() {
                     <Text style={styles.resultTrophyOld}>{resultOldTrophies}</Text>
                     <Text style={styles.resultTrophyArrow}>→</Text>
                     <Text style={styles.resultTrophyNew}>{resultNewTrophies}</Text>
-                    <View style={[styles.resultChangeBadge, { backgroundColor: resultChange >= 0 ? '#10b981' : '#ef4444' }]}>
-                      <Text style={styles.resultChangeBadgeText}>{resultChangeSign}{resultChange}</Text>
-                    </View>
                   </View>
                 </View>
               </View>
             )}
 
-            {!resultData.training && (
+            {!resultData.training && (resultData.promoted || resultData.demoted) && (
               <View style={styles.resultLeagueRow}>
                 <LeagueBadge trophies={resultOldTrophies} size="md" />
-                {(resultData.promoted || resultData.demoted) && (
-                  <Text style={styles.resultLeagueArrow}>{resultData.promoted ? '⬆️' : '⬇️'}</Text>
-                )}
-                {(resultData.promoted || resultData.demoted) && (
-                  <LeagueBadge trophies={resultNewTrophies} size="md" />
-                )}
+                <Text style={styles.resultLeagueArrow}>→</Text>
+                <LeagueBadge trophies={resultNewTrophies} size="md" />
               </View>
             )}
 
             {resultShardsEarned > 0 && (
               <View style={styles.resultShardsRow}>
-                <Text style={styles.resultShardsText}>🔷 +{resultShardsEarned} shards</Text>
+                <Text style={styles.resultShardsText}>🔷</Text>
+                <Text style={styles.resultShardsText}>
+                  +{resultShardsEarned}
+                </Text>
+                <Text style={styles.resultShardsText}>shards</Text>
               </View>
             )}
 
@@ -1141,15 +1135,6 @@ export default function GameScreen() {
 
             <View style={styles.resultButtons}>
               <Pressable
-                style={styles.resultPlayAgainBtn}
-                onPress={() => {
-                  console.log('[Game] Play Again pressed from result screen');
-                  router.push('/setup');
-                }}
-              >
-                <Text style={styles.resultPlayAgainBtnText}>Play Again</Text>
-              </Pressable>
-              <Pressable
                 style={styles.resultHomeBtn}
                 onPress={() => {
                   console.log('[Game] Home pressed from result screen');
@@ -1157,6 +1142,15 @@ export default function GameScreen() {
                 }}
               >
                 <Text style={styles.resultHomeBtnText}>Home</Text>
+              </Pressable>
+              <Pressable
+                style={styles.resultPlayAgainBtn}
+                onPress={() => {
+                  console.log('[Game] Play Again pressed from result screen');
+                  router.push('/setup');
+                }}
+              >
+                <Text style={styles.resultPlayAgainBtnText}>Play Again</Text>
               </Pressable>
             </View>
           </ScrollView>
@@ -1297,6 +1291,55 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#334155',
   },
+  abilityRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 4,
+  },
+  abilityButtons: {
+    flexDirection: 'row',
+    gap: 10,
+    alignItems: 'center',
+  },
+  abilityRightBtns: {
+    flexDirection: 'column',
+    gap: 6,
+    alignItems: 'center',
+  },
+  orbShopCircleBtn: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#4F46E5',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#4F46E5',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.35,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  orbShopCircleBtnText: {
+    fontSize: 24,
+  },
+  editToggleBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#F1F5F9',
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  editToggleBtnActive: {
+    backgroundColor: 'rgba(79,142,247,0.12)',
+    borderColor: COLORS.primary,
+  },
+  editToggleBtnText: {
+    fontSize: 16,
+  },
   towerBar: {
     flexGrow: 0,
   },
@@ -1306,14 +1349,14 @@ const styles = StyleSheet.create({
   },
   towerCard: {
     alignItems: 'center',
-    gap: 3,
+    gap: 2,
     paddingHorizontal: 8,
-    paddingVertical: 6,
-    borderRadius: 12,
+    paddingVertical: 8,
+    borderRadius: 14,
     borderWidth: 1.5,
     borderColor: '#E2E8F0',
     backgroundColor: '#FFFFFF',
-    minWidth: 56,
+    minWidth: 72,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.06,
@@ -1328,10 +1371,27 @@ const styles = StyleSheet.create({
   towerCardDisabled: {
     opacity: 0.45,
   },
+  towerName: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#334155',
+    textAlign: 'center',
+  },
+  towerCostRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+  },
   towerCost: {
     fontSize: 10,
     fontWeight: '700',
     color: '#F59E0B',
+    fontFamily: 'SpaceMono',
+  },
+  towerDiscount: {
+    fontSize: 9,
+    fontWeight: '700',
+    color: '#10B981',
     fontFamily: 'SpaceMono',
   },
   abilityBar: {
@@ -1563,24 +1623,31 @@ const styles = StyleSheet.create({
     zIndex: 50,
   },
   forfeitCard: {
-    backgroundColor: COLORS.surfaceElevated,
+    backgroundColor: '#FFFFFF',
     borderRadius: 20,
     padding: 28,
     width: 280,
     alignItems: 'center',
     gap: 12,
-    borderWidth: 1,
-    borderColor: COLORS.border,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.2,
+    shadowRadius: 16,
+    elevation: 12,
+  },
+  forfeitEmoji: {
+    fontSize: 40,
+    marginBottom: 4,
   },
   forfeitTitle: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: '800',
-    color: COLORS.text,
-    letterSpacing: 1,
+    color: '#0F172A',
+    letterSpacing: 0.5,
   },
   forfeitSubtitle: {
     fontSize: 13,
-    color: COLORS.textSecondary,
+    color: '#64748B',
     textAlign: 'center',
     lineHeight: 18,
   },
@@ -1588,7 +1655,7 @@ const styles = StyleSheet.create({
     width: '100%',
     paddingVertical: 13,
     borderRadius: 12,
-    backgroundColor: COLORS.danger,
+    backgroundColor: '#EF4444',
     alignItems: 'center',
   },
   forfeitYesBtnText: {
@@ -1600,8 +1667,10 @@ const styles = StyleSheet.create({
     width: '100%',
     paddingVertical: 13,
     borderRadius: 12,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
   },
   forfeitCancelBtnText: {
     fontSize: 15,
@@ -1729,58 +1798,73 @@ const styles = StyleSheet.create({
   },
   // Searching screen
   searchingOverlay: {
-    backgroundColor: '#0f172a',
+    backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 100,
-    gap: 12,
+    gap: 10,
+    paddingHorizontal: 32,
+  },
+  searchingEmoji: {
+    fontSize: 64,
+    marginBottom: 8,
   },
   searchingTitle: {
-    fontSize: 22,
-    fontWeight: '800',
-    color: '#F1F5F9',
-    letterSpacing: 0.5,
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#64748B',
+    letterSpacing: 0.2,
   },
   searchingTimer: {
-    fontSize: 48,
+    fontSize: 72,
     fontWeight: '900',
-    color: '#4F8EF7',
+    color: '#0F172A',
     fontFamily: 'SpaceMono',
+    lineHeight: 80,
+  },
+  searchingHint: {
+    fontSize: 13,
+    color: '#94A3B8',
+    textAlign: 'center',
+    marginBottom: 8,
   },
   searchToast: {
-    backgroundColor: 'rgba(79,142,247,0.15)',
-    borderWidth: 1,
-    borderColor: '#4F8EF7',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    marginTop: 8,
+    position: 'absolute',
+    bottom: 48,
+    left: 24,
+    right: 24,
+    backgroundColor: '#1E293B',
+    borderRadius: 24,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    alignItems: 'center',
   },
   searchToastText: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#93C5FD',
+    color: '#F1F5F9',
     textAlign: 'center',
   },
   searchVsAiBtn: {
-    marginTop: 16,
     paddingHorizontal: 32,
     paddingVertical: 14,
     borderRadius: 14,
-    backgroundColor: '#4F8EF7',
+    borderWidth: 1.5,
+    borderColor: '#CBD5E1',
+    backgroundColor: '#FFFFFF',
   },
   searchVsAiBtnText: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#334155',
   },
   // Result screen
   resultOverlayWin: {
-    backgroundColor: '#78350f',
+    backgroundColor: '#FFFFFF',
     zIndex: 90,
   },
   resultOverlayLoss: {
-    backgroundColor: '#0f172a',
+    backgroundColor: '#FFFFFF',
     zIndex: 90,
   },
   resultContent: {
@@ -1789,10 +1873,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 60,
     paddingHorizontal: 24,
-    gap: 16,
+    gap: 12,
   },
   resultEmoji: {
-    fontSize: 64,
+    fontSize: 72,
+    marginBottom: 4,
   },
   resultTitle: {
     fontSize: 42,
@@ -1801,21 +1886,38 @@ const styles = StyleSheet.create({
     fontFamily: 'SpaceMono',
   },
   resultTitleWin: {
-    color: '#FCD34D',
+    color: '#0F172A',
   },
   resultTitleLoss: {
+    color: '#0F172A',
+  },
+  resultVsText: {
+    fontSize: 14,
     color: '#94A3B8',
+    fontWeight: '500',
+  },
+  resultOpponentText: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#334155',
+    marginBottom: 4,
+  },
+  resultTrophyBig: {
+    fontSize: 56,
+    fontWeight: '900',
+    fontFamily: 'SpaceMono',
+    lineHeight: 64,
   },
   resultTrophyRow: {
     alignItems: 'center',
-    gap: 6,
+    gap: 4,
   },
   resultTrophyBlock: {
     alignItems: 'center',
-    gap: 6,
+    gap: 4,
   },
   resultTrophyLabel: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '700',
     color: '#94A3B8',
     textTransform: 'uppercase',
@@ -1827,19 +1929,19 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   resultTrophyOld: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '700',
     color: '#94A3B8',
     fontFamily: 'SpaceMono',
   },
   resultTrophyArrow: {
     fontSize: 16,
-    color: '#64748B',
+    color: '#94A3B8',
   },
   resultTrophyNew: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '700',
-    color: '#F1F5F9',
+    color: '#0F172A',
     fontFamily: 'SpaceMono',
   },
   resultChangeBadge: {
@@ -1856,13 +1958,19 @@ const styles = StyleSheet.create({
   resultLeagueRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 12,
+    marginVertical: 4,
   },
   resultLeagueArrow: {
-    fontSize: 20,
+    fontSize: 18,
+    color: '#64748B',
+    fontWeight: '700',
   },
   resultShardsRow: {
-    backgroundColor: 'rgba(79,142,247,0.15)',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(132,204,22,0.1)',
     borderRadius: 10,
     paddingHorizontal: 16,
     paddingVertical: 8,
@@ -1870,16 +1978,17 @@ const styles = StyleSheet.create({
   resultShardsText: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#93C5FD',
+    color: '#65A30D',
   },
   resultUnlocks: {
-    backgroundColor: 'rgba(16,185,129,0.1)',
+    backgroundColor: 'rgba(16,185,129,0.08)',
     borderRadius: 12,
     padding: 14,
     alignItems: 'center',
     gap: 6,
     borderWidth: 1,
-    borderColor: 'rgba(16,185,129,0.3)',
+    borderColor: 'rgba(16,185,129,0.2)',
+    width: '100%',
   },
   resultUnlocksTitle: {
     fontSize: 13,
@@ -1891,35 +2000,38 @@ const styles = StyleSheet.create({
   resultUnlockItem: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#F1F5F9',
+    color: '#334155',
   },
   resultButtons: {
+    flexDirection: 'row',
     gap: 10,
     width: '100%',
     marginTop: 8,
   },
   resultPlayAgainBtn: {
+    flex: 1,
     paddingVertical: 15,
     borderRadius: 14,
-    backgroundColor: '#4F8EF7',
+    backgroundColor: '#0F172A',
     alignItems: 'center',
   },
   resultPlayAgainBtnText: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '800',
     color: '#FFFFFF',
   },
   resultHomeBtn: {
+    flex: 1,
     paddingVertical: 15,
     borderRadius: 14,
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
   },
   resultHomeBtnText: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '700',
-    color: '#F1F5F9',
+    color: '#334155',
   },
 });
