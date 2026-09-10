@@ -6,6 +6,7 @@ import {
   Pressable,
   ScrollView,
   Modal,
+  ActivityIndicator,
   useWindowDimensions,
   Platform,
 } from 'react-native';
@@ -276,7 +277,7 @@ export default function GameScreen() {
     const opponentName = opponentNameParam ?? AI_NAMES[difficulty] ?? 'Opponent';
 
     setTimeout(() => {
-      router.replace({
+      router.push({
         pathname: '/match-result',
         params: {
           outcome: isWin ? 'WIN' : 'LOSS',
@@ -415,7 +416,7 @@ export default function GameScreen() {
 
   const handleForfeit = useCallback(() => {
     console.log('[Game] Forfeit pressed');
-    router.replace({
+    router.push({
       pathname: '/match-result',
       params: { result: 'loss', trophiesChange: '-15', newTrophies: '85', coinsEarned: '10', shardsEarned: '0' },
     });
@@ -457,7 +458,11 @@ export default function GameScreen() {
 
   // Guard: on web, Expo Router may not have initialized route params yet
   if (!params?.mode) {
-    return <View style={{ flex: 1, backgroundColor: '#0f172a' }} />;
+    return (
+      <View style={{ flex: 1, backgroundColor: '#0f172a', alignItems: 'center', justifyContent: 'center' }}>
+        <ActivityIndicator size="large" color="#4F8EF7" />
+      </View>
+    );
   }
 
   return (
