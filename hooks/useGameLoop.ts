@@ -12,10 +12,17 @@ interface UseGameLoopOptions {
 export function useGameLoop({ initialState, mode, onGameEnd }: UseGameLoopOptions) {
   const stateRef = useRef<GameState>(initialState);
   const [renderState, setRenderState] = useState<GameState>(initialState);
+  const [hudState, setHudState] = useState<GameState>(initialState);
   const lastTimeRef = useRef<number>(0);
   const rafRef = useRef<number>(0);
   const pausedRef = useRef<boolean>(false);
   const endedRef = useRef<boolean>(false);
+  const frameCountRef = useRef<number>(0);
+  const onGameEndRef = useRef(onGameEnd);
+
+  useEffect(() => {
+    onGameEndRef.current = onGameEnd;
+  }, [onGameEnd]);
 
   const dispatch = useCallback((action: (state: GameState) => GameState) => {
     stateRef.current = action(stateRef.current);
@@ -57,12 +64,17 @@ export function useGameLoop({ initialState, mode, onGameEnd }: UseGameLoopOption
         }
 
         stateRef.current = newState;
-        setRenderState({ ...newState });
+        setRenderState({ ...newState }); // 60fps for canvas
+
+        frameCountRef.current += 1;
+        if (frameCountRef.current % 2 === 0) {
+          setHudState({ ...newState }); // ~30fps for HUD
+        }
 
         if (newState.status === 'finished') {
           endedRef.current = true;
           console.log('[GameLoop] Game ended', { winner: newState.winner, mode });
-          onGameEnd(newState);
+          onGameEndRef.current(newState);
           return;
         }
       } else {
@@ -79,8 +91,7 @@ export function useGameLoop({ initialState, mode, onGameEnd }: UseGameLoopOption
       cancelAnimationFrame(rafRef.current);
       endedRef.current = true;
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode]);
 
-  return { renderState, stateRef, dispatch, pause, resume };
+  return { renderState, hudState, stateRef, dispatch, pause, resume };
 }

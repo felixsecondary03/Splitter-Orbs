@@ -84,7 +84,7 @@ const ESCALATION_COLORS: Record<string, string> = {
 
 // ─── GameCanvasInner ──────────────────────────────────────────────────────────
 
-export function GameCanvasInner({
+export const GameCanvasInner = React.memo(function GameCanvasInner({
   state,
   width,
   height,
@@ -131,10 +131,8 @@ export function GameCanvasInner({
       }
 
       if (tappedOrb) {
-        console.log('[GameCanvas] Orb tapped (Skia):', tappedOrb.id, tappedOrb.type);
         onOrbTap(tappedOrb.id);
       } else {
-        console.log('[GameCanvas] Field tapped (Skia) at game coords:', gameX.toFixed(1), gameY.toFixed(1));
         onFieldTap(gameX, gameY);
       }
     });
@@ -815,10 +813,8 @@ export function GameCanvasInner({
           }
 
           if (tappedOrb) {
-            console.log('[GameCanvas] Orb tapped (web):', tappedOrb.id, tappedOrb.type);
             onOrbTap(tappedOrb.id);
           } else {
-            console.log('[GameCanvas] Field tapped (web) at game coords:', gameX.toFixed(1), gameY.toFixed(1));
             onFieldTap(gameX, gameY);
           }
         }}
@@ -837,6 +833,6 @@ export function GameCanvasInner({
       </View>
     </GestureDetector>
   );
-}
+});
 
 export default GameCanvasInner;

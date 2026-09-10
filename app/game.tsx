@@ -35,7 +35,7 @@ import {
   collectCoin,
   selectTower,
 } from '@/game/engine';
-import type { GameState, Tower, Loadout } from '@/game/engine-types';
+import type { GameState, Tower, Loadout, AbilityState } from '@/game/engine-types';
 import type { TowerType, AbilityType, OrbType } from '@/game/constants';
 import { TOWER_COSTS, TOWER_TYPES, ORB_TYPES, UPGRADE_COST_MULT_ARRAY, SELL_RATIO, GAME_WIDTH, GAME_HEIGHT, WALL_Y } from '@/game/constants';
 import { TowerIcon } from '@/components/TowerIcon';
@@ -139,6 +139,226 @@ interface ResultData {
   shardsEarned?: number;
   training?: boolean;
 }
+
+// ─── GameHUD ──────────────────────────────────────────────────────────────────
+interface GameHUDProps {
+  playerHp: number;
+  playerMaxHp: number;
+  oppHp: number;
+  oppMaxHp: number;
+  playerCoins: number;
+  timeDisplay: string;
+  clicksLeft: number;
+  maxClicks: number;
+  escalationTier: string;
+  abilities: AbilityState[];
+  isAiming: boolean;
+  onAbility: (type: AbilityType) => void;
+  onCancelAim: () => void;
+  opponentName: string;
+  isAiMode: boolean;
+  insets: { top: number; bottom: number };
+  editMode: boolean;
+  placementModeActive: boolean;
+  selectedTowerType: TowerType | null;
+  loadoutTowers: TowerType[];
+  playerCoinsForTower: number;
+  onToggleEditMode: () => void;
+  onOpenOrbShop: () => void;
+  onSelectTower: (type: TowerType | null) => void;
+  onPause: () => void;
+}
+
+const GameHUD = React.memo(function GameHUD({
+  playerHp,
+  playerMaxHp,
+  oppHp,
+  oppMaxHp,
+  playerCoins,
+  timeDisplay,
+  clicksLeft,
+  maxClicks,
+  escalationTier,
+  abilities,
+  isAiming,
+  onAbility,
+  onCancelAim,
+  opponentName,
+  isAiMode,
+  insets,
+  editMode,
+  placementModeActive,
+  selectedTowerType,
+  loadoutTowers,
+  playerCoinsForTower,
+  onToggleEditMode,
+  onOpenOrbShop,
+  onSelectTower,
+  onPause,
+}: GameHUDProps) {
+  const escalationLabel: Record<string, string> = {
+    overtime: 'OT',
+    intensifying: 'INT',
+    critical: 'CRIT',
+    max_pressure: 'MAX',
+    tower_bleed: 'BLEED',
+  };
+  const escalationColor: Record<string, string> = {
+    overtime: COLORS.warning,
+    intensifying: '#F97316',
+    critical: COLORS.danger,
+    max_pressure: '#DC2626',
+    tower_bleed: '#7F1D1D',
+  };
+
+  const timerPillBg = escalationTier === 'tower_bleed'
+    ? '#7F1D1D'
+    : escalationTier === 'critical' || escalationTier === 'max_pressure'
+    ? '#FEE2E2'
+    : escalationTier === 'overtime' || escalationTier === 'intensifying'
+    ? '#FFEDD5'
+    : '#F1F5F9';
+  const timerPillTextColor = escalationTier === 'tower_bleed'
+    ? '#FEF2F2'
+    : escalationTier === 'critical' || escalationTier === 'max_pressure'
+    ? '#DC2626'
+    : escalationTier === 'overtime' || escalationTier === 'intensifying'
+    ? '#EA580C'
+    : '#334155';
+  const timerLabel = escalationTier !== 'none'
+    ? (escalationLabel[escalationTier] ?? escalationTier.toUpperCase())
+    : null;
+  const clicksPillBg = clicksLeft >= maxClicks
+    ? 'rgba(16,185,129,0.12)'
+    : clicksLeft === 0
+    ? 'rgba(244,63,94,0.12)'
+    : '#F1F5F9';
+  const clicksPillBorder = clicksLeft >= maxClicks
+    ? '#10B981'
+    : clicksLeft === 0
+    ? '#F43F5E'
+    : '#E2E8F0';
+
+  const towerNameFirst = (type: TowerType) => {
+    const name = TOWER_TYPES[type]?.name ?? String(type);
+    return name.split(' ')[0];
+  };
+
+  return (
+    <>
+      {/* ── Top HUD ── */}
+      <View style={[styles.topHud, { paddingTop: insets.top + 6 }]}>
+        <View style={styles.hudTopRow}>
+          <Pressable style={styles.backBtn} onPress={onPause}>
+            <Text style={styles.backBtnText}>⏸</Text>
+          </Pressable>
+
+          <View style={styles.hudCenterBlock}>
+            <View style={styles.opponentNameRow}>
+              <Text style={styles.hudOpponentName} numberOfLines={1}>{opponentName}</Text>
+              {isAiMode && (
+                <View style={styles.kiBadge}>
+                  <Text style={styles.kiBadgeText}>KI</Text>
+                </View>
+              )}
+            </View>
+            <View style={[styles.timerPill, { backgroundColor: timerPillBg }]}>
+              {timerLabel ? (
+                <Text style={[styles.timerPillText, { color: timerPillTextColor }]}>{timerLabel}</Text>
+              ) : (
+                <Text style={[styles.timerPillText, { color: timerPillTextColor }]}>{timeDisplay}</Text>
+              )}
+            </View>
+          </View>
+
+          <View style={styles.hudPills}>
+            <View style={[styles.clicksPill, { backgroundColor: clicksPillBg, borderColor: clicksPillBorder }]}>
+              <Text style={styles.pillText}>👆 {clicksLeft}/{maxClicks}</Text>
+            </View>
+            <View style={styles.coinsPill}>
+              <View style={styles.coinDot} />
+              <Text style={styles.pillText}>{playerCoins}</Text>
+            </View>
+          </View>
+        </View>
+      </View>
+
+      {/* ── Bottom HUD ── */}
+      <View style={[styles.bottomHud, { paddingBottom: insets.bottom + 16 }]}>
+        <View style={styles.abilityRow}>
+          <View style={styles.abilityButtons}>
+            {abilities.map((ability) => (
+              <AbilityButton
+                key={ability.type}
+                abilityType={ability.type}
+                cooldown={ability.cooldown}
+                maxCooldown={ability.maxCooldown}
+                onPress={() => onAbility(ability.type)}
+                size={56}
+              />
+            ))}
+          </View>
+          <View style={styles.abilityRightBtns}>
+            {!placementModeActive ? (
+              <Pressable style={styles.orbShopCircleBtn} onPress={onOpenOrbShop}>
+                <Text style={styles.orbShopCircleBtnText}>🌀</Text>
+              </Pressable>
+            ) : (
+              <View style={{ width: 56, height: 56 }} />
+            )}
+            <Pressable
+              style={[styles.editToggleBtn, editMode && styles.editToggleBtnActive]}
+              onPress={onToggleEditMode}
+            >
+              <Text style={styles.editToggleBtnText}>{editMode ? '✅' : '✏️'}</Text>
+            </Pressable>
+          </View>
+        </View>
+
+        <View style={styles.towerTrayBorder}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={styles.towerBar}
+            contentContainerStyle={styles.towerBarContent}
+          >
+            {loadoutTowers.map((towerType) => {
+              const cost = TOWER_COSTS[towerType] ?? 60;
+              const isSelected = selectedTowerType === towerType;
+              const canAfford = playerCoinsForTower >= cost;
+              const firstName = towerNameFirst(towerType);
+              return (
+                <Pressable
+                  key={towerType}
+                  style={[
+                    styles.towerCard,
+                    isSelected && styles.towerCardSelected,
+                    !canAfford && styles.towerCardDisabled,
+                  ]}
+                  onPress={() => {
+                    console.log(`[Game] Tower card pressed type=${towerType}`);
+                    onSelectTower(isSelected ? null : towerType);
+                  }}
+                >
+                  <TowerIcon type={towerType} size={34} />
+                  <Text style={styles.towerName} numberOfLines={1}>{firstName}</Text>
+                  <View style={styles.towerCostRow}>
+                    <Text style={[styles.towerCost, !canAfford && { color: COLORS.textTertiary }]}>
+                      {'🪙 '}
+                    </Text>
+                    <Text style={[styles.towerCost, !canAfford && { color: COLORS.textTertiary }]}>
+                      {cost}
+                    </Text>
+                  </View>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+        </View>
+      </View>
+    </>
+  );
+});
 
 // ─── Main component ───────────────────────────────────────────────────────────
 export default function GameScreen() {
@@ -386,7 +606,7 @@ export default function GameScreen() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [uiMode, difficulty, sessionIdParam, opponentNameParam]);
 
-  const { renderState, stateRef: gameStateRef, dispatch, pause, resume } = useGameLoop({
+  const { renderState, hudState, stateRef: gameStateRef, dispatch, pause, resume } = useGameLoop({
     initialState,
     mode: engineMode,
     onGameEnd: handleGameEnd,
@@ -399,33 +619,28 @@ export default function GameScreen() {
   const canvasWidth = screenWidth;
 
   // ── Touch handling ──
-  const tapGesture = Gesture.Tap()
+  const tapGesture = useMemo(() => Gesture.Tap()
     .runOnJS(true)
     .onEnd((event) => {
       const { x, y } = event;
       const gameX = (x / canvasWidth) * GAME_WIDTH;
       const gameY = (y / canvasHeight) * GAME_HEIGHT;
 
-      console.log(`[Game] Tap at screen=(${x.toFixed(0)},${y.toFixed(0)}) game=(${gameX.toFixed(0)},${gameY.toFixed(0)})`);
-
       const state = gameStateRef.current as GameState;
 
       if (state.aiming) {
-        console.log(`[Game] Confirming aim at game=(${gameX.toFixed(0)},${gameY.toFixed(0)})`);
         dispatch((s) => confirmAim(s, gameX, gameY));
         return;
       }
 
       const coin = findCoinAtPosition(state, gameX, gameY);
       if (coin) {
-        console.log(`[Game] Collecting coin id=${coin.id}`);
         dispatch((s) => collectCoin(s, coin.id));
         return;
       }
 
       const tappedOrb = findOrbAtPosition(state, gameX, gameY);
       if (tappedOrb) {
-        console.log(`[Game] Tapped orb id=${tappedOrb.id} clicks=${state.player.clicks}`);
         dispatch((s) => clickOrb(s, tappedOrb.id));
         return;
       }
@@ -434,7 +649,6 @@ export default function GameScreen() {
       if (editMode) {
         const tower = findTowerAtPosition(state, gameX, gameY);
         if (tower) {
-          console.log(`[Game] Edit mode: selected tower id=${tower.id} type=${tower.type}`);
           setSelectedTowerForEdit({ ...tower });
           return;
         }
@@ -442,13 +656,13 @@ export default function GameScreen() {
       }
 
       if (state.player.selectedTower && gameY > WALL_Y) {
-        console.log(`[Game] Placing tower type=${state.player.selectedTower} at game=(${gameX.toFixed(0)},${gameY.toFixed(0)})`);
         dispatch((s) => placeTower(s, s.player.selectedTower!, gameX, gameY));
         return;
       }
-    });
+    }),
+  [canvasWidth, canvasHeight, editMode, dispatch, gameStateRef]);
 
-  const longPressGesture = Gesture.LongPress()
+  const longPressGesture = useMemo(() => Gesture.LongPress()
     .runOnJS(true)
     .minDuration(400)
     .onStart((event) => {
@@ -457,17 +671,19 @@ export default function GameScreen() {
       const gameY = (y / canvasHeight) * GAME_HEIGHT;
       const tower = findTowerAtPosition(gameStateRef.current, gameX, gameY);
       if (tower) {
-        console.log(`[Game] Long press on tower id=${tower.id} type=${tower.type}`);
         setSelectedTowerForEdit({ ...tower });
         setEditMode(true);
       }
-    });
+    }),
+  [canvasWidth, canvasHeight, gameStateRef]);
 
-  const composedGesture = Gesture.Exclusive(longPressGesture, tapGesture);
+  const composedGesture = useMemo(
+    () => Gesture.Exclusive(longPressGesture, tapGesture),
+    [longPressGesture, tapGesture]
+  );
 
   // ── Tower selection ──
   const handleSelectTower = useCallback((type: TowerType | null) => {
-    console.log(`[Game] Select tower for placement type=${type}`);
     dispatch((s) => selectTower(s, type));
   }, [dispatch]);
 
@@ -501,12 +717,12 @@ export default function GameScreen() {
 
   // ── Orb shop ──
   const handleOpenOrbShop = useCallback(() => {
-    console.log('[Game] Open orb shop pressed');
+    console.log('[Game] Open orb shop');
     setShowOrbShop(true);
   }, []);
 
   const handleSelectOrbType = useCallback((typeId: string) => {
-    console.log(`[Game] Orb type selected for placement typeId=${typeId}`);
+    console.log(`[Game] Orb type selected typeId=${typeId}`);
     setShowOrbShop(false);
     setPlacementMode({ active: true, typeId });
   }, []);
@@ -518,10 +734,9 @@ export default function GameScreen() {
     const cost = orbDef?.cost ?? 20;
     const state = gameStateRef.current as GameState;
     if (state.player.coins < cost) {
-      console.log(`[Game] Cannot place orb — not enough coins. Have=${state.player.coins} need=${cost}`);
       return;
     }
-    console.log(`[Game] Place orb typeId=${typeId} slotIndex=${slotIndex} cost=${cost}`);
+    console.log(`[Game] Place orb typeId=${typeId} slotIndex=${slotIndex}`);
     // Spawn orb on player side by deducting coins and adding to orbs array
     dispatch((s) => {
       if (s.player.coins < cost) return s;
@@ -566,7 +781,6 @@ export default function GameScreen() {
   }, [placementMode.typeId, dispatch, gameStateRef]);
 
   const handleCancelPlacement = useCallback(() => {
-    console.log('[Game] Cancel orb placement');
     setPlacementMode({ active: false, typeId: null });
   }, []);
 
@@ -582,14 +796,14 @@ export default function GameScreen() {
 
   // ── Pause ──
   const handlePause = useCallback(() => {
-    console.log('[Game] Pause button pressed');
+    console.log('[Game] Pause');
     pause();
     setIsPaused(true);
     setShowPauseMenu(true);
   }, [pause]);
 
   const handleResume = useCallback(() => {
-    console.log('[Game] Resume pressed');
+    console.log('[Game] Resume');
     setShowPauseMenu(false);
     setIsPaused(false);
     resume();
@@ -603,22 +817,22 @@ export default function GameScreen() {
   }, [setShowForfeitDialog, setShowPauseMenu]);
 
   const handleCancelAim = useCallback(() => {
-    console.log('[Game] Cancel aim pressed');
     dispatch((s) => cancelAim(s));
   }, [dispatch]);
 
-  // ── Derived display values ──
-  const playerHp = renderState?.player?.station?.hp ?? 0;
-  const playerMaxHp = renderState?.player?.station?.maxHp ?? 100;
-  const oppHp = renderState?.opponent?.station?.hp ?? 0;
-  const oppMaxHp = renderState?.opponent?.station?.maxHp ?? 100;
-  const playerCoins = Math.floor(renderState?.player?.coins ?? 0);
-  const timeDisplay = formatTime(renderState?.time ?? 0);
-  const selectedTowerType = renderState?.player?.selectedTower ?? null;
+  // ── Derived display values (from hudState at ~30fps) ──
+  const playerHp = hudState?.player?.station?.hp ?? 0;
+  const playerMaxHp = hudState?.player?.station?.maxHp ?? 100;
+  const oppHp = hudState?.opponent?.station?.hp ?? 0;
+  const oppMaxHp = hudState?.opponent?.station?.maxHp ?? 100;
+  const playerCoins = Math.floor(hudState?.player?.coins ?? 0);
+  const timeDisplay = formatTime(hudState?.time ?? 0);
+  const selectedTowerType = hudState?.player?.selectedTower ?? null;
   const isAiming = (renderState?.aiming ?? null) !== null;
-  const clicksLeft = renderState?.player?.clicks ?? 0;
-  const maxClicks = renderState?.player?.maxClicks ?? 5;
-  const escalationTier = renderState?.escalationTier ?? 'none';
+  const clicksLeft = hudState?.player?.clicks ?? 0;
+  const maxClicks = hudState?.player?.maxClicks ?? 5;
+  const escalationTier = hudState?.escalationTier ?? 'none';
+  const hudAbilities = hudState?.player?.abilities ?? [];
 
   const escalationLabel: Record<string, string> = {
     overtime: 'OT',
@@ -672,94 +886,42 @@ export default function GameScreen() {
     );
   }
 
-  // ── Timer pill color based on escalation ──
-  const timerPillBg = escalationTier === 'tower_bleed'
-    ? '#7F1D1D'
-    : escalationTier === 'critical' || escalationTier === 'max_pressure'
-    ? '#FEE2E2'
-    : escalationTier === 'overtime' || escalationTier === 'intensifying'
-    ? '#FFEDD5'
-    : '#F1F5F9';
-  const timerPillTextColor = escalationTier === 'tower_bleed'
-    ? '#FEF2F2'
-    : escalationTier === 'critical' || escalationTier === 'max_pressure'
-    ? '#DC2626'
-    : escalationTier === 'overtime' || escalationTier === 'intensifying'
-    ? '#EA580C'
-    : '#334155';
-  const timerLabel = escalationTier !== 'none'
-    ? (escalationLabel[escalationTier] ?? escalationTier.toUpperCase())
-    : null;
-  const clicksPillBg = clicksLeft >= maxClicks
-    ? 'rgba(16,185,129,0.12)'
-    : clicksLeft === 0
-    ? 'rgba(244,63,94,0.12)'
-    : '#F1F5F9';
-  const clicksPillBorder = clicksLeft >= maxClicks
-    ? '#10B981'
-    : clicksLeft === 0
-    ? '#F43F5E'
-    : '#E2E8F0';
-  const firstPlacement = (renderState?.player as any)?.firstPlacement ?? false;
-
   const searchEmoji = uiMode === 'training' || uiMode === 'tutorial' ? '🎯' : '🛰️';
   const searchTitle = uiMode === 'training' || uiMode === 'tutorial'
     ? t('game.startingMatch')
     : t('game.searching');
   const isTrainingOrTutorial = uiMode === 'training' || uiMode === 'tutorial';
 
-  const towerNameFirst = (type: TowerType) => {
-    const name = TOWER_TYPES[type]?.name ?? String(type);
-    return name.split(' ')[0];
-  };
-
   return (
     <View style={styles.root}>
-      {/* ── Top HUD ── */}
-      <View style={[styles.topHud, { paddingTop: insets.top + 6 }]}>
-        <View style={styles.hudTopRow}>
-          {/* LEFT: back/forfeit button */}
-          <Pressable
-            style={styles.backBtn}
-            onPress={() => {
-              console.log('[Game] Back/forfeit button pressed');
-              setShowForfeitDialog(true);
-            }}
-          >
-            <Text style={styles.backBtnText}>←</Text>
-          </Pressable>
-
-          {/* CENTER: opponent name + timer pill */}
-          <View style={styles.hudCenterBlock}>
-            <View style={styles.opponentNameRow}>
-              <Text style={styles.hudOpponentName} numberOfLines={1}>{opponentName}</Text>
-              {isAiMode && (
-                <View style={styles.kiBadge}>
-                  <Text style={styles.kiBadgeText}>KI</Text>
-                </View>
-              )}
-            </View>
-            <View style={[styles.timerPill, { backgroundColor: timerPillBg }]}>
-              {timerLabel ? (
-                <Text style={[styles.timerPillText, { color: timerPillTextColor }]}>{timerLabel}</Text>
-              ) : (
-                <Text style={[styles.timerPillText, { color: timerPillTextColor }]}>{timeDisplay}</Text>
-              )}
-            </View>
-          </View>
-
-          {/* RIGHT: clicks pill + coins pill */}
-          <View style={styles.hudPills}>
-            <View style={[styles.clicksPill, { backgroundColor: clicksPillBg, borderColor: clicksPillBorder }]}>
-              <Text style={styles.pillText}>👆 {clicksLeft}/{maxClicks}</Text>
-            </View>
-            <View style={styles.coinsPill}>
-              <View style={styles.coinDot} />
-              <Text style={styles.pillText}>{playerCoins}</Text>
-            </View>
-          </View>
-        </View>
-      </View>
+      {/* ── HUD (top + bottom, ~30fps) ── */}
+      <GameHUD
+        playerHp={playerHp}
+        playerMaxHp={playerMaxHp}
+        oppHp={oppHp}
+        oppMaxHp={oppMaxHp}
+        playerCoins={playerCoins}
+        timeDisplay={timeDisplay}
+        clicksLeft={clicksLeft}
+        maxClicks={maxClicks}
+        escalationTier={escalationTier}
+        abilities={hudAbilities}
+        isAiming={isAiming}
+        onAbility={handleAbility}
+        onCancelAim={handleCancelAim}
+        opponentName={opponentName}
+        isAiMode={isAiMode}
+        insets={insets}
+        editMode={editMode}
+        placementModeActive={placementMode.active}
+        selectedTowerType={selectedTowerType}
+        loadoutTowers={loadout.towers}
+        playerCoinsForTower={playerCoins}
+        onToggleEditMode={handleToggleEditMode}
+        onOpenOrbShop={handleOpenOrbShop}
+        onSelectTower={handleSelectTower}
+        onPause={handlePause}
+      />
 
       {/* ── Game Canvas ── */}
       <View style={{ flex: 1, position: 'relative' }}>
@@ -772,26 +934,21 @@ export default function GameScreen() {
               const gameX = (x / canvasWidth) * GAME_WIDTH;
               const gameY = (y / canvasHeight) * GAME_HEIGHT;
 
-              console.log(`[Game] Web tap at screen=(${x.toFixed(0)},${y.toFixed(0)}) game=(${gameX.toFixed(0)},${gameY.toFixed(0)})`);
-
               const state = gameStateRef.current as GameState;
 
               if (state.aiming) {
-                console.log(`[Game] Web confirming aim at game=(${gameX.toFixed(0)},${gameY.toFixed(0)})`);
                 dispatch((s) => confirmAim(s, gameX, gameY));
                 return;
               }
 
               const coin = findCoinAtPosition(state, gameX, gameY);
               if (coin) {
-                console.log(`[Game] Web collecting coin id=${coin.id}`);
                 dispatch((s) => collectCoin(s, coin.id));
                 return;
               }
 
               const tappedOrb = findOrbAtPosition(state, gameX, gameY);
               if (tappedOrb) {
-                console.log(`[Game] Web tapped orb id=${tappedOrb.id}`);
                 dispatch((s) => clickOrb(s, tappedOrb.id));
                 return;
               }
@@ -799,14 +956,12 @@ export default function GameScreen() {
               if (editMode) {
                 const tower = findTowerAtPosition(state, gameX, gameY);
                 if (tower) {
-                  console.log(`[Game] Web edit mode: selected tower id=${tower.id}`);
                   setSelectedTowerForEdit({ ...tower });
                 }
                 return;
               }
 
               if (state.player.selectedTower && gameY > WALL_Y) {
-                console.log(`[Game] Web placing tower type=${state.player.selectedTower} at game=(${gameX.toFixed(0)},${gameY.toFixed(0)})`);
                 dispatch((s) => placeTower(s, s.player.selectedTower!, gameX, gameY));
                 return;
               }
@@ -861,7 +1016,6 @@ export default function GameScreen() {
                   key={i}
                   style={[styles.orbSlot, { left: slotLeft, top: slotTop }]}
                   onPress={() => {
-                    console.log(`[Game] Orb slot ${i + 1} tapped`);
                     handlePlaceOrbAtSlot(i);
                   }}
                 >
@@ -894,7 +1048,7 @@ export default function GameScreen() {
                   height={5}
                   showText
                 />
-                <Pressable onPress={() => { console.log('[Game] Close upgrade popup'); setSelectedTowerForEdit(null); }} style={styles.upgradePopupClose}>
+                <Pressable onPress={() => { setSelectedTowerForEdit(null); }} style={styles.upgradePopupClose}>
                   <X size={14} color={COLORS.textSecondary} strokeWidth={2} />
                 </Pressable>
               </View>
@@ -931,96 +1085,14 @@ export default function GameScreen() {
         )}
       </View>
 
-      {/* ── Bottom HUD ── */}
-      <View style={[styles.bottomHud, { paddingBottom: insets.bottom + 16 }]}>
-        {/* Row 1: Ability buttons + orb shop circle + edit toggle */}
-        <View style={styles.abilityRow}>
-          <View style={styles.abilityButtons}>
-            {(renderState?.player?.abilities ?? []).map((ability) => (
-              <AbilityButton
-                key={ability.type}
-                abilityType={ability.type}
-                cooldown={ability.cooldown}
-                maxCooldown={ability.maxCooldown}
-                onPress={() => handleAbility(ability.type)}
-                size={56}
-              />
-            ))}
-          </View>
-          <View style={styles.abilityRightBtns}>
-            {!placementMode.active ? (
-              <Pressable
-                style={styles.orbShopCircleBtn}
-                onPress={handleOpenOrbShop}
-              >
-                <Text style={styles.orbShopCircleBtnText}>🌀</Text>
-              </Pressable>
-            ) : (
-              <View style={{ width: 56, height: 56 }} />
-            )}
-            <Pressable
-              style={[styles.editToggleBtn, editMode && styles.editToggleBtnActive]}
-              onPress={handleToggleEditMode}
-            >
-              <Text style={styles.editToggleBtnText}>{editMode ? '✅' : '✏️'}</Text>
-            </Pressable>
-          </View>
-        </View>
-
-        {/* Row 2: Tower selection tray */}
-        <View style={styles.towerTrayBorder}>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={styles.towerBar}
-            contentContainerStyle={styles.towerBarContent}
-          >
-            {(loadout.towers ?? []).map((towerType) => {
-              const cost = TOWER_COSTS[towerType] ?? 60;
-              const isSelected = selectedTowerType === towerType;
-              const canAfford = playerCoins >= cost;
-              const firstName = towerNameFirst(towerType);
-              return (
-                <Pressable
-                  key={towerType}
-                  style={[
-                    styles.towerCard,
-                    isSelected && styles.towerCardSelected,
-                    !canAfford && styles.towerCardDisabled,
-                  ]}
-                  onPress={() => {
-                    console.log(`[Game] Tower card pressed type=${towerType} cost=${cost} coins=${playerCoins}`);
-                    handleSelectTower(isSelected ? null : towerType);
-                  }}
-                >
-                  <TowerIcon type={towerType} size={34} />
-                  <Text style={styles.towerName} numberOfLines={1}>{firstName}</Text>
-                  <View style={styles.towerCostRow}>
-                    <Text style={[styles.towerCost, !canAfford && { color: COLORS.textTertiary }]}>
-                      {'🪙 '}
-                    </Text>
-                    <Text style={[styles.towerCost, !canAfford && { color: COLORS.textTertiary }]}>
-                      {cost}
-                    </Text>
-                  </View>
-                  {firstPlacement && (
-                    <Text style={styles.towerDiscount}>-20%</Text>
-                  )}
-                </Pressable>
-              );
-            })}
-          </ScrollView>
-        </View>
-      </View>
-
       {/* ── Orb Shop Panel ── */}
       {showOrbShop && (
         <View style={styles.orbShopOverlay}>
-          <Pressable style={styles.orbShopBackdrop} onPress={() => { console.log('[Game] Orb shop dismissed'); setShowOrbShop(false); }} />
+          <Pressable style={styles.orbShopBackdrop} onPress={() => { setShowOrbShop(false); }} />
           <View style={styles.orbShopPanel}>
             <View style={styles.orbShopHeader}>
               <Text style={styles.orbShopTitle}>Send Orb</Text>
-              <Pressable onPress={() => { console.log('[Game] Orb shop close pressed'); setShowOrbShop(false); }}>
+              <Pressable onPress={() => { setShowOrbShop(false); }}>
                 <X size={18} color={COLORS.textSecondary} strokeWidth={2} />
               </Pressable>
             </View>
@@ -1034,7 +1106,7 @@ export default function GameScreen() {
                     key={orbType}
                     style={[styles.orbShopCard, !canAfford && styles.orbShopCardDisabled]}
                     onPress={() => {
-                      console.log(`[Game] Orb shop card pressed type=${orbType} cost=${orbDef.cost}`);
+                      
                       handleSelectOrbType(orbType);
                     }}
                   >
@@ -1063,7 +1135,7 @@ export default function GameScreen() {
             <View style={styles.forfeitBtns}>
               <Pressable
                 style={styles.forfeitCancelBtn}
-                onPress={() => { console.log('[Game] Forfeit cancelled'); setShowForfeitDialog(false); }}
+                onPress={() => { setShowForfeitDialog(false); }}
               >
                 <Text style={styles.forfeitCancelBtnText}>{t('game.cancel')}</Text>
               </Pressable>
@@ -1092,7 +1164,6 @@ export default function GameScreen() {
             <Pressable
               style={[styles.pauseBtn2, styles.pauseForfeit]}
               onPress={() => {
-                console.log('[Game] Forfeit button pressed in pause menu');
                 setShowPauseMenu(false);
                 setShowForfeitDialog(true);
               }}
