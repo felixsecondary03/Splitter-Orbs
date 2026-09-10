@@ -1,5 +1,4 @@
 import React from 'react';
-import { Platform, View, Text } from 'react-native';
 import Svg, {
   Defs, LinearGradient, RadialGradient, Stop,
   Ellipse, Polygon, Rect, Line, Circle, Path, G,
@@ -16,27 +15,6 @@ interface TowerIconProps {
 export function TowerIcon({ type, size = 36, level = 1 }: TowerIconProps) {
   const def = TOWER_TYPES[type];
   const c = def?.color || '#64748b';
-
-  // On web, react-native-svg crashes inside Expo Router — use plain View
-  if (Platform.OS === 'web') {
-    const initials = (def?.name ?? type).slice(0, 2).toUpperCase();
-    return (
-      <View style={{
-        width: size,
-        height: size,
-        borderRadius: size * 0.2,
-        backgroundColor: c + '33',
-        borderWidth: 1.5,
-        borderColor: c,
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}>
-        <Text style={{ fontSize: size * 0.35, color: c, fontWeight: '700' }}>
-          {initials}
-        </Text>
-      </View>
-    );
-  }
 
   const isBouncer = def?.bouncer;
   const top = 30 - (level - 1) * 4;
