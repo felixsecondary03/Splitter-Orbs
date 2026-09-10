@@ -38,7 +38,6 @@
       "@react-native-community/datetimepicker",
       "expo-splash-screen",
       "expo-status-bar",
-      "@shopify/react-native-skia"
     ],
     "scheme": "mindmapai",
     "experiments": {
