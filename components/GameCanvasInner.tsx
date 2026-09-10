@@ -91,6 +91,8 @@ export function GameCanvasInner({
   onOrbTap,
   onFieldTap,
 }: GameCanvasProps) {
+  if (!state) return null;
+
   const scaleX = width / GAME_WIDTH;
   const scaleY = height / GAME_HEIGHT;
   const sx = (x: number) => x * scaleX;
