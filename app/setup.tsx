@@ -9,7 +9,6 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { COLORS } from '@/constants/Colors';
 import { TowerIcon } from '@/components/TowerIcon';
 import { supabase } from '@/utils/supabase';
 import { useProfile } from '@/contexts/ProfileContext';
@@ -17,7 +16,7 @@ import { useTranslation } from '@/i18n/LanguageContext';
 import {
   TOWER_TYPES, TOWER_LOADOUT_SIZE, STARTER_TOWERS,
   ORB_TYPES, SENDABLE_ORBS, ORB_LOADOUT_SIZE, STARTER_ORBS,
-  ABILITIES, STARTER_ABILITIES, AI_LEVELS,
+  ABILITIES, STARTER_ABILITIES, AI_LEVELS, TOWER_COSTS,
 } from '@/game/constants';
 import type { TowerType, OrbType, AbilityType } from '@/game/constants';
 
@@ -32,7 +31,6 @@ export default function SetupScreen() {
   const { t } = useTranslation();
   const { profile } = useProfile();
 
-  // Animated bob for the sword emoji
   const bobAnim = useRef(new Animated.Value(0)).current;
   useEffect(() => {
     Animated.loop(
@@ -74,7 +72,6 @@ export default function SetupScreen() {
     (id) => ((profile.ability_cards ?? {})[id]?.level ?? 0) >= 1
   );
 
-  // Fall back to starter sets if profile has no cards yet
   const effectiveUnlockedTowers = unlockedTowers.length > 0
     ? unlockedTowers
     : ['basic', 'machinegun', 'boomerang', 'bomb'];
@@ -164,7 +161,7 @@ export default function SetupScreen() {
   if (showQuickPlay) {
     return (
       <SafeAreaView style={styles.safe}>
-        <ScrollView contentContainerStyle={styles.content}>
+        <ScrollView contentContainerStyle={styles.quickPlayContent}>
           <TouchableOpacity
             onPress={() => {
               console.log('[Setup] Back pressed');
@@ -176,10 +173,11 @@ export default function SetupScreen() {
           </TouchableOpacity>
 
           <Text style={styles.pageTitle}>{t('setup.title')}</Text>
-          <Text style={styles.pageSubtitle}>{t('setup.quickPlayHint')}</Text>
+          <Text style={styles.pageSubtitleCenter}>{t('setup.quickPlayHint')}</Text>
 
           <Animated.Text style={[styles.bigEmoji, { transform: [{ translateY: bobAnim }] }]}>⚔️</Animated.Text>
 
+          {/* Mode pills */}
           <View style={styles.modePills}>
             {MODES.map((m) => {
               const isActive = mode === m.id;
@@ -205,10 +203,12 @@ export default function SetupScreen() {
             <Text style={styles.disclaimer}>{t('setup.rankedBetaDisclaimer')}</Text>
           )}
 
+          {/* Big play button */}
           <TouchableOpacity onPress={start} style={styles.playBtn}>
             <Text style={styles.playBtnText}>⚡ {t('setup.quickPlay')} →</Text>
           </TouchableOpacity>
 
+          {/* Change loadout button */}
           <TouchableOpacity
             onPress={() => {
               console.log('[Setup] Change Loadout pressed');
@@ -242,6 +242,7 @@ export default function SetupScreen() {
           {t('setup.subtitle', { towers: TOWER_LOADOUT_SIZE, orbs: ORB_LOADOUT_SIZE })}
         </Text>
 
+        {/* Mode pills */}
         <View style={styles.modePills}>
           {MODES.map((m) => {
             const isActive = mode === m.id;
@@ -267,9 +268,10 @@ export default function SetupScreen() {
           <Text style={styles.disclaimer}>{t('setup.rankedBetaDisclaimer')}</Text>
         )}
 
+        {/* AI Difficulty (training only) */}
         {mode === 'training' && (
           <View style={styles.section}>
-            <Text style={styles.sectionLabel}>{t('setup.aiDifficulty')}</Text>
+            <Text style={styles.sectionLabelCenter}>{t('setup.aiDifficulty')}</Text>
             <View style={styles.modePills}>
               {(Object.keys(AI_LEVELS) as ('easy' | 'normal' | 'hard')[]).map((id) => {
                 const isActive = difficulty === id;
@@ -292,68 +294,82 @@ export default function SetupScreen() {
           </View>
         )}
 
-        {/* Tower grid */}
+        {/* Tower grid — show ALL, locked ones dimmed */}
         <View style={styles.section}>
           <Text style={styles.sectionLabel}>
             {t('setup.towers')} · {towers.length}/{TOWER_LOADOUT_SIZE}
           </Text>
           <View style={styles.cardGrid}>
-            {Object.values(TOWER_TYPES)
-              .filter((def) => effectiveUnlockedTowers.includes(def.id))
-              .map((def) => {
-                const isSel = towers.includes(def.id as TowerType);
-                const selIdx = towers.indexOf(def.id as TowerType);
-                const selBorderStyle = isSel
-                  ? { borderColor: '#F59E0B', backgroundColor: '#FFFBEB' }
-                  : undefined;
-                return (
-                  <TouchableOpacity
-                    key={def.id}
-                    onPress={() => toggleTower(def.id as TowerType)}
-                    style={styles.cardItem}
-                  >
-                    <View style={[styles.cardItemInner, selBorderStyle]}>
-                      {isSel && (
-                        <View style={styles.selBadge}>
-                          <Text style={styles.selBadgeText}>{selIdx + 1}</Text>
-                        </View>
-                      )}
-                      <TowerIcon type={def.id as TowerType} size={32} />
-                      <Text style={styles.cardName} numberOfLines={1}>
-                        {t(`towers.${def.id}.name`)}
-                      </Text>
+            {Object.values(TOWER_TYPES).map((def) => {
+              const isLocked = !effectiveUnlockedTowers.includes(def.id);
+              const isSel = towers.includes(def.id as TowerType);
+              const selIdx = towers.indexOf(def.id as TowerType);
+              const cardStyle = isSel
+                ? { borderColor: '#fbbf24', backgroundColor: '#fffbeb' }
+                : isLocked
+                ? { borderColor: '#e2e8f0', opacity: 0.4 }
+                : { borderColor: '#e2e8f0' };
+              return (
+                <TouchableOpacity
+                  key={def.id}
+                  onPress={() => {
+                    if (!isLocked) toggleTower(def.id as TowerType);
+                  }}
+                  style={styles.cardItem}
+                  activeOpacity={isLocked ? 1 : 0.7}
+                >
+                  <View style={[styles.cardItemInner, cardStyle]}>
+                    {isSel && (
+                      <View style={styles.selBadge}>
+                        <Text style={styles.selBadgeText}>{selIdx + 1}</Text>
+                      </View>
+                    )}
+                    <TowerIcon type={def.id as TowerType} size={32} />
+                    <Text style={styles.cardName} numberOfLines={1}>
+                      {t(`towers.${def.id}.name`)}
+                    </Text>
+                    {isLocked ? (
+                      <Text style={styles.cardLock}>🔒</Text>
+                    ) : (
                       <Text style={styles.cardCost}>🪙{def.cost}</Text>
-                    </View>
-                  </TouchableOpacity>
-                );
-              })}
+                    )}
+                  </View>
+                </TouchableOpacity>
+              );
+            })}
           </View>
           {lockedTowerCount > 0 && (
             <Text style={styles.moreHint}>{t('setup.moreInLab', { n: lockedTowerCount })}</Text>
           )}
         </View>
 
-        {/* Orb grid */}
+        {/* Orb grid — show ALL */}
         <View style={styles.section}>
           <Text style={styles.sectionLabel}>
             {t('setup.orbs')} · {orbs.length}/{ORB_LOADOUT_SIZE}
           </Text>
           <View style={styles.cardGrid}>
-            {SENDABLE_ORBS.filter((id) => effectiveUnlockedOrbs.includes(id)).map((id) => {
+            {SENDABLE_ORBS.map((id) => {
               const def = ORB_TYPES[id as OrbType];
               if (!def) return null;
+              const isLocked = !effectiveUnlockedOrbs.includes(id);
               const isSel = orbs.includes(id as OrbType);
               const selIdx = orbs.indexOf(id as OrbType);
-              const selBorderStyle = isSel
-                ? { borderColor: '#818CF8', backgroundColor: '#EEF2FF' }
-                : undefined;
+              const cardStyle = isSel
+                ? { borderColor: '#818cf8', backgroundColor: '#eef2ff' }
+                : isLocked
+                ? { borderColor: '#e2e8f0', opacity: 0.4 }
+                : { borderColor: '#e2e8f0' };
               return (
                 <TouchableOpacity
                   key={id}
-                  onPress={() => toggleOrb(id as OrbType)}
+                  onPress={() => {
+                    if (!isLocked) toggleOrb(id as OrbType);
+                  }}
                   style={styles.cardItem}
+                  activeOpacity={isLocked ? 1 : 0.7}
                 >
-                  <View style={[styles.cardItemInner, selBorderStyle]}>
+                  <View style={[styles.cardItemInner, cardStyle]}>
                     {isSel && (
                       <View style={styles.selBadge}>
                         <Text style={styles.selBadgeText}>{selIdx + 1}</Text>
@@ -365,7 +381,11 @@ export default function SetupScreen() {
                     <Text style={styles.cardName} numberOfLines={1}>
                       {t(`orbs.${id}.name`)}
                     </Text>
-                    <Text style={styles.cardCost}>🪙{def.cost}</Text>
+                    {isLocked ? (
+                      <Text style={styles.cardLock}>🔒</Text>
+                    ) : (
+                      <Text style={styles.cardCost}>🪙{def.cost}</Text>
+                    )}
                   </View>
                 </TouchableOpacity>
               );
@@ -376,47 +396,56 @@ export default function SetupScreen() {
           )}
         </View>
 
-        {/* Ability grid */}
+        {/* Ability grid — show ALL */}
         <View style={styles.section}>
           <Text style={styles.sectionLabel}>
             {t('setup.powers')} · {abilities.length}/3
           </Text>
           <View style={styles.abilityGrid}>
-            {Object.values(ABILITIES)
-              .filter((def) => effectiveUnlockedAbilities.includes(def.id))
-              .map((def) => {
-                const isSel = abilities.includes(def.id as AbilityType);
-                const selIdx = abilities.indexOf(def.id as AbilityType);
-                const selBorderStyle = isSel
-                  ? { borderColor: COLORS.primary, backgroundColor: '#EFF6FF' }
-                  : undefined;
-                const abilityIcon = ABILITY_ICONS[def.id] || '✨';
-                const abilityIconBg = def.color + '22';
-                return (
-                  <TouchableOpacity
-                    key={def.id}
-                    onPress={() => toggleAbility(def.id as AbilityType)}
-                    style={styles.abilityItem}
-                  >
-                    <View style={[styles.abilityItemInner, selBorderStyle]}>
-                      {isSel && (
-                        <View style={[styles.selBadge, styles.selBadgeAbsolute]}>
-                          <Text style={styles.selBadgeText}>{selIdx + 1}</Text>
-                        </View>
-                      )}
-                      <View style={styles.abilityIconRow}>
-                        <View style={[styles.abilityIcon, { backgroundColor: abilityIconBg }]}>
-                          <Text style={styles.abilityEmoji}>{abilityIcon}</Text>
-                        </View>
-                        <Text style={styles.abilityName}>{t(`abilities.${def.id}.name`)}</Text>
+            {Object.values(ABILITIES).map((def) => {
+              const isLocked = !effectiveUnlockedAbilities.includes(def.id);
+              const isSel = abilities.includes(def.id as AbilityType);
+              const selIdx = abilities.indexOf(def.id as AbilityType);
+              const abilityIcon = ABILITY_ICONS[def.id] || '✨';
+              const abilityIconBg = def.color + '22';
+              const cardStyle = isSel
+                ? { borderColor: '#60a5fa', backgroundColor: '#eff6ff' }
+                : isLocked
+                ? { borderColor: '#e2e8f0', opacity: 0.4 }
+                : { borderColor: '#e2e8f0' };
+              return (
+                <TouchableOpacity
+                  key={def.id}
+                  onPress={() => {
+                    if (!isLocked) toggleAbility(def.id as AbilityType);
+                  }}
+                  style={styles.abilityItem}
+                  activeOpacity={isLocked ? 1 : 0.7}
+                >
+                  <View style={[styles.abilityItemInner, cardStyle]}>
+                    {isSel && (
+                      <View style={[styles.selBadge, styles.selBadgeAbsolute]}>
+                        <Text style={styles.selBadgeText}>{selIdx + 1}</Text>
                       </View>
-                      <Text style={styles.abilityDesc} numberOfLines={2}>
-                        {t(`abilities.${def.id}.desc`)}
-                      </Text>
+                    )}
+                    {isLocked && (
+                      <View style={[styles.selBadge, styles.selBadgeAbsolute]}>
+                        <Text style={styles.selBadgeText}>🔒</Text>
+                      </View>
+                    )}
+                    <View style={styles.abilityIconRow}>
+                      <View style={[styles.abilityIcon, { backgroundColor: abilityIconBg }]}>
+                        <Text style={styles.abilityEmoji}>{abilityIcon}</Text>
+                      </View>
+                      <Text style={styles.abilityName}>{t(`abilities.${def.id}.name`)}</Text>
                     </View>
-                  </TouchableOpacity>
-                );
-              })}
+                    <Text style={styles.abilityDesc} numberOfLines={2}>
+                      {t(`abilities.${def.id}.desc`)}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              );
+            })}
           </View>
           {lockedAbilityCount > 0 && (
             <Text style={styles.moreHint}>{t('setup.moreInLab', { n: lockedAbilityCount })}</Text>
@@ -441,28 +470,44 @@ export default function SetupScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: COLORS.background },
-  content: { padding: 16, paddingBottom: 100, alignItems: 'center' },
-  backLink: { alignSelf: 'flex-start', marginBottom: 8 },
-  backLinkText: { fontSize: 14, fontWeight: '700', color: COLORS.textSecondary },
+  safe: { flex: 1, backgroundColor: '#f1f5f9' },
+  quickPlayContent: {
+    paddingHorizontal: 16,
+    paddingBottom: 40,
+    alignItems: 'center',
+  },
+  content: {
+    paddingHorizontal: 16,
+    paddingBottom: 40,
+    alignItems: 'center',
+  },
+  backLink: { alignSelf: 'flex-start', marginBottom: 8, marginTop: 4 },
+  backLinkText: { fontSize: 14, fontWeight: '700', color: '#94a3b8' },
   pageTitle: {
-    fontSize: 28,
+    fontSize: 30,
     fontWeight: '900',
-    color: COLORS.text,
+    color: '#0f172a',
     marginBottom: 4,
     alignSelf: 'flex-start',
+    letterSpacing: -0.5,
   },
   pageSubtitle: {
     fontSize: 14,
-    color: COLORS.textSecondary,
+    color: '#94a3b8',
     marginBottom: 24,
     alignSelf: 'flex-start',
+  },
+  pageSubtitleCenter: {
+    fontSize: 14,
+    color: '#94a3b8',
+    marginBottom: 32,
+    textAlign: 'center',
   },
   bigEmoji: { fontSize: 64, marginBottom: 24 },
   modePills: {
     flexDirection: 'row',
     gap: 8,
-    marginBottom: 16,
+    marginBottom: 12,
     flexWrap: 'wrap',
     justifyContent: 'center',
   },
@@ -470,29 +515,29 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 12,
-    backgroundColor: COLORS.surface,
+    backgroundColor: '#ffffff',
     borderWidth: 2,
-    borderColor: COLORS.border,
+    borderColor: '#e2e8f0',
   },
-  modePillActive: { backgroundColor: COLORS.text, borderColor: COLORS.text },
-  modePillText: { fontSize: 14, fontWeight: '700', color: COLORS.textSecondary },
+  modePillActive: { backgroundColor: '#0f172a', borderColor: '#0f172a' },
+  modePillText: { fontSize: 14, fontWeight: '700', color: '#475569' },
   modePillTextActive: { color: '#fff' },
   disclaimer: {
     fontSize: 12,
-    color: COLORS.textTertiary,
+    color: '#94a3b8',
     textAlign: 'center',
     marginBottom: 16,
     maxWidth: 320,
   },
   playBtn: {
     width: '100%',
-    maxWidth: 360,
-    paddingVertical: 18,
+    maxWidth: 384,
+    paddingVertical: 16,
     borderRadius: 20,
-    backgroundColor: COLORS.primary,
+    backgroundColor: '#3b82f6',
     alignItems: 'center',
     marginBottom: 12,
-    shadowColor: COLORS.primary,
+    shadowColor: '#3b82f6',
     shadowOpacity: 0.3,
     shadowRadius: 12,
     shadowOffset: { width: 0, height: 4 },
@@ -501,31 +546,40 @@ const styles = StyleSheet.create({
   playBtnText: { fontSize: 18, fontWeight: '900', color: '#fff' },
   loadoutBtn: {
     width: '100%',
-    maxWidth: 360,
-    paddingVertical: 14,
+    maxWidth: 384,
+    paddingVertical: 12,
     borderRadius: 20,
     borderWidth: 2,
-    borderColor: COLORS.border,
-    backgroundColor: COLORS.surface,
+    borderColor: '#cbd5e1',
+    backgroundColor: '#ffffff',
     alignItems: 'center',
   },
-  loadoutBtnText: { fontSize: 14, fontWeight: '800', color: COLORS.text },
+  loadoutBtnText: { fontSize: 14, fontWeight: '800', color: '#374151' },
   section: { width: '100%', marginBottom: 24 },
   sectionLabel: {
     fontSize: 11,
     fontWeight: '700',
-    color: COLORS.textTertiary,
+    color: '#94a3b8',
     textTransform: 'uppercase',
-    letterSpacing: 1,
-    marginBottom: 10,
+    letterSpacing: 1.5,
+    marginBottom: 8,
+  },
+  sectionLabelCenter: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#94a3b8',
+    textTransform: 'uppercase',
+    letterSpacing: 1.5,
+    marginBottom: 8,
+    textAlign: 'center',
   },
   cardGrid: { flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: -4 },
   cardItem: { width: '33.333%', padding: 4 },
   cardItemInner: {
-    backgroundColor: COLORS.surface,
+    backgroundColor: '#ffffff',
     borderRadius: 16,
     borderWidth: 2,
-    borderColor: COLORS.border,
+    borderColor: '#e2e8f0',
     padding: 8,
     alignItems: 'center',
     position: 'relative',
@@ -537,31 +591,32 @@ const styles = StyleSheet.create({
     width: 18,
     height: 18,
     borderRadius: 9,
-    backgroundColor: COLORS.text,
+    backgroundColor: '#0f172a',
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 10,
   },
-  selBadgeText: { fontSize: 10, fontWeight: '900', color: '#fff' },
+  selBadgeText: { fontSize: 9, fontWeight: '900', color: '#fff' },
   cardName: {
     fontSize: 9,
     fontWeight: '700',
-    color: COLORS.text,
+    color: '#334155',
     textAlign: 'center',
     marginTop: 4,
   },
-  cardCost: { fontSize: 10, fontWeight: '700', color: '#F59E0B', marginTop: 2 },
+  cardCost: { fontSize: 10, fontWeight: '700', color: '#f59e0b', marginTop: 2 },
+  cardLock: { fontSize: 10, marginTop: 2 },
   orbCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
   },
   orbHp: { fontSize: 10, fontWeight: '900', color: '#fff' },
   moreHint: {
     fontSize: 11,
-    color: COLORS.textTertiary,
+    color: '#94a3b8',
     fontWeight: '700',
     textAlign: 'center',
     marginTop: 8,
@@ -569,10 +624,10 @@ const styles = StyleSheet.create({
   abilityGrid: { flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: -4 },
   abilityItem: { width: '50%', padding: 4 },
   abilityItemInner: {
-    backgroundColor: COLORS.surface,
+    backgroundColor: '#ffffff',
     borderRadius: 16,
     borderWidth: 2,
-    borderColor: COLORS.border,
+    borderColor: '#e2e8f0',
     padding: 12,
     position: 'relative',
   },
@@ -591,17 +646,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   abilityEmoji: { fontSize: 18 },
-  abilityName: { fontSize: 13, fontWeight: '800', color: COLORS.text, flex: 1 },
-  abilityDesc: { fontSize: 11, color: COLORS.textSecondary, lineHeight: 16 },
+  abilityName: { fontSize: 13, fontWeight: '800', color: '#1e293b', flex: 1 },
+  abilityDesc: { fontSize: 11, color: '#64748b', lineHeight: 16 },
   startBtn: {
     width: '100%',
-    maxWidth: 360,
-    paddingVertical: 18,
+    maxWidth: 384,
+    paddingVertical: 16,
     borderRadius: 20,
-    backgroundColor: COLORS.primary,
+    backgroundColor: '#3b82f6',
     alignItems: 'center',
     marginTop: 8,
-    shadowColor: COLORS.primary,
+    shadowColor: '#3b82f6',
     shadowOpacity: 0.3,
     shadowRadius: 12,
     shadowOffset: { width: 0, height: 4 },

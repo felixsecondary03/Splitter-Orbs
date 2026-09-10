@@ -6,6 +6,7 @@ import {
   Pressable,
   ScrollView,
   Modal,
+  Animated,
   useWindowDimensions,
   Platform,
 } from 'react-native';
@@ -643,6 +644,20 @@ export default function GameScreen() {
   const resultTitle = resultWon ? 'VICTORY' : 'DEFEAT';
   const resultEmoji = resultWon ? '🏆' : '💀';
 
+  // ── Searching screen bob animation ──
+  const searchBobAnim = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    if (!searching) return;
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(searchBobAnim, { toValue: -8, duration: 700, useNativeDriver: true }),
+        Animated.timing(searchBobAnim, { toValue: 0, duration: 700, useNativeDriver: true }),
+      ])
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [searching, searchBobAnim]);
+
   // Guard: params not ready
   if (!params?.mode) {
     return (
@@ -682,10 +697,21 @@ export default function GameScreen() {
     : '#E2E8F0';
   const firstPlacement = (renderState?.player as any)?.firstPlacement ?? false;
 
+  const searchEmoji = uiMode === 'training' || uiMode === 'tutorial' ? '🎯' : '🛰️';
+  const searchTitle = uiMode === 'training' || uiMode === 'tutorial'
+    ? t('game.startingMatch')
+    : t('game.searching');
+  const isTrainingOrTutorial = uiMode === 'training' || uiMode === 'tutorial';
+
+  const towerNameFirst = (type: TowerType) => {
+    const name = TOWER_TYPES[type]?.name ?? String(type);
+    return name.split(' ')[0];
+  };
+
   return (
-    <View style={[styles.root, { backgroundColor: COLORS.background }]}>
+    <View style={styles.root}>
       {/* ── Top HUD ── */}
-      <View style={[styles.topHud, { paddingTop: insets.top + 4 }]}>
+      <View style={[styles.topHud, { paddingTop: insets.top + 6 }]}>
         <View style={styles.hudTopRow}>
           {/* LEFT: back/forfeit button */}
           <Pressable
@@ -731,7 +757,7 @@ export default function GameScreen() {
       </View>
 
       {/* ── Game Canvas ── */}
-      <View style={{ position: 'relative' }}>
+      <View style={{ flex: 1, position: 'relative' }}>
         {Platform.OS === 'web' ? (
           <Pressable
             style={{ width: canvasWidth, height: canvasHeight }}
@@ -910,7 +936,7 @@ export default function GameScreen() {
       </View>
 
       {/* ── Bottom HUD ── */}
-      <View style={[styles.bottomHud, { paddingBottom: insets.bottom + 4 }]}>
+      <View style={[styles.bottomHud, { paddingBottom: insets.bottom + 16 }]}>
         {/* Row 1: Ability buttons + orb shop circle + edit toggle */}
         <View style={styles.abilityRow}>
           <View style={styles.abilityButtons}>
@@ -926,15 +952,16 @@ export default function GameScreen() {
             ))}
           </View>
           <View style={styles.abilityRightBtns}>
-            {!placementMode.active && (
+            {!placementMode.active ? (
               <Pressable
                 style={styles.orbShopCircleBtn}
                 onPress={handleOpenOrbShop}
               >
                 <Text style={styles.orbShopCircleBtnText}>🌀</Text>
               </Pressable>
+            ) : (
+              <View style={{ width: 56, height: 56 }} />
             )}
-            {placementMode.active && <View style={{ width: 56, height: 56 }} />}
             <Pressable
               style={[styles.editToggleBtn, editMode && styles.editToggleBtnActive]}
               onPress={handleToggleEditMode}
@@ -945,47 +972,49 @@ export default function GameScreen() {
         </View>
 
         {/* Row 2: Tower selection tray */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.towerBar}
-          contentContainerStyle={styles.towerBarContent}
-        >
-          {(loadout.towers ?? []).map((towerType) => {
-            const cost = TOWER_COSTS[towerType] ?? 60;
-            const towerName = TOWER_TYPES[towerType]?.name ?? String(towerType);
-            const isSelected = selectedTowerType === towerType;
-            const canAfford = playerCoins >= cost;
-            return (
-              <Pressable
-                key={towerType}
-                style={[
-                  styles.towerCard,
-                  isSelected && styles.towerCardSelected,
-                  !canAfford && styles.towerCardDisabled,
-                ]}
-                onPress={() => {
-                  console.log(`[Game] Tower card pressed type=${towerType} cost=${cost} coins=${playerCoins}`);
-                  handleSelectTower(isSelected ? null : towerType);
-                }}
-              >
-                <TowerIcon type={towerType} size={34} />
-                <Text style={styles.towerName} numberOfLines={1}>{towerName}</Text>
-                <View style={styles.towerCostRow}>
-                  <Text style={[styles.towerCost, !canAfford && { color: COLORS.textTertiary }]}>
-                    🪙
-                  </Text>
-                  <Text style={[styles.towerCost, !canAfford && { color: COLORS.textTertiary }]}>
-                    {cost}
-                  </Text>
+        <View style={styles.towerTrayBorder}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={styles.towerBar}
+            contentContainerStyle={styles.towerBarContent}
+          >
+            {(loadout.towers ?? []).map((towerType) => {
+              const cost = TOWER_COSTS[towerType] ?? 60;
+              const isSelected = selectedTowerType === towerType;
+              const canAfford = playerCoins >= cost;
+              const firstName = towerNameFirst(towerType);
+              return (
+                <Pressable
+                  key={towerType}
+                  style={[
+                    styles.towerCard,
+                    isSelected && styles.towerCardSelected,
+                    !canAfford && styles.towerCardDisabled,
+                  ]}
+                  onPress={() => {
+                    console.log(`[Game] Tower card pressed type=${towerType} cost=${cost} coins=${playerCoins}`);
+                    handleSelectTower(isSelected ? null : towerType);
+                  }}
+                >
+                  <TowerIcon type={towerType} size={34} />
+                  <Text style={styles.towerName} numberOfLines={1}>{firstName}</Text>
+                  <View style={styles.towerCostRow}>
+                    <Text style={[styles.towerCost, !canAfford && { color: COLORS.textTertiary }]}>
+                      {'🪙 '}
+                    </Text>
+                    <Text style={[styles.towerCost, !canAfford && { color: COLORS.textTertiary }]}>
+                      {cost}
+                    </Text>
+                  </View>
                   {firstPlacement && (
                     <Text style={styles.towerDiscount}>-20%</Text>
                   )}
-                </View>
-              </Pressable>
-            );
-          })}
-        </ScrollView>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+        </View>
       </View>
 
       {/* ── Orb Shop Panel ── */}
@@ -1028,19 +1057,24 @@ export default function GameScreen() {
         </View>
       )}
 
-      {/* ── Forfeit Dialog (inline overlay) ── */}
+      {/* ── Forfeit Dialog ── */}
       {showForfeitDialog && (
         <View style={styles.forfeitOverlay}>
           <View style={styles.forfeitCard}>
             <Text style={styles.forfeitEmoji}>🏳️</Text>
-            <Text style={styles.forfeitTitle}>{t('game.forfeitMatch')}</Text>
-            <Text style={styles.forfeitSubtitle}>{t('game.vs')} {opponentName}</Text>
-            <Pressable style={styles.forfeitCancelBtn} onPress={() => { console.log('[Game] Forfeit cancelled'); setShowForfeitDialog(false); }}>
-              <Text style={styles.forfeitCancelBtnText}>{t('game.cancel')}</Text>
-            </Pressable>
-            <Pressable style={styles.forfeitYesBtn} onPress={handleForfeit}>
-              <Text style={styles.forfeitYesBtnText}>{t('game.forfeitMatch')}</Text>
-            </Pressable>
+            <Text style={styles.forfeitTitle}>{t('game.forfeitMatch')}?</Text>
+            <Text style={styles.forfeitSubtitle}>vs {opponentName}</Text>
+            <View style={styles.forfeitBtns}>
+              <Pressable
+                style={styles.forfeitCancelBtn}
+                onPress={() => { console.log('[Game] Forfeit cancelled'); setShowForfeitDialog(false); }}
+              >
+                <Text style={styles.forfeitCancelBtnText}>{t('game.cancel')}</Text>
+              </Pressable>
+              <Pressable style={styles.forfeitYesBtn} onPress={handleForfeit}>
+                <Text style={styles.forfeitYesBtnText}>{t('game.forfeitMatch')}</Text>
+              </Pressable>
+            </View>
           </View>
         </View>
       )}
@@ -1077,15 +1111,17 @@ export default function GameScreen() {
       {/* ── Searching Screen ── */}
       {searching && (
         <View style={[StyleSheet.absoluteFill, styles.searchingOverlay]}>
-          <Text style={styles.searchingEmoji}>
-            {uiMode === 'training' || uiMode === 'tutorial' ? '🎯' : '🛰️'}
-          </Text>
-          <Text style={styles.searchingTitle}>{t('game.searching')}</Text>
-          {uiMode !== 'training' && uiMode !== 'tutorial' && (
+          <Animated.Text style={[styles.searchingEmoji, { transform: [{ translateY: searchBobAnim }] }]}>
+            {searchEmoji}
+          </Animated.Text>
+          <Text style={styles.searchingTitle}>{searchTitle}</Text>
+          {!isTrainingOrTutorial && (
             <Text style={styles.searchingTimer}>{searchTime}</Text>
           )}
-          <Text style={styles.searchingHint}>Searching for a live match nearby</Text>
-          {uiMode !== 'training' && uiMode !== 'tutorial' && (
+          {!isTrainingOrTutorial && (
+            <Text style={styles.searchingHint}>{t('game.searchingHint')}</Text>
+          )}
+          {!isTrainingOrTutorial && (
             <Pressable
               style={styles.searchVsAiBtn}
               onPress={() => {
@@ -1106,40 +1142,40 @@ export default function GameScreen() {
 
       {/* ── Result Screen ── */}
       {resultData !== null && (
-        <View style={[StyleSheet.absoluteFill, resultWon ? styles.resultOverlayWin : styles.resultOverlayLoss]}>
+        <View style={[StyleSheet.absoluteFill, styles.resultOverlay]}>
           <ScrollView contentContainerStyle={styles.resultContent} showsVerticalScrollIndicator={false}>
             <Text style={styles.resultEmoji}>{resultEmoji}</Text>
             <Text style={[styles.resultTitle, resultWon ? styles.resultTitleWin : styles.resultTitleLoss]}>
-              {resultWon ? t('game.victory') : t('game.defeat')}
+              {resultData.training
+                ? (resultWon ? t('game.trainingWin') : t('game.trainingLoss'))
+                : (resultWon ? t('game.victory') : t('game.defeat'))}
             </Text>
             <Text style={styles.resultVsText}>
-              {t('game.vs')}
-            </Text>
-            <Text style={styles.resultOpponentText}>
-              {resultData.opponent ?? 'Opponent'}
+              vs {resultData.opponent ?? 'Opponent'}
             </Text>
 
             {!resultData.training && resultChange !== 0 && (
               <Text style={[styles.resultTrophyBig, { color: resultChange >= 0 ? '#10B981' : '#EF4444' }]}>
-                {resultChangeSign}{resultChange}
+                {resultChangeSign}{Math.abs(resultChange)}
               </Text>
             )}
-
-            {!resultData.training && (
-              <View style={styles.resultLeagueRow}>
-                <LeagueBadge trophies={resultOldTrophies} size="md" />
-                <Text style={styles.resultLeagueArrow}>→</Text>
-                <LeagueBadge trophies={resultNewTrophies} size="md" />
-              </View>
+            {!resultData.training && resultChange === 0 && (
+              <Text style={styles.noTrophyChange}>{t('game.noTrophyChange')}</Text>
             )}
 
             {resultShardsEarned > 0 && (
               <View style={styles.resultShardsRow}>
                 <Text style={styles.resultShardsText}>🔷</Text>
-                <Text style={styles.resultShardsText}>
-                  +{resultShardsEarned}
-                </Text>
+                <Text style={styles.resultShardsText}>+{resultShardsEarned}</Text>
                 <Text style={styles.resultShardsText}>shards</Text>
+              </View>
+            )}
+
+            {!resultData.training && (
+              <View style={styles.resultLeagueRow}>
+                <LeagueBadge trophies={resultOldTrophies} size="sm" />
+                <Text style={styles.resultLeagueArrow}>→</Text>
+                <LeagueBadge trophies={resultNewTrophies} size="md" />
               </View>
             )}
 
@@ -1186,138 +1222,123 @@ export default function GameScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
+    backgroundColor: '#f1f5f9',
   },
+  // Top HUD
   topHud: {
     paddingHorizontal: 12,
     paddingBottom: 6,
-    gap: 4,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'rgba(255,255,255,0.9)',
     borderBottomWidth: 1,
     borderBottomColor: '#E2E8F0',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 4,
-    elevation: 3,
   },
-  hudRow: {
+  hudTopRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
   },
-  hudPlayerInfo: {
-    width: 72,
-    gap: 1,
+  backBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+    backgroundColor: '#F1F5F9',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
   },
-  hudName: {
+  backBtnText: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#94A3B8',
+  },
+  hudCenterBlock: {
+    flex: 1,
+    alignItems: 'center',
+    gap: 2,
+    minWidth: 0,
+  },
+  opponentNameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  hudOpponentName: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#F43F5E',
+    maxWidth: 120,
+  },
+  kiBadge: {
+    backgroundColor: '#E2E8F0',
+    borderRadius: 6,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  kiBadgeText: {
+    fontSize: 10,
+    fontWeight: '900',
+    color: '#64748B',
+  },
+  timerPill: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 20,
+  },
+  timerPillText: {
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+  },
+  hudPills: {
+    flexDirection: 'row',
+    gap: 6,
+    alignItems: 'center',
+  },
+  clicksPill: {
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  coinsPill: {
+    backgroundColor: '#FFFBEB',
+    borderWidth: 1,
+    borderColor: '#FDE68A',
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  coinDot: {
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    backgroundColor: '#F59E0B',
+  },
+  pillText: {
     fontSize: 12,
     fontWeight: '700',
     color: '#0F172A',
-    letterSpacing: -0.2,
   },
-  hudHpBarWrap: {
-    flex: 1,
-  },
-  timerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 2,
-  },
-  pauseBtn: {
-    width: 28,
-    height: 28,
-    borderRadius: 8,
-    backgroundColor: '#FFFFFF',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  timerText: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#334155',
-    fontFamily: 'SpaceMono',
-    letterSpacing: 1,
-  },
-  escalationBadge: {
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-    borderWidth: 1,
-  },
-  escalationText: {
-    fontSize: 9,
-    fontWeight: '700',
-    fontFamily: 'SpaceMono',
-    letterSpacing: 0.5,
-  },
+  // Bottom HUD
   bottomHud: {
     paddingHorizontal: 12,
-    paddingTop: 8,
-    gap: 6,
-    backgroundColor: '#FFFFFF',
+    paddingTop: 12,
+    gap: 8,
+    backgroundColor: 'rgba(255,255,255,0.9)',
     borderTopWidth: 1,
     borderTopColor: '#E2E8F0',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  clickRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  clickLabel: {
-    fontSize: 9,
-    fontWeight: '700',
-    color: COLORS.textTertiary,
-    fontFamily: 'SpaceMono',
-    letterSpacing: 0.5,
-    width: 44,
-  },
-  clickDots: {
-    flexDirection: 'row',
-    gap: 4,
-    flex: 1,
-  },
-  clickDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  hudActionBtns: {
-    flexDirection: 'row',
-    gap: 6,
-  },
-  hudActionBtn: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-    backgroundColor: '#F1F5F9',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  hudActionBtnActive: {
-    backgroundColor: 'rgba(79,142,247,0.12)',
-    borderColor: COLORS.primary,
-  },
-  hudActionBtnText: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: '#334155',
   },
   abilityRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 4,
+    gap: 8,
+    paddingBottom: 20,
   },
   abilityButtons: {
     flexDirection: 'row',
@@ -1325,8 +1346,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   abilityRightBtns: {
-    flexDirection: 'column',
-    gap: 6,
+    flexDirection: 'row',
+    gap: 4,
     alignItems: 'center',
   },
   orbShopCircleBtn: {
@@ -1350,17 +1371,20 @@ const styles = StyleSheet.create({
     height: 36,
     borderRadius: 18,
     backgroundColor: '#F1F5F9',
-    borderWidth: 1.5,
-    borderColor: '#E2E8F0',
     alignItems: 'center',
     justifyContent: 'center',
+    marginLeft: 4,
   },
   editToggleBtnActive: {
-    backgroundColor: 'rgba(79,142,247,0.12)',
-    borderColor: COLORS.primary,
+    backgroundColor: '#0F172A',
   },
   editToggleBtnText: {
     fontSize: 16,
+  },
+  towerTrayBorder: {
+    borderTopWidth: 1,
+    borderTopColor: '#F1F5F9',
+    paddingTop: 8,
   },
   towerBar: {
     flexGrow: 0,
@@ -1371,57 +1395,45 @@ const styles = StyleSheet.create({
   },
   towerCard: {
     alignItems: 'center',
-    gap: 2,
     paddingHorizontal: 8,
     paddingVertical: 8,
-    borderRadius: 14,
-    borderWidth: 1.5,
+    borderRadius: 16,
+    borderWidth: 2,
     borderColor: '#E2E8F0',
     backgroundColor: '#FFFFFF',
-    minWidth: 72,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 2,
-    elevation: 1,
+    width: 72,
+    height: 94,
+    justifyContent: 'center',
   },
   towerCardSelected: {
-    borderColor: '#F59E0B',
-    borderWidth: 2,
-    backgroundColor: 'rgba(245,158,11,0.08)',
+    borderColor: '#0F172A',
   },
   towerCardDisabled: {
-    opacity: 0.45,
+    opacity: 0.7,
   },
   towerName: {
-    fontSize: 11,
-    fontWeight: '600',
+    fontSize: 9,
+    fontWeight: '700',
     color: '#334155',
     textAlign: 'center',
+    marginTop: 2,
+    lineHeight: 12,
   },
   towerCostRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 2,
   },
   towerCost: {
     fontSize: 10,
     fontWeight: '700',
     color: '#F59E0B',
-    fontFamily: 'SpaceMono',
   },
   towerDiscount: {
     fontSize: 9,
     fontWeight: '700',
     color: '#10B981',
-    fontFamily: 'SpaceMono',
   },
-  abilityBar: {
-    flexDirection: 'row',
-    gap: 12,
-    justifyContent: 'center',
-    paddingVertical: 2,
-  },
+  // Canvas overlays
   aimingBanner: {
     position: 'absolute',
     bottom: 8,
@@ -1442,7 +1454,6 @@ const styles = StyleSheet.create({
     color: COLORS.danger,
     fontWeight: '700',
   },
-  // Placement overlay
   placementOverlay: {
     zIndex: 10,
   },
@@ -1513,7 +1524,6 @@ const styles = StyleSheet.create({
   upgradePopupLevel: {
     fontSize: 10,
     color: COLORS.textSecondary,
-    fontFamily: 'SpaceMono',
   },
   upgradePopupClose: {
     padding: 4,
@@ -1554,7 +1564,6 @@ const styles = StyleSheet.create({
   upgradePopupBtnSub: {
     fontSize: 9,
     color: COLORS.textSecondary,
-    fontFamily: 'SpaceMono',
   },
   // Orb shop
   orbShopOverlay: {
@@ -1630,7 +1639,6 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '700',
     color: '#F59E0B',
-    fontFamily: 'SpaceMono',
   },
   // Forfeit dialog
   forfeitOverlay: {
@@ -1639,18 +1647,19 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0,0,0,0.65)',
+    backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'center',
     alignItems: 'center',
+    padding: 24,
     zIndex: 50,
   },
   forfeitCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    padding: 28,
-    width: 280,
+    borderRadius: 24,
+    padding: 24,
+    maxWidth: 384,
+    width: '100%',
     alignItems: 'center',
-    gap: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.2,
@@ -1658,24 +1667,41 @@ const styles = StyleSheet.create({
     elevation: 12,
   },
   forfeitEmoji: {
-    fontSize: 40,
-    marginBottom: 4,
+    fontSize: 48,
+    marginBottom: 12,
   },
   forfeitTitle: {
     fontSize: 20,
-    fontWeight: '800',
+    fontWeight: '900',
     color: '#0F172A',
-    letterSpacing: 0.5,
+    marginBottom: 8,
   },
   forfeitSubtitle: {
-    fontSize: 13,
+    fontSize: 14,
     color: '#64748B',
-    textAlign: 'center',
-    lineHeight: 18,
+    marginBottom: 24,
+  },
+  forfeitBtns: {
+    flexDirection: 'row',
+    gap: 8,
+    width: '100%',
+  },
+  forfeitCancelBtn: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: '#E2E8F0',
+    alignItems: 'center',
+  },
+  forfeitCancelBtnText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#475569',
   },
   forfeitYesBtn: {
-    width: '100%',
-    paddingVertical: 13,
+    flex: 1,
+    paddingVertical: 12,
     borderRadius: 12,
     backgroundColor: '#EF4444',
     alignItems: 'center',
@@ -1684,20 +1710,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '700',
     color: '#FFFFFF',
-  },
-  forfeitCancelBtn: {
-    width: '100%',
-    paddingVertical: 13,
-    borderRadius: 12,
-    backgroundColor: '#FFFFFF',
-    alignItems: 'center',
-    borderWidth: 1.5,
-    borderColor: '#E2E8F0',
-  },
-  forfeitCancelBtnText: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#475569',
   },
   // Pause menu
   pauseBackdrop: {
@@ -1721,7 +1733,6 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: COLORS.text,
     letterSpacing: 3,
-    fontFamily: 'SpaceMono',
   },
   pauseBtn2: {
     flexDirection: 'row',
@@ -1751,114 +1762,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: COLORS.danger,
   },
-  hudTopRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  hudCenterBlock: {
-    flex: 1,
-    alignItems: 'center',
-    gap: 3,
-  },
-  opponentNameRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  hudOpponentName: {
-    fontSize: 13,
-    fontWeight: '800',
-    color: '#F43F5E',
-    letterSpacing: -0.2,
-    maxWidth: 120,
-  },
-  kiBadge: {
-    backgroundColor: '#F1F5F9',
-    borderRadius: 6,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-  },
-  kiBadgeText: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: '#475569',
-  },
-  timerPill: {
-    paddingHorizontal: 10,
-    paddingVertical: 3,
-    borderRadius: 20,
-  },
-  timerPillText: {
-    fontSize: 13,
-    fontWeight: '700',
-    fontFamily: 'SpaceMono',
-    letterSpacing: 0.5,
-  },
-  hudPills: {
-    flexDirection: 'row',
-    gap: 4,
-    alignItems: 'center',
-  },
-  clicksPill: {
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-  },
-  coinsPill: {
-    backgroundColor: 'rgba(245,158,11,0.1)',
-    borderWidth: 1,
-    borderColor: '#F59E0B',
-    borderRadius: 8,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  coinDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#F59E0B',
-  },
-  pillText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#0F172A',
-  },
-  hpBarsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginTop: 4,
-  },
-  hpBarBlock: {
-    flex: 1,
-    gap: 2,
-  },
-  hpLabel: {
-    fontSize: 9,
-    fontWeight: '700',
-    color: '#94A3B8',
-    letterSpacing: 0.5,
-  },
-  backBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
-    backgroundColor: '#F1F5F9',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  backBtnText: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#94A3B8',
-  },
   // Searching screen
   searchingOverlay: {
     backgroundColor: '#FFFFFF',
@@ -1866,67 +1769,61 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     zIndex: 100,
     gap: 10,
-    paddingHorizontal: 32,
+    paddingHorizontal: 16,
   },
   searchingEmoji: {
-    fontSize: 64,
-    marginBottom: 8,
+    fontSize: 48,
+    marginBottom: 24,
   },
   searchingTitle: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: 20,
+    fontWeight: '700',
     color: '#64748B',
-    letterSpacing: 0.2,
+    marginBottom: 8,
   },
   searchingTimer: {
     fontSize: 72,
     fontWeight: '900',
     color: '#0F172A',
-    fontFamily: 'SpaceMono',
     lineHeight: 80,
   },
   searchingHint: {
-    fontSize: 13,
+    fontSize: 14,
     color: '#94A3B8',
     textAlign: 'center',
-    marginBottom: 8,
   },
   searchToast: {
     position: 'absolute',
     bottom: 48,
     left: 24,
     right: 24,
-    backgroundColor: '#1E293B',
-    borderRadius: 24,
-    paddingHorizontal: 20,
-    paddingVertical: 12,
+    backgroundColor: '#0F172A',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
     alignItems: 'center',
   },
   searchToastText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#F1F5F9',
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#FFFFFF',
     textAlign: 'center',
   },
   searchVsAiBtn: {
-    paddingHorizontal: 32,
-    paddingVertical: 14,
-    borderRadius: 14,
-    borderWidth: 1.5,
-    borderColor: '#CBD5E1',
-    backgroundColor: '#FFFFFF',
+    marginTop: 24,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: '#E2E8F0',
   },
   searchVsAiBtnText: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '700',
-    color: '#334155',
+    color: '#475569',
   },
   // Result screen
-  resultOverlayWin: {
-    backgroundColor: '#FFFFFF',
-    zIndex: 90,
-  },
-  resultOverlayLoss: {
+  resultOverlay: {
     backgroundColor: '#FFFFFF',
     zIndex: 90,
   },
@@ -1935,18 +1832,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingVertical: 60,
-    paddingHorizontal: 24,
+    paddingHorizontal: 16,
     gap: 12,
   },
   resultEmoji: {
     fontSize: 72,
-    marginBottom: 4,
+    marginBottom: 16,
   },
   resultTitle: {
-    fontSize: 42,
+    fontSize: 40,
     fontWeight: '900',
-    letterSpacing: 4,
-    fontFamily: 'SpaceMono',
+    marginBottom: 8,
   },
   resultTitleWin: {
     color: '#0F172A',
@@ -1957,89 +1853,37 @@ const styles = StyleSheet.create({
   resultVsText: {
     fontSize: 14,
     color: '#94A3B8',
-    fontWeight: '500',
-  },
-  resultOpponentText: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#334155',
     marginBottom: 4,
   },
+  noTrophyChange: {
+    fontSize: 14,
+    color: '#94A3B8',
+    marginBottom: 12,
+  },
   resultTrophyBig: {
-    fontSize: 56,
-    fontWeight: '900',
-    fontFamily: 'SpaceMono',
-    lineHeight: 64,
-  },
-  resultTrophyRow: {
-    alignItems: 'center',
-    gap: 4,
-  },
-  resultTrophyBlock: {
-    alignItems: 'center',
-    gap: 4,
-  },
-  resultTrophyLabel: {
-    fontSize: 11,
+    fontSize: 40,
     fontWeight: '700',
-    color: '#94A3B8',
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-  },
-  resultTrophyChange: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  resultTrophyOld: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#94A3B8',
-    fontFamily: 'SpaceMono',
-  },
-  resultTrophyArrow: {
-    fontSize: 16,
-    color: '#94A3B8',
-  },
-  resultTrophyNew: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#0F172A',
-    fontFamily: 'SpaceMono',
-  },
-  resultChangeBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 8,
-  },
-  resultChangeBadgeText: {
-    fontSize: 13,
-    fontWeight: '800',
-    color: '#FFFFFF',
-    fontFamily: 'SpaceMono',
+    marginBottom: 12,
   },
   resultLeagueRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    marginVertical: 4,
+    marginBottom: 16,
   },
   resultLeagueArrow: {
-    fontSize: 18,
-    color: '#64748B',
+    fontSize: 20,
+    color: '#94A3B8',
     fontWeight: '700',
   },
   resultShardsRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: 'rgba(132,204,22,0.1)',
-    borderRadius: 10,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    marginBottom: 12,
   },
   resultShardsText: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '700',
     color: '#65A30D',
   },
@@ -2067,34 +1911,66 @@ const styles = StyleSheet.create({
   },
   resultButtons: {
     flexDirection: 'row',
-    gap: 10,
+    gap: 12,
     width: '100%',
     marginTop: 8,
   },
+  resultHomeBtn: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: '#E2E8F0',
+    alignItems: 'center',
+  },
+  resultHomeBtnText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#374151',
+  },
   resultPlayAgainBtn: {
     flex: 1,
-    paddingVertical: 15,
-    borderRadius: 14,
+    paddingVertical: 12,
+    borderRadius: 12,
     backgroundColor: '#0F172A',
     alignItems: 'center',
   },
   resultPlayAgainBtnText: {
     fontSize: 15,
-    fontWeight: '800',
+    fontWeight: '700',
     color: '#FFFFFF',
   },
-  resultHomeBtn: {
-    flex: 1,
-    paddingVertical: 15,
-    borderRadius: 14,
-    backgroundColor: '#FFFFFF',
-    alignItems: 'center',
-    borderWidth: 1.5,
-    borderColor: '#E2E8F0',
-  },
-  resultHomeBtnText: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#334155',
-  },
+  // Unused but kept for compatibility
+  hudRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  hudPlayerInfo: { width: 72, gap: 1 },
+  hudName: { fontSize: 12, fontWeight: '700', color: '#0F172A' },
+  hudHpBarWrap: { flex: 1 },
+  timerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 2 },
+  pauseBtn: { width: 28, height: 28, borderRadius: 8, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#E2E8F0' },
+  timerText: { fontSize: 15, fontWeight: '700', color: '#334155', letterSpacing: 1 },
+  escalationBadge: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, borderWidth: 1 },
+  escalationText: { fontSize: 9, fontWeight: '700', letterSpacing: 0.5 },
+  clickRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  clickLabel: { fontSize: 9, fontWeight: '700', color: COLORS.textTertiary, letterSpacing: 0.5, width: 44 },
+  clickDots: { flexDirection: 'row', gap: 4, flex: 1 },
+  clickDot: { width: 10, height: 10, borderRadius: 5, borderWidth: 1, borderColor: '#E2E8F0' },
+  hudActionBtns: { flexDirection: 'row', gap: 6 },
+  hudActionBtn: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, backgroundColor: '#F1F5F9', borderWidth: 1, borderColor: '#E2E8F0' },
+  hudActionBtnActive: { backgroundColor: 'rgba(79,142,247,0.12)', borderColor: COLORS.primary },
+  hudActionBtnText: { fontSize: 10, fontWeight: '700', color: '#334155' },
+  abilityBar: { flexDirection: 'row', gap: 12, justifyContent: 'center', paddingVertical: 2 },
+  hpBarsRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 },
+  hpBarBlock: { flex: 1, gap: 2 },
+  hpLabel: { fontSize: 9, fontWeight: '700', color: '#94A3B8', letterSpacing: 0.5 },
+  resultTrophyRow: { alignItems: 'center', gap: 4 },
+  resultTrophyBlock: { alignItems: 'center', gap: 4 },
+  resultTrophyLabel: { fontSize: 11, fontWeight: '700', color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 1 },
+  resultTrophyChange: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  resultTrophyOld: { fontSize: 18, fontWeight: '700', color: '#94A3B8' },
+  resultTrophyArrow: { fontSize: 16, color: '#94A3B8' },
+  resultTrophyNew: { fontSize: 18, fontWeight: '700', color: '#0F172A' },
+  resultChangeBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 },
+  resultChangeBadgeText: { fontSize: 13, fontWeight: '800', color: '#FFFFFF' },
+  resultOverlayWin: { backgroundColor: '#FFFFFF', zIndex: 90 },
+  resultOverlayLoss: { backgroundColor: '#FFFFFF', zIndex: 90 },
 });

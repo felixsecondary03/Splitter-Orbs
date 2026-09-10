@@ -3,7 +3,7 @@ import {
   View, Text, TouchableOpacity, ScrollView, StyleSheet,
   ActivityIndicator, Alert, Dimensions, Animated,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { supabase } from '@/utils/supabase';
 import { useProfile } from '@/contexts/ProfileContext';
 import { useTranslation } from '@/i18n/LanguageContext';
@@ -119,17 +119,16 @@ function useFlipAnim() {
 export default function CollectionScreen() {
   const { t } = useTranslation();
   const { profile, refreshProfile } = useProfile();
+  const insets = useSafeAreaInsets();
   const [tab, setTab] = useState<LabTab>('towers');
   const [busy, setBusy] = useState<string | null>(null);
 
-  // NEW badge tracking — session-local set of seen card IDs
   const seenCardsRef = useRef(new Set<string>());
   const [seenVersion, setSeenVersion] = useState(0);
 
   const shards = profile?.shards || 0;
   const gems = profile?.gems || 0;
 
-  // Mark all cards in current tab as seen after 500ms
   const markTabSeen = useCallback((newTab: LabTab) => {
     setTimeout(() => {
       const defs =
@@ -295,21 +294,21 @@ export default function CollectionScreen() {
     const sideStatsText = `HP ${curSide.hp} · DMG ${curSide.damage} · ${curFireRate}s`;
     const sideNextText = `→ HP ${nextSide.hp} · DMG ${nextSide.damage}`;
 
+    const handTitle = '👆 Hand Speed';
+    const sideTowerTitle = '🏰 Side Towers';
+
     return (
       <View style={styles.upgradesContainer}>
-        <View style={[styles.upgradeCard, { borderColor: '#c4b5fd' }]}>
+        {/* Hand upgrade card */}
+        <View style={styles.upgradeCard}>
           <View style={styles.upgradeCardHeader}>
-            <View style={[styles.upgradeIcon, { backgroundColor: '#8b5cf6' }]}>
-              <Text style={{ fontSize: 24 }}>✋</Text>
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.upgradeTitle}>Hand Upgrade</Text>
-              <Text style={styles.upgradeDesc}>More clicks & faster recharge</Text>
-            </View>
+            <Text style={styles.upgradeTitle}>{handTitle}</Text>
+            <Text style={styles.upgradeLevel}>Level {handLevel}/5</Text>
           </View>
+          <Text style={styles.upgradeDesc}>More clicks &amp; faster recharge</Text>
           <View style={styles.levelPips}>
             {handPipIndices.map((i) => (
-              <View key={i} style={[styles.levelPip, i < handLevel ? { backgroundColor: '#8b5cf6' } : { backgroundColor: '#e2e8f0' }]} />
+              <View key={i} style={[styles.levelPip, i < handLevel ? styles.levelPipFilled : styles.levelPipEmpty]} />
             ))}
           </View>
           <View style={styles.statsRow}>
@@ -317,35 +316,32 @@ export default function CollectionScreen() {
             {!handMaxed && <Text style={styles.statsNext}>{handNextText}</Text>}
           </View>
           {handMaxed ? (
-            <View style={[styles.maxedBtn, { backgroundColor: '#ede9fe' }]}>
-              <Text style={[styles.maxedBtnText, { color: '#7c3aed' }]}>MAX</Text>
+            <View style={styles.maxedBtn}>
+              <Text style={styles.maxedBtnText}>MAX</Text>
             </View>
           ) : (
             <TouchableOpacity
-              style={[styles.upgradeBtn, { backgroundColor: handAffordable ? '#8b5cf6' : '#e2e8f0' }]}
+              style={[styles.upgradeBtn, !handAffordable && styles.upgradeBtnDisabled]}
               onPress={() => handleUpgradeMeta('hand')}
               disabled={busy === 'hand' || !handAffordable}
             >
               {busy === 'hand'
                 ? <ActivityIndicator size="small" color="#fff" />
-                : <Text style={[styles.upgradeBtnText, !handAffordable && { color: '#94a3b8' }]}>Upgrade · 🔷 {handCost}</Text>}
+                : <Text style={[styles.upgradeBtnText, !handAffordable && styles.upgradeBtnTextDisabled]}>Upgrade · 🔷 {handCost}</Text>}
             </TouchableOpacity>
           )}
         </View>
 
-        <View style={[styles.upgradeCard, { borderColor: '#a5f3fc' }]}>
+        {/* Side tower upgrade card */}
+        <View style={styles.upgradeCard}>
           <View style={styles.upgradeCardHeader}>
-            <View style={[styles.upgradeIcon, { backgroundColor: '#06b6d4' }]}>
-              <Text style={{ fontSize: 24 }}>🛡️</Text>
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.upgradeTitle}>Side Tower</Text>
-              <Text style={styles.upgradeDesc}>Stronger defensive towers</Text>
-            </View>
+            <Text style={styles.upgradeTitle}>{sideTowerTitle}</Text>
+            <Text style={styles.upgradeLevel}>Level {sideTowerLevel}/5</Text>
           </View>
+          <Text style={styles.upgradeDesc}>Stronger defensive towers</Text>
           <View style={styles.levelPips}>
             {sidePipIndices.map((i) => (
-              <View key={i} style={[styles.levelPip, i < sideTowerLevel ? { backgroundColor: '#06b6d4' } : { backgroundColor: '#e2e8f0' }]} />
+              <View key={i} style={[styles.levelPip, i < sideTowerLevel ? styles.levelPipFilledCyan : styles.levelPipEmpty]} />
             ))}
           </View>
           <View style={styles.statsRow}>
@@ -353,18 +349,18 @@ export default function CollectionScreen() {
             {!sideTowerMaxed && <Text style={styles.statsNext}>{sideNextText}</Text>}
           </View>
           {sideTowerMaxed ? (
-            <View style={[styles.maxedBtn, { backgroundColor: '#cffafe' }]}>
-              <Text style={[styles.maxedBtnText, { color: '#0891b2' }]}>MAX</Text>
+            <View style={[styles.maxedBtn, styles.maxedBtnCyan]}>
+              <Text style={[styles.maxedBtnText, styles.maxedBtnTextCyan]}>MAX</Text>
             </View>
           ) : (
             <TouchableOpacity
-              style={[styles.upgradeBtn, { backgroundColor: sideAffordable ? '#06b6d4' : '#e2e8f0' }]}
+              style={[styles.upgradeBtn, styles.upgradeBtnCyan, !sideAffordable && styles.upgradeBtnDisabled]}
               onPress={() => handleUpgradeMeta('side_tower')}
               disabled={busy === 'side_tower' || !sideAffordable}
             >
               {busy === 'side_tower'
                 ? <ActivityIndicator size="small" color="#fff" />
-                : <Text style={[styles.upgradeBtnText, !sideAffordable && { color: '#94a3b8' }]}>Upgrade · 🔷 {sideCost}</Text>}
+                : <Text style={[styles.upgradeBtnText, !sideAffordable && styles.upgradeBtnTextDisabled]}>Upgrade · 🔷 {sideCost}</Text>}
             </TouchableOpacity>
           )}
         </View>
@@ -437,44 +433,35 @@ export default function CollectionScreen() {
 
     return (
       <View>
-        {/* Orb Patterns */}
         <Text style={styles.sectionLabel}>Orb Patterns</Text>
         <View style={styles.skinGrid}>
           {sortedOrbs.map((skin) => renderSkinCard(skin, 'equipped_orb_pattern'))}
         </View>
 
-        {/* Station Skins */}
         <Text style={[styles.sectionLabel, { marginTop: 20 }]}>Station Skins</Text>
         <View style={styles.skinGrid}>
           {sortedStation.map((skin) => renderSkinCard(skin, 'equipped_station_skin'))}
         </View>
 
-        {/* Emblems & Tower Skins */}
         <Text style={[styles.sectionLabel, { marginTop: 20 }]}>Emblems</Text>
-        {EMBLEM_SLOTS.map((slot) => {
-          const equippedId = (profile as any)?.[slot.field] || 'default';
-          return (
-            <View key={slot.id} style={styles.slotSection}>
-              <Text style={styles.slotLabel}>{slot.name}</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.slotScroll}>
-                {sortedEmblems.map((skin) => renderSkinCard(skin, slot.field))}
-              </ScrollView>
-            </View>
-          );
-        })}
+        {EMBLEM_SLOTS.map((slot) => (
+          <View key={slot.id} style={styles.slotSection}>
+            <Text style={styles.slotLabel}>{slot.name}</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.slotScroll}>
+              {sortedEmblems.map((skin) => renderSkinCard(skin, slot.field))}
+            </ScrollView>
+          </View>
+        ))}
 
         <Text style={[styles.sectionLabel, { marginTop: 20 }]}>Tower Skins</Text>
-        {TOWER_SKIN_SLOTS.map((slot) => {
-          const equippedId = (profile as any)?.[slot.field] || 'default';
-          return (
-            <View key={slot.id} style={styles.slotSection}>
-              <Text style={styles.slotLabel}>{slot.name}</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.slotScroll}>
-                {sortedTower.map((skin) => renderSkinCard(skin, slot.field))}
-              </ScrollView>
-            </View>
-          );
-        })}
+        {TOWER_SKIN_SLOTS.map((slot) => (
+          <View key={slot.id} style={styles.slotSection}>
+            <Text style={styles.slotLabel}>{slot.name}</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.slotScroll}>
+              {sortedTower.map((skin) => renderSkinCard(skin, slot.field))}
+            </ScrollView>
+          </View>
+        ))}
       </View>
     );
   };
@@ -492,50 +479,54 @@ export default function CollectionScreen() {
   const orbDefs = SENDABLE_ORBS.map((id) => ORB_TYPES[id as OrbType]).filter(Boolean);
   const abilityDefs = Object.values(ABILITIES);
 
+  const paddingTop = insets.top + 40;
+
   return (
-    <SafeAreaView style={styles.safe}>
-      <View style={styles.header}>
+    <View style={styles.safe}>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={[styles.scrollContent, { paddingTop }]}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Header */}
         <View style={styles.headerRow}>
           <Text style={styles.headerTitle}>{t('collection.title')}</Text>
-          <View style={styles.currencyRow}>
-            <View style={styles.shardBadge}>
-              <Text style={styles.shardBadgeText}>🔷 {shards}</Text>
-            </View>
-            <View style={styles.gemBadge}>
-              <Text style={styles.gemBadgeText}>💎 {gems}</Text>
-            </View>
+          <View style={styles.shardBadge}>
+            <Text style={styles.shardBadgeText}>🔷 {shards}</Text>
           </View>
         </View>
         <Text style={styles.headerHint}>{t('collection.hint')}</Text>
-      </View>
 
-      <View style={styles.tabBar}>
-        {TABS.map((tb) => {
-          const isActive = tab === tb.id;
-          return (
-            <TouchableOpacity
-              key={tb.id}
-              onPress={() => {
-                console.log('[Lab] Tab selected:', tb.id);
-                setTab(tb.id);
-                markTabSeen(tb.id);
-              }}
-              style={[styles.tabBtn, isActive && styles.tabBtnActive]}
-            >
-              <Text style={[styles.tabBtnText, isActive && styles.tabBtnTextActive]}>{tb.label}</Text>
-            </TouchableOpacity>
-          );
-        })}
-      </View>
+        {/* Tab bar */}
+        <View style={[styles.tabBar, { top: insets.top + 8 }]}>
+          {TABS.map((tb) => {
+            const isActive = tab === tb.id;
+            return (
+              <TouchableOpacity
+                key={tb.id}
+                onPress={() => {
+                  console.log('[Lab] Tab selected:', tb.id);
+                  setTab(tb.id);
+                  markTabSeen(tb.id);
+                }}
+                style={[styles.tabBtn, isActive && styles.tabBtnActive]}
+              >
+                <Text style={[styles.tabBtnText, isActive && styles.tabBtnTextActive]}>{tb.label}</Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
 
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
-        {tab === 'towers' && renderSection('tower', towerDefs)}
-        {tab === 'orbs' && renderSection('orb', orbDefs)}
-        {tab === 'powers' && renderSection('ability', abilityDefs)}
-        {tab === 'skins' && renderSkinsTab()}
-        {tab === 'upgrades' && renderUpgrades()}
+        {/* Content */}
+        <View style={styles.tabContent}>
+          {tab === 'towers' && renderSection('tower', towerDefs)}
+          {tab === 'orbs' && renderSection('orb', orbDefs)}
+          {tab === 'powers' && renderSection('ability', abilityDefs)}
+          {tab === 'skins' && renderSkinsTab()}
+          {tab === 'upgrades' && renderUpgrades()}
+        </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -562,9 +553,12 @@ function FlippableCard({ kind, def, profile, busy, seenVersion, seenCardsRef, on
   const category = kind === 'tower' ? 'tower_cards' : kind === 'ability' ? 'ability_cards' : 'orb_cards';
   const isNew = !seenCardsRef.current.has(def.id);
 
-  // Orb stats
   const orbStats = kind === 'orb' && level >= 1 ? getOrbStats(def.id, level) : null;
   const orbStatsNext = kind === 'orb' && level >= 1 && level < MAX_CARD_LEVEL ? getOrbStats(def.id, level + 1) : null;
+
+  const isTower = kind === 'tower';
+  const isOrb = kind === 'orb';
+  const canFlip = isTower || isOrb;
 
   let visual: React.ReactNode;
   if (kind === 'tower') {
@@ -588,6 +582,12 @@ function FlippableCard({ kind, def, profile, busy, seenVersion, seenCardsRef, on
   const progressColor = progressPct >= 1 ? '#10b981' : '#94a3b8';
   const progressWidth = `${progressPct * 100}%` as any;
   const levelDotIndices = Array.from({ length: MAX_CARD_LEVEL }, (_, i) => i);
+
+  // Orb stats text
+  const orbStatsText = orbStats ? `HP ${orbStats.hp} · SPD ${orbStats.speed} · DMG ${orbStats.damage}` : '';
+  const orbStatsNextHp = orbStatsNext ? String(orbStatsNext.hp) : '';
+  const orbStatsNextSpd = orbStatsNext ? String(orbStatsNext.speed) : '';
+  const orbStatsNextDmg = orbStatsNext ? String(orbStatsNext.damage) : '';
 
   // Back face content
   const backContent = kind === 'orb' && orbStats ? (
@@ -636,6 +636,19 @@ function FlippableCard({ kind, def, profile, busy, seenVersion, seenCardsRef, on
     </View>
   );
 
+  const trophyReq = kind === 'tower' ? (TOWER_TROPHY_UNLOCKS as any)[def.id] :
+                    kind === 'orb' ? (ORB_TROPHY_UNLOCKS as any)[def.id] :
+                    (ABILITY_TROPHY_UNLOCKS as any)[def.id];
+  const lockText = trophyReq
+    ? t('collection.trophyLock', { n: trophyReq })
+    : t('collection.crateLock');
+
+  const copiesLabel = t('collection.copies') || 'Copies';
+  const levelUpLabel = t('collection.levelUp') || 'Level Up';
+  const buyCopyLabel = t('collection.buyCopy') || 'Buy Copy';
+  const collectMoreLabel = t('collection.collectMore') || 'Collect More';
+  const maxLevelLabel = t('collection.maxLevel') || 'MAX LEVEL';
+
   return (
     <View style={[styles.card, locked && styles.cardLocked, maxed && styles.cardMaxed]}>
       {/* NEW badge */}
@@ -652,6 +665,17 @@ function FlippableCard({ kind, def, profile, busy, seenVersion, seenCardsRef, on
           { transform: [{ rotateY: frontRotate }], backfaceVisibility: 'hidden' },
         ]}
       >
+        {/* Info button (top-right, only for towers/orbs) */}
+        {canFlip && !locked && (
+          <TouchableOpacity
+            onPress={() => { console.log('[Lab] Card flip tapped:', def.id); flip(); }}
+            style={styles.infoBtn}
+          >
+            <Text style={styles.infoBtnText}>i</Text>
+          </TouchableOpacity>
+        )}
+
+        {/* Header row */}
         <View style={styles.cardHeader}>
           {visual}
           <View style={styles.cardHeaderInfo}>
@@ -665,30 +689,41 @@ function FlippableCard({ kind, def, profile, busy, seenVersion, seenCardsRef, on
               ))}
             </View>
           </View>
-          {!locked && (
-            <TouchableOpacity onPress={() => { console.log('[Lab] Card flip tapped:', def.id); flip(); }} style={styles.infoBtn}>
-              <Text style={styles.infoBtnText}>ℹ️</Text>
-            </TouchableOpacity>
-          )}
         </View>
 
-        <View style={styles.cardBody}>
+        {/* Bottom section */}
+        <View style={styles.cardBottom}>
           {locked ? (
-            <Text style={styles.lockedText}>
-              {(kind === 'orb' && (ORB_TROPHY_UNLOCKS as any)[def.id]) ||
-               (kind === 'tower' && (TOWER_TROPHY_UNLOCKS as any)[def.id]) ||
-               (kind === 'ability' && (ABILITY_TROPHY_UNLOCKS as any)[def.id])
-                ? t('collection.trophyLock', { n: (ORB_TROPHY_UNLOCKS as any)[def.id] || (TOWER_TROPHY_UNLOCKS as any)[def.id] || (ABILITY_TROPHY_UNLOCKS as any)[def.id] })
-                : t('collection.crateLock')}
-            </Text>
+            <Text style={styles.lockedText}>{lockText}</Text>
           ) : maxed ? (
-            <View style={styles.maxBadge}>
-              <Text style={styles.maxBadgeText}>⭐ MAX LEVEL</Text>
-            </View>
+            <>
+              {isOrb && orbStats && (
+                <Text style={styles.orbStatsMaxed}>{orbStatsText}</Text>
+              )}
+              <View style={styles.maxBadge}>
+                <Text style={styles.maxBadgeText}>⭐ {maxLevelLabel}</Text>
+              </View>
+            </>
           ) : (
             <>
+              {isOrb && orbStats && (
+                <View style={styles.orbStatsRow}>
+                  <Text style={styles.orbStatsCurrent}>
+                    {'HP '}
+                  </Text>
+                  <Text style={styles.orbStatsCurrent}>{orbStats.hp}</Text>
+                  {orbStatsNext && <Text style={styles.orbStatsNextVal}>→{orbStatsNextHp}</Text>}
+                  <Text style={styles.orbStatsCurrent}>{' · SPD '}</Text>
+                  <Text style={styles.orbStatsCurrent}>{orbStats.speed}</Text>
+                  {orbStatsNext && <Text style={styles.orbStatsNextVal}>→{orbStatsNextSpd}</Text>}
+                  <Text style={styles.orbStatsCurrent}>{' · DMG '}</Text>
+                  <Text style={styles.orbStatsCurrent}>{orbStats.damage}</Text>
+                  {orbStatsNext && <Text style={styles.orbStatsNextVal}>→{orbStatsNextDmg}</Text>}
+                </View>
+              )}
+              {/* Copies progress */}
               <View style={styles.copiesRow}>
-                <Text style={styles.copiesLabel}>Copies</Text>
+                <Text style={styles.copiesLabel}>{copiesLabel}</Text>
                 <Text style={styles.copiesCount}>{copies}/{needed}</Text>
               </View>
               <View style={styles.progressBar}>
@@ -697,39 +732,37 @@ function FlippableCard({ kind, def, profile, busy, seenVersion, seenCardsRef, on
               {buyableCopies > 0 && (
                 <Text style={styles.boughtText}>{boughtCopies}/{buyableCopies} bought</Text>
               )}
+              {/* Action button */}
+              <View style={styles.cardAction}>
+                {canLevel ? (
+                  <TouchableOpacity
+                    style={styles.levelUpBtn}
+                    onPress={() => { console.log('[Lab] Level Up tapped:', def.id); onLevelUp(category, def.id); }}
+                    disabled={!!isBusy}
+                  >
+                    {isBusy
+                      ? <ActivityIndicator size="small" color="#fff" />
+                      : <Text style={styles.levelUpBtnText}>⭐ {levelUpLabel}</Text>}
+                  </TouchableOpacity>
+                ) : boughtCopies < buyableCopies ? (
+                  <TouchableOpacity
+                    style={[styles.buyBtn, !canBuyCopy && styles.buyBtnDisabled]}
+                    onPress={() => { console.log('[Lab] Buy Copy tapped:', def.id); onBuyCopy(category, def.id); }}
+                    disabled={!!isBuyBusy || !canBuyCopy}
+                  >
+                    {isBuyBusy
+                      ? <ActivityIndicator size="small" color="#fff" />
+                      : <Text style={[styles.buyBtnText, !canBuyCopy && styles.buyBtnTextDisabled]}>🔷 {copyShardCost} {buyCopyLabel}</Text>}
+                  </TouchableOpacity>
+                ) : (
+                  <View style={styles.collectMoreBtn}>
+                    <Text style={styles.collectMoreText}>📦 {collectMoreLabel}</Text>
+                  </View>
+                )}
+              </View>
             </>
           )}
         </View>
-
-        {!locked && (
-          <View style={styles.cardAction}>
-            {maxed ? null : canLevel ? (
-              <TouchableOpacity
-                style={styles.levelUpBtn}
-                onPress={() => { console.log('[Lab] Level Up tapped:', def.id); onLevelUp(category, def.id); }}
-                disabled={!!isBusy}
-              >
-                {isBusy
-                  ? <ActivityIndicator size="small" color="#fff" />
-                  : <Text style={styles.levelUpBtnText}>⭐ Level Up</Text>}
-              </TouchableOpacity>
-            ) : boughtCopies < buyableCopies ? (
-              <TouchableOpacity
-                style={[styles.buyBtn, !canBuyCopy && styles.buyBtnDisabled]}
-                onPress={() => { console.log('[Lab] Buy Copy tapped:', def.id); onBuyCopy(category, def.id); }}
-                disabled={!!isBuyBusy || !canBuyCopy}
-              >
-                {isBuyBusy
-                  ? <ActivityIndicator size="small" color="#fff" />
-                  : <Text style={[styles.buyBtnText, !canBuyCopy && styles.buyBtnTextDisabled]}>Buy Copy · 🔷 {copyShardCost}</Text>}
-              </TouchableOpacity>
-            ) : (
-              <View style={styles.collectMoreBtn}>
-                <Text style={styles.collectMoreText}>📦 Collect More</Text>
-              </View>
-            )}
-          </View>
-        )}
       </Animated.View>
 
       {/* Back face */}
@@ -741,7 +774,10 @@ function FlippableCard({ kind, def, profile, busy, seenVersion, seenCardsRef, on
         ]}
       >
         {backContent}
-        <TouchableOpacity onPress={() => { console.log('[Lab] Card flip back tapped:', def.id); flip(); }} style={styles.infoBtnBack}>
+        <TouchableOpacity
+          onPress={() => { console.log('[Lab] Card flip back tapped:', def.id); flip(); }}
+          style={styles.infoBtnBack}
+        >
           <Text style={styles.infoBtnText}>✕</Text>
         </TouchableOpacity>
       </Animated.View>
@@ -751,24 +787,59 @@ function FlippableCard({ kind, def, profile, busy, seenVersion, seenCardsRef, on
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: '#f8fafc' },
-  header: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 12, backgroundColor: '#f8fafc' },
-  headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 2 },
-  headerTitle: { fontSize: 28, fontWeight: '900', color: '#0f172a' },
-  headerHint: { fontSize: 12, color: '#94a3b8', textAlign: 'center' },
-  currencyRow: { flexDirection: 'row', gap: 8 },
-  shardBadge: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 12, backgroundColor: '#f0fdf4', borderWidth: 1, borderColor: '#bbf7d0' },
-  shardBadgeText: { fontSize: 13, fontWeight: '700', color: '#16a34a' },
-  gemBadge: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 12, backgroundColor: '#eff6ff', borderWidth: 1, borderColor: '#bfdbfe' },
-  gemBadgeText: { fontSize: 13, fontWeight: '700', color: '#2563eb' },
-  tabBar: { flexDirection: 'row', marginHorizontal: 16, marginBottom: 12, padding: 4, borderRadius: 16, backgroundColor: '#fff', borderWidth: 2, borderColor: '#e2e8f0', gap: 2 },
+  scroll: { flex: 1 },
+  scrollContent: {
+    paddingHorizontal: 16,
+    paddingBottom: 96,
+  },
+
+  // Header
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+  },
+  headerTitle: { fontSize: 30, fontWeight: '900', color: '#0f172a' },
+  headerHint: { fontSize: 12, color: '#94a3b8', textAlign: 'center', marginBottom: 16 },
+  shardBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 12,
+    backgroundColor: '#f7fee7',
+    borderWidth: 1,
+    borderColor: '#bef264',
+  },
+  shardBadgeText: { fontSize: 13, fontWeight: '700', color: '#65a30d' },
+
+  // Tab bar
+  tabBar: {
+    flexDirection: 'row',
+    padding: 4,
+    borderRadius: 16,
+    backgroundColor: '#fff',
+    borderWidth: 2,
+    borderColor: '#e2e8f0',
+    marginBottom: 20,
+    gap: 2,
+    zIndex: 10,
+  },
   tabBtn: { flex: 1, paddingVertical: 8, borderRadius: 12, alignItems: 'center' },
   tabBtnActive: { backgroundColor: '#0f172a' },
   tabBtnText: { fontSize: 10, fontWeight: '700', color: '#64748b' },
   tabBtnTextActive: { color: '#fff' },
-  scroll: { flex: 1 },
-  scrollContent: { paddingHorizontal: 16, paddingBottom: 32 },
+
+  tabContent: {},
+
   section: { marginBottom: 20 },
-  sectionLabel: { fontSize: 12, fontWeight: '700', color: '#475569', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.5 },
+  sectionLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#475569',
+    marginBottom: 8,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
   cardGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
 
   // Card
@@ -778,7 +849,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     borderWidth: 2,
     borderColor: '#e2e8f0',
-    minHeight: 180,
+    minHeight: 200,
     overflow: 'hidden',
   },
   cardLocked: { opacity: 0.6 },
@@ -787,39 +858,79 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 0, left: 0, right: 0, bottom: 0,
     padding: 12,
-    justifyContent: 'space-between',
     backgroundColor: '#fff',
     borderRadius: 14,
-    minHeight: 180,
+    minHeight: 200,
   },
   cardFaceBack: {
     backgroundColor: '#1e293b',
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#334155',
   },
   cardHeader: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, marginBottom: 8 },
-  cardVisualBox: { width: 38, height: 38, borderRadius: 8, borderWidth: 1.5, alignItems: 'center', justifyContent: 'center' },
-  cardVisualText: { fontSize: 12, fontWeight: '700' },
   orbCircle: { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center' },
   orbCircleText: { fontSize: 11, fontWeight: '900', color: '#fff' },
   abilityCircle: { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center' },
   cardHeaderInfo: { flex: 1 },
   cardName: { fontSize: 12, fontWeight: '700', color: '#1e293b', marginBottom: 2 },
   rarityBadge: { alignSelf: 'flex-start', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 8, marginBottom: 4 },
-  rarityText: { fontSize: 9, fontWeight: '700' },
+  rarityText: { fontSize: 8, fontWeight: '700' },
   levelDots: { flexDirection: 'row', gap: 3 },
   levelDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#e2e8f0' },
   levelDotFilled: { backgroundColor: '#f59e0b' },
-  cardBody: { flex: 1, justifyContent: 'center', marginVertical: 4 },
-  lockedText: { fontSize: 11, color: '#94a3b8', fontWeight: '600', textAlign: 'center' },
-  maxBadge: { alignItems: 'center', paddingVertical: 4 },
-  maxBadgeText: { fontSize: 11, fontWeight: '800', color: '#d97706' },
+
+  // Info button
+  infoBtn: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#f1f5f9',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 5,
+  },
+  infoBtnBack: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#334155',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  infoBtnText: { fontSize: 11, fontWeight: '900', color: '#64748b' },
+
+  // NEW badge
+  newBadge: {
+    position: 'absolute', top: 6, left: 6, zIndex: 10,
+    backgroundColor: '#ef4444', borderRadius: 6,
+    paddingHorizontal: 5, paddingVertical: 2,
+  },
+  newBadgeText: { fontSize: 8, fontWeight: '900', color: '#fff' },
+
+  // Bottom section
+  cardBottom: { flex: 1, justifyContent: 'flex-end' },
+  lockedText: { fontSize: 11, color: '#94a3b8', fontWeight: '600', textAlign: 'center', paddingVertical: 12 },
+  maxBadge: { alignItems: 'center', paddingVertical: 8 },
+  maxBadgeText: { fontSize: 11, fontWeight: '800', color: '#f59e0b' },
+  orbStatsMaxed: { fontSize: 10, color: '#94a3b8', textAlign: 'center', marginBottom: 4 },
+  orbStatsRow: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', marginBottom: 6 },
+  orbStatsCurrent: { fontSize: 10, color: '#64748b' },
+  orbStatsNextVal: { fontSize: 10, color: '#10b981', fontWeight: '700' },
+
   copiesRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 3 },
   copiesLabel: { fontSize: 10, color: '#94a3b8' },
   copiesCount: { fontSize: 10, color: '#475569', fontWeight: '600' },
   progressBar: { height: 6, borderRadius: 3, backgroundColor: '#f1f5f9', overflow: 'hidden', marginBottom: 2 },
   progressFill: { height: '100%', borderRadius: 3 },
-  boughtText: { fontSize: 9, color: '#94a3b8', textAlign: 'right' },
+  boughtText: { fontSize: 9, color: '#94a3b8', textAlign: 'right', marginTop: 2 },
   cardAction: { marginTop: 8 },
   levelUpBtn: { paddingVertical: 8, borderRadius: 10, backgroundColor: '#10b981', alignItems: 'center' },
   levelUpBtnText: { fontSize: 11, fontWeight: '700', color: '#fff' },
@@ -829,19 +940,6 @@ const styles = StyleSheet.create({
   buyBtnTextDisabled: { color: '#94a3b8' },
   collectMoreBtn: { paddingVertical: 8, borderRadius: 10, backgroundColor: '#f1f5f9', alignItems: 'center' },
   collectMoreText: { fontSize: 11, fontWeight: '600', color: '#94a3b8' },
-
-  // Info / flip button
-  infoBtn: { padding: 4 },
-  infoBtnBack: { position: 'absolute', top: 8, right: 8, padding: 4 },
-  infoBtnText: { fontSize: 14 },
-
-  // NEW badge
-  newBadge: {
-    position: 'absolute', top: 6, right: 6, zIndex: 10,
-    backgroundColor: '#ef4444', borderRadius: 6,
-    paddingHorizontal: 5, paddingVertical: 2,
-  },
-  newBadgeText: { fontSize: 8, fontWeight: '900', color: '#fff' },
 
   // Back face stats
   backStats: { alignItems: 'center', gap: 4 },
@@ -853,20 +951,49 @@ const styles = StyleSheet.create({
 
   // Upgrades
   upgradesContainer: { gap: 12 },
-  upgradeCard: { backgroundColor: '#fff', borderRadius: 20, borderWidth: 2, padding: 20 },
-  upgradeCardHeader: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 12 },
-  upgradeIcon: { width: 52, height: 52, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
-  upgradeTitle: { fontSize: 16, fontWeight: '900', color: '#0f172a' },
-  upgradeDesc: { fontSize: 11, color: '#94a3b8', marginTop: 2 },
+  upgradeCard: {
+    backgroundColor: '#fff',
+    borderRadius: 24,
+    borderWidth: 2,
+    borderColor: '#e2e8f0',
+    padding: 20,
+  },
+  upgradeCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+  },
+  upgradeTitle: { fontSize: 16, fontWeight: '700', color: '#1e293b' },
+  upgradeLevel: { fontSize: 12, color: '#94a3b8' },
+  upgradeDesc: { fontSize: 12, color: '#64748b', marginBottom: 12 },
   levelPips: { flexDirection: 'row', gap: 6, marginBottom: 10 },
   levelPip: { flex: 1, height: 8, borderRadius: 4 },
+  levelPipFilled: { backgroundColor: '#10b981' },
+  levelPipFilledCyan: { backgroundColor: '#06b6d4' },
+  levelPipEmpty: { backgroundColor: '#e2e8f0' },
   statsRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
   statsCurrent: { fontSize: 12, fontWeight: '600', color: '#475569' },
   statsNext: { fontSize: 11, fontWeight: '700', color: '#10b981' },
-  upgradeBtn: { paddingVertical: 12, borderRadius: 12, alignItems: 'center' },
+  upgradeBtn: {
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignItems: 'center',
+    backgroundColor: '#10b981',
+  },
+  upgradeBtnCyan: { backgroundColor: '#06b6d4' },
+  upgradeBtnDisabled: { backgroundColor: '#e2e8f0' },
   upgradeBtnText: { fontSize: 14, fontWeight: '700', color: '#fff' },
-  maxedBtn: { paddingVertical: 12, borderRadius: 12, alignItems: 'center' },
-  maxedBtnText: { fontSize: 14, fontWeight: '800' },
+  upgradeBtnTextDisabled: { color: '#94a3b8' },
+  maxedBtn: {
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignItems: 'center',
+    backgroundColor: '#f0fdf4',
+  },
+  maxedBtnCyan: { backgroundColor: '#ecfeff' },
+  maxedBtnText: { fontSize: 14, fontWeight: '800', color: '#10b981' },
+  maxedBtnTextCyan: { color: '#0891b2' },
 
   // Skins
   skinGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
@@ -894,7 +1021,6 @@ const styles = StyleSheet.create({
   skinBuyBtn: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, backgroundColor: '#3b82f6', marginTop: 2 },
   skinBuyBtnText: { fontSize: 9, fontWeight: '700', color: '#fff' },
 
-  // Slot sections (horizontal scroll)
   slotSection: { marginBottom: 12 },
   slotLabel: { fontSize: 11, fontWeight: '700', color: '#64748b', marginBottom: 6 },
   slotScroll: { gap: 8, paddingRight: 16 },

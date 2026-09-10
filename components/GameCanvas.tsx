@@ -12,22 +12,21 @@ export function GameCanvas(props: GameCanvasProps) {
   useEffect(() => {
     if (Platform.OS !== 'web') return;
     let cancelled = false;
-    // Hard timeout: if Skia hasn't loaded in 5s, render anyway
-    const timeout = setTimeout(() => {
-      if (!cancelled) setSkiaReady(true);
-    }, 5000);
     function probe() {
       try {
         // eslint-disable-next-line @typescript-eslint/no-require-imports
         const { Skia } = require('@shopify/react-native-skia');
-        Skia.Path.Make().close();
-        if (!cancelled) { clearTimeout(timeout); setSkiaReady(true); }
+        // Test PictureRecorder specifically — it initializes AFTER Path.Make
+        const rec = Skia.PictureRecorder();
+        rec.beginRecording({ x: 0, y: 0, width: 1, height: 1 });
+        rec.finishRecordingAsPicture();
+        if (!cancelled) setSkiaReady(true);
       } catch {
-        if (!cancelled) setTimeout(probe, 100);
+        if (!cancelled) setTimeout(probe, 200);
       }
     }
     probe();
-    return () => { cancelled = true; clearTimeout(timeout); };
+    return () => { cancelled = true; };
   }, []);
 
   if (!skiaReady) {
