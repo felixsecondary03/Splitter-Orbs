@@ -1,10 +1,10 @@
 import React from "react";
 import { Pressable, StyleSheet, Alert } from "react-native";
 import { IconSymbol } from "@/components/IconSymbol";
-import { useTheme } from "@react-navigation/native";
+import { useAppTheme } from "@/contexts/ThemeContext";
 
 export function HeaderRightButton() {
-  const theme = useTheme();
+  const theme = useAppTheme();
 
   return (
     <Pressable
@@ -17,7 +17,7 @@ export function HeaderRightButton() {
 }
 
 export function HeaderLeftButton() {
-  const theme = useTheme();
+  const theme = useAppTheme();
 
   return (
     <Pressable

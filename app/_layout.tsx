@@ -8,13 +8,8 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useColorScheme, Alert } from "react-native";
 import { useNetworkState } from "expo-network";
-import {
-  DarkTheme,
-  DefaultTheme,
-  Theme,
-  ThemeProvider,
-} from "@react-navigation/native";
 import { StatusBar } from "expo-status-bar";
+import { AppThemeProvider } from "@/contexts/ThemeContext";
 import { WidgetProvider } from "@/contexts/WidgetContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProfileProvider } from "@/contexts/ProfileContext";
@@ -58,23 +53,11 @@ export default function RootLayout() {
     }
   }, [networkState.isConnected, networkState.isInternetReachable]);
 
-  const GameDarkTheme: Theme = {
-    ...DarkTheme,
-    colors: {
-      primary: '#4F8EF7',
-      background: '#0A0E1A',
-      card: '#111827',
-      text: '#F1F5F9',
-      border: 'rgba(255, 255, 255, 0.06)',
-      notification: '#EF4444',
-    },
-  };
-
   return (
     <LanguageProvider>
     <DevErrorBoundary>
       <StatusBar style="light" animated />
-      <ThemeProvider value={GameDarkTheme}>
+      <AppThemeProvider>
         <SafeAreaProvider>
           <AuthProvider>
             <ProfileProvider>
@@ -101,7 +84,7 @@ export default function RootLayout() {
             </ProfileProvider>
           </AuthProvider>
         </SafeAreaProvider>
-      </ThemeProvider>
+      </AppThemeProvider>
     </DevErrorBoundary>
     </LanguageProvider>
   );
