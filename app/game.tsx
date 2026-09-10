@@ -614,7 +614,7 @@ export default function GameScreen() {
         <View style={styles.clickRow}>
           <Text style={styles.clickLabel}>CLICKS</Text>
           <View style={styles.clickDots}>
-            {Array.from({ length: maxClicks }).map((_, i) => (
+            {Array.from({ length: maxClicks }, (_, i) => i).map((i) => (
               <View
                 key={i}
                 style={[

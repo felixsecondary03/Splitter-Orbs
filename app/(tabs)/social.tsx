@@ -548,7 +548,7 @@ export default function SocialScreen() {
             </AnimatedListItem>
           ) : leaderboardLoading ? (
             <>
-              {Array.from({ length: 8 }).map((_, i) => (
+              {Array.from({ length: 8 }, (_, i) => i).map((i) => (
                 <SkeletonRow key={i} />
               ))}
             </>

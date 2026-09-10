@@ -146,7 +146,7 @@ export default function CollectionScreen() {
             <View style={styles.labCardInfo}>
               <Text style={styles.labCardName}>{name}</Text>
               <View style={styles.levelDots}>
-                {Array.from({ length: maxLevel }).map((_, i) => (
+                {Array.from({ length: maxLevel }, (_, i) => i).map((i) => (
                   <View key={i} style={[styles.levelDot, i < level ? styles.levelDotFilled : null]} />
                 ))}
               </View>

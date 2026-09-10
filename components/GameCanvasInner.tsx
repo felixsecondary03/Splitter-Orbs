@@ -444,7 +444,7 @@ export function GameCanvasInner({
               />
             )}
             {/* Level pips */}
-            {Array.from({ length: pipCount }).map((_, i) => (
+            {Array.from({ length: pipCount }, (_, i) => i).map((i) => (
               <Circle
                 key={i}
                 cx={pipsStartX + i * pipSpacing}

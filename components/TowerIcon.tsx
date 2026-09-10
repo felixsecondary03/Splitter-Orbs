@@ -46,7 +46,7 @@ export function TowerIcon({ type, size = 36, level = 1 }: TowerIconProps) {
   const stoneId = `stone-${type}-${level}`;
   const glowId = `glow-${type}-${level}`;
 
-  const levelPips = Array.from({ length: level });
+  const levelPips = Array.from({ length: level }, (_, i) => i);
 
   const stoneFill = `url(#${stoneId})`;
   const glowFill = `url(#${glowId})`;

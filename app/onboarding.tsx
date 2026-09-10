@@ -197,7 +197,7 @@ export default function OnboardingScreen() {
     <View style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom + 24 }]}>
       {/* Progress bar */}
       <View style={styles.progressBar}>
-        {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
+        {Array.from({ length: TOTAL_STEPS }, (_, i) => i).map((i) => (
           <View
             key={i}
             style={[
