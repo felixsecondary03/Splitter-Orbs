@@ -20,6 +20,7 @@ import { GameCanvas } from '@/components/GameCanvas';
 import { HPBar } from '@/components/HPBar';
 import { CoinDisplay } from '@/components/CoinDisplay';
 import { AbilityButton } from '@/components/AbilityButton';
+import { LeagueBadge } from '@/components/LeagueBadge';
 import {
   createInitialState,
   clickOrb,
@@ -35,12 +36,13 @@ import {
 } from '@/game/engine';
 import type { GameState, Tower, Loadout } from '@/game/engine-types';
 import type { TowerType, AbilityType, OrbType } from '@/game/constants';
-import { TOWER_COSTS, TOWER_TYPES, UPGRADE_COST_MULT_ARRAY, SELL_RATIO, GAME_WIDTH, GAME_HEIGHT, WALL_Y } from '@/game/constants';
+import { TOWER_COSTS, TOWER_TYPES, ORB_TYPES, UPGRADE_COST_MULT_ARRAY, SELL_RATIO, GAME_WIDTH, GAME_HEIGHT, WALL_Y } from '@/game/constants';
 import { TowerIcon } from '@/components/TowerIcon';
 import { distance } from '@/game/engine-helpers';
 import type { MatchMode } from '@/game/engine-types';
 import { useGameLoop } from '@/hooks/useGameLoop';
 import { supabase } from '@/utils/supabase';
+import { getLeague } from '@/game/constants';
 
 // ─── Default loadout ──────────────────────────────────────────────────────────
 const DEFAULT_LOADOUT: Loadout = {
@@ -64,7 +66,6 @@ function resolveEngineMode(mode: string, difficulty: string): MatchMode {
   if (mode === 'ranked') return 'ranked';
   if (mode === 'private') return 'private';
   if (mode === 'tutorial') return 'tutorial';
-  // training / casual → ai_*
   const diff = difficulty === 'hard' ? 'hard' : difficulty === 'easy' ? 'easy' : 'normal';
   return `ai_${diff}` as MatchMode;
 }
@@ -119,6 +120,25 @@ function getTowerSellValue(tower: Tower): number {
   return Math.round(total * SELL_RATIO);
 }
 
+// ─── Result data type ─────────────────────────────────────────────────────────
+interface ResultData {
+  won: boolean;
+  change?: number;
+  opponent?: string;
+  oldTrophies?: number;
+  newTrophies?: number;
+  oldLeague?: string;
+  newLeague?: string;
+  promoted?: boolean;
+  demoted?: boolean;
+  shardDrop?: boolean;
+  shardCrateAmt?: number;
+  orbUnlocks?: string[];
+  towerUnlocks?: string[];
+  shardsEarned?: number;
+  training?: boolean;
+}
+
 // ─── Main component ───────────────────────────────────────────────────────────
 export default function GameScreen() {
   const insets = useSafeAreaInsets();
@@ -137,7 +157,6 @@ export default function GameScreen() {
     role?: string;
   }>();
 
-  // Safely parse params — on web, Expo Router may not have initialized route params yet
   const paramsReady = !!params && typeof params === 'object';
 
   const uiMode = paramsReady ? (params.mode ?? 'casual') : 'casual';
@@ -145,7 +164,6 @@ export default function GameScreen() {
   const engineMode = resolveEngineMode(uiMode, difficulty);
   const seed = paramsReady ? parseInt(params.seed ?? String(Date.now()), 10) : Date.now();
 
-  // Parse loadout from params or fall back to defaults
   let parsedTowers: TowerType[] = DEFAULT_LOADOUT.towers;
   try {
     if (paramsReady && params.towers) parsedTowers = JSON.parse(params.towers) as TowerType[];
@@ -177,12 +195,24 @@ export default function GameScreen() {
   };
 
   const opponentName = paramsReady ? (params.opponentName ?? AI_NAMES[difficulty] ?? 'Opponent') : 'Opponent';
-
   const isAiMode = engineMode.startsWith('ai_');
+
+  // ── Core game state ──
   const [isPaused, setIsPaused] = useState(false);
-  const [selectedTowerMenu, setSelectedTowerMenu] = useState<Tower | null>(null);
   const [showPauseMenu, setShowPauseMenu] = useState(false);
 
+  // ── New state variables ──
+  const [searching, setSearching] = useState(true);
+  const [searchTime, setSearchTime] = useState(15);
+  const [searchToast, setSearchToast] = useState('');
+  const [resultData, setResultData] = useState<ResultData | null>(null);
+  const [placementMode, setPlacementMode] = useState<{ active: boolean; typeId: string | null }>({ active: false, typeId: null });
+  const [editMode, setEditMode] = useState(false);
+  const [selectedTowerForEdit, setSelectedTowerForEdit] = useState<Tower | null>(null);
+  const [showOrbShop, setShowOrbShop] = useState(false);
+  const [showForfeitDialog, setShowForfeitDialog] = useState(false);
+
+  // ── Initial state (created once) ──
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const initialState = useMemo(() => {
     try {
@@ -192,12 +222,51 @@ export default function GameScreen() {
       console.error('[Game] createInitialState failed, using fallback:', e);
       return createInitialState('ai_normal', 0, Date.now(), DEFAULT_LOADOUT);
     }
-  // Only run once on mount — seed and loadout are stable at this point
+  // Only run once on mount
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Notify backend that match has started
+  const sessionIdParam = params?.mode ? (params.sessionId as string | undefined) : undefined;
+  const opponentNameParam = params?.mode ? (params.opponentName as string | undefined) : undefined;
+
+  // ── beginMatch ──
+  const beginMatch = useCallback(() => {
+    console.log('[Game] beginMatch called, mode=', uiMode);
+    setSearching(false);
+    setSearchToast('');
+  }, [uiMode]);
+
+  // ── On mount: skip search for training/tutorial ──
   useEffect(() => {
+    if (!params?.mode) return;
+    if (params.mode === 'training' || params.mode === 'tutorial') {
+      console.log('[Game] Skipping search for mode=', params.mode);
+      beginMatch();
+      return;
+    }
+    // For other modes, countdown starts via the searchTime effect
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params?.mode]);
+
+  // ── Countdown timer ──
+  useEffect(() => {
+    if (!searching) return;
+    if (searchTime <= 0) {
+      console.log('[Game] Search countdown hit 0, starting vs AI');
+      setSearchToast('No player found — starting vs AI');
+      const t = setTimeout(() => {
+        console.log('[Game] Auto-starting vs AI after toast');
+        beginMatch();
+      }, 1400);
+      return () => clearTimeout(t);
+    }
+    const iv = setInterval(() => setSearchTime((s) => Math.max(0, s - 1)), 1000);
+    return () => clearInterval(iv);
+  }, [searching, searchTime, beginMatch]);
+
+  // ── Notify backend that match has started ──
+  useEffect(() => {
+    if (searching) return; // only after match begins
     if (isAiMode || uiMode === 'ranked') {
       console.log('[Game] Calling start-ai-match on game start', { mode: uiMode });
       supabase.functions.invoke('start-ai-match', {}).catch((e) => {
@@ -205,11 +274,9 @@ export default function GameScreen() {
       });
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [searching]);
 
-  const sessionIdParam = params?.mode ? (params.sessionId as string | undefined) : undefined;
-  const opponentNameParam = params?.mode ? (params.opponentName as string | undefined) : undefined;
-
+  // ── handleMatchEnd — sets resultData inline ──
   const handleGameEnd = useCallback(async (state: GameState) => {
     const isWin = state.winner === 'player';
     const elapsedSeconds = Math.floor(state.time / 1000);
@@ -220,76 +287,98 @@ export default function GameScreen() {
     console.log(`[Game] Game finished winner=${state.winner} mode=${uiMode} difficulty=${difficulty} elapsed=${elapsedSeconds}s multiplayer=${isMultiplayer}`);
 
     let trophyChange = isWin ? 25 : -15;
-    let coinsEarned = isWin ? 45 : 20;
-    let newTrophies: number | undefined;
+    let oldTrophies = 0;
+    let newTrophies = 0;
+    let oldLeague = 'Beginner';
+    let newLeague = 'Beginner';
+    let promoted = false;
+    let demoted = false;
+    let shardDrop = false;
+    let shardCrateAmt = 0;
+    let orbUnlocks: string[] = [];
+    let towerUnlocks: string[] = [];
+    let shardsEarned = 0;
 
     if (isMultiplayer && sessionId) {
-      // Multiplayer finalize
       const myHp = state.player.station.hp;
       const oppHp = state.opponent.station.hp;
       try {
         console.log('[Game] Calling finalize-match edge function', { sessionId, outcome: isWin ? 'win' : 'loss' });
         const { data, error } = await supabase.functions.invoke('finalize-match', {
-          body: {
-            sessionId,
-            outcome: isWin ? 'win' : 'loss',
-            gameTime: elapsedSeconds,
-            myHp,
-            oppHp,
-          },
+          body: { sessionId, outcome: isWin ? 'win' : 'loss', gameTime: elapsedSeconds, myHp, oppHp },
         });
         if (error) {
           console.warn('[Game] finalize-match error:', error.message);
         } else {
           console.log('[Game] finalize-match response:', data);
-          if (data?.trophyChange !== undefined) trophyChange = Number(data.trophyChange);
-          if (data?.newTrophies !== undefined) newTrophies = Number(data.newTrophies);
-          if (data?.coinsEarned !== undefined) coinsEarned = Number(data.coinsEarned);
+          const d = data || {};
+          trophyChange = d.trophyChange ?? trophyChange;
+          oldTrophies = d.oldTrophies ?? 0;
+          newTrophies = d.newTrophies ?? 0;
+          oldLeague = d.oldLeague ?? 'Beginner';
+          newLeague = d.newLeague ?? 'Beginner';
+          promoted = d.promoted ?? false;
+          demoted = d.demoted ?? false;
+          shardDrop = d.shardDrop ?? false;
+          shardCrateAmt = d.shardCrateAmt ?? 0;
+          orbUnlocks = d.orbUnlocks ?? [];
+          towerUnlocks = d.towerUnlocks ?? [];
+          shardsEarned = d.shardsEarned ?? 0;
         }
       } catch (err) {
         console.warn('[Game] finalize-match exception:', err);
       }
     } else if (isAiGame) {
-      // AI finalize
-      const aiDifficulty = difficulty;
       try {
-        console.log('[Game] Calling finalize-ai-match edge function', { outcome: isWin ? 'win' : 'loss', aiDifficulty });
+        console.log('[Game] Calling finalize-ai-match edge function', { outcome: isWin ? 'win' : 'loss', difficulty });
         const { data, error } = await supabase.functions.invoke('finalize-ai-match', {
-          body: {
-            outcome: isWin ? 'win' : 'loss',
-            gameTime: elapsedSeconds,
-            difficulty: aiDifficulty,
-          },
+          body: { outcome: isWin ? 'win' : 'loss', gameTime: elapsedSeconds, difficulty },
         });
         if (error) {
           console.warn('[Game] finalize-ai-match error:', error.message);
         } else {
           console.log('[Game] finalize-ai-match response:', data);
-          if (data?.trophyChange !== undefined) trophyChange = Number(data.trophyChange);
-          if (data?.newTrophies !== undefined) newTrophies = Number(data.newTrophies);
-          if (data?.coinsEarned !== undefined) coinsEarned = Number(data.coinsEarned);
+          const d = data || {};
+          trophyChange = d.trophyChange ?? trophyChange;
+          oldTrophies = d.oldTrophies ?? 0;
+          newTrophies = d.newTrophies ?? 0;
+          oldLeague = d.oldLeague ?? 'Beginner';
+          newLeague = d.newLeague ?? 'Beginner';
+          promoted = d.promoted ?? false;
+          demoted = d.demoted ?? false;
+          shardDrop = d.shardDrop ?? false;
+          shardCrateAmt = d.shardCrateAmt ?? 0;
+          orbUnlocks = d.orbUnlocks ?? [];
+          towerUnlocks = d.towerUnlocks ?? [];
+          shardsEarned = d.shardsEarned ?? 0;
         }
       } catch (err) {
         console.warn('[Game] finalize-ai-match exception:', err);
       }
     }
 
-    const opponentName = opponentNameParam ?? AI_NAMES[difficulty] ?? 'Opponent';
+    const finalOpponentName = opponentNameParam ?? AI_NAMES[difficulty] ?? 'Opponent';
 
     setTimeout(() => {
-      router.push({
-        pathname: '/match-result',
-        params: {
-          outcome: isWin ? 'WIN' : 'LOSS',
-          trophyChange: (trophyChange >= 0 ? '+' : '') + String(trophyChange),
-          newTrophies: String(newTrophies ?? 0),
-          coinsEarned: String(coinsEarned),
-          opponentName,
-          mode: uiMode,
-        },
+      setResultData({
+        won: isWin,
+        change: trophyChange,
+        opponent: finalOpponentName,
+        oldTrophies,
+        newTrophies,
+        oldLeague,
+        newLeague,
+        promoted,
+        demoted,
+        shardDrop,
+        shardCrateAmt,
+        orbUnlocks,
+        towerUnlocks,
+        shardsEarned,
+        training: uiMode === 'training',
       });
     }, 800);
-  }, [uiMode, difficulty, engineMode, paramsReady, sessionIdParam, opponentNameParam]);
+  }, [uiMode, difficulty, engineMode, sessionIdParam, opponentNameParam]);
 
   const { renderState, stateRef: gameStateRef, dispatch, pause, resume } = useGameLoop({
     initialState,
@@ -303,9 +392,6 @@ export default function GameScreen() {
   const canvasHeight = screenHeight - HUD_TOP_HEIGHT - HUD_BOTTOM_HEIGHT;
   const canvasWidth = screenWidth;
 
-  // ── Pause/resume sync ──
-  // Handled by useGameLoop via pause/resume callbacks
-
   // ── Touch handling ──
   const tapGesture = Gesture.Tap()
     .runOnJS(true)
@@ -318,14 +404,12 @@ export default function GameScreen() {
 
       const state = gameStateRef.current as GameState;
 
-      // Check aiming mode
       if (state.aiming) {
         console.log(`[Game] Confirming aim at game=(${gameX.toFixed(0)},${gameY.toFixed(0)})`);
         dispatch((s) => confirmAim(s, gameX, gameY));
         return;
       }
 
-      // Check coin pickup
       const coin = findCoinAtPosition(state, gameX, gameY);
       if (coin) {
         console.log(`[Game] Collecting coin id=${coin.id}`);
@@ -333,7 +417,6 @@ export default function GameScreen() {
         return;
       }
 
-      // Check orb tap
       const tappedOrb = findOrbAtPosition(state, gameX, gameY);
       if (tappedOrb) {
         console.log(`[Game] Tapped orb id=${tappedOrb.id} clicks=${state.player.clicks}`);
@@ -341,7 +424,17 @@ export default function GameScreen() {
         return;
       }
 
-      // Tower placement
+      // Edit mode: select tower on tap
+      if (editMode) {
+        const tower = findTowerAtPosition(state, gameX, gameY);
+        if (tower) {
+          console.log(`[Game] Edit mode: selected tower id=${tower.id} type=${tower.type}`);
+          setSelectedTowerForEdit({ ...tower });
+          return;
+        }
+        return;
+      }
+
       if (state.player.selectedTower && gameY > WALL_Y) {
         console.log(`[Game] Placing tower type=${state.player.selectedTower} at game=(${gameX.toFixed(0)},${gameY.toFixed(0)})`);
         dispatch((s) => placeTower(s, s.player.selectedTower!, gameX, gameY));
@@ -359,7 +452,8 @@ export default function GameScreen() {
       const tower = findTowerAtPosition(gameStateRef.current, gameX, gameY);
       if (tower) {
         console.log(`[Game] Long press on tower id=${tower.id} type=${tower.type}`);
-        setSelectedTowerMenu({ ...tower });
+        setSelectedTowerForEdit({ ...tower });
+        setEditMode(true);
       }
     });
 
@@ -377,27 +471,108 @@ export default function GameScreen() {
     dispatch((s) => activateAbility(s, abilityType));
   }, [dispatch]);
 
-  // ── Tower menu actions ──
+  // ── Tower edit actions ──
   const handleUpgradeTower = useCallback(() => {
-    if (!selectedTowerMenu) return;
-    console.log(`[Game] Upgrade tower id=${selectedTowerMenu.id}`);
-    dispatch((s) => upgradeTower(s, selectedTowerMenu.id));
-    setSelectedTowerMenu(null);
-  }, [selectedTowerMenu, dispatch]);
+    if (!selectedTowerForEdit) return;
+    console.log(`[Game] Upgrade tower id=${selectedTowerForEdit.id}`);
+    dispatch((s) => upgradeTower(s, selectedTowerForEdit.id));
+    setSelectedTowerForEdit(null);
+  }, [selectedTowerForEdit, dispatch]);
 
   const handleSellTower = useCallback(() => {
-    if (!selectedTowerMenu) return;
-    console.log(`[Game] Sell tower id=${selectedTowerMenu.id}`);
-    dispatch((s) => sellTower(s, selectedTowerMenu.id));
-    setSelectedTowerMenu(null);
-  }, [selectedTowerMenu, dispatch]);
+    if (!selectedTowerForEdit) return;
+    console.log(`[Game] Sell tower id=${selectedTowerForEdit.id}`);
+    dispatch((s) => sellTower(s, selectedTowerForEdit.id));
+    setSelectedTowerForEdit(null);
+  }, [selectedTowerForEdit, dispatch]);
 
   const handleCleanseTower = useCallback(() => {
-    if (!selectedTowerMenu) return;
-    console.log(`[Game] Cleanse tower id=${selectedTowerMenu.id}`);
-    dispatch((s) => cleanseTower(s, selectedTowerMenu.id));
-    setSelectedTowerMenu(null);
-  }, [selectedTowerMenu, dispatch]);
+    if (!selectedTowerForEdit) return;
+    console.log(`[Game] Cleanse tower id=${selectedTowerForEdit.id}`);
+    dispatch((s) => cleanseTower(s, selectedTowerForEdit.id));
+    setSelectedTowerForEdit(null);
+  }, [selectedTowerForEdit, dispatch]);
+
+  // ── Orb shop ──
+  const handleOpenOrbShop = useCallback(() => {
+    console.log('[Game] Open orb shop pressed');
+    setShowOrbShop(true);
+  }, []);
+
+  const handleSelectOrbType = useCallback((typeId: string) => {
+    console.log(`[Game] Orb type selected for placement typeId=${typeId}`);
+    setShowOrbShop(false);
+    setPlacementMode({ active: true, typeId });
+  }, []);
+
+  const handlePlaceOrbAtSlot = useCallback((slotIndex: number) => {
+    if (!placementMode.typeId) return;
+    const typeId = placementMode.typeId as OrbType;
+    const orbDef = ORB_TYPES[typeId];
+    const cost = orbDef?.cost ?? 20;
+    const state = gameStateRef.current as GameState;
+    if (state.player.coins < cost) {
+      console.log(`[Game] Cannot place orb — not enough coins. Have=${state.player.coins} need=${cost}`);
+      return;
+    }
+    console.log(`[Game] Place orb typeId=${typeId} slotIndex=${slotIndex} cost=${cost}`);
+    // Spawn orb on player side by deducting coins and adding to orbs array
+    dispatch((s) => {
+      if (s.player.coins < cost) return s;
+      const slotX = (GAME_WIDTH / 6) * (slotIndex + 1);
+      const slotY = WALL_Y + 30;
+      const speed = orbDef?.speed ?? 42;
+      const hp = orbDef?.hp ?? 27;
+      const radius = orbDef?.radius ?? 22;
+      const damage = orbDef?.damage ?? 6;
+      const color = orbDef?.color ?? '#60a5fa';
+      const newOrb = {
+        id: `orb_${Date.now()}_${slotIndex}`,
+        type: typeId,
+        x: slotX,
+        y: slotY,
+        vx: 0,
+        vy: -speed,
+        hp,
+        maxHp: hp,
+        damage,
+        speed,
+        radius,
+        color,
+        side: 0 as const,
+        owner: 'player' as const,
+        frozen: false,
+        frozenTimer: 0,
+        poisoned: false,
+        poisonTimer: 0,
+        poisonDps: 0,
+        shieldHp: 0,
+        growthTimer: 0,
+        summonTimer: 0,
+      };
+      return {
+        ...s,
+        player: { ...s.player, coins: s.player.coins - cost },
+        orbs: [...s.orbs, newOrb],
+      };
+    });
+    setPlacementMode({ active: false, typeId: null });
+  }, [placementMode.typeId, dispatch, gameStateRef]);
+
+  const handleCancelPlacement = useCallback(() => {
+    console.log('[Game] Cancel orb placement');
+    setPlacementMode({ active: false, typeId: null });
+  }, []);
+
+  // ── Edit mode toggle ──
+  const handleToggleEditMode = useCallback(() => {
+    const next = !editMode;
+    console.log(`[Game] Toggle edit mode → ${next}`);
+    setEditMode(next);
+    if (!next) {
+      setSelectedTowerForEdit(null);
+    }
+  }, [editMode]);
 
   // ── Pause ──
   const handlePause = useCallback(() => {
@@ -415,11 +590,10 @@ export default function GameScreen() {
   }, [resume]);
 
   const handleForfeit = useCallback(() => {
-    console.log('[Game] Forfeit pressed');
-    router.push({
-      pathname: '/match-result',
-      params: { result: 'loss', trophiesChange: '-15', newTrophies: '85', coinsEarned: '10', shardsEarned: '0' },
-    });
+    console.log('[Game] Forfeit confirmed');
+    setShowForfeitDialog(false);
+    setShowPauseMenu(false);
+    router.push('/');
   }, []);
 
   const handleCancelAim = useCallback(() => {
@@ -427,13 +601,12 @@ export default function GameScreen() {
     dispatch((s) => cancelAim(s));
   }, [dispatch]);
 
-  // ── Derived display values (null-guarded for safety during first render) ──
+  // ── Derived display values ──
   const playerHp = renderState?.player?.station?.hp ?? 0;
   const playerMaxHp = renderState?.player?.station?.maxHp ?? 100;
   const oppHp = renderState?.opponent?.station?.hp ?? 0;
   const oppMaxHp = renderState?.opponent?.station?.maxHp ?? 100;
   const playerCoins = Math.floor(renderState?.player?.coins ?? 0);
-  const oppCoins = Math.floor(renderState?.opponent?.coins ?? 0);
   const timeDisplay = formatTime(renderState?.time ?? 0);
   const selectedTowerType = renderState?.player?.selectedTower ?? null;
   const isAiming = (renderState?.aiming ?? null) !== null;
@@ -456,7 +629,20 @@ export default function GameScreen() {
     tower_bleed: '#7F1D1D',
   };
 
-  // Guard: on web, Expo Router may not have initialized route params yet
+  // ── Result screen derived values ──
+  const resultWon = resultData?.won ?? false;
+  const resultChange = resultData?.change ?? 0;
+  const resultChangeSign = resultChange >= 0 ? '+' : '';
+  const resultOldTrophies = resultData?.oldTrophies ?? 0;
+  const resultNewTrophies = resultData?.newTrophies ?? 0;
+  const resultShardsEarned = resultData?.shardsEarned ?? 0;
+  const resultOrbUnlocks = resultData?.orbUnlocks ?? [];
+  const resultTowerUnlocks = resultData?.towerUnlocks ?? [];
+  const resultHasUnlocks = resultOrbUnlocks.length > 0 || resultTowerUnlocks.length > 0;
+  const resultTitle = resultWon ? 'VICTORY' : 'DEFEAT';
+  const resultEmoji = resultWon ? '🏆' : '💀';
+
+  // Guard: params not ready
   if (!params?.mode) {
     return (
       <View style={{ flex: 1, backgroundColor: '#0f172a', alignItems: 'center', justifyContent: 'center' }}>
@@ -469,7 +655,6 @@ export default function GameScreen() {
     <View style={[styles.root, { backgroundColor: COLORS.background }]}>
       {/* ── Top HUD ── */}
       <View style={[styles.topHud, { paddingTop: insets.top + 8 }]}>
-        {/* Opponent name + timer row */}
         <View style={styles.hudTopRow}>
           <Pressable style={styles.pauseBtn} onPress={handlePause}>
             <Pause size={14} color={COLORS.textSecondary} strokeWidth={2} />
@@ -497,7 +682,6 @@ export default function GameScreen() {
           </View>
         </View>
 
-        {/* HP bars */}
         <View style={styles.hpBarsRow}>
           <View style={styles.hpBarBlock}>
             <Text style={styles.hpLabel}>OPP</Text>
@@ -523,65 +707,56 @@ export default function GameScreen() {
       </View>
 
       {/* ── Game Canvas ── */}
-      {Platform.OS === 'web' ? (
-        <Pressable
-          style={{ width: canvasWidth, height: canvasHeight }}
-          onPress={(e) => {
-            const x = e.nativeEvent.locationX;
-            const y = e.nativeEvent.locationY;
-            const gameX = (x / canvasWidth) * GAME_WIDTH;
-            const gameY = (y / canvasHeight) * GAME_HEIGHT;
+      <View style={{ position: 'relative' }}>
+        {Platform.OS === 'web' ? (
+          <Pressable
+            style={{ width: canvasWidth, height: canvasHeight }}
+            onPress={(e) => {
+              const x = e.nativeEvent.locationX;
+              const y = e.nativeEvent.locationY;
+              const gameX = (x / canvasWidth) * GAME_WIDTH;
+              const gameY = (y / canvasHeight) * GAME_HEIGHT;
 
-            console.log(`[Game] Web tap at screen=(${x.toFixed(0)},${y.toFixed(0)}) game=(${gameX.toFixed(0)},${gameY.toFixed(0)})`);
+              console.log(`[Game] Web tap at screen=(${x.toFixed(0)},${y.toFixed(0)}) game=(${gameX.toFixed(0)},${gameY.toFixed(0)})`);
 
-            const state = gameStateRef.current as GameState;
+              const state = gameStateRef.current as GameState;
 
-            if (state.aiming) {
-              console.log(`[Game] Web confirming aim at game=(${gameX.toFixed(0)},${gameY.toFixed(0)})`);
-              dispatch((s) => confirmAim(s, gameX, gameY));
-              return;
-            }
+              if (state.aiming) {
+                console.log(`[Game] Web confirming aim at game=(${gameX.toFixed(0)},${gameY.toFixed(0)})`);
+                dispatch((s) => confirmAim(s, gameX, gameY));
+                return;
+              }
 
-            const coin = findCoinAtPosition(state, gameX, gameY);
-            if (coin) {
-              console.log(`[Game] Web collecting coin id=${coin.id}`);
-              dispatch((s) => collectCoin(s, coin.id));
-              return;
-            }
+              const coin = findCoinAtPosition(state, gameX, gameY);
+              if (coin) {
+                console.log(`[Game] Web collecting coin id=${coin.id}`);
+                dispatch((s) => collectCoin(s, coin.id));
+                return;
+              }
 
-            const tappedOrb = findOrbAtPosition(state, gameX, gameY);
-            if (tappedOrb) {
-              console.log(`[Game] Web tapped orb id=${tappedOrb.id}`);
-              dispatch((s) => clickOrb(s, tappedOrb.id));
-              return;
-            }
+              const tappedOrb = findOrbAtPosition(state, gameX, gameY);
+              if (tappedOrb) {
+                console.log(`[Game] Web tapped orb id=${tappedOrb.id}`);
+                dispatch((s) => clickOrb(s, tappedOrb.id));
+                return;
+              }
 
-            if (state.player.selectedTower && gameY > WALL_Y) {
-              console.log(`[Game] Web placing tower type=${state.player.selectedTower} at game=(${gameX.toFixed(0)},${gameY.toFixed(0)})`);
-              dispatch((s) => placeTower(s, s.player.selectedTower!, gameX, gameY));
-              return;
-            }
-          }}
-        >
-          <GameCanvas
-            state={renderState}
-            width={canvasWidth}
-            height={canvasHeight}
-            onOrbTap={() => {}}
-            onFieldTap={() => {}}
-          />
-          {isAiming && (
-            <View style={styles.aimingBanner}>
-              <Text style={styles.aimingText}>Tap to aim — </Text>
-              <Pressable onPress={handleCancelAim}>
-                <Text style={styles.aimingCancel}>Cancel</Text>
-              </Pressable>
-            </View>
-          )}
-        </Pressable>
-      ) : (
-        <GestureDetector gesture={composedGesture}>
-          <View style={{ width: canvasWidth, height: canvasHeight }}>
+              if (editMode) {
+                const tower = findTowerAtPosition(state, gameX, gameY);
+                if (tower) {
+                  console.log(`[Game] Web edit mode: selected tower id=${tower.id}`);
+                  setSelectedTowerForEdit({ ...tower });
+                }
+                return;
+              }
+
+              if (state.player.selectedTower && gameY > WALL_Y) {
+                console.log(`[Game] Web placing tower type=${state.player.selectedTower} at game=(${gameX.toFixed(0)},${gameY.toFixed(0)})`);
+                dispatch((s) => placeTower(s, s.player.selectedTower!, gameX, gameY));
+                return;
+              }
+            }}
+          >
             <GameCanvas
               state={renderState}
               width={canvasWidth}
@@ -589,7 +764,6 @@ export default function GameScreen() {
               onOrbTap={() => {}}
               onFieldTap={() => {}}
             />
-            {/* Aiming cancel overlay */}
             {isAiming && (
               <View style={styles.aimingBanner}>
                 <Text style={styles.aimingText}>Tap to aim — </Text>
@@ -598,9 +772,118 @@ export default function GameScreen() {
                 </Pressable>
               </View>
             )}
+          </Pressable>
+        ) : (
+          <GestureDetector gesture={composedGesture}>
+            <View style={{ width: canvasWidth, height: canvasHeight }}>
+              <GameCanvas
+                state={renderState}
+                width={canvasWidth}
+                height={canvasHeight}
+                onOrbTap={() => {}}
+                onFieldTap={() => {}}
+              />
+              {isAiming && (
+                <View style={styles.aimingBanner}>
+                  <Text style={styles.aimingText}>Tap to aim — </Text>
+                  <Pressable onPress={handleCancelAim}>
+                    <Text style={styles.aimingCancel}>Cancel</Text>
+                  </Pressable>
+                </View>
+              )}
+            </View>
+          </GestureDetector>
+        )}
+
+        {/* ── Placement Overlay ── */}
+        {placementMode.active && (
+          <View style={[StyleSheet.absoluteFill, styles.placementOverlay]} pointerEvents="box-none">
+            {Array.from({ length: 5 }, (_, i) => i).map((i) => {
+              const slotLeft = (canvasWidth / 6) * (i + 1) - 20;
+              const slotTop = canvasHeight - 60;
+              return (
+                <Pressable
+                  key={i}
+                  style={[styles.orbSlot, { left: slotLeft, top: slotTop }]}
+                  onPress={() => {
+                    console.log(`[Game] Orb slot ${i + 1} tapped`);
+                    handlePlaceOrbAtSlot(i);
+                  }}
+                >
+                  <Text style={styles.orbSlotText}>{i + 1}</Text>
+                </Pressable>
+              );
+            })}
+            <Pressable style={styles.cancelPlacementBtn} onPress={handleCancelPlacement}>
+              <Text style={styles.cancelPlacementText}>Cancel</Text>
+            </Pressable>
           </View>
-        </GestureDetector>
-      )}
+        )}
+
+        {/* ── UpgradePopup (edit mode) ── */}
+        {editMode && selectedTowerForEdit && (
+          <View style={styles.upgradePopup} pointerEvents="box-none">
+            <View style={styles.upgradePopupCard}>
+              <View style={styles.upgradePopupHeader}>
+                <View style={{
+                  width: 32, height: 32, borderRadius: 8,
+                  backgroundColor: (TOWER_TYPES[selectedTowerForEdit.type]?.color ?? '#64748b') + '33',
+                  borderWidth: 1.5, borderColor: TOWER_TYPES[selectedTowerForEdit.type]?.color ?? '#64748b',
+                  alignItems: 'center', justifyContent: 'center',
+                }}>
+                  <Text style={{ fontSize: 10, color: TOWER_TYPES[selectedTowerForEdit.type]?.color ?? '#64748b', fontWeight: '700' }}>
+                    {(TOWER_TYPES[selectedTowerForEdit.type]?.name ?? selectedTowerForEdit.type).slice(0, 2).toUpperCase()}
+                  </Text>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.upgradePopupName}>
+                    {selectedTowerForEdit.type.replace(/_/g, ' ').toUpperCase()}
+                  </Text>
+                  <Text style={styles.upgradePopupLevel}>Level {selectedTowerForEdit.level}</Text>
+                </View>
+                <HPBar
+                  current={selectedTowerForEdit.hp}
+                  max={selectedTowerForEdit.maxHp}
+                  width={70}
+                  height={5}
+                  showText
+                />
+                <Pressable onPress={() => { console.log('[Game] Close upgrade popup'); setSelectedTowerForEdit(null); }} style={styles.upgradePopupClose}>
+                  <X size={14} color={COLORS.textSecondary} strokeWidth={2} />
+                </Pressable>
+              </View>
+              <View style={styles.upgradePopupActions}>
+                <Pressable
+                  style={[
+                    styles.upgradePopupBtn,
+                    styles.upgradePopupBtnUpgrade,
+                    (playerCoins < getTowerUpgradeCost(selectedTowerForEdit) || selectedTowerForEdit.level >= 5) && styles.upgradePopupBtnDisabled,
+                  ]}
+                  onPress={handleUpgradeTower}
+                >
+                  <Text style={styles.upgradePopupBtnText}>Upgrade</Text>
+                  <Text style={styles.upgradePopupBtnSub}>{getTowerUpgradeCost(selectedTowerForEdit)} coins</Text>
+                </Pressable>
+
+                {selectedTowerForEdit.poisoned && (
+                  <Pressable
+                    style={[styles.upgradePopupBtn, styles.upgradePopupBtnCleanse, playerCoins < 20 && styles.upgradePopupBtnDisabled]}
+                    onPress={handleCleanseTower}
+                  >
+                    <Text style={styles.upgradePopupBtnText}>Cleanse</Text>
+                    <Text style={styles.upgradePopupBtnSub}>20 coins</Text>
+                  </Pressable>
+                )}
+
+                <Pressable style={[styles.upgradePopupBtn, styles.upgradePopupBtnSell]} onPress={handleSellTower}>
+                  <Text style={styles.upgradePopupBtnText}>Sell</Text>
+                  <Text style={styles.upgradePopupBtnSub}>+{getTowerSellValue(selectedTowerForEdit)}</Text>
+                </Pressable>
+              </View>
+            </View>
+          </View>
+        )}
+      </View>
 
       {/* ── Bottom HUD ── */}
       <View style={[styles.bottomHud, { paddingBottom: insets.bottom + 4 }]}>
@@ -615,7 +898,7 @@ export default function GameScreen() {
           <CoinDisplay coins={playerCoins} size="sm" />
         </View>
 
-        {/* Click stamina */}
+        {/* Click stamina + action buttons row */}
         <View style={styles.clickRow}>
           <Text style={styles.clickLabel}>CLICKS</Text>
           <View style={styles.clickDots}>
@@ -628,6 +911,20 @@ export default function GameScreen() {
                 ]}
               />
             ))}
+          </View>
+          <View style={styles.hudActionBtns}>
+            <Pressable
+              style={[styles.hudActionBtn, showOrbShop && styles.hudActionBtnActive]}
+              onPress={handleOpenOrbShop}
+            >
+              <Text style={styles.hudActionBtnText}>⚔️ Orb</Text>
+            </Pressable>
+            <Pressable
+              style={[styles.hudActionBtn, editMode && styles.hudActionBtnActive]}
+              onPress={handleToggleEditMode}
+            >
+              <Text style={styles.hudActionBtnText}>{editMode ? '✅ Done' : '✏️ Edit'}</Text>
+            </Pressable>
           </View>
         </View>
 
@@ -679,84 +976,61 @@ export default function GameScreen() {
         </View>
       </View>
 
-      {/* ── Tower context menu ── */}
-      <Modal
-        visible={selectedTowerMenu !== null}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setSelectedTowerMenu(null)}
-      >
-        <Pressable style={styles.modalBackdrop} onPress={() => setSelectedTowerMenu(null)}>
-          <View style={styles.towerMenu}>
-            {selectedTowerMenu && (
-              <>
-                <View style={styles.towerMenuHeader}>
-                  <View style={{
-                    width: 36, height: 36, borderRadius: 8,
-                    backgroundColor: (TOWER_TYPES[selectedTowerMenu.type]?.color ?? '#64748b') + '33',
-                    borderWidth: 1.5, borderColor: TOWER_TYPES[selectedTowerMenu.type]?.color ?? '#64748b',
-                    alignItems: 'center', justifyContent: 'center',
-                  }}>
-                    <Text style={{ fontSize: 12, color: TOWER_TYPES[selectedTowerMenu.type]?.color ?? '#64748b', fontWeight: '700' }}>
-                      {(TOWER_TYPES[selectedTowerMenu.type]?.name ?? selectedTowerMenu.type).slice(0, 2).toUpperCase()}
-                    </Text>
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.towerMenuName}>
-                      {selectedTowerMenu.type.replace(/_/g, ' ').toUpperCase()}
-                    </Text>
-                    <Text style={styles.towerMenuLevel}>Level {selectedTowerMenu.level}</Text>
-                  </View>
-                  <HPBar
-                    current={selectedTowerMenu.hp}
-                    max={selectedTowerMenu.maxHp}
-                    width={80}
-                    height={5}
-                    showText
-                  />
-                </View>
-
-                <View style={styles.towerMenuActions}>
+      {/* ── Orb Shop Panel ── */}
+      {showOrbShop && (
+        <View style={styles.orbShopOverlay}>
+          <Pressable style={styles.orbShopBackdrop} onPress={() => { console.log('[Game] Orb shop dismissed'); setShowOrbShop(false); }} />
+          <View style={styles.orbShopPanel}>
+            <View style={styles.orbShopHeader}>
+              <Text style={styles.orbShopTitle}>Send Orb</Text>
+              <Pressable onPress={() => { console.log('[Game] Orb shop close pressed'); setShowOrbShop(false); }}>
+                <X size={18} color={COLORS.textSecondary} strokeWidth={2} />
+              </Pressable>
+            </View>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.orbShopRow}>
+              {(loadout.orbs ?? []).map((orbType) => {
+                const orbDef = ORB_TYPES[orbType];
+                if (!orbDef) return null;
+                const canAfford = playerCoins >= orbDef.cost;
+                return (
                   <Pressable
-                    style={[
-                      styles.menuBtn,
-                      styles.menuBtnUpgrade,
-                      (playerCoins < getTowerUpgradeCost(selectedTowerMenu) || selectedTowerMenu.level >= 5) && styles.menuBtnDisabled,
-                    ]}
-                    onPress={handleUpgradeTower}
+                    key={orbType}
+                    style={[styles.orbShopCard, !canAfford && styles.orbShopCardDisabled]}
+                    onPress={() => {
+                      console.log(`[Game] Orb shop card pressed type=${orbType} cost=${orbDef.cost}`);
+                      handleSelectOrbType(orbType);
+                    }}
                   >
-                    <Text style={styles.menuBtnText}>
-                      Upgrade
+                    <View style={[styles.orbShopCircle, { backgroundColor: orbDef.color }]}>
+                      <Text style={styles.orbShopCircleText}>{orbDef.hp}</Text>
+                    </View>
+                    <Text style={styles.orbShopName} numberOfLines={1}>{orbDef.name}</Text>
+                    <Text style={[styles.orbShopCost, !canAfford && { color: COLORS.textTertiary }]}>
+                      🪙 {orbDef.cost}
                     </Text>
-                    <Text style={styles.menuBtnSub}>
-                      {getTowerUpgradeCost(selectedTowerMenu)} coins
-                    </Text>
                   </Pressable>
-
-                  {selectedTowerMenu.poisoned && (
-                    <Pressable
-                      style={[styles.menuBtn, styles.menuBtnCleanse, playerCoins < 20 && styles.menuBtnDisabled]}
-                      onPress={handleCleanseTower}
-                    >
-                      <Text style={styles.menuBtnText}>Cleanse</Text>
-                      <Text style={styles.menuBtnSub}>20 coins</Text>
-                    </Pressable>
-                  )}
-
-                  <Pressable style={[styles.menuBtn, styles.menuBtnSell]} onPress={handleSellTower}>
-                    <Text style={styles.menuBtnText}>Sell</Text>
-                    <Text style={styles.menuBtnSub}>+{getTowerSellValue(selectedTowerMenu)} coins</Text>
-                  </Pressable>
-
-                  <Pressable style={[styles.menuBtn, styles.menuBtnClose]} onPress={() => setSelectedTowerMenu(null)}>
-                    <X size={16} color={COLORS.textSecondary} strokeWidth={2} />
-                  </Pressable>
-                </View>
-              </>
-            )}
+                );
+              })}
+            </ScrollView>
           </View>
-        </Pressable>
-      </Modal>
+        </View>
+      )}
+
+      {/* ── Forfeit Dialog (inline overlay) ── */}
+      {showForfeitDialog && (
+        <View style={styles.forfeitOverlay}>
+          <View style={styles.forfeitCard}>
+            <Text style={styles.forfeitTitle}>Forfeit?</Text>
+            <Text style={styles.forfeitSubtitle}>Are you sure you want to forfeit this match?</Text>
+            <Pressable style={styles.forfeitYesBtn} onPress={handleForfeit}>
+              <Text style={styles.forfeitYesBtnText}>Yes, Forfeit</Text>
+            </Pressable>
+            <Pressable style={styles.forfeitCancelBtn} onPress={() => { console.log('[Game] Forfeit cancelled'); setShowForfeitDialog(false); }}>
+              <Text style={styles.forfeitCancelBtnText}>Cancel</Text>
+            </Pressable>
+          </View>
+        </View>
+      )}
 
       {/* ── Pause menu ── */}
       <Modal
@@ -772,13 +1046,122 @@ export default function GameScreen() {
               <Play size={18} color="#000" strokeWidth={2.5} />
               <Text style={styles.pauseResumeText}>Resume</Text>
             </Pressable>
-            <Pressable style={[styles.pauseBtn2, styles.pauseForfeit]} onPress={handleForfeit}>
+            <Pressable
+              style={[styles.pauseBtn2, styles.pauseForfeit]}
+              onPress={() => {
+                console.log('[Game] Forfeit button pressed in pause menu');
+                setShowPauseMenu(false);
+                setShowForfeitDialog(true);
+              }}
+            >
               <Flag size={16} color={COLORS.danger} strokeWidth={2} />
               <Text style={styles.pauseForfeitText}>Forfeit</Text>
             </Pressable>
           </View>
         </View>
       </Modal>
+
+      {/* ── Searching Screen ── */}
+      {searching && (
+        <View style={[StyleSheet.absoluteFill, styles.searchingOverlay]}>
+          <ActivityIndicator size="large" color="#4F8EF7" style={{ marginBottom: 20 }} />
+          <Text style={styles.searchingTitle}>Finding opponent...</Text>
+          <Text style={styles.searchingTimer}>{searchTime}s</Text>
+          {searchToast.length > 0 && (
+            <View style={styles.searchToast}>
+              <Text style={styles.searchToastText}>{searchToast}</Text>
+            </View>
+          )}
+          <Pressable
+            style={styles.searchVsAiBtn}
+            onPress={() => {
+              console.log('[Game] Play vs AI button pressed from searching screen');
+              beginMatch();
+            }}
+          >
+            <Text style={styles.searchVsAiBtnText}>Play vs AI</Text>
+          </Pressable>
+        </View>
+      )}
+
+      {/* ── Result Screen ── */}
+      {resultData !== null && (
+        <View style={[StyleSheet.absoluteFill, resultWon ? styles.resultOverlayWin : styles.resultOverlayLoss]}>
+          <ScrollView contentContainerStyle={styles.resultContent} showsVerticalScrollIndicator={false}>
+            <Text style={styles.resultEmoji}>{resultEmoji}</Text>
+            <Text style={[styles.resultTitle, resultWon ? styles.resultTitleWin : styles.resultTitleLoss]}>
+              {resultTitle}
+            </Text>
+
+            {!resultData.training && (
+              <View style={styles.resultTrophyRow}>
+                <View style={styles.resultTrophyBlock}>
+                  <Text style={styles.resultTrophyLabel}>Trophies</Text>
+                  <View style={styles.resultTrophyChange}>
+                    <Text style={styles.resultTrophyOld}>{resultOldTrophies}</Text>
+                    <Text style={styles.resultTrophyArrow}>→</Text>
+                    <Text style={styles.resultTrophyNew}>{resultNewTrophies}</Text>
+                    <View style={[styles.resultChangeBadge, { backgroundColor: resultChange >= 0 ? '#10b981' : '#ef4444' }]}>
+                      <Text style={styles.resultChangeBadgeText}>{resultChangeSign}{resultChange}</Text>
+                    </View>
+                  </View>
+                </View>
+              </View>
+            )}
+
+            {!resultData.training && (
+              <View style={styles.resultLeagueRow}>
+                <LeagueBadge trophies={resultOldTrophies} size="md" />
+                {(resultData.promoted || resultData.demoted) && (
+                  <Text style={styles.resultLeagueArrow}>{resultData.promoted ? '⬆️' : '⬇️'}</Text>
+                )}
+                {(resultData.promoted || resultData.demoted) && (
+                  <LeagueBadge trophies={resultNewTrophies} size="md" />
+                )}
+              </View>
+            )}
+
+            {resultShardsEarned > 0 && (
+              <View style={styles.resultShardsRow}>
+                <Text style={styles.resultShardsText}>🔷 +{resultShardsEarned} shards</Text>
+              </View>
+            )}
+
+            {resultHasUnlocks && (
+              <View style={styles.resultUnlocks}>
+                <Text style={styles.resultUnlocksTitle}>New cards unlocked!</Text>
+                {resultTowerUnlocks.map((name) => (
+                  <Text key={name} style={styles.resultUnlockItem}>🏰 {name}</Text>
+                ))}
+                {resultOrbUnlocks.map((name) => (
+                  <Text key={name} style={styles.resultUnlockItem}>🔵 {name}</Text>
+                ))}
+              </View>
+            )}
+
+            <View style={styles.resultButtons}>
+              <Pressable
+                style={styles.resultPlayAgainBtn}
+                onPress={() => {
+                  console.log('[Game] Play Again pressed from result screen');
+                  router.push('/setup');
+                }}
+              >
+                <Text style={styles.resultPlayAgainBtnText}>Play Again</Text>
+              </Pressable>
+              <Pressable
+                style={styles.resultHomeBtn}
+                onPress={() => {
+                  console.log('[Game] Home pressed from result screen');
+                  router.push('/');
+                }}
+              >
+                <Text style={styles.resultHomeBtnText}>Home</Text>
+              </Pressable>
+            </View>
+          </ScrollView>
+        </View>
+      )}
     </View>
   );
 }
@@ -815,11 +1198,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#0F172A',
     letterSpacing: -0.2,
-  },
-  hudTrophies: {
-    fontSize: 9,
-    color: COLORS.gold,
-    fontFamily: 'SpaceMono',
   },
   hudHpBarWrap: {
     flex: 1,
@@ -889,6 +1267,7 @@ const styles = StyleSheet.create({
   clickDots: {
     flexDirection: 'row',
     gap: 4,
+    flex: 1,
   },
   clickDot: {
     width: 10,
@@ -896,6 +1275,27 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     borderWidth: 1,
     borderColor: '#E2E8F0',
+  },
+  hudActionBtns: {
+    flexDirection: 'row',
+    gap: 6,
+  },
+  hudActionBtn: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    backgroundColor: '#F1F5F9',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  hudActionBtnActive: {
+    backgroundColor: 'rgba(79,142,247,0.12)',
+    borderColor: COLORS.primary,
+  },
+  hudActionBtnText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#334155',
   },
   towerBar: {
     flexGrow: 0,
@@ -960,84 +1360,253 @@ const styles = StyleSheet.create({
     color: COLORS.danger,
     fontWeight: '700',
   },
-  // Tower menu modal
-  modalBackdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    justifyContent: 'flex-end',
-    paddingBottom: 200,
-    paddingHorizontal: 20,
+  // Placement overlay
+  placementOverlay: {
+    zIndex: 10,
   },
-  towerMenu: {
+  orbSlot: {
+    position: 'absolute',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(79,142,247,0.85)',
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  orbSlotText: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
+  cancelPlacementBtn: {
+    position: 'absolute',
+    bottom: 8,
+    alignSelf: 'center',
+    left: '50%',
+    marginLeft: -40,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 10,
+    backgroundColor: 'rgba(239,68,68,0.9)',
+  },
+  cancelPlacementText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  // UpgradePopup
+  upgradePopup: {
+    position: 'absolute',
+    bottom: 8,
+    left: 8,
+    right: 8,
+    zIndex: 20,
+  },
+  upgradePopupCard: {
     backgroundColor: COLORS.surfaceElevated,
-    borderRadius: 16,
-    padding: 16,
+    borderRadius: 14,
+    padding: 12,
     borderWidth: 1,
     borderColor: COLORS.border,
-    gap: 12,
+    gap: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 8,
   },
-  towerMenuHeader: {
+  upgradePopupHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 10,
   },
-  towerMenuName: {
-    fontSize: 14,
+  upgradePopupName: {
+    fontSize: 13,
     fontWeight: '700',
     color: COLORS.text,
     letterSpacing: 0.5,
   },
-  towerMenuLevel: {
-    fontSize: 11,
+  upgradePopupLevel: {
+    fontSize: 10,
     color: COLORS.textSecondary,
     fontFamily: 'SpaceMono',
   },
-  towerMenuActions: {
+  upgradePopupClose: {
+    padding: 4,
+  },
+  upgradePopupActions: {
     flexDirection: 'row',
     gap: 8,
-    flexWrap: 'wrap',
   },
-  menuBtn: {
+  upgradePopupBtn: {
     flex: 1,
-    minWidth: 70,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
+    paddingVertical: 9,
+    paddingHorizontal: 10,
     borderRadius: 10,
     alignItems: 'center',
     gap: 2,
     borderWidth: 1,
   },
-  menuBtnUpgrade: {
+  upgradePopupBtnUpgrade: {
     backgroundColor: 'rgba(79,142,247,0.12)',
     borderColor: COLORS.primary,
   },
-  menuBtnSell: {
+  upgradePopupBtnSell: {
     backgroundColor: 'rgba(239,68,68,0.1)',
     borderColor: COLORS.danger,
   },
-  menuBtnCleanse: {
+  upgradePopupBtnCleanse: {
     backgroundColor: 'rgba(132,204,22,0.1)',
     borderColor: '#84CC16',
   },
-  menuBtnClose: {
-    flex: 0,
-    width: 40,
-    backgroundColor: COLORS.surface,
-    borderColor: COLORS.border,
-    justifyContent: 'center',
-  },
-  menuBtnDisabled: {
+  upgradePopupBtnDisabled: {
     opacity: 0.4,
   },
-  menuBtnText: {
+  upgradePopupBtnText: {
     fontSize: 12,
     fontWeight: '700',
     color: COLORS.text,
   },
-  menuBtnSub: {
-    fontSize: 10,
+  upgradePopupBtnSub: {
+    fontSize: 9,
     color: COLORS.textSecondary,
     fontFamily: 'SpaceMono',
+  },
+  // Orb shop
+  orbShopOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    top: 0,
+    zIndex: 30,
+    justifyContent: 'flex-end',
+  },
+  orbShopBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+  },
+  orbShopPanel: {
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingTop: 16,
+    paddingBottom: 24,
+    paddingHorizontal: 16,
+    borderTopWidth: 1,
+    borderColor: '#E2E8F0',
+    gap: 12,
+  },
+  orbShopHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  orbShopTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#0F172A',
+  },
+  orbShopRow: {
+    gap: 10,
+    paddingRight: 8,
+  },
+  orbShopCard: {
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 10,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
+    backgroundColor: '#F8FAFC',
+    minWidth: 72,
+  },
+  orbShopCardDisabled: {
+    opacity: 0.45,
+  },
+  orbShopCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  orbShopCircleText: {
+    fontSize: 11,
+    fontWeight: '900',
+    color: '#FFFFFF',
+  },
+  orbShopName: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#334155',
+  },
+  orbShopCost: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#F59E0B',
+    fontFamily: 'SpaceMono',
+  },
+  // Forfeit dialog
+  forfeitOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.65)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 50,
+  },
+  forfeitCard: {
+    backgroundColor: COLORS.surfaceElevated,
+    borderRadius: 20,
+    padding: 28,
+    width: 280,
+    alignItems: 'center',
+    gap: 12,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  forfeitTitle: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: COLORS.text,
+    letterSpacing: 1,
+  },
+  forfeitSubtitle: {
+    fontSize: 13,
+    color: COLORS.textSecondary,
+    textAlign: 'center',
+    lineHeight: 18,
+  },
+  forfeitYesBtn: {
+    width: '100%',
+    paddingVertical: 13,
+    borderRadius: 12,
+    backgroundColor: COLORS.danger,
+    alignItems: 'center',
+  },
+  forfeitYesBtnText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  forfeitCancelBtn: {
+    width: '100%',
+    paddingVertical: 13,
+    borderRadius: 12,
+    backgroundColor: '#F1F5F9',
+    alignItems: 'center',
+  },
+  forfeitCancelBtnText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#475569',
   },
   // Pause menu
   pauseBackdrop: {
@@ -1157,5 +1726,200 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#94A3B8',
     letterSpacing: 0.5,
+  },
+  // Searching screen
+  searchingOverlay: {
+    backgroundColor: '#0f172a',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 100,
+    gap: 12,
+  },
+  searchingTitle: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: '#F1F5F9',
+    letterSpacing: 0.5,
+  },
+  searchingTimer: {
+    fontSize: 48,
+    fontWeight: '900',
+    color: '#4F8EF7',
+    fontFamily: 'SpaceMono',
+  },
+  searchToast: {
+    backgroundColor: 'rgba(79,142,247,0.15)',
+    borderWidth: 1,
+    borderColor: '#4F8EF7',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    marginTop: 8,
+  },
+  searchToastText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#93C5FD',
+    textAlign: 'center',
+  },
+  searchVsAiBtn: {
+    marginTop: 16,
+    paddingHorizontal: 32,
+    paddingVertical: 14,
+    borderRadius: 14,
+    backgroundColor: '#4F8EF7',
+  },
+  searchVsAiBtnText: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
+  // Result screen
+  resultOverlayWin: {
+    backgroundColor: '#78350f',
+    zIndex: 90,
+  },
+  resultOverlayLoss: {
+    backgroundColor: '#0f172a',
+    zIndex: 90,
+  },
+  resultContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 60,
+    paddingHorizontal: 24,
+    gap: 16,
+  },
+  resultEmoji: {
+    fontSize: 64,
+  },
+  resultTitle: {
+    fontSize: 42,
+    fontWeight: '900',
+    letterSpacing: 4,
+    fontFamily: 'SpaceMono',
+  },
+  resultTitleWin: {
+    color: '#FCD34D',
+  },
+  resultTitleLoss: {
+    color: '#94A3B8',
+  },
+  resultTrophyRow: {
+    alignItems: 'center',
+    gap: 6,
+  },
+  resultTrophyBlock: {
+    alignItems: 'center',
+    gap: 6,
+  },
+  resultTrophyLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#94A3B8',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+  resultTrophyChange: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  resultTrophyOld: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#94A3B8',
+    fontFamily: 'SpaceMono',
+  },
+  resultTrophyArrow: {
+    fontSize: 16,
+    color: '#64748B',
+  },
+  resultTrophyNew: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#F1F5F9',
+    fontFamily: 'SpaceMono',
+  },
+  resultChangeBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+  },
+  resultChangeBadgeText: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    fontFamily: 'SpaceMono',
+  },
+  resultLeagueRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  resultLeagueArrow: {
+    fontSize: 20,
+  },
+  resultShardsRow: {
+    backgroundColor: 'rgba(79,142,247,0.15)',
+    borderRadius: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  resultShardsText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#93C5FD',
+  },
+  resultUnlocks: {
+    backgroundColor: 'rgba(16,185,129,0.1)',
+    borderRadius: 12,
+    padding: 14,
+    alignItems: 'center',
+    gap: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(16,185,129,0.3)',
+  },
+  resultUnlocksTitle: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#10B981',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  resultUnlockItem: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#F1F5F9',
+  },
+  resultButtons: {
+    gap: 10,
+    width: '100%',
+    marginTop: 8,
+  },
+  resultPlayAgainBtn: {
+    paddingVertical: 15,
+    borderRadius: 14,
+    backgroundColor: '#4F8EF7',
+    alignItems: 'center',
+  },
+  resultPlayAgainBtnText: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
+  resultHomeBtn: {
+    paddingVertical: 15,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+  },
+  resultHomeBtnText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#F1F5F9',
   },
 });

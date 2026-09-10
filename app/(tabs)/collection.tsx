@@ -151,9 +151,10 @@ export default function CollectionScreen() {
     console.log('[Lab] Level Up pressed:', category, id);
     if (!profile?.id) { Alert.alert('Sign in required'); return; }
     setBusy(id);
+    const kind = category.replace('_cards', '') as 'tower' | 'orb' | 'ability';
     try {
-      console.log('[Lab] Invoking level-up-card', { category, cardId: id });
-      const { error } = await supabase.functions.invoke('level-up-card', { body: { category, cardId: id } });
+      console.log('[Lab] Invoking level-up-card', { kind, id });
+      const { error } = await supabase.functions.invoke('level-up-card', { body: { kind, id } });
       if (error) throw error;
       console.log('[Lab] Level Up success:', id);
       await refreshProfile();
@@ -169,9 +170,10 @@ export default function CollectionScreen() {
     console.log('[Lab] Buy Copy pressed:', category, id);
     if (!profile?.id) { Alert.alert('Sign in required'); return; }
     setBusy(id + '_buy');
+    const kind = category.replace('_cards', '') as 'tower' | 'orb' | 'ability';
     try {
-      console.log('[Lab] Invoking buy-card-copy', { category, cardId: id });
-      const { error } = await supabase.functions.invoke('buy-card-copy', { body: { category, cardId: id } });
+      console.log('[Lab] Invoking buy-card-copy', { kind, id });
+      const { error } = await supabase.functions.invoke('buy-card-copy', { body: { kind, id } });
       if (error) throw error;
       console.log('[Lab] Buy Copy success:', id);
       await refreshProfile();
