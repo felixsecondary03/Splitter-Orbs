@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import {
   View, Text, TouchableOpacity, ScrollView, StyleSheet,
   ActivityIndicator, Alert, Dimensions, Animated,
@@ -109,10 +109,13 @@ function useFlipAnim() {
     Animated.spring(anim, { toValue, useNativeDriver: true, friction: 8 }).start();
   }, [anim]);
 
+  // RN-correct flip: use opacity interpolation instead of backfaceVisibility
+  const frontOpacity = anim.interpolate({ inputRange: [0, 0.5, 1], outputRange: [1, 0, 0] });
+  const backOpacity = anim.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0, 0, 1] });
   const frontRotate = anim.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '180deg'] });
   const backRotate = anim.interpolate({ inputRange: [0, 1], outputRange: ['180deg', '360deg'] });
 
-  return { flip, frontRotate, backRotate };
+  return { flip, frontOpacity, backOpacity, frontRotate, backRotate };
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
@@ -492,7 +495,7 @@ export default function CollectionScreen() {
         <View style={styles.headerRow}>
           <Text style={styles.headerTitle}>{t('collection.title')}</Text>
           <View style={styles.shardBadge}>
-            <Text style={styles.shardBadgeText}>🔷 {shards}</Text>
+            <CountUp from={0} to={shards} />
           </View>
         </View>
         <Text style={styles.headerHint}>{t('collection.hint')}</Text>
@@ -543,8 +546,74 @@ interface FlippableCardProps {
   t: (key: string, params?: Record<string, any>) => string;
 }
 
+// ─── ConfettiBurst component ──────────────────────────────────────────────────
+function ConfettiBurst({ trigger }: { trigger: number }) {
+  const COLORS_CONF = ['#f59e0b', '#10b981', '#3b82f6', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
+  const anims = useRef(COLORS_CONF.map(() => ({
+    x: new Animated.Value(0),
+    y: new Animated.Value(0),
+    opacity: new Animated.Value(0),
+  }))).current;
+
+  useEffect(() => {
+    if (trigger === 0) return;
+    const animations = anims.map((a, i) => {
+      const angle = (i / anims.length) * 2 * Math.PI;
+      const dist = 40 + Math.random() * 20;
+      a.x.setValue(0);
+      a.y.setValue(0);
+      a.opacity.setValue(1);
+      return Animated.parallel([
+        Animated.timing(a.x, { toValue: Math.cos(angle) * dist, duration: 600, useNativeDriver: true }),
+        Animated.timing(a.y, { toValue: Math.sin(angle) * dist, duration: 600, useNativeDriver: true }),
+        Animated.timing(a.opacity, { toValue: 0, duration: 600, useNativeDriver: true }),
+      ]);
+    });
+    Animated.parallel(animations).start();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [trigger]);
+
+  if (trigger === 0) return null;
+  return (
+    <View style={StyleSheet.absoluteFill} pointerEvents="none">
+      {anims.map((a, i) => (
+        <Animated.View
+          key={i}
+          style={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            width: 8,
+            height: 8,
+            borderRadius: 4,
+            backgroundColor: COLORS_CONF[i],
+            transform: [{ translateX: a.x }, { translateY: a.y }],
+            opacity: a.opacity,
+          }}
+        />
+      ))}
+    </View>
+  );
+}
+
+// ─── CountUp component ────────────────────────────────────────────────────────
+function CountUp({ from, to }: { from: number; to: number }) {
+  const anim = useRef(new Animated.Value(from)).current;
+  const [display, setDisplay] = useState(from);
+
+  useEffect(() => {
+    anim.setValue(from);
+    Animated.timing(anim, { toValue: to, duration: 600, useNativeDriver: false }).start();
+    const id = anim.addListener(({ value }) => setDisplay(Math.round(value)));
+    return () => anim.removeListener(id);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [to]);
+
+  return <Text style={styles.shardBadgeText}>🔷 {display}</Text>;
+}
+
 function FlippableCard({ kind, def, profile, busy, seenVersion, seenCardsRef, onLevelUp, onBuyCopy, t }: FlippableCardProps) {
-  const { flip, frontRotate, backRotate } = useFlipAnim();
+  const { flip, frontOpacity, backOpacity, frontRotate, backRotate } = useFlipAnim();
   const info = getCardInfo(profile, kind, def.id);
   const { level, copies, needed, boughtCopies, buyableCopies, copyShardCost, rarity, canBuyCopy, canLevel, maxed, locked } = info;
   const rarityColor = RARITY_COLORS[rarity] || '#94a3b8';
@@ -552,6 +621,78 @@ function FlippableCard({ kind, def, profile, busy, seenVersion, seenCardsRef, on
   const isBuyBusy = busy === def.id + '_buy';
   const category = kind === 'tower' ? 'tower_cards' : kind === 'ability' ? 'ability_cards' : 'orb_cards';
   const isNew = !seenCardsRef.current.has(def.id);
+
+  // ── Animations ──
+  const auraPulse = useRef(new Animated.Value(0.4)).current;
+  const shimmerX = useRef(new Animated.Value(-40)).current;
+  const levelBtnScale = useRef(new Animated.Value(1)).current;
+  const newBadgeScale = useRef(new Animated.Value(1)).current;
+  const shakeX = useRef(new Animated.Value(0)).current;
+  const [confettiTrigger, setConfettiTrigger] = useState(0);
+
+  useEffect(() => {
+    if (level >= 1) {
+      const loop = Animated.loop(
+        Animated.sequence([
+          Animated.timing(auraPulse, { toValue: 1.0, duration: 1200, useNativeDriver: true }),
+          Animated.timing(auraPulse, { toValue: 0.4, duration: 1200, useNativeDriver: true }),
+        ])
+      );
+      loop.start();
+      return () => loop.stop();
+    }
+    return undefined;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [level]);
+
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.timing(shimmerX, { toValue: CARD_WIDTH + 40, duration: 1800, useNativeDriver: true })
+    );
+    loop.start();
+    return () => loop.stop();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (canLevel) {
+      const loop = Animated.loop(
+        Animated.sequence([
+          Animated.timing(levelBtnScale, { toValue: 1.04, duration: 600, useNativeDriver: true }),
+          Animated.timing(levelBtnScale, { toValue: 1.0, duration: 600, useNativeDriver: true }),
+        ])
+      );
+      loop.start();
+      return () => loop.stop();
+    }
+    return undefined;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [canLevel]);
+
+  useEffect(() => {
+    if (isNew && !locked) {
+      const loop = Animated.loop(
+        Animated.sequence([
+          Animated.timing(newBadgeScale, { toValue: 1.15, duration: 500, useNativeDriver: true }),
+          Animated.timing(newBadgeScale, { toValue: 1.0, duration: 500, useNativeDriver: true }),
+        ])
+      );
+      loop.start();
+      return () => loop.stop();
+    }
+    return undefined;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isNew, locked]);
+
+  const triggerShake = () => {
+    Animated.sequence([
+      Animated.timing(shakeX, { toValue: -6, duration: 60, useNativeDriver: true }),
+      Animated.timing(shakeX, { toValue: 6, duration: 60, useNativeDriver: true }),
+      Animated.timing(shakeX, { toValue: -6, duration: 60, useNativeDriver: true }),
+      Animated.timing(shakeX, { toValue: 6, duration: 60, useNativeDriver: true }),
+      Animated.timing(shakeX, { toValue: 0, duration: 60, useNativeDriver: true }),
+    ]).start();
+  };
 
   const orbStats = kind === 'orb' && level >= 1 ? getOrbStats(def.id, level) : null;
   const orbStatsNext = kind === 'orb' && level >= 1 && level < MAX_CARD_LEVEL ? getOrbStats(def.id, level + 1) : null;
@@ -650,21 +791,56 @@ function FlippableCard({ kind, def, profile, busy, seenVersion, seenCardsRef, on
   const maxLevelLabel = t('collection.maxLevel') || 'MAX LEVEL';
 
   return (
-    <View style={[styles.card, locked && styles.cardLocked, maxed && styles.cardMaxed]}>
+    <Animated.View
+      style={[
+        styles.card,
+        locked && styles.cardLocked,
+        maxed && styles.cardMaxed,
+        level >= 1 && { borderColor: rarityColor },
+        { transform: [{ translateX: shakeX }] },
+      ]}
+    >
+      {/* Rarity aura pulse border */}
+      {level >= 1 && (
+        <Animated.View
+          style={[
+            StyleSheet.absoluteFill,
+            {
+              borderRadius: 16,
+              borderWidth: 2,
+              borderColor: rarityColor,
+              opacity: auraPulse,
+            },
+          ]}
+          pointerEvents="none"
+        />
+      )}
+
+      {/* Confetti burst */}
+      <ConfettiBurst trigger={confettiTrigger} />
+
       {/* NEW badge */}
       {isNew && !locked && (
-        <View style={styles.newBadge}>
+        <Animated.View style={[styles.newBadge, { transform: [{ scale: newBadgeScale }] }]}>
           <Text style={styles.newBadgeText}>NEW</Text>
-        </View>
+        </Animated.View>
       )}
 
       {/* Front face */}
       <Animated.View
         style={[
           styles.cardFace,
-          { transform: [{ rotateY: frontRotate }], backfaceVisibility: 'hidden' },
+          { transform: [{ rotateY: frontRotate }], opacity: frontOpacity },
         ]}
       >
+        {/* Shimmer sweep */}
+        <Animated.View
+          style={[
+            styles.shimmer,
+            { transform: [{ translateX: shimmerX }] },
+          ]}
+          pointerEvents="none"
+        />
         {/* Info button (top-right, only for towers/orbs) */}
         {canFlip && !locked && (
           <TouchableOpacity
@@ -735,20 +911,30 @@ function FlippableCard({ kind, def, profile, busy, seenVersion, seenCardsRef, on
               {/* Action button */}
               <View style={styles.cardAction}>
                 {canLevel ? (
-                  <TouchableOpacity
-                    style={styles.levelUpBtn}
-                    onPress={() => { console.log('[Lab] Level Up tapped:', def.id); onLevelUp(category, def.id); }}
-                    disabled={!!isBusy}
-                  >
-                    {isBusy
-                      ? <ActivityIndicator size="small" color="#fff" />
-                      : <Text style={styles.levelUpBtnText}>⭐ {levelUpLabel}</Text>}
-                  </TouchableOpacity>
+                  <Animated.View style={{ transform: [{ scale: levelBtnScale }] }}>
+                    <TouchableOpacity
+                      style={styles.levelUpBtn}
+                      onPress={() => {
+                        console.log('[Lab] Level Up tapped:', def.id);
+                        onLevelUp(category, def.id);
+                        setConfettiTrigger((v) => v + 1);
+                      }}
+                      disabled={!!isBusy}
+                    >
+                      {isBusy
+                        ? <ActivityIndicator size="small" color="#fff" />
+                        : <Text style={styles.levelUpBtnText}>⭐ {levelUpLabel}</Text>}
+                    </TouchableOpacity>
+                  </Animated.View>
                 ) : boughtCopies < buyableCopies ? (
                   <TouchableOpacity
                     style={[styles.buyBtn, !canBuyCopy && styles.buyBtnDisabled]}
-                    onPress={() => { console.log('[Lab] Buy Copy tapped:', def.id); onBuyCopy(category, def.id); }}
-                    disabled={!!isBuyBusy || !canBuyCopy}
+                    onPress={() => {
+                      console.log('[Lab] Buy Copy tapped:', def.id);
+                      if (!canBuyCopy) { triggerShake(); return; }
+                      onBuyCopy(category, def.id);
+                    }}
+                    disabled={!!isBuyBusy}
                   >
                     {isBuyBusy
                       ? <ActivityIndicator size="small" color="#fff" />
@@ -770,7 +956,7 @@ function FlippableCard({ kind, def, profile, busy, seenVersion, seenCardsRef, on
         style={[
           styles.cardFace,
           styles.cardFaceBack,
-          { transform: [{ rotateY: backRotate }], backfaceVisibility: 'hidden' },
+          { transform: [{ rotateY: backRotate }], opacity: backOpacity },
         ]}
       >
         {backContent}
@@ -781,7 +967,7 @@ function FlippableCard({ kind, def, profile, busy, seenVersion, seenCardsRef, on
           <Text style={styles.infoBtnText}>✕</Text>
         </TouchableOpacity>
       </Animated.View>
-    </View>
+    </Animated.View>
   );
 }
 
@@ -880,6 +1066,17 @@ const styles = StyleSheet.create({
   levelDots: { flexDirection: 'row', gap: 3 },
   levelDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#e2e8f0' },
   levelDotFilled: { backgroundColor: '#f59e0b' },
+
+  // Shimmer
+  shimmer: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    width: 40,
+    backgroundColor: 'rgba(255,255,255,0.3)',
+    transform: [{ skewX: '-15deg' }],
+    zIndex: 1,
+  },
 
   // Info button
   infoBtn: {

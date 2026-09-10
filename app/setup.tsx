@@ -6,6 +6,7 @@ import {
   ScrollView,
   StyleSheet,
   Animated,
+  Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -19,6 +20,77 @@ import {
   ABILITIES, STARTER_ABILITIES, AI_LEVELS, TOWER_COSTS,
 } from '@/game/constants';
 import type { TowerType, OrbType, AbilityType } from '@/game/constants';
+
+// ─── LoadoutInfoBadge ─────────────────────────────────────────────────────────
+function LoadoutInfoBadge({ title, description }: { title: string; description: string }) {
+  const [visible, setVisible] = useState(false);
+  return (
+    <>
+      <TouchableOpacity
+        onPress={() => {
+          console.log('[Setup] Info badge pressed:', title);
+          setVisible(true);
+        }}
+        style={infoStyles.btn}
+        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+      >
+        <Text style={infoStyles.btnText}>ℹ️</Text>
+      </TouchableOpacity>
+      <Modal visible={visible} transparent animationType="fade" onRequestClose={() => setVisible(false)}>
+        <TouchableOpacity style={infoStyles.backdrop} activeOpacity={1} onPress={() => setVisible(false)}>
+          <View style={infoStyles.card}>
+            <Text style={infoStyles.cardTitle}>{title}</Text>
+            <Text style={infoStyles.cardDesc}>{description}</Text>
+            <TouchableOpacity onPress={() => setVisible(false)} style={infoStyles.closeBtn}>
+              <Text style={infoStyles.closeBtnText}>Got it</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
+    </>
+  );
+}
+
+const infoStyles = StyleSheet.create({
+  btn: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#e2e8f0',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 6,
+  },
+  btnText: { fontSize: 10 },
+  backdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    padding: 20,
+    maxWidth: 320,
+    width: '100%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 16,
+    elevation: 10,
+  },
+  cardTitle: { fontSize: 16, fontWeight: '800', color: '#0f172a', marginBottom: 8 },
+  cardDesc: { fontSize: 14, color: '#64748b', lineHeight: 20, marginBottom: 16 },
+  closeBtn: {
+    paddingVertical: 10,
+    borderRadius: 12,
+    backgroundColor: '#0f172a',
+    alignItems: 'center',
+  },
+  closeBtnText: { fontSize: 14, fontWeight: '700', color: '#fff' },
+});
 
 const ABILITY_ICONS: Record<string, string> = {
   zap: '⚡', portal: '🌀', repair: '➕', freeze: '❄️', rage: '🔥',
@@ -137,12 +209,10 @@ export default function SetupScreen() {
     } else {
       console.log('[Setup] Guest mode — skipping set-loadout');
     }
-    const engineMode =
-      mode === 'training' ? `ai_${difficulty}` : mode === 'casual' ? 'ai_normal' : 'ranked';
     router.push({
       pathname: '/game',
       params: {
-        mode: engineMode,
+        mode,
         abilities: JSON.stringify(abilities),
         difficulty,
         towers: JSON.stringify(towers),
@@ -296,9 +366,15 @@ export default function SetupScreen() {
 
         {/* Tower grid — show ALL, locked ones dimmed */}
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>
-            {t('setup.towers')} · {towers.length}/{TOWER_LOADOUT_SIZE}
-          </Text>
+          <View style={styles.sectionLabelRow}>
+            <Text style={styles.sectionLabel}>
+              {t('setup.towers')} · {towers.length}/{TOWER_LOADOUT_SIZE}
+            </Text>
+            <LoadoutInfoBadge
+              title="Towers"
+              description={`Pick up to ${TOWER_LOADOUT_SIZE} towers. Higher level cards = stronger towers.`}
+            />
+          </View>
           <View style={styles.cardGrid}>
             {Object.values(TOWER_TYPES).map((def) => {
               const isLocked = !effectiveUnlockedTowers.includes(def.id);
@@ -345,9 +421,15 @@ export default function SetupScreen() {
 
         {/* Orb grid — show ALL */}
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>
-            {t('setup.orbs')} · {orbs.length}/{ORB_LOADOUT_SIZE}
-          </Text>
+          <View style={styles.sectionLabelRow}>
+            <Text style={styles.sectionLabel}>
+              {t('setup.orbs')} · {orbs.length}/{ORB_LOADOUT_SIZE}
+            </Text>
+            <LoadoutInfoBadge
+              title="Orbs"
+              description={`Pick up to ${ORB_LOADOUT_SIZE} orbs to send at your opponent.`}
+            />
+          </View>
           <View style={styles.cardGrid}>
             {SENDABLE_ORBS.map((id) => {
               const def = ORB_TYPES[id as OrbType];
@@ -398,9 +480,15 @@ export default function SetupScreen() {
 
         {/* Ability grid — show ALL */}
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>
-            {t('setup.powers')} · {abilities.length}/3
-          </Text>
+          <View style={styles.sectionLabelRow}>
+            <Text style={styles.sectionLabel}>
+              {t('setup.powers')} · {abilities.length}/3
+            </Text>
+            <LoadoutInfoBadge
+              title="Abilities"
+              description="Pick 3 abilities. Use them during battle for powerful effects."
+            />
+          </View>
           <View style={styles.abilityGrid}>
             {Object.values(ABILITIES).map((def) => {
               const isLocked = !effectiveUnlockedAbilities.includes(def.id);
@@ -556,13 +644,17 @@ const styles = StyleSheet.create({
   },
   loadoutBtnText: { fontSize: 14, fontWeight: '800', color: '#374151' },
   section: { width: '100%', marginBottom: 24 },
+  sectionLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
   sectionLabel: {
     fontSize: 11,
     fontWeight: '700',
     color: '#94a3b8',
     textTransform: 'uppercase',
     letterSpacing: 1.5,
-    marginBottom: 8,
   },
   sectionLabelCenter: {
     fontSize: 11,

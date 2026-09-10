@@ -1,10 +1,9 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Pressable, Animated } from 'react-native';
-import { AbilityType } from '@/game/constants';
-import { COLORS } from '@/constants/Colors';
-import {
-  Flame, Snowflake, Zap, Shield, Cpu, Droplets, Circle, Swords,
-} from 'lucide-react-native';
+import Svg, { Circle } from 'react-native-svg';
+import { ABILITIES } from '@/game/constants';
+import type { AbilityType } from '@/game/constants';
+import { useTranslation } from '@/i18n/LanguageContext';
 
 interface AbilityButtonProps {
   abilityType: AbilityType;
@@ -14,86 +13,63 @@ interface AbilityButtonProps {
   size?: number;
 }
 
-const ABILITY_ICONS: Partial<Record<AbilityType, React.ComponentType<{ size: number; color: string; strokeWidth: number }>>> = {
-  meteor: Flame,
-  freeze: Snowflake,
-  rage: Swords,
-  shield: Shield,
-  overclock: Cpu,
-  glue: Droplets,
-  speed_zone: Circle,
-  damage_zone: Circle,
-  frost_zone: Snowflake,
-  deep_freeze: Snowflake,
-  portal: Zap,
-  burner: Flame,
-  zap: Zap,
-  repair: Cpu,
-};
-
-// Background colors per ability type (light theme)
-const ABILITY_BG_COLORS: Partial<Record<AbilityType, string>> = {
-  meteor: '#F97316',
-  freeze: '#0EA5E9',
-  rage: '#F43F5E',
-  shield: '#3B82F6',
-  overclock: '#F59E0B',
-  glue: '#94A3B8',
-  speed_zone: '#22d3ee',
-  damage_zone: '#f43f5e',
-  frost_zone: '#38bdf8',
-  deep_freeze: '#0ea5e9',
-  portal: '#4F46E5',
-  burner: '#F59E0B',
-  zap: '#fbbf24',
-  repair: '#10b981',
-};
-
-const ABILITY_LABELS: Partial<Record<AbilityType, string>> = {
-  meteor: 'METEOR',
-  freeze: 'FREEZE',
-  rage: 'RAGE',
-  shield: 'SHIELD',
-  overclock: 'CLOCK',
-  glue: 'GLUE',
-  speed_zone: 'SPEED',
-  damage_zone: 'DMG',
-  frost_zone: 'FROST',
-  deep_freeze: 'DEEP',
-  portal: 'PORTAL',
-  burner: 'BURN',
-  zap: 'ZAP',
-  repair: 'REPAIR',
+const ABILITY_EMOJIS: Partial<Record<AbilityType, string>> = {
+  zap: '⚡',
+  portal: '🌀',
+  repair: '➕',
+  freeze: '❄️',
+  rage: '🔥',
+  shield: '🛡️',
+  burner: '🌋',
+  meteor: '☄️',
+  glue: '🟢',
+  overclock: '⚙️',
+  speed_zone: '💨',
+  damage_zone: '💢',
+  frost_zone: '🌨️',
+  deep_freeze: '🧊',
 };
 
 export function AbilityButton({ abilityType, cooldown, maxCooldown, onPress, size = 64 }: AbilityButtonProps) {
+  const { t } = useTranslation();
+  const glowAnim = useRef(new Animated.Value(0.4)).current;
   const scaleAnim = useRef(new Animated.Value(1)).current;
-  const glowAnim = useRef(new Animated.Value(0)).current;
+
+  const def = ABILITIES[abilityType as keyof typeof ABILITIES];
+  const defColor = (def as any)?.color ?? '#64748b';
   const isReady = cooldown <= 0;
-  const pct = maxCooldown > 0 ? Math.max(0, Math.min(1, cooldown / maxCooldown)) : 0;
-  const bgColor = ABILITY_BG_COLORS[abilityType] ?? COLORS.primary;
-  const IconComponent = ABILITY_ICONS[abilityType] ?? Zap;
-  const iconSize = Math.round(size * 0.38);
-  const cdSeconds = Math.ceil(cooldown / 1000);
-  const label = ABILITY_LABELS[abilityType] ?? abilityType.toUpperCase();
+  const effectiveCooldown = Math.max(0, cooldown);
+  const effectiveMax = maxCooldown > 0 ? maxCooldown : ((def as any)?.cooldown ?? 1);
+  const pct = isReady ? 0 : (effectiveCooldown / effectiveMax) * 100;
+
+  const C = 2 * Math.PI * 26;
+  const offset = C * (1 - pct / 100);
+
+  const icon = ABILITY_EMOJIS[abilityType] ?? '✨';
+  const cdDisplay = Math.ceil(effectiveCooldown);
+
+  const abilityName = t(`abilities.${abilityType}.name`);
 
   useEffect(() => {
     if (isReady) {
-      Animated.loop(
+      const loop = Animated.loop(
         Animated.sequence([
-          Animated.timing(glowAnim, { toValue: 1, duration: 800, useNativeDriver: true }),
-          Animated.timing(glowAnim, { toValue: 0, duration: 800, useNativeDriver: true }),
+          Animated.timing(glowAnim, { toValue: 1.0, duration: 800, useNativeDriver: true }),
+          Animated.timing(glowAnim, { toValue: 0.4, duration: 800, useNativeDriver: true }),
         ])
-      ).start();
+      );
+      loop.start();
+      return () => loop.stop();
     } else {
       glowAnim.stopAnimation();
-      glowAnim.setValue(0);
+      glowAnim.setValue(0.4);
+      return undefined;
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isReady]);
 
   const handlePress = () => {
-    console.log(`[AbilityButton] Pressed ability=${abilityType} cooldown=${cooldown}`);
+    console.log(`[AbilityButton] Pressed ability=${abilityType} cooldown=${cooldown} isReady=${isReady}`);
     if (!isReady) return;
     Animated.sequence([
       Animated.timing(scaleAnim, { toValue: 0.88, duration: 80, useNativeDriver: true }),
@@ -102,61 +78,97 @@ export function AbilityButton({ abilityType, cooldown, maxCooldown, onPress, siz
     onPress();
   };
 
-  const glowOpacity = glowAnim.interpolate({ inputRange: [0, 1], outputRange: [0.3, 0.8] });
+  const BUTTON_SIZE = size;
+  const INNER_SIZE = BUTTON_SIZE - 8;
 
   return (
     <Pressable onPress={handlePress} style={styles.wrapper}>
       <Animated.View style={{ transform: [{ scale: scaleAnim }], alignItems: 'center' }}>
-        {/* Ready glow ring */}
-        {isReady && (
-          <Animated.View
-            style={[
-              styles.glowRing,
-              {
-                width: size + 12,
-                height: size + 12,
-                borderRadius: (size + 12) / 2,
-                borderColor: COLORS.success,
-                opacity: glowOpacity,
-              },
-            ]}
-          />
-        )}
-        <View
-          style={[
-            styles.button,
-            {
-              width: size,
-              height: size,
-              borderRadius: size / 2,
-              backgroundColor: isReady ? bgColor : `${bgColor}55`,
-            },
-          ]}
-        >
-          <IconComponent size={iconSize} color="#FFFFFF" strokeWidth={2.5} />
-          {/* Cooldown overlay */}
-          {!isReady && (
-            <View
+        {/* Outer container — 64×64 circle */}
+        <View style={[styles.outerCircle, { width: BUTTON_SIZE, height: BUTTON_SIZE, borderRadius: BUTTON_SIZE / 2 }]}>
+          {/* Glow aura when ready */}
+          {isReady && (
+            <Animated.View
               style={[
-                styles.cooldownOverlay,
+                StyleSheet.absoluteFill,
                 {
-                  width: size,
-                  height: size,
-                  borderRadius: size / 2,
-                  opacity: pct * 0.55,
+                  borderRadius: BUTTON_SIZE / 2,
+                  borderWidth: 2,
+                  borderColor: defColor,
+                  opacity: glowAnim,
+                  shadowColor: defColor,
+                  shadowOffset: { width: 0, height: 0 },
+                  shadowOpacity: 0.8,
+                  shadowRadius: 8,
                 },
               ]}
             />
           )}
-          {/* Countdown text */}
+
+          {/* Background disc */}
+          <View
+            style={[
+              styles.innerDisc,
+              {
+                width: INNER_SIZE,
+                height: INNER_SIZE,
+                borderRadius: INNER_SIZE / 2,
+                backgroundColor: isReady ? defColor + '33' : '#f1f5f9',
+                borderWidth: 2,
+                borderColor: isReady ? defColor : '#e2e8f0',
+              },
+            ]}
+          >
+            {/* Center content */}
+            {isReady ? (
+              <Text style={[styles.iconEmoji, { textShadowColor: defColor, textShadowRadius: 6 }]}>
+                {icon}
+              </Text>
+            ) : (
+              <Text style={styles.cdNumber}>{cdDisplay}</Text>
+            )}
+          </View>
+
+          {/* SVG cooldown ring */}
           {!isReady && (
-            <View style={styles.cdOverlay}>
-              <Text style={styles.cdNumber}>{cdSeconds}</Text>
+            <View
+              style={[
+                StyleSheet.absoluteFill,
+                { margin: 4, borderRadius: (INNER_SIZE) / 2 },
+              ]}
+              pointerEvents="none"
+            >
+              <Svg viewBox="0 0 64 64" width={INNER_SIZE} height={INNER_SIZE}>
+                <Circle
+                  cx="32"
+                  cy="32"
+                  r="26"
+                  fill="none"
+                  stroke="#e2e8f0"
+                  strokeWidth="4"
+                />
+                <Circle
+                  cx="32"
+                  cy="32"
+                  r="26"
+                  fill="none"
+                  stroke="#64748b"
+                  strokeWidth="4"
+                  strokeLinecap="round"
+                  strokeDasharray={C}
+                  strokeDashoffset={offset}
+                  transform="rotate(-90 32 32)"
+                />
+              </Svg>
             </View>
           )}
         </View>
+
+        {/* Label below */}
+        <Text style={styles.label} numberOfLines={1}>
+          {abilityName}
+        </Text>
       </Animated.View>
-      <Text style={[styles.label, isReady && { color: COLORS.text }]}>{label}</Text>
     </Pressable>
   );
 }
@@ -164,43 +176,34 @@ export function AbilityButton({ abilityType, cooldown, maxCooldown, onPress, siz
 const styles = StyleSheet.create({
   wrapper: {
     alignItems: 'center',
-    gap: 4,
+    paddingBottom: 16,
   },
-  button: {
+  outerCircle: {
     alignItems: 'center',
     justifyContent: 'center',
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    elevation: 3,
+    position: 'relative',
   },
-  glowRing: {
-    position: 'absolute',
-    top: -6,
-    borderWidth: 2,
-    zIndex: -1,
-  },
-  cooldownOverlay: {
-    position: 'absolute',
-    backgroundColor: '#000000',
-  },
-  cdOverlay: {
-    position: 'absolute',
+  innerDisc: {
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  iconEmoji: {
+    fontSize: 24,
   },
   cdNumber: {
     fontSize: 18,
-    fontWeight: '800',
-    color: '#FFFFFF',
-    fontFamily: 'SpaceMono',
+    fontWeight: '900',
+    color: '#64748b',
   },
   label: {
-    fontSize: 10,
-    fontWeight: '600',
-    color: COLORS.textSecondary,
-    letterSpacing: 0.3,
+    position: 'absolute',
+    bottom: -2,
+    fontSize: 8,
+    fontWeight: '700',
+    color: '#64748b',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    textAlign: 'center',
+    maxWidth: 64,
   },
 });
