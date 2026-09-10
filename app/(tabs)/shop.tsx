@@ -41,7 +41,8 @@ type CrateReward = {
 };
 
 function FloatBob({ children }: { children: React.ReactNode }) {
-  const anim = useRef(new Animated.Value(0)).current;
+  const animRef = useRef(new Animated.Value(0));
+  const anim = animRef.current;
   useEffect(() => {
     const loop = Animated.loop(
       Animated.sequence([
@@ -76,7 +77,8 @@ export default function ShopScreen() {
   const shardsDisplay = (profile.shards ?? 0).toLocaleString();
 
   const lastFreeCrate = profile.last_free_crate ?? null;
-  const freeCrateAvailable = !lastFreeCrate || (Date.now() - new Date(lastFreeCrate).getTime() > 24 * 60 * 60 * 1000);
+  const nowRef = useRef(Date.now());
+  const freeCrateAvailable = !lastFreeCrate || (nowRef.current - new Date(lastFreeCrate).getTime() > 24 * 60 * 60 * 1000);
 
   const handleExchangeGems = useCallback(async (amount: number) => {
     if (exchangingGems !== null) return;

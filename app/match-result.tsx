@@ -37,7 +37,7 @@ interface ConfettiPiece {
 }
 
 function Confetti({ active }: { active: boolean }) {
-  const pieces = useRef<ConfettiPiece[]>(
+  const piecesRef = useRef<ConfettiPiece[]>(
     Array.from({ length: 30 }, (_, i) => ({
       x: new Animated.Value(0),
       y: new Animated.Value(0),
@@ -47,7 +47,8 @@ function Confetti({ active }: { active: boolean }) {
       size: 6 + Math.random() * 8,
       startX: Math.random() * SCREEN_WIDTH,
     }))
-  ).current;
+  );
+  const pieces = piecesRef.current;
 
   useEffect(() => {
     if (!active) return;
@@ -83,7 +84,7 @@ function Confetti({ active }: { active: boolean }) {
   if (!active) return null;
 
   return (
-    <View style={StyleSheet.absoluteFillObject} pointerEvents="none">
+    <View style={StyleSheet.absoluteFill} pointerEvents="none">
       {pieces.map((piece, i) => {
         const rotate = piece.rotate.interpolate({ inputRange: [0, 720], outputRange: ['0deg', '720deg'] });
         return (
@@ -115,8 +116,10 @@ interface StatCardProps {
 }
 
 function StatCard({ icon, label, value, index }: StatCardProps) {
-  const opacity = useRef(new Animated.Value(0)).current;
-  const translateY = useRef(new Animated.Value(16)).current;
+  const opacityRef = useRef(new Animated.Value(0));
+  const translateYRef = useRef(new Animated.Value(16));
+  const opacity = opacityRef.current;
+  const translateY = translateYRef.current;
   useEffect(() => {
     Animated.parallel([
       Animated.timing(opacity, { toValue: 1, duration: 350, delay: 400 + index * 80, useNativeDriver: true }),
@@ -189,10 +192,14 @@ export default function MatchResultScreen() {
     ? Math.min(1, (newTrophies - newLeague.min) / (nextLeague.min - newLeague.min))
     : 1;
 
-  const scaleAnim = useRef(new Animated.Value(0.5)).current;
-  const opacityAnim = useRef(new Animated.Value(0)).current;
-  const progressAnim = useRef(new Animated.Value(0)).current;
-  const coinsAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnimRef = useRef(new Animated.Value(0.5));
+  const opacityAnimRef = useRef(new Animated.Value(0));
+  const progressAnimRef = useRef(new Animated.Value(0));
+  const coinsAnimRef = useRef(new Animated.Value(0));
+  const scaleAnim = scaleAnimRef.current;
+  const opacityAnim = opacityAnimRef.current;
+  const progressAnim = progressAnimRef.current;
+  const coinsAnim = coinsAnimRef.current;
 
   useEffect(() => {
     Animated.parallel([

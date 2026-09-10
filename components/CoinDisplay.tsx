@@ -8,7 +8,8 @@ interface CoinDisplayProps {
 }
 
 export function CoinDisplay({ coins, size = 'md' }: CoinDisplayProps) {
-  const scaleAnim = useRef(new Animated.Value(1)).current;
+  const scaleAnimRef = useRef(new Animated.Value(1));
+  const scaleAnim = scaleAnimRef.current;
   const prevCoins = useRef(coins);
 
   useEffect(() => {

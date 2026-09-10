@@ -79,7 +79,8 @@ export default function OnboardingScreen() {
   const [nameError, setNameError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const slideAnim = useRef(new Animated.Value(0)).current;
+  const slideAnimRef = useRef(new Animated.Value(0));
+  const slideAnim = slideAnimRef.current;
 
   const animateStep = (direction: 1 | -1) => {
     Animated.sequence([

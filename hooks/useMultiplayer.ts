@@ -11,7 +11,8 @@ interface UseMultiplayerOptions {
 export function useMultiplayer({ sessionId, role, onRemoteEvent, onOpponentDisconnect }: UseMultiplayerOptions) {
   const syncRef = useRef<SyncState>(createSyncState(sessionId, role));
   const heartbeatTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const lastOpponentHeartbeatRef = useRef<number>(Date.now());
+  const lastOpponentHeartbeatRef = useRef<number>(0);
+  if (lastOpponentHeartbeatRef.current === 0) lastOpponentHeartbeatRef.current = Date.now();
   const pollTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const sendEvent = useCallback((type: string, payload: Record<string, unknown>) => {

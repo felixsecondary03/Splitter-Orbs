@@ -100,7 +100,8 @@ function sortedSkins(catalog: Record<string, any>) {
 
 // ─── Flip animation hook ──────────────────────────────────────────────────────
 function useFlipAnim() {
-  const anim = useRef(new Animated.Value(0)).current;
+  const animRef = useRef(new Animated.Value(0));
+  const anim = animRef.current;
   const flipped = useRef(false);
 
   const flip = useCallback(() => {
@@ -109,7 +110,6 @@ function useFlipAnim() {
     Animated.spring(anim, { toValue, useNativeDriver: true, friction: 8 }).start();
   }, [anim]);
 
-  // RN-correct flip: use opacity interpolation instead of backfaceVisibility
   const frontOpacity = anim.interpolate({ inputRange: [0, 0.5, 1], outputRange: [1, 0, 0] });
   const backOpacity = anim.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0, 0, 1] });
   const frontRotate = anim.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '180deg'] });
@@ -549,11 +549,12 @@ interface FlippableCardProps {
 // ─── ConfettiBurst component ──────────────────────────────────────────────────
 function ConfettiBurst({ trigger }: { trigger: number }) {
   const COLORS_CONF = ['#f59e0b', '#10b981', '#3b82f6', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
-  const anims = useRef(COLORS_CONF.map(() => ({
+  const animsRef = useRef(COLORS_CONF.map(() => ({
     x: new Animated.Value(0),
     y: new Animated.Value(0),
     opacity: new Animated.Value(0),
-  }))).current;
+  })));
+  const anims = animsRef.current;
 
   useEffect(() => {
     if (trigger === 0) return;
@@ -598,7 +599,8 @@ function ConfettiBurst({ trigger }: { trigger: number }) {
 
 // ─── CountUp component ────────────────────────────────────────────────────────
 function CountUp({ from, to }: { from: number; to: number }) {
-  const anim = useRef(new Animated.Value(from)).current;
+  const animRef = useRef(new Animated.Value(from));
+  const anim = animRef.current;
   const [display, setDisplay] = useState(from);
 
   useEffect(() => {
@@ -623,11 +625,16 @@ function FlippableCard({ kind, def, profile, busy, seenVersion, seenCardsRef, on
   const isNew = !seenCardsRef.current.has(def.id);
 
   // ── Animations ──
-  const auraPulse = useRef(new Animated.Value(0.4)).current;
-  const shimmerX = useRef(new Animated.Value(-40)).current;
-  const levelBtnScale = useRef(new Animated.Value(1)).current;
-  const newBadgeScale = useRef(new Animated.Value(1)).current;
-  const shakeX = useRef(new Animated.Value(0)).current;
+  const auraPulseRef = useRef(new Animated.Value(0.4));
+  const shimmerXRef = useRef(new Animated.Value(-40));
+  const levelBtnScaleRef = useRef(new Animated.Value(1));
+  const newBadgeScaleRef = useRef(new Animated.Value(1));
+  const shakeXRef = useRef(new Animated.Value(0));
+  const auraPulse = auraPulseRef.current;
+  const shimmerX = shimmerXRef.current;
+  const levelBtnScale = levelBtnScaleRef.current;
+  const newBadgeScale = newBadgeScaleRef.current;
+  const shakeX = shakeXRef.current;
   const [confettiTrigger, setConfettiTrigger] = useState(0);
 
   useEffect(() => {

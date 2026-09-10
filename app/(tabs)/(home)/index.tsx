@@ -27,8 +27,10 @@ import { supabase } from '@/utils/supabase';
 import { getLeague, LEAGUES } from '@/game/constants';
 
 function AnimatedListItem({ index, children }: { index: number; children: React.ReactNode }) {
-  const opacity = useRef(new Animated.Value(0)).current;
-  const translateY = useRef(new Animated.Value(16)).current;
+  const opacityRef = useRef(new Animated.Value(0));
+  const translateYRef = useRef(new Animated.Value(16));
+  const opacity = opacityRef.current;
+  const translateY = translateYRef.current;
   useEffect(() => {
     Animated.parallel([
       Animated.timing(opacity, { toValue: 1, duration: 380, delay: index * 65, useNativeDriver: true }),

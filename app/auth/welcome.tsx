@@ -54,8 +54,10 @@ export default function WelcomeScreen() {
   const router = useRouter();
   const { signInWithGoogle, signInWithApple } = useAuth();
 
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(30)).current;
+  const fadeAnimRef = useRef(new Animated.Value(0));
+  const slideAnimRef = useRef(new Animated.Value(30));
+  const fadeAnim = fadeAnimRef.current;
+  const slideAnim = slideAnimRef.current;
 
   useEffect(() => {
     Animated.parallel([

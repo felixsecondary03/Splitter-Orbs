@@ -35,7 +35,8 @@ function formatCountdown(ms: number): string {
 export function CrateButton({ type, lastClaimed, onClaim }: CrateButtonProps) {
   const cooldown = COOLDOWNS[type];
   const [remaining, setRemaining] = useState(() => getTimeRemaining(lastClaimed, cooldown));
-  const bounceAnim = useRef(new Animated.Value(1)).current;
+  const bounceAnimRef = useRef(new Animated.Value(1));
+  const bounceAnim = bounceAnimRef.current;
   const isReady = remaining <= 0;
 
   useEffect(() => {

@@ -14,7 +14,8 @@ export function AnimatedPressable({
   scaleValue = 0.97,
   ...props
 }: AnimatedPressableProps) {
-  const scale = useRef(new Animated.Value(1)).current;
+  const scaleRef = useRef(new Animated.Value(1));
+  const scale = scaleRef.current;
 
   const animateIn = useCallback(() => {
     Animated.spring(scale, {

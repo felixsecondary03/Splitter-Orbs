@@ -32,8 +32,10 @@ const ABILITY_EMOJIS: Partial<Record<AbilityType, string>> = {
 
 export function AbilityButton({ abilityType, cooldown, maxCooldown, onPress, size = 64 }: AbilityButtonProps) {
   const { t } = useTranslation();
-  const glowAnim = useRef(new Animated.Value(0.4)).current;
-  const scaleAnim = useRef(new Animated.Value(1)).current;
+  const glowAnimRef = useRef(new Animated.Value(0.4));
+  const scaleAnimRef = useRef(new Animated.Value(1));
+  const glowAnim = glowAnimRef.current;
+  const scaleAnim = scaleAnimRef.current;
 
   const def = ABILITIES[abilityType as keyof typeof ABILITIES];
   const defColor = (def as any)?.color ?? '#64748b';

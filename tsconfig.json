@@ -5,6 +5,7 @@
     "strictNullChecks": true,
     "noImplicitReturns": true,
     "skipLibCheck": true,
+    "ignoreDeprecations": "6.0",
     "baseUrl": ".",
     "jsx": "react-jsx",
     "paths": {

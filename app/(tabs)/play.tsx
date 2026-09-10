@@ -18,8 +18,10 @@ import { useProfile } from '@/contexts/ProfileContext';
 import { getLeague } from '@/game/constants';
 
 function AnimatedListItem({ index, children }: { index: number; children: React.ReactNode }) {
-  const opacity = useRef(new Animated.Value(0)).current;
-  const translateY = useRef(new Animated.Value(16)).current;
+  const opacityRef = useRef(new Animated.Value(0));
+  const translateYRef = useRef(new Animated.Value(16));
+  const opacity = opacityRef.current;
+  const translateY = translateYRef.current;
   useEffect(() => {
     Animated.parallel([
       Animated.timing(opacity, { toValue: 1, duration: 350, delay: index * 70, useNativeDriver: true }),
@@ -41,8 +43,10 @@ const AI_DIFFICULTIES = [
 ];
 
 function PulsingOrb() {
-  const scale = useRef(new Animated.Value(1)).current;
-  const opacity = useRef(new Animated.Value(0.6)).current;
+  const scaleRef = useRef(new Animated.Value(1));
+  const opacityRef = useRef(new Animated.Value(0.6));
+  const scale = scaleRef.current;
+  const opacity = opacityRef.current;
 
   useEffect(() => {
     Animated.loop(

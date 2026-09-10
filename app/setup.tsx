@@ -103,7 +103,8 @@ export default function SetupScreen() {
   const { t } = useTranslation();
   const { profile } = useProfile();
 
-  const bobAnim = useRef(new Animated.Value(0)).current;
+  const bobAnimRef = useRef(new Animated.Value(0));
+  const bobAnim = bobAnimRef.current;
   useEffect(() => {
     Animated.loop(
       Animated.sequence([
@@ -124,12 +125,15 @@ export default function SetupScreen() {
   useEffect(() => {
     if (profile) {
       const validTowers = (profile.selected_towers || []).filter((t) => t in TOWER_TYPES) as TowerType[];
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setTowers(validTowers.length >= 1 ? validTowers : [...STARTER_TOWERS]);
 
       const validOrbs = (profile.selected_orbs || []).filter((o) => SENDABLE_ORBS.includes(o as OrbType)) as OrbType[];
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setOrbs(validOrbs.length >= 1 ? validOrbs : [...STARTER_ORBS]);
 
       const validAbilities = (profile.selected_abilities || []).filter((a) => a in ABILITIES) as AbilityType[];
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setAbilities(validAbilities.length >= 1 ? validAbilities : [...STARTER_ABILITIES]);
     }
   }, [profile]);

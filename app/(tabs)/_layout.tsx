@@ -22,7 +22,7 @@ export default function TabLayout() {
       console.log('[TabLayout] No authenticated user, redirecting to auth/welcome');
       router.replace('/auth/welcome');
     }
-  }, [user, isLoading]);
+  }, [user, isLoading, router]);
 
   return (
     <>

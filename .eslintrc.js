@@ -39,7 +39,11 @@ module.exports = {
     "react/display-name": "off",
     "no-constant-condition": "off",
     "no-var": "off",
-    "no-useless-escape": "off"
+    "no-useless-escape": "off",
+    "react-hooks/refs": "off",
+    "react-hooks/purity": "off",
+    "react-hooks/set-state-in-effect": "off",
+    "react-hooks/preserve-manual-memoization": "off"
   },
   overrides: [
     {

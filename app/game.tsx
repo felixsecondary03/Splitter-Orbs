@@ -164,7 +164,8 @@ export default function GameScreen() {
   const uiMode = paramsReady ? (params.mode ?? 'casual') : 'casual';
   const difficulty = paramsReady ? (params.difficulty ?? 'normal') : 'normal';
   const engineMode = resolveEngineMode(uiMode, difficulty);
-  const seed = paramsReady ? parseInt(params.seed ?? String(Date.now()), 10) : Date.now();
+  const seedFallbackRef = useRef(Date.now());
+  const seed = paramsReady ? parseInt(params.seed ?? String(seedFallbackRef.current), 10) : seedFallbackRef.current;
 
   let parsedTowers: TowerType[] = DEFAULT_LOADOUT.towers;
   try {
@@ -222,7 +223,7 @@ export default function GameScreen() {
       return createInitialState(engineMode, 0, seed, loadout);
     } catch (e) {
       console.error('[Game] createInitialState failed, using fallback:', e);
-      return createInitialState('ai_normal', 0, Date.now(), DEFAULT_LOADOUT);
+      return createInitialState('ai_normal', 0, seedFallbackRef.current, DEFAULT_LOADOUT);
     }
   // Only run once on mount
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -243,6 +244,7 @@ export default function GameScreen() {
     if (!params?.mode) return;
     if (params.mode === 'training' || params.mode === 'tutorial') {
       console.log('[Game] Skipping search for mode=', params.mode);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       beginMatch();
       return;
     }
@@ -255,6 +257,7 @@ export default function GameScreen() {
     if (!searching) return;
     if (searchTime <= 0) {
       console.log('[Game] Search countdown hit 0, starting vs AI');
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSearchToast('No player found — starting vs AI');
       const t = setTimeout(() => {
         console.log('[Game] Auto-starting vs AI after toast');
@@ -380,7 +383,8 @@ export default function GameScreen() {
         training: uiMode === 'training',
       });
     }, 800);
-  }, [uiMode, difficulty, engineMode, sessionIdParam, opponentNameParam]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [uiMode, difficulty, sessionIdParam, opponentNameParam]);
 
   const { renderState, stateRef: gameStateRef, dispatch, pause, resume } = useGameLoop({
     initialState,
@@ -589,14 +593,14 @@ export default function GameScreen() {
     setShowPauseMenu(false);
     setIsPaused(false);
     resume();
-  }, [resume]);
+  }, [resume, setShowPauseMenu, setIsPaused]);
 
   const handleForfeit = useCallback(() => {
     console.log('[Game] Forfeit confirmed');
     setShowForfeitDialog(false);
     setShowPauseMenu(false);
     router.push('/');
-  }, []);
+  }, [setShowForfeitDialog, setShowPauseMenu]);
 
   const handleCancelAim = useCallback(() => {
     console.log('[Game] Cancel aim pressed');
@@ -645,7 +649,8 @@ export default function GameScreen() {
   const resultEmoji = resultWon ? '🏆' : '💀';
 
   // ── Searching screen bob animation ──
-  const searchBobAnim = useRef(new Animated.Value(0)).current;
+  const searchBobAnimRef = useRef(new Animated.Value(0));
+  const searchBobAnim = searchBobAnimRef.current;
   useEffect(() => {
     if (!searching) return;
     const loop = Animated.loop(
@@ -1567,7 +1572,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   orbShopBackdrop: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: 'rgba(0,0,0,0.4)',
   },
   orbShopPanel: {
