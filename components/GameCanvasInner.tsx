@@ -712,8 +712,8 @@ export function GameCanvasInner({
               fontWeight: '800',
               color: floater.color,
               opacity: alpha,
+              pointerEvents: 'none',
             }}
-            pointerEvents="none"
           >
             {floater.text}
           </Text>
@@ -735,8 +735,8 @@ export function GameCanvasInner({
             borderRadius: 6,
             alignItems: 'center',
             justifyContent: 'center',
+            pointerEvents: 'none',
           }}
-          pointerEvents="none"
         >
           <Text
             style={{
@@ -760,8 +760,8 @@ export function GameCanvasInner({
             top: wallY + (height - wallY) * 0.3,
             width: 80,
             alignItems: 'center',
+            pointerEvents: 'none',
           }}
-          pointerEvents="none"
         >
           <Text
             style={{
