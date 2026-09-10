@@ -847,7 +847,7 @@ export default function GameScreen() {
 
         {/* ── Placement Overlay ── */}
         {placementMode.active && (
-          <View style={[StyleSheet.absoluteFill, styles.placementOverlay]} pointerEvents="box-none">
+          <View style={[StyleSheet.absoluteFill, styles.placementOverlay, { pointerEvents: 'box-none' }]}>
             {Array.from({ length: 5 }, (_, i) => i).map((i) => {
               const slotLeft = (canvasWidth / 6) * (i + 1) - 20;
               const slotTop = canvasHeight - 60;
@@ -872,19 +872,10 @@ export default function GameScreen() {
 
         {/* ── UpgradePopup (edit mode) ── */}
         {editMode && selectedTowerForEdit && (
-          <View style={styles.upgradePopup} pointerEvents="box-none">
+          <View style={styles.upgradePopup}>
             <View style={styles.upgradePopupCard}>
               <View style={styles.upgradePopupHeader}>
-                <View style={{
-                  width: 32, height: 32, borderRadius: 8,
-                  backgroundColor: (TOWER_TYPES[selectedTowerForEdit.type]?.color ?? '#64748b') + '33',
-                  borderWidth: 1.5, borderColor: TOWER_TYPES[selectedTowerForEdit.type]?.color ?? '#64748b',
-                  alignItems: 'center', justifyContent: 'center',
-                }}>
-                  <Text style={{ fontSize: 10, color: TOWER_TYPES[selectedTowerForEdit.type]?.color ?? '#64748b', fontWeight: '700' }}>
-                    {(TOWER_TYPES[selectedTowerForEdit.type]?.name ?? selectedTowerForEdit.type).slice(0, 2).toUpperCase()}
-                  </Text>
-                </View>
+                <TowerIcon type={selectedTowerForEdit.type} size={32} level={selectedTowerForEdit.level} />
                 <View style={{ flex: 1 }}>
                   <Text style={styles.upgradePopupName}>
                     {selectedTowerForEdit.type.replace(/_/g, ' ').toUpperCase()}
