@@ -3,7 +3,6 @@ import React, { useEffect } from "react";
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import { SystemBars } from "react-native-edge-to-edge";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useColorScheme, Alert } from "react-native";
@@ -78,7 +77,7 @@ export default function RootLayout() {
                     <Stack.Screen name="eula-screen" options={{ headerShown: false }} />
                     <Stack.Screen name="impressum" options={{ headerShown: false }} />
                   </Stack>
-                  <SystemBars style="light" />
+                  <StatusBar style="light" />
                 </GestureHandlerRootView>
               </WidgetProvider>
             </ProfileProvider>
