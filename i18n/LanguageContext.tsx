@@ -1,6 +1,6 @@
 import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '@/utils/supabase';
+import { storage } from '@/utils/storage';
 import en from './locales/en.json';
 import de from './locales/de.json';
 import es from './locales/es.json';
@@ -65,7 +65,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const [lang, setLangState] = useState('en');
 
   useEffect(() => {
-    AsyncStorage.getItem('so_lang').then(s => {
+    storage.getItem('so_lang').then(s => {
       console.log('[i18n] Loaded saved language:', s);
       if (s && LOCALES[s]) setLangState(s);
     });
@@ -74,7 +74,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const setLang = useCallback((l: string) => {
     console.log('[i18n] Language changed to:', l);
     setLangState(l);
-    AsyncStorage.setItem('so_lang', l);
+    storage.setItem('so_lang', l);
     supabase.auth.getUser().then(({ data }) => {
       if (data.user) {
         console.log('[i18n] Syncing language to profile:', l);
