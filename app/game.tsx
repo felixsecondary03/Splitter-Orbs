@@ -1023,62 +1023,62 @@ export default function GameScreen() {
             </Pressable>
           </View>
         )}
+      </View>
 
-        {/* ── UpgradePopup (edit mode) ── */}
-        {editMode && selectedTowerForEdit && (
-          <View style={styles.upgradePopup}>
-            <View style={styles.upgradePopupCard}>
-              <View style={styles.upgradePopupHeader}>
-                <TowerIcon type={selectedTowerForEdit.type} size={32} level={selectedTowerForEdit.level} />
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.upgradePopupName}>
-                    {selectedTowerForEdit.type.replace(/_/g, ' ').toUpperCase()}
-                  </Text>
-                  <Text style={styles.upgradePopupLevel}>Level {selectedTowerForEdit.level}</Text>
-                </View>
-                <HPBar
-                  current={selectedTowerForEdit.hp}
-                  max={selectedTowerForEdit.maxHp}
-                  width={70}
-                  height={5}
-                  showText
-                />
-                <Pressable onPress={() => { setSelectedTowerForEdit(null); }} style={styles.upgradePopupClose}>
-                  <X size={14} color={COLORS.textSecondary} strokeWidth={2} />
-                </Pressable>
+      {/* ── UpgradePopup (edit mode) — outside overflow:hidden canvas View ── */}
+      {editMode && selectedTowerForEdit && (
+        <View style={styles.upgradePopup}>
+          <View style={styles.upgradePopupCard}>
+            <View style={styles.upgradePopupHeader}>
+              <TowerIcon type={selectedTowerForEdit.type} size={32} level={selectedTowerForEdit.level} />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.upgradePopupName}>
+                  {selectedTowerForEdit.type.replace(/_/g, ' ').toUpperCase()}
+                </Text>
+                <Text style={styles.upgradePopupLevel}>Level {selectedTowerForEdit.level}</Text>
               </View>
-              <View style={styles.upgradePopupActions}>
+              <HPBar
+                current={selectedTowerForEdit.hp}
+                max={selectedTowerForEdit.maxHp}
+                width={70}
+                height={5}
+                showText
+              />
+              <Pressable onPress={() => { setSelectedTowerForEdit(null); }} style={styles.upgradePopupClose}>
+                <X size={14} color={COLORS.textSecondary} strokeWidth={2} />
+              </Pressable>
+            </View>
+            <View style={styles.upgradePopupActions}>
+              <Pressable
+                style={[
+                  styles.upgradePopupBtn,
+                  styles.upgradePopupBtnUpgrade,
+                  (playerCoins < getTowerUpgradeCost(selectedTowerForEdit) || selectedTowerForEdit.level >= 5) && styles.upgradePopupBtnDisabled,
+                ]}
+                onPress={handleUpgradeTower}
+              >
+                <Text style={styles.upgradePopupBtnText}>Upgrade</Text>
+                <Text style={styles.upgradePopupBtnSub}>{getTowerUpgradeCost(selectedTowerForEdit)} coins</Text>
+              </Pressable>
+
+              {selectedTowerForEdit.poisoned && (
                 <Pressable
-                  style={[
-                    styles.upgradePopupBtn,
-                    styles.upgradePopupBtnUpgrade,
-                    (playerCoins < getTowerUpgradeCost(selectedTowerForEdit) || selectedTowerForEdit.level >= 5) && styles.upgradePopupBtnDisabled,
-                  ]}
-                  onPress={handleUpgradeTower}
+                  style={[styles.upgradePopupBtn, styles.upgradePopupBtnCleanse, playerCoins < 20 && styles.upgradePopupBtnDisabled]}
+                  onPress={handleCleanseTower}
                 >
-                  <Text style={styles.upgradePopupBtnText}>Upgrade</Text>
-                  <Text style={styles.upgradePopupBtnSub}>{getTowerUpgradeCost(selectedTowerForEdit)} coins</Text>
+                  <Text style={styles.upgradePopupBtnText}>Cleanse</Text>
+                  <Text style={styles.upgradePopupBtnSub}>20 coins</Text>
                 </Pressable>
+              )}
 
-                {selectedTowerForEdit.poisoned && (
-                  <Pressable
-                    style={[styles.upgradePopupBtn, styles.upgradePopupBtnCleanse, playerCoins < 20 && styles.upgradePopupBtnDisabled]}
-                    onPress={handleCleanseTower}
-                  >
-                    <Text style={styles.upgradePopupBtnText}>Cleanse</Text>
-                    <Text style={styles.upgradePopupBtnSub}>20 coins</Text>
-                  </Pressable>
-                )}
-
-                <Pressable style={[styles.upgradePopupBtn, styles.upgradePopupBtnSell]} onPress={handleSellTower}>
-                  <Text style={styles.upgradePopupBtnText}>Sell</Text>
-                  <Text style={styles.upgradePopupBtnSub}>+{getTowerSellValue(selectedTowerForEdit)}</Text>
-                </Pressable>
-              </View>
+              <Pressable style={[styles.upgradePopupBtn, styles.upgradePopupBtnSell]} onPress={handleSellTower}>
+                <Text style={styles.upgradePopupBtnText}>Sell</Text>
+                <Text style={styles.upgradePopupBtnSub}>+{getTowerSellValue(selectedTowerForEdit)}</Text>
+              </Pressable>
             </View>
           </View>
-        )}
-      </View>
+        </View>
+      )}
 
       {/* ── Bottom HUD (~10fps) ── */}
       <BottomHUD
@@ -1304,10 +1304,15 @@ const styles = StyleSheet.create({
   // Top HUD
   topHud: {
     paddingHorizontal: 12,
-    paddingBottom: 6,
-    backgroundColor: 'rgba(255,255,255,0.9)',
+    paddingBottom: 8,
+    backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
+    borderBottomColor: '#CBD5E1',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 4,
   },
   hudTopRow: {
     flexDirection: 'row',
@@ -1341,9 +1346,9 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   hudOpponentName: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '700',
-    color: '#F43F5E',
+    color: '#1E293B',
     maxWidth: 120,
   },
   kiBadge: {
@@ -1359,14 +1364,18 @@ const styles = StyleSheet.create({
   },
   timerPill: {
     alignSelf: 'flex-start',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
     borderRadius: 20,
+    backgroundColor: '#F1F5F9',
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
   },
   timerPillText: {
-    fontSize: 12,
-    fontWeight: '700',
+    fontSize: 13,
+    fontWeight: '800',
     letterSpacing: 0.5,
+    color: '#334155',
   },
   hudPills: {
     flexDirection: 'row',
@@ -1568,11 +1577,8 @@ const styles = StyleSheet.create({
   },
   // UpgradePopup
   upgradePopup: {
-    position: 'absolute',
-    bottom: 8,
-    left: 8,
-    right: 8,
-    zIndex: 20,
+    marginHorizontal: 8,
+    marginBottom: 4,
   },
   upgradePopupCard: {
     backgroundColor: COLORS.surfaceElevated,

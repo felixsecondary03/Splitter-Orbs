@@ -3136,6 +3136,10 @@ export const GameCanvasInner = React.memo(function GameCanvasInner({
 
   const scale = Math.min(width / GAME_WIDTH, height / GAME_HEIGHT);
 
+  // Keep scale always current inside the RAF closure
+  const scaleRef = useRef(scale);
+  scaleRef.current = scale;
+
   // Stable refs for UI options (avoid re-creating RAF loop on every render)
   const uiRef = useRef<DrawUI>({});
   uiRef.current = {
@@ -3157,12 +3161,13 @@ export const GameCanvasInner = React.memo(function GameCanvasInner({
       const s = drawStateRef.current;
       if (!s) return;
       if (s.orbs.length === 0 && s.projectiles.length === 0 && s.effects.length === 0 && s.status !== 'playing') return;
-      const bounds = Skia.XYWHRect(0, 0, GAME_WIDTH * scale, GAME_HEIGHT * scale);
+      const currentScale = scaleRef.current;
+      const bounds = Skia.XYWHRect(0, 0, GAME_WIDTH * currentScale, GAME_HEIGHT * currentScale);
       const recorder = Skia.PictureRecorder();
       const c = recorder.beginRecording(bounds);
       const now = Date.now();
       c.save();
-      c.scale(scale, scale);
+      c.scale(currentScale, currentScale);
       drawFrame(c, s, now, boldFont, uiRef.current);
       c.restore();
       pictureValue.value = recorder.finishRecordingAsPicture();
@@ -3170,7 +3175,7 @@ export const GameCanvasInner = React.memo(function GameCanvasInner({
     rafId = requestAnimationFrame(render);
     return () => cancelAnimationFrame(rafId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [boldFont]);
+  }, [boldFont, scale]);
 
   // ── Canvas content ───────────────────────────────────────────────────────────
   const canvasContent = (
