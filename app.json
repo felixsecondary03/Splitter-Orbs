@@ -31,7 +31,6 @@
       "bundler": "metro"
     },
     "plugins": [
-      "@shopify/react-native-skia",
       "expo-font",
       "expo-router",
       "expo-web-browser",
