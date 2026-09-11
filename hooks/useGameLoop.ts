@@ -65,8 +65,8 @@ export function useGameLoop({ initialState, mode, onGameEnd }: UseGameLoopOption
         stateRef.current = newState;
 
         frameCountRef.current += 1;
-        if (frameCountRef.current % 2 === 0) {
-          setHudState(newState); // ~30fps for HUD
+        if (frameCountRef.current % 6 === 0) {
+          setHudState(newState); // ~10fps for HUD
         }
 
         if (newState.status === 'finished') {

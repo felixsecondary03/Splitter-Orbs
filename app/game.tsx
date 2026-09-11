@@ -13,7 +13,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
 import { GestureDetector, Gesture } from 'react-native-gesture-handler';
-import { X, Pause, Play, Flag } from 'lucide-react-native';
+import { X, Pause, Play, Flag, ArrowLeft } from 'lucide-react-native';
 import { COLORS } from '@/constants/Colors';
 import { useProfile } from '@/contexts/ProfileContext';
 import { useTranslation } from '@/i18n/LanguageContext';
@@ -140,75 +140,36 @@ interface ResultData {
   training?: boolean;
 }
 
-// ─── GameHUD ──────────────────────────────────────────────────────────────────
-interface GameHUDProps {
-  playerHp: number;
-  playerMaxHp: number;
-  oppHp: number;
-  oppMaxHp: number;
-  playerCoins: number;
-  timeDisplay: string;
-  clicksLeft: number;
-  maxClicks: number;
-  escalationTier: string;
-  abilities: AbilityState[];
-  isAiming: boolean;
-  onAbility: (type: AbilityType) => void;
-  onCancelAim: () => void;
+// ─── TopHUD ───────────────────────────────────────────────────────────────────
+interface TopHUDProps {
   opponentName: string;
   isAiMode: boolean;
   insets: { top: number; bottom: number };
-  editMode: boolean;
-  placementModeActive: boolean;
-  selectedTowerType: TowerType | null;
-  loadoutTowers: TowerType[];
-  playerCoinsForTower: number;
-  onToggleEditMode: () => void;
-  onOpenOrbShop: () => void;
-  onSelectTower: (type: TowerType | null) => void;
+  timeDisplay: string;
+  escalationTier: string;
+  clicksLeft: number;
+  maxClicks: number;
+  playerCoins: number;
   onPause: () => void;
 }
 
-const GameHUD = React.memo(function GameHUD({
-  playerHp,
-  playerMaxHp,
-  oppHp,
-  oppMaxHp,
-  playerCoins,
-  timeDisplay,
-  clicksLeft,
-  maxClicks,
-  escalationTier,
-  abilities,
-  isAiming,
-  onAbility,
-  onCancelAim,
+const TopHUD = React.memo(function TopHUD({
   opponentName,
   isAiMode,
   insets,
-  editMode,
-  placementModeActive,
-  selectedTowerType,
-  loadoutTowers,
-  playerCoinsForTower,
-  onToggleEditMode,
-  onOpenOrbShop,
-  onSelectTower,
+  timeDisplay,
+  escalationTier,
+  clicksLeft,
+  maxClicks,
+  playerCoins,
   onPause,
-}: GameHUDProps) {
+}: TopHUDProps) {
   const escalationLabel: Record<string, string> = {
     overtime: 'OT',
     intensifying: 'INT',
     critical: 'CRIT',
     max_pressure: 'MAX',
     tower_bleed: 'BLEED',
-  };
-  const escalationColor: Record<string, string> = {
-    overtime: COLORS.warning,
-    intensifying: '#F97316',
-    critical: COLORS.danger,
-    max_pressure: '#DC2626',
-    tower_bleed: '#7F1D1D',
   };
 
   const timerPillBg = escalationTier === 'tower_bleed'
@@ -239,124 +200,149 @@ const GameHUD = React.memo(function GameHUD({
     ? '#F43F5E'
     : '#E2E8F0';
 
+  const timerText = timerLabel ?? timeDisplay;
+
+  return (
+    <View style={[styles.topHud, { paddingTop: insets.top + 6 }]}>
+      <View style={styles.hudTopRow}>
+        <Pressable onPress={onPause} hitSlop={8}>
+          <ArrowLeft size={22} color="#94A3B8" strokeWidth={2} />
+        </Pressable>
+
+        <View style={styles.hudCenterBlock}>
+          <View style={styles.opponentNameRow}>
+            <Text style={styles.hudOpponentName} numberOfLines={1}>{opponentName}</Text>
+            {isAiMode && (
+              <View style={styles.kiBadge}>
+                <Text style={styles.kiBadgeText}>AI</Text>
+              </View>
+            )}
+          </View>
+          <View style={[styles.timerPill, { backgroundColor: timerPillBg }]}>
+            <Text style={[styles.timerPillText, { color: timerPillTextColor }]}>{timerText}</Text>
+          </View>
+        </View>
+
+        <View style={styles.hudPills}>
+          <View style={[styles.clicksPill, { backgroundColor: clicksPillBg, borderColor: clicksPillBorder }]}>
+            <Text style={styles.pillText}>👆 {clicksLeft}/{maxClicks}</Text>
+          </View>
+          <View style={styles.coinsPill}>
+            <View style={styles.coinDot} />
+            <Text style={styles.pillText}>{playerCoins}</Text>
+          </View>
+        </View>
+      </View>
+    </View>
+  );
+});
+
+// ─── BottomHUD ────────────────────────────────────────────────────────────────
+interface BottomHUDProps {
+  abilities: AbilityState[];
+  onAbility: (type: AbilityType) => void;
+  editMode: boolean;
+  placementModeActive: boolean;
+  loadoutTowers: TowerType[];
+  selectedTowerType: TowerType | null;
+  playerCoinsForTower: number;
+  onToggleEditMode: () => void;
+  onOpenOrbShop: () => void;
+  onSelectTower: (type: TowerType | null) => void;
+  insets: { top: number; bottom: number };
+}
+
+const BottomHUD = React.memo(function BottomHUD({
+  abilities,
+  onAbility,
+  editMode,
+  placementModeActive,
+  loadoutTowers,
+  selectedTowerType,
+  playerCoinsForTower,
+  onToggleEditMode,
+  onOpenOrbShop,
+  onSelectTower,
+  insets,
+}: BottomHUDProps) {
   const towerNameFirst = (type: TowerType) => {
     const name = TOWER_TYPES[type]?.name ?? String(type);
     return name.split(' ')[0];
   };
 
   return (
-    <>
-      {/* ── Top HUD ── */}
-      <View style={[styles.topHud, { paddingTop: insets.top + 6 }]}>
-        <View style={styles.hudTopRow}>
-          <Pressable style={styles.backBtn} onPress={onPause}>
-            <Text style={styles.backBtnText}>⏸</Text>
-          </Pressable>
-
-          <View style={styles.hudCenterBlock}>
-            <View style={styles.opponentNameRow}>
-              <Text style={styles.hudOpponentName} numberOfLines={1}>{opponentName}</Text>
-              {isAiMode && (
-                <View style={styles.kiBadge}>
-                  <Text style={styles.kiBadgeText}>KI</Text>
-                </View>
-              )}
-            </View>
-            <View style={[styles.timerPill, { backgroundColor: timerPillBg }]}>
-              {timerLabel ? (
-                <Text style={[styles.timerPillText, { color: timerPillTextColor }]}>{timerLabel}</Text>
-              ) : (
-                <Text style={[styles.timerPillText, { color: timerPillTextColor }]}>{timeDisplay}</Text>
-              )}
-            </View>
-          </View>
-
-          <View style={styles.hudPills}>
-            <View style={[styles.clicksPill, { backgroundColor: clicksPillBg, borderColor: clicksPillBorder }]}>
-              <Text style={styles.pillText}>👆 {clicksLeft}/{maxClicks}</Text>
-            </View>
-            <View style={styles.coinsPill}>
-              <View style={styles.coinDot} />
-              <Text style={styles.pillText}>{playerCoins}</Text>
-            </View>
-          </View>
+    <View style={[styles.bottomHud, { paddingBottom: insets.bottom + 16 }]}>
+      <View style={styles.abilityRow}>
+        <View style={styles.abilityButtons}>
+          {abilities.map((ability) => (
+            <AbilityButton
+              key={ability.type}
+              abilityType={ability.type}
+              cooldown={ability.cooldown}
+              maxCooldown={ability.maxCooldown}
+              onPress={() => onAbility(ability.type)}
+              size={56}
+            />
+          ))}
         </View>
-      </View>
-
-      {/* ── Bottom HUD ── */}
-      <View style={[styles.bottomHud, { paddingBottom: insets.bottom + 16 }]}>
-        <View style={styles.abilityRow}>
-          <View style={styles.abilityButtons}>
-            {abilities.map((ability) => (
-              <AbilityButton
-                key={ability.type}
-                abilityType={ability.type}
-                cooldown={ability.cooldown}
-                maxCooldown={ability.maxCooldown}
-                onPress={() => onAbility(ability.type)}
-                size={56}
-              />
-            ))}
-          </View>
-          <View style={styles.abilityRightBtns}>
-            {!placementModeActive ? (
-              <Pressable style={styles.orbShopCircleBtn} onPress={onOpenOrbShop}>
-                <Text style={styles.orbShopCircleBtnText}>🌀</Text>
-              </Pressable>
-            ) : (
-              <View style={{ width: 56, height: 56 }} />
-            )}
-            <Pressable
-              style={[styles.editToggleBtn, editMode && styles.editToggleBtnActive]}
-              onPress={onToggleEditMode}
-            >
-              <Text style={styles.editToggleBtnText}>{editMode ? '✅' : '✏️'}</Text>
+        <View style={styles.abilityRightBtns}>
+          {!placementModeActive ? (
+            <Pressable style={styles.orbShopCircleBtn} onPress={onOpenOrbShop}>
+              <Text style={styles.orbShopCircleBtnText}>🌀</Text>
             </Pressable>
-          </View>
-        </View>
-
-        <View style={styles.towerTrayBorder}>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={styles.towerBar}
-            contentContainerStyle={styles.towerBarContent}
+          ) : (
+            <View style={{ width: 56, height: 56 }} />
+          )}
+          <Pressable
+            style={[styles.editToggleBtn, editMode && styles.editToggleBtnActive]}
+            onPress={onToggleEditMode}
           >
-            {loadoutTowers.map((towerType) => {
-              const cost = TOWER_COSTS[towerType] ?? 60;
-              const isSelected = selectedTowerType === towerType;
-              const canAfford = playerCoinsForTower >= cost;
-              const firstName = towerNameFirst(towerType);
-              return (
-                <Pressable
-                  key={towerType}
-                  style={[
-                    styles.towerCard,
-                    isSelected && styles.towerCardSelected,
-                    !canAfford && styles.towerCardDisabled,
-                  ]}
-                  onPress={() => {
-                    console.log(`[Game] Tower card pressed type=${towerType}`);
-                    onSelectTower(isSelected ? null : towerType);
-                  }}
-                >
-                  <TowerIcon type={towerType} size={34} />
-                  <Text style={styles.towerName} numberOfLines={1}>{firstName}</Text>
-                  <View style={styles.towerCostRow}>
-                    <Text style={[styles.towerCost, !canAfford && { color: COLORS.textTertiary }]}>
-                      {'🪙 '}
-                    </Text>
-                    <Text style={[styles.towerCost, !canAfford && { color: COLORS.textTertiary }]}>
-                      {cost}
-                    </Text>
-                  </View>
-                </Pressable>
-              );
-            })}
-          </ScrollView>
+            <Text style={styles.editToggleBtnText}>{editMode ? '✅' : '✏️'}</Text>
+          </Pressable>
         </View>
       </View>
-    </>
+
+      <View style={styles.towerTrayBorder}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.towerBar}
+          contentContainerStyle={styles.towerBarContent}
+        >
+          {loadoutTowers.map((towerType) => {
+            const cost = TOWER_COSTS[towerType] ?? 60;
+            const isSelected = selectedTowerType === towerType;
+            const canAfford = playerCoinsForTower >= cost;
+            const firstName = towerNameFirst(towerType);
+            return (
+              <Pressable
+                key={towerType}
+                style={[
+                  styles.towerCard,
+                  isSelected && styles.towerCardSelected,
+                  !canAfford && styles.towerCardDisabled,
+                ]}
+                onPress={() => {
+                  console.log(`[Game] Tower card pressed type=${towerType}`);
+                  onSelectTower(isSelected ? null : towerType);
+                }}
+              >
+                <TowerIcon type={towerType} size={34} />
+                <Text style={styles.towerName} numberOfLines={1}>{firstName}</Text>
+                <View style={styles.towerCostRow}>
+                  <Text style={[styles.towerCost, !canAfford && { color: COLORS.textTertiary }]}>
+                    {'🪙 '}
+                  </Text>
+                  <Text style={[styles.towerCost, !canAfford && { color: COLORS.textTertiary }]}>
+                    {cost}
+                  </Text>
+                </View>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
+      </View>
+    </View>
   );
 });
 
@@ -895,32 +881,16 @@ export default function GameScreen() {
 
   return (
     <View style={styles.root}>
-      {/* ── HUD (top + bottom, ~30fps) ── */}
-      <GameHUD
-        playerHp={playerHp}
-        playerMaxHp={playerMaxHp}
-        oppHp={oppHp}
-        oppMaxHp={oppMaxHp}
-        playerCoins={playerCoins}
-        timeDisplay={timeDisplay}
-        clicksLeft={clicksLeft}
-        maxClicks={maxClicks}
-        escalationTier={escalationTier}
-        abilities={hudAbilities}
-        isAiming={isAiming}
-        onAbility={handleAbility}
-        onCancelAim={handleCancelAim}
+      {/* ── Top HUD (~10fps) ── */}
+      <TopHUD
         opponentName={opponentName}
         isAiMode={isAiMode}
         insets={insets}
-        editMode={editMode}
-        placementModeActive={placementMode.active}
-        selectedTowerType={selectedTowerType}
-        loadoutTowers={loadout.towers}
-        playerCoinsForTower={playerCoins}
-        onToggleEditMode={handleToggleEditMode}
-        onOpenOrbShop={handleOpenOrbShop}
-        onSelectTower={handleSelectTower}
+        timeDisplay={timeDisplay}
+        escalationTier={escalationTier}
+        clicksLeft={clicksLeft}
+        maxClicks={maxClicks}
+        playerCoins={playerCoins}
         onPause={handlePause}
       />
 
@@ -1104,6 +1074,21 @@ export default function GameScreen() {
           </View>
         )}
       </View>
+
+      {/* ── Bottom HUD (~10fps) ── */}
+      <BottomHUD
+        abilities={hudAbilities}
+        onAbility={handleAbility}
+        editMode={editMode}
+        placementModeActive={placementMode.active}
+        loadoutTowers={loadout.towers}
+        selectedTowerType={selectedTowerType}
+        playerCoinsForTower={playerCoins}
+        onToggleEditMode={handleToggleEditMode}
+        onOpenOrbShop={handleOpenOrbShop}
+        onSelectTower={handleSelectTower}
+        insets={insets}
+      />
 
       {/* ── Orb Shop Panel ── */}
       {showOrbShop && (
