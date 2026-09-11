@@ -190,7 +190,7 @@ function drawOrbGloss(canvas: SkCanvas, cx: number, cy: number, r: number): void
   _ps.setStrokeWidth(Math.max(1, r * 0.05));
   const rimPath = Skia.Path.Make();
   rimPath.addArc(
-    { x: cx - r * 0.93, y: cy - r * 0.93, width: r * 1.86, height: r * 1.86 },
+    Skia.XYWHRect(cx - r * 0.93, cy - r * 0.93, r * 1.86, r * 1.86),
     190,
     144,
   );
@@ -2868,9 +2868,16 @@ function drawFrame(
 
   // ── 1. Field background ──
   p.setStyle(PaintStyle.Fill);
-  p.setShader(null);
-  p.setColor(Skia.Color('#FF0000'));
+  const bgShader = Skia.Shader.MakeLinearGradient(
+    { x: 0, y: 0 },
+    { x: 0, y: GAME_HEIGHT },
+    [Skia.Color('#f8fafc'), Skia.Color('#ffffff'), Skia.Color('#f1f5f9')],
+    [0, 0.5, 1],
+    TileMode.Clamp,
+  );
+  p.setShader(bgShader);
   canvas.drawRect(Skia.XYWHRect(0, 0, GAME_WIDTH, GAME_HEIGHT), p);
+  p.setShader(null);
 
   // Side tints
   p.setColor(Skia.Color('rgba(244,63,94,0.05)'));
