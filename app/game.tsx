@@ -42,6 +42,7 @@ import { TowerIcon } from '@/components/TowerIcon';
 import { distance } from '@/game/engine-helpers';
 import type { MatchMode } from '@/game/engine-types';
 import { useGameLoop } from '@/hooks/useGameLoop';
+import type { HudState } from '@/hooks/useGameLoop';
 import { supabase } from '@/utils/supabase';
 import { getLeague } from '@/game/constants';
 
@@ -808,18 +809,18 @@ export default function GameScreen() {
   }, [dispatch]);
 
   // ── Derived display values (from hudState at ~30fps) ──
-  const playerHp = hudState?.player?.station?.hp ?? 0;
-  const playerMaxHp = hudState?.player?.station?.maxHp ?? 100;
-  const oppHp = hudState?.opponent?.station?.hp ?? 0;
-  const oppMaxHp = hudState?.opponent?.station?.maxHp ?? 100;
-  const playerCoins = Math.floor(hudState?.player?.coins ?? 0);
+  const playerHp = hudState?.playerHp ?? 0;
+  const playerMaxHp = hudState?.playerMaxHp ?? 100;
+  const oppHp = hudState?.oppHp ?? 0;
+  const oppMaxHp = hudState?.oppMaxHp ?? 100;
+  const playerCoins = Math.floor(hudState?.coins ?? 0);
   const timeDisplay = formatTime(hudState?.time ?? 0);
-  const selectedTowerType = hudState?.player?.selectedTower ?? null;
+  const selectedTowerType = (hudState?.selectedTower ?? null) as TowerType | null;
   const isAiming = (gameStateRef.current?.aiming ?? null) !== null;
-  const clicksLeft = hudState?.player?.clicks ?? 0;
-  const maxClicks = hudState?.player?.maxClicks ?? 5;
+  const clicksLeft = hudState?.clicks ?? 0;
+  const maxClicks = hudState?.maxClicks ?? 5;
   const escalationTier = hudState?.escalationTier ?? 'none';
-  const hudAbilities = hudState?.player?.abilities ?? [];
+  const hudAbilities = hudState?.abilities ?? [];
 
   const escalationLabel: Record<string, string> = {
     overtime: 'OT',

@@ -3,6 +3,24 @@ import { GameState, MatchMode } from '@/game/engine-types';
 import { update } from '@/game/engine';
 import { computeAiAction } from '@/game/ai';
 
+export interface HudState {
+  playerHp: number;
+  playerMaxHp: number;
+  oppHp: number;
+  oppMaxHp: number;
+  coins: number;
+  time: number;
+  clicks: number;
+  maxClicks: number;
+  escalationTier: string;
+  abilities: import('@/game/engine-types').AbilityState[];
+  status: string;
+  combo: number;
+  comboTimer: number;
+  selectedTower: string | null;
+  floaters: import('@/game/engine-types').Floater[];
+}
+
 interface UseGameLoopOptions {
   initialState: GameState;
   mode: MatchMode;
@@ -11,7 +29,23 @@ interface UseGameLoopOptions {
 
 export function useGameLoop({ initialState, mode, onGameEnd }: UseGameLoopOptions) {
   const stateRef = useRef<GameState>(initialState);
-  const [hudState, setHudState] = useState<GameState>(initialState);
+  const [hudState, setHudState] = useState<HudState>(() => ({
+    playerHp: initialState.player.station.hp,
+    playerMaxHp: initialState.player.station.maxHp,
+    oppHp: initialState.opponent.station.hp,
+    oppMaxHp: initialState.opponent.station.maxHp,
+    coins: initialState.player.coins,
+    time: initialState.time,
+    clicks: initialState.player.clicks,
+    maxClicks: initialState.player.maxClicks,
+    escalationTier: initialState.escalationTier ?? 'none',
+    abilities: initialState.player.abilities,
+    status: initialState.status,
+    combo: initialState.combo,
+    comboTimer: initialState.comboTimer,
+    selectedTower: initialState.player.selectedTower ?? null,
+    floaters: initialState.floaters,
+  }));
   const lastTimeRef = useRef<number>(0);
   const pausedRef = useRef<boolean>(false);
   const endedRef = useRef<boolean>(false);
@@ -38,7 +72,23 @@ export function useGameLoop({ initialState, mode, onGameEnd }: UseGameLoopOption
 
   // Called on JS thread to update HUD state
   const handleHudUpdate = useCallback((state: GameState) => {
-    setHudState(state);
+    setHudState({
+      playerHp: state.player.station.hp,
+      playerMaxHp: state.player.station.maxHp,
+      oppHp: state.opponent.station.hp,
+      oppMaxHp: state.opponent.station.maxHp,
+      coins: state.player.coins,
+      time: state.time,
+      clicks: state.player.clicks,
+      maxClicks: state.player.maxClicks,
+      escalationTier: state.escalationTier ?? 'none',
+      abilities: state.player.abilities,
+      status: state.status,
+      combo: state.combo,
+      comboTimer: state.comboTimer,
+      selectedTower: state.player.selectedTower ?? null,
+      floaters: state.floaters,
+    });
   }, []);
 
   const handleGameEnd = useCallback((state: GameState) => {

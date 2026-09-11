@@ -3159,11 +3159,14 @@ export const GameCanvasInner = React.memo(function GameCanvasInner({
       rafId = requestAnimationFrame(render);
       const s = stateRef.current;
       if (!s) return;
-      const bounds = Skia.XYWHRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+      const bounds = Skia.XYWHRect(0, 0, width, height);
       const recorder = Skia.PictureRecorder();
       const c = recorder.beginRecording(bounds);
       const now = Date.now();
+      c.save();
+      c.scale(width / GAME_WIDTH, height / GAME_HEIGHT);
       drawFrame(c, s, now, boldFont, uiRef.current);
+      c.restore();
       pictureRef.current = recorder.finishRecordingAsPicture();
       canvasRef.current?.redraw();
     };
