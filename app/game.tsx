@@ -605,14 +605,17 @@ export default function GameScreen() {
   const [canvasDims, setCanvasDims] = React.useState({ width: 320, height: 480 });
   const canvasWidth = canvasDims.width;
   const canvasHeight = canvasDims.height;
+  const canvasScale = canvasWidth > 0 && canvasHeight > 0
+    ? Math.min(canvasWidth / GAME_WIDTH, canvasHeight / GAME_HEIGHT)
+    : 1;
 
   // ── Touch handling ──
   const tapGesture = useMemo(() => Gesture.Tap()
     .runOnJS(true)
     .onEnd((event) => {
       const { x, y } = event;
-      const gameX = (x / canvasWidth) * GAME_WIDTH;
-      const gameY = (y / canvasHeight) * GAME_HEIGHT;
+      const gameX = x / canvasScale;
+      const gameY = y / canvasScale;
 
       const state = gameStateRef.current as GameState;
 
@@ -648,22 +651,22 @@ export default function GameScreen() {
         return;
       }
     }),
-  [canvasWidth, canvasHeight, editMode, dispatch, gameStateRef]);
+  [canvasScale, editMode, dispatch, gameStateRef]);
 
   const longPressGesture = useMemo(() => Gesture.LongPress()
     .runOnJS(true)
     .minDuration(400)
     .onStart((event) => {
       const { x, y } = event;
-      const gameX = (x / canvasWidth) * GAME_WIDTH;
-      const gameY = (y / canvasHeight) * GAME_HEIGHT;
+      const gameX = x / canvasScale;
+      const gameY = y / canvasScale;
       const tower = findTowerAtPosition(gameStateRef.current, gameX, gameY);
       if (tower) {
         setSelectedTowerForEdit({ ...tower });
         setEditMode(true);
       }
     }),
-  [canvasWidth, canvasHeight, gameStateRef]);
+  [canvasScale, gameStateRef]);
 
   const composedGesture = useMemo(
     () => Gesture.Exclusive(longPressGesture, tapGesture),
@@ -921,8 +924,8 @@ export default function GameScreen() {
             onPress={(e) => {
               const x = e.nativeEvent.locationX;
               const y = e.nativeEvent.locationY;
-              const gameX = (x / canvasWidth) * GAME_WIDTH;
-              const gameY = (y / canvasHeight) * GAME_HEIGHT;
+              const gameX = x / canvasScale;
+              const gameY = y / canvasScale;
 
               const state = gameStateRef.current as GameState;
 

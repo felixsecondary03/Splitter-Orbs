@@ -3136,8 +3136,7 @@ export const GameCanvasInner = React.memo(function GameCanvasInner({
   const stateRef = useRef(state);
   stateRef.current = state;
 
-  const scaleX = GAME_WIDTH / width;
-  const scaleY = GAME_HEIGHT / height;
+  const scale = Math.min(width / GAME_WIDTH, height / GAME_HEIGHT);
 
   // Stable refs for UI options (avoid re-creating RAF loop on every render)
   const uiRef = useRef<DrawUI>({});
@@ -3159,12 +3158,12 @@ export const GameCanvasInner = React.memo(function GameCanvasInner({
       rafId = requestAnimationFrame(render);
       const s = stateRef.current;
       if (!s) return;
-      const bounds = Skia.XYWHRect(0, 0, width, height);
+      const bounds = Skia.XYWHRect(0, 0, GAME_WIDTH * scale, GAME_HEIGHT * scale);
       const recorder = Skia.PictureRecorder();
       const c = recorder.beginRecording(bounds);
       const now = Date.now();
       c.save();
-      c.scale(width / GAME_WIDTH, height / GAME_HEIGHT);
+      c.scale(scale, scale);
       drawFrame(c, s, now, boldFont, uiRef.current);
       c.restore();
       pictureRef.current = recorder.finishRecordingAsPicture();
@@ -3181,8 +3180,8 @@ export const GameCanvasInner = React.memo(function GameCanvasInner({
     .onEnd((e) => {
       const tapX = e.x;
       const tapY = e.y;
-      const gameX = tapX * scaleX;
-      const gameY = tapY * scaleY;
+      const gameX = tapX / scale;
+      const gameY = tapY / scale;
       const s = stateRef.current;
       if (!s) return;
 
@@ -3317,8 +3316,8 @@ export const GameCanvasInner = React.memo(function GameCanvasInner({
         onPress={(e) => {
           const tapX = e.nativeEvent.locationX;
           const tapY = e.nativeEvent.locationY;
-          const gameX = tapX * scaleX;
-          const gameY = tapY * scaleY;
+          const gameX = tapX / scale;
+          const gameY = tapY / scale;
           const s = stateRef.current;
           if (!s) return;
 
