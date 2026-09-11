@@ -1,5 +1,4 @@
 import { useRef, useEffect, useCallback, useState } from 'react';
-import { useFrameCallback, runOnJS } from 'react-native-reanimated';
 import { GameState, MatchMode } from '@/game/engine-types';
 import { update } from '@/game/engine';
 import { computeAiAction } from '@/game/ai';
@@ -47,39 +46,47 @@ export function useGameLoop({ initialState, mode, onGameEnd }: UseGameLoopOption
     onGameEndRef.current(state);
   }, []);
 
-  useFrameCallback((frameInfo) => {
-    if (endedRef.current || pausedRef.current) {
-      lastTimeRef.current = frameInfo.timestamp;
-      return;
-    }
+  useEffect(() => {
+    let rafId: number;
+    let lastTime = 0;
 
-    const dt = lastTimeRef.current === 0
-      ? 16
-      : Math.min(frameInfo.timestamp - lastTimeRef.current, 50);
-    lastTimeRef.current = frameInfo.timestamp;
+    const loop = (now: number) => {
+      rafId = requestAnimationFrame(loop);
 
-    let newState = update(stateRef.current, dt);
-
-    if (modeRef.current.startsWith('ai_')) {
-      const difficulty = modeRef.current.replace('ai_', '') as 'easy' | 'normal' | 'hard';
-      const aiAction = computeAiAction(newState, difficulty);
-      if (aiAction.type !== 'none') {
-        newState = update(newState, 0, aiAction);
+      if (endedRef.current || pausedRef.current) {
+        lastTime = now;
+        return;
       }
-    }
 
-    stateRef.current = newState;
-    frameCountRef.current += 1;
+      const dt = lastTime === 0 ? 16 : Math.min(now - lastTime, 50);
+      lastTime = now;
 
-    if (frameCountRef.current % 6 === 0) {
-      runOnJS(handleHudUpdate)(newState);
-    }
+      let newState = update(stateRef.current, dt);
 
-    if (newState.status === 'finished') {
-      endedRef.current = true;
-      runOnJS(handleGameEnd)(newState);
-    }
-  }, true); // true = auto-start on mount
+      if (modeRef.current.startsWith('ai_')) {
+        const difficulty = modeRef.current.replace('ai_', '') as 'easy' | 'normal' | 'hard';
+        const aiAction = computeAiAction(newState, difficulty);
+        if (aiAction.type !== 'none') {
+          newState = update(newState, 0, aiAction);
+        }
+      }
+
+      stateRef.current = newState;
+      frameCountRef.current += 1;
+
+      if (frameCountRef.current % 6 === 0) {
+        handleHudUpdate(newState);
+      }
+
+      if (newState.status === 'finished' && !endedRef.current) {
+        endedRef.current = true;
+        handleGameEnd(newState);
+      }
+    };
+
+    rafId = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(rafId);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Reset state when mode changes (new game)
   useEffect(() => {

@@ -11,9 +11,9 @@ import {
   TileMode,
   ClipOp,
   useFont,
+  useCanvasRef,
 } from '@shopify/react-native-skia';
 import type { SkCanvas, SkPaint, SkPicture, SkFont } from '@shopify/react-native-skia';
-import { useSharedValue } from 'react-native-reanimated';
 import { GestureDetector, Gesture } from 'react-native-gesture-handler';
 import {
   GAME_WIDTH,
@@ -3131,13 +3131,8 @@ export const GameCanvasInner = React.memo(function GameCanvasInner({
   oppSkins,
 }: GameCanvasProps) {
   const boldFont = useFont(require('../assets/fonts/SpaceMono-Bold.ttf'), 16);
-  // Initialize with an empty picture so the SharedValue is always non-null
-  const emptyPicture = React.useMemo(() => {
-    const rec = Skia.PictureRecorder();
-    rec.beginRecording(Skia.XYWHRect(0, 0, GAME_WIDTH, GAME_HEIGHT));
-    return rec.finishRecordingAsPicture();
-  }, []);
-  const picture = useSharedValue<SkPicture>(emptyPicture);
+  const canvasRef = useCanvasRef();
+  const pictureRef = useRef<SkPicture | null>(null);
   const stateRef = useRef(state);
   stateRef.current = state;
 
@@ -3161,22 +3156,19 @@ export const GameCanvasInner = React.memo(function GameCanvasInner({
     if (!boldFont) return;
     let rafId: number;
     const render = () => {
+      rafId = requestAnimationFrame(render);
       const s = stateRef.current;
-      if (!s) {
-        rafId = requestAnimationFrame(render);
-        return;
-      }
+      if (!s) return;
+      const bounds = Skia.XYWHRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
       const recorder = Skia.PictureRecorder();
-      const c = recorder.beginRecording(Skia.XYWHRect(0, 0, GAME_WIDTH, GAME_HEIGHT));
+      const c = recorder.beginRecording(bounds);
       const now = Date.now();
       drawFrame(c, s, now, boldFont, uiRef.current);
-      // Assign to SharedValue — Picture component reads this on the UI thread
-      picture.value = recorder.finishRecordingAsPicture();
-      rafId = requestAnimationFrame(render);
+      pictureRef.current = recorder.finishRecordingAsPicture();
+      canvasRef.current?.redraw();
     };
     rafId = requestAnimationFrame(render);
     return () => cancelAnimationFrame(rafId);
-    // picture is a stable SharedValue — intentionally omitted
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [boldFont]);
 
@@ -3226,8 +3218,8 @@ export const GameCanvasInner = React.memo(function GameCanvasInner({
 
   // ── Canvas content ───────────────────────────────────────────────────────────
   const canvasContent = (
-    <Canvas style={{ width, height }}>
-      <Picture picture={picture} />
+    <Canvas ref={canvasRef} style={{ width, height }}>
+      {pictureRef.current && <Picture picture={pictureRef.current} />}
     </Canvas>
   );
 
