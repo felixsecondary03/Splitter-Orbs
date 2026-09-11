@@ -606,7 +606,7 @@ export default function GameScreen() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [uiMode, difficulty, sessionIdParam, opponentNameParam]);
 
-  const { renderState, hudState, stateRef: gameStateRef, dispatch, pause, resume } = useGameLoop({
+  const { hudState, stateRef: gameStateRef, dispatch, pause, resume } = useGameLoop({
     initialState,
     mode: engineMode,
     onGameEnd: handleGameEnd,
@@ -828,7 +828,7 @@ export default function GameScreen() {
   const playerCoins = Math.floor(hudState?.player?.coins ?? 0);
   const timeDisplay = formatTime(hudState?.time ?? 0);
   const selectedTowerType = hudState?.player?.selectedTower ?? null;
-  const isAiming = (renderState?.aiming ?? null) !== null;
+  const isAiming = (gameStateRef.current?.aiming ?? null) !== null;
   const clicksLeft = hudState?.player?.clicks ?? 0;
   const maxClicks = hudState?.player?.maxClicks ?? 5;
   const escalationTier = hudState?.escalationTier ?? 'none';
@@ -968,7 +968,7 @@ export default function GameScreen() {
             }}
           >
             <GameCanvas
-              state={renderState}
+              state={gameStateRef.current!}
               width={canvasWidth}
               height={canvasHeight}
               onOrbTap={() => {}}
@@ -987,7 +987,7 @@ export default function GameScreen() {
           <GestureDetector gesture={composedGesture}>
             <View style={{ width: canvasWidth, height: canvasHeight }}>
               <GameCanvas
-                state={renderState}
+                state={gameStateRef.current!}
                 width={canvasWidth}
                 height={canvasHeight}
                 onOrbTap={() => {}}

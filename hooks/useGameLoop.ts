@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect, useCallback } from 'react';
+import { useRef, useEffect, useCallback, useState } from 'react';
 import { GameState, MatchMode } from '@/game/engine-types';
 import { update } from '@/game/engine';
 import { computeAiAction } from '@/game/ai';
@@ -11,7 +11,6 @@ interface UseGameLoopOptions {
 
 export function useGameLoop({ initialState, mode, onGameEnd }: UseGameLoopOptions) {
   const stateRef = useRef<GameState>(initialState);
-  const [renderState, setRenderState] = useState<GameState>(initialState);
   const [hudState, setHudState] = useState<GameState>(initialState);
   const lastTimeRef = useRef<number>(0);
   const rafRef = useRef<number>(0);
@@ -64,11 +63,10 @@ export function useGameLoop({ initialState, mode, onGameEnd }: UseGameLoopOption
         }
 
         stateRef.current = newState;
-        setRenderState({ ...newState }); // 60fps for canvas
 
         frameCountRef.current += 1;
         if (frameCountRef.current % 2 === 0) {
-          setHudState({ ...newState }); // ~30fps for HUD
+          setHudState(newState); // ~30fps for HUD
         }
 
         if (newState.status === 'finished') {
@@ -93,5 +91,5 @@ export function useGameLoop({ initialState, mode, onGameEnd }: UseGameLoopOption
     };
   }, [mode]);
 
-  return { renderState, hudState, stateRef, dispatch, pause, resume };
+  return { hudState, stateRef, dispatch, pause, resume };
 }
