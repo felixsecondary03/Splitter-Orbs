@@ -48,7 +48,7 @@ export function AbilityButton({ abilityType, cooldown, maxCooldown, onPress, siz
   const offset = C * (1 - pct / 100);
 
   const icon = ABILITY_EMOJIS[abilityType] ?? '✨';
-  const cdDisplay = Math.ceil(effectiveCooldown);
+  const cdDisplay = Math.ceil(effectiveCooldown / 1000);
 
   const abilityName = t(`abilities.${abilityType}.name`);
 

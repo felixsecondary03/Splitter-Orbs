@@ -3134,7 +3134,7 @@ export const GameCanvasInner = React.memo(function GameCanvasInner({
   // Initialize with an empty picture so the SharedValue is always non-null
   const emptyPicture = React.useMemo(() => {
     const rec = Skia.PictureRecorder();
-    rec.beginRecording(Skia.XYWHRect(0, 0, 1, 1));
+    rec.beginRecording(Skia.XYWHRect(0, 0, GAME_WIDTH, GAME_HEIGHT));
     return rec.finishRecordingAsPicture();
   }, []);
   const picture = useSharedValue<SkPicture>(emptyPicture);
