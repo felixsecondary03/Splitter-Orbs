@@ -73,8 +73,8 @@ export function createInitialState(
   const safeLeagueIndex = leagueIndex < 0 ? 0 : leagueIndex;
   const clickDamage = CLICK_DAMAGE_BY_LEAGUE[safeLeagueIndex] ?? 8;
 
-  const maxClicks = 5 + loadout.handLevel;
-  const rechargeInterval = Math.round(3000 / (1 + loadout.handLevel * 0.1));
+  const maxClicks = 20 + loadout.handLevel * 2;
+  const rechargeInterval = Math.max(100, 500 - loadout.handLevel * 40);
 
   const makeStation = (x: number, y: number): Station => ({
     x, y, hp: STATION_HP, maxHp: STATION_HP,

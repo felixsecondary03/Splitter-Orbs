@@ -204,7 +204,7 @@ const TopHUD = React.memo(function TopHUD({
   const timerText = timerLabel ?? timeDisplay;
 
   return (
-    <View style={[styles.topHud, { paddingTop: insets.top + 6 }]}>
+    <View style={[styles.topHud, { paddingTop: Math.max(insets.top, 16) + 6 }]}>
       <View style={styles.hudTopRow}>
         <Pressable onPress={onPause} hitSlop={8}>
           <ArrowLeft size={22} color="#94A3B8" strokeWidth={2} />
@@ -272,7 +272,7 @@ const BottomHUD = React.memo(function BottomHUD({
   };
 
   return (
-    <View style={[styles.bottomHud, { paddingBottom: insets.bottom + 16 }]}>
+    <View style={[styles.bottomHud, { paddingBottom: Math.max(insets.bottom, 12) + 16 }]}>
       <View style={styles.abilityRow}>
         <View style={styles.abilityButtons}>
           {abilities.map((ability) => (
@@ -904,7 +904,6 @@ export default function GameScreen() {
           style={{
             aspectRatio: 600 / 900,
             maxWidth: 460,
-            maxHeight: 690,
             width: '100%',
             borderRadius: 24,
             overflow: 'hidden',

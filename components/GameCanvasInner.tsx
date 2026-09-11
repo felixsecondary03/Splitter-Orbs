@@ -3156,6 +3156,7 @@ export const GameCanvasInner = React.memo(function GameCanvasInner({
       rafId = requestAnimationFrame(render);
       const s = drawStateRef.current;
       if (!s) return;
+      if (s.orbs.length === 0 && s.projectiles.length === 0 && s.effects.length === 0 && s.status !== 'playing') return;
       const bounds = Skia.XYWHRect(0, 0, GAME_WIDTH * scale, GAME_HEIGHT * scale);
       const recorder = Skia.PictureRecorder();
       const c = recorder.beginRecording(bounds);

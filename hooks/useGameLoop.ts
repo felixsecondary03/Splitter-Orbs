@@ -124,7 +124,7 @@ export function useGameLoop({ initialState, mode, onGameEnd }: UseGameLoopOption
       stateRef.current = newState;
       frameCountRef.current += 1;
 
-      if (frameCountRef.current % 6 === 0) {
+      if (frameCountRef.current % 12 === 0) {
         handleHudUpdate(newState);
       }
 
