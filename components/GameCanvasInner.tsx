@@ -1,31 +1,38 @@
-import React, { useRef, useEffect, useMemo } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { Platform, Pressable, View, Text } from 'react-native';
 import {
   Canvas,
-  Circle,
-  Rect,
-  Line,
-  useFont,
-  LinearGradient,
-  RadialGradient,
-  vec,
-  Group,
-  Paint,
-  RoundedRect,
-  Path,
-  Fill,
+  Picture,
   Skia,
-  Text as SkiaText,
+  PaintStyle,
+  BlurStyle,
+  StrokeCap,
+  StrokeJoin,
+  TileMode,
+  ClipOp,
+  useFont,
 } from '@shopify/react-native-skia';
+import type { SkCanvas, SkPaint, SkPicture, SkFont } from '@shopify/react-native-skia';
 import { GestureDetector, Gesture } from 'react-native-gesture-handler';
-import { GAME_WIDTH, GAME_HEIGHT, WALL_Y } from '@/game/constants';
-import { getOrbColor, getTowerColor } from '@/game/engine-helpers';
+import {
+  GAME_WIDTH,
+  GAME_HEIGHT,
+  WALL_Y,
+  WALL_THICKNESS,
+  TOWER_TYPES,
+  GRID_SIZE,
+  PLAYER_STATION_X,
+  PLAYER_STATION_Y,
+  OPP_STATION_X,
+  OPP_STATION_Y,
+} from '@/game/constants';
+import { getTowerColor, getTowerRange } from '@/game/engine-helpers';
+import { STATION_SKINS, TOWER_SKINS } from '@/game/skins';
 import type {
   GameState,
   Orb,
   Tower,
   SideTower,
-  Station,
   Projectile,
   Effect,
   Floater,
@@ -37,12 +44,24 @@ import type {
   MagnetState,
 } from '@/game/engine-types';
 
+// ─── Props ────────────────────────────────────────────────────────────────────
+
 export interface GameCanvasProps {
   state: GameState;
   width: number;
   height: number;
   onOrbTap: (orbId: string) => void;
   onFieldTap: (x: number, y: number) => void;
+  onTowerTap?: (towerId: string) => void;
+  onCoinTap?: (coinId: string) => void;
+  isAiming?: boolean;
+  aimingAbility?: string | null;
+  placingTower?: string | null;
+  previewPos?: { x: number; y: number } | null;
+  editMode?: boolean;
+  selectedTower?: string | null;
+  playerSkins?: Record<string, string>;
+  oppSkins?: Record<string, string>;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -53,26 +72,15 @@ function hpColor(pct: number): string {
   return '#EF4444';
 }
 
-function alphaHex(alpha: number): string {
-  return Math.round(Math.max(0, Math.min(1, alpha)) * 255)
-    .toString(16)
-    .padStart(2, '0');
+function snapToGrid(gx: number, gy: number): { col: number; row: number; x: number; y: number } {
+  const col = Math.round(gx / GRID_SIZE);
+  const row = Math.round(gy / GRID_SIZE);
+  return { col, row, x: col * GRID_SIZE, y: row * GRID_SIZE };
 }
 
-function lightenColor(hex: string, amount: number): string {
-  const h = hex.replace('#', '');
-  const r = Math.min(255, parseInt(h.substring(0, 2), 16) + amount);
-  const g = Math.min(255, parseInt(h.substring(2, 4), 16) + amount);
-  const b = Math.min(255, parseInt(h.substring(4, 6), 16) + amount);
-  return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
-}
-
-function darkenColor(hex: string, amount: number): string {
-  const h = hex.replace('#', '');
-  const r = Math.max(0, parseInt(h.substring(0, 2), 16) - amount);
-  const g = Math.max(0, parseInt(h.substring(2, 4), 16) - amount);
-  const b = Math.max(0, parseInt(h.substring(4, 6), 16) - amount);
-  return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+function getTowerStats(type: string, level: number) {
+  const range = getTowerRange(type as any, level);
+  return { range };
 }
 
 const ESCALATION_LABELS: Record<string, string> = {
@@ -91,257 +99,1827 @@ const ESCALATION_COLORS: Record<string, string> = {
   tower_bleed: '#7F1D1D',
 };
 
-// ─── Orb type decorations ─────────────────────────────────────────────────────
+// ─── Drawing helpers ──────────────────────────────────────────────────────────
 
-function makeHexPath(cx: number, cy: number, r: number): ReturnType<typeof Skia.Path.Make> {
-  const path = Skia.Path.Make();
-  for (let i = 0; i < 6; i++) {
-    const angle = (Math.PI / 3) * i - Math.PI / 6;
-    const px = cx + r * Math.cos(angle);
-    const py = cy + r * Math.sin(angle);
-    if (i === 0) path.moveTo(px, py);
-    else path.lineTo(px, py);
+function drawHealthBar(
+  canvas: SkCanvas,
+  cx: number,
+  y: number,
+  w: number,
+  hp: number,
+  maxHp: number,
+  color: string,
+  p: SkPaint,
+) {
+  const pct = maxHp > 0 ? Math.max(0, hp / maxHp) : 0;
+  p.setStyle(PaintStyle.Fill);
+  p.setColor(Skia.Color('rgba(15,23,42,0.12)'));
+  canvas.drawRect(Skia.XYWHRect(cx - w / 2, y, w, 6), p);
+  if (pct > 0) {
+    p.setColor(Skia.Color(color));
+    canvas.drawRect(Skia.XYWHRect(cx - w / 2, y, w * pct, 6), p);
   }
-  path.close();
-  return path;
+  p.setStyle(PaintStyle.Stroke);
+  p.setStrokeWidth(1);
+  p.setColor(Skia.Color('rgba(15,23,42,0.25)'));
+  canvas.drawRect(Skia.XYWHRect(cx - w / 2 + 0.5, y + 0.5, w - 1, 5), p);
+  p.setStyle(PaintStyle.Fill);
 }
 
-function makeStarPath(cx: number, cy: number, outerR: number, innerR: number, points: number): ReturnType<typeof Skia.Path.Make> {
+function drawLightning(
+  canvas: SkCanvas,
+  x1: number,
+  y1: number,
+  x2: number,
+  y2: number,
+  p: SkPaint,
+) {
   const path = Skia.Path.Make();
-  for (let i = 0; i < points * 2; i++) {
-    const angle = (Math.PI / points) * i - Math.PI / 2;
-    const r = i % 2 === 0 ? outerR : innerR;
-    const px = cx + r * Math.cos(angle);
-    const py = cy + r * Math.sin(angle);
-    if (i === 0) path.moveTo(px, py);
-    else path.lineTo(px, py);
+  path.moveTo(x1, y1);
+  const segments = 6;
+  for (let i = 1; i < segments; i++) {
+    const t = i / segments;
+    const mx = x1 + (x2 - x1) * t + (Math.random() - 0.5) * 20;
+    const my = y1 + (y2 - y1) * t + (Math.random() - 0.5) * 20;
+    path.lineTo(mx, my);
   }
-  path.close();
-  return path;
+  path.lineTo(x2, y2);
+  p.setStyle(PaintStyle.Stroke);
+  p.setStrokeWidth(2);
+  p.setColor(Skia.Color('rgba(253,230,138,0.9)'));
+  canvas.drawPath(path, p);
+  p.setStyle(PaintStyle.Fill);
 }
 
-// ─── Tower silhouette paths ───────────────────────────────────────────────────
+function drawWall(canvas: SkCanvas, p: SkPaint) {
+  const y = WALL_Y - WALL_THICKNESS / 2;
+  const h = WALL_THICKNESS;
 
-function makeTowerTopPath(type: string, cx: number, cy: number, half: number): ReturnType<typeof Skia.Path.Make> | null {
-  const path = Skia.Path.Make();
-  const h = half;
+  // Shadow
+  p.setStyle(PaintStyle.Fill);
+  p.setColor(Skia.Color('rgba(15,23,42,0.2)'));
+  canvas.drawRect(Skia.XYWHRect(0, y + h, GAME_WIDTH, 9), p);
+
+  // Gradient body
+  const shader = Skia.Shader.MakeLinearGradient(
+    { x: 0, y },
+    { x: 0, y: y + h },
+    [
+      Skia.Color('#a8a29e'),
+      Skia.Color('#78716c'),
+      Skia.Color('#57534e'),
+      Skia.Color('#44403c'),
+    ],
+    [0, 0.25, 0.75, 1],
+    TileMode.Clamp,
+  );
+  p.setShader(shader);
+  canvas.drawRect(Skia.XYWHRect(0, y, GAME_WIDTH, h), p);
+  p.setShader(null);
+
+  // Top highlight
+  p.setColor(Skia.Color('rgba(255,255,255,0.35)'));
+  canvas.drawRect(Skia.XYWHRect(0, y, GAME_WIDTH, 2), p);
+
+  // Bottom shadow
+  p.setColor(Skia.Color('rgba(0,0,0,0.4)'));
+  canvas.drawRect(Skia.XYWHRect(0, y + h - 2, GAME_WIDTH, 2), p);
+
+  // Mortar lines
+  p.setStyle(PaintStyle.Stroke);
+  p.setStrokeWidth(1.5);
+  p.setColor(Skia.Color('rgba(15,23,42,0.5)'));
+  const segW = 50;
+  const midPath = Skia.Path.Make();
+  midPath.moveTo(0, y + h / 2);
+  midPath.lineTo(GAME_WIDTH, y + h / 2);
+  canvas.drawPath(midPath, p);
+
+  for (let x = 0; x <= GAME_WIDTH; x += segW) {
+    const vPath = Skia.Path.Make();
+    vPath.moveTo(x, y);
+    vPath.lineTo(x, y + h / 2);
+    canvas.drawPath(vPath, p);
+  }
+  for (let x = -segW / 2; x <= GAME_WIDTH; x += segW) {
+    const vPath2 = Skia.Path.Make();
+    vPath2.moveTo(x + segW / 2, y + h / 2);
+    vPath2.lineTo(x + segW / 2, y + h);
+    canvas.drawPath(vPath2, p);
+  }
+
+  // Green base
+  p.setStyle(PaintStyle.Fill);
+  p.setColor(Skia.Color('rgba(34,197,94,0.2)'));
+  canvas.drawRect(Skia.XYWHRect(0, y + h - 3, GAME_WIDTH, 3), p);
+}
+
+function drawStation(
+  canvas: SkCanvas,
+  pos: { x: number; y: number },
+  hp: number,
+  maxHp: number,
+  color: string,
+  shielded: boolean,
+  flash: number,
+  side: 'top' | 'bottom',
+  skinId: string | undefined,
+  p: SkPaint,
+) {
+  const flip = side === 'top';
+  const x = pos.x;
+  const y = pos.y;
+  const dir = flip ? 1 : -1;
+
+  const skin = STATION_SKINS[skinId || 'default'] || STATION_SKINS['default'];
+  const body = skin.body;
+  const trim = skin.trim;
+
+  // Shadow ellipse
+  p.setStyle(PaintStyle.Fill);
+  p.setColor(Skia.Color('rgba(15,23,42,0.22)'));
+  const shadowPath = Skia.Path.Make();
+  shadowPath.addOval(Skia.XYWHRect(x - 34, y + (flip ? -28 : 30) - 7, 68, 14));
+  canvas.drawPath(shadowPath, p);
+
+  // Body gradient
+  const bodyShader = Skia.Shader.MakeLinearGradient(
+    { x: x - 28, y },
+    { x: x + 28, y },
+    [Skia.Color(body[0]), Skia.Color(body[1]), Skia.Color(body[2])],
+    [0, 0.5, 1],
+    TileMode.Clamp,
+  );
+  p.setShader(bodyShader);
+  canvas.drawRect(Skia.XYWHRect(x - 26, y - 18, 52, 36), p);
+  p.setShader(null);
+
+  // Top highlight
+  p.setColor(Skia.Color('rgba(255,255,255,0.25)'));
+  canvas.drawRect(Skia.XYWHRect(x - 26, y - 18, 52, 3), p);
+
+  // Bottom shadow
+  p.setColor(Skia.Color('rgba(15,23,42,0.3)'));
+  canvas.drawRect(Skia.XYWHRect(x - 26, y + 15, 52, 3), p);
+
+  // Stone lines
+  p.setStyle(PaintStyle.Stroke);
+  p.setStrokeWidth(1);
+  p.setColor(Skia.Color('rgba(15,23,42,0.25)'));
+  const stonePath = Skia.Path.Make();
+  stonePath.moveTo(x - 26, y);
+  stonePath.lineTo(x + 26, y);
+  stonePath.moveTo(x - 10, y - 18);
+  stonePath.lineTo(x - 10, y);
+  stonePath.moveTo(x + 10, y - 18);
+  stonePath.lineTo(x + 10, y);
+  stonePath.moveTo(x - 10, y);
+  stonePath.lineTo(x - 10, y + 18);
+  stonePath.moveTo(x + 10, y);
+  stonePath.lineTo(x + 10, y + 18);
+  canvas.drawPath(stonePath, p);
+
+  // Battlements
+  const battY = y + dir * 20;
+  p.setStyle(PaintStyle.Fill);
+  p.setColor(Skia.Color(trim));
+  for (const dx of [-16, 0, 16]) {
+    canvas.drawRect(Skia.XYWHRect(x + dx - 5, battY - 4, 10, 8), p);
+  }
+
+  // Flag pole
+  const poleX = x + 22;
+  const poleTop = y + dir * 34;
+  p.setStyle(PaintStyle.Stroke);
+  p.setStrokeWidth(2);
+  p.setColor(Skia.Color('#475569'));
+  const polePath = Skia.Path.Make();
+  polePath.moveTo(poleX, y);
+  polePath.lineTo(poleX, poleTop);
+  canvas.drawPath(polePath, p);
+
+  // Flag
+  p.setStyle(PaintStyle.Fill);
+  p.setColor(Skia.Color(color));
+  const flagPath = Skia.Path.Make();
+  flagPath.moveTo(poleX, poleTop);
+  flagPath.lineTo(poleX + 14, poleTop + dir * 4);
+  flagPath.lineTo(poleX, poleTop + dir * 9);
+  flagPath.close();
+  canvas.drawPath(flagPath, p);
+
+  // Glowing orb center
+  p.setMaskFilter(Skia.MaskFilter.MakeBlur(BlurStyle.Normal, 6, true));
+  p.setColor(Skia.Color(color));
+  const orbPath = Skia.Path.Make();
+  orbPath.addCircle(x, y, 9);
+  canvas.drawPath(orbPath, p);
+  p.setMaskFilter(null);
+
+  p.setColor(Skia.Color(color));
+  canvas.drawCircle(x, y, 9, p);
+
+  // Orb highlight
+  p.setColor(Skia.Color('rgba(255,255,255,0.55)'));
+  canvas.drawCircle(x - 3, y - 3, 3, p);
+
+  // Flash overlay
+  if (flash > 0) {
+    p.setColor(Skia.Color(`rgba(244,63,94,${Math.min(0.6, flash).toFixed(3)})`));
+    canvas.drawRect(Skia.XYWHRect(x - 26, y - 18, 52, 36), p);
+  }
+
+  // Shield dome
+  if (shielded) {
+    p.setColor(Skia.Color('rgba(96,165,250,0.2)'));
+    canvas.drawCircle(x, y, 44, p);
+    p.setStyle(PaintStyle.Stroke);
+    p.setStrokeWidth(2);
+    p.setColor(Skia.Color('rgba(96,165,250,0.6)'));
+    canvas.drawCircle(x, y, 44, p);
+    p.setStyle(PaintStyle.Fill);
+  }
+
+  // HP bar
+  const barY = flip ? y - 34 : y + 34;
+  drawHealthBar(canvas, x, barY, 60, hp, maxHp, color, p);
+}
+
+function drawSideTower(
+  canvas: SkCanvas,
+  st: SideTower,
+  color: string,
+  side: 'top' | 'bottom',
+  p: SkPaint,
+) {
+  const x = st.x;
+  const y = st.y;
+  const half = 11;
+  const towerColor = st.frozen ? '#BAE6FD' : color;
+
+  // Body
+  p.setStyle(PaintStyle.Fill);
+  p.setColor(Skia.Color('rgba(71,85,105,0.9)'));
+  canvas.drawRect(Skia.XYWHRect(x - half, y - half, half * 2, half * 2), p);
+
+  // Border
+  p.setStyle(PaintStyle.Stroke);
+  p.setStrokeWidth(1.5);
+  p.setColor(Skia.Color(towerColor));
+  canvas.drawRect(Skia.XYWHRect(x - half, y - half, half * 2, half * 2), p);
+
+  // Battlements
+  p.setStyle(PaintStyle.Fill);
+  p.setColor(Skia.Color('rgba(71,85,105,0.9)'));
+  const battDir = side === 'top' ? 1 : -1;
+  for (const i of [-1, 0, 1]) {
+    canvas.drawRect(
+      Skia.XYWHRect(x + i * half * 0.6 - half * 0.18, y + battDir * half - 3, half * 0.36, 4),
+      p,
+    );
+  }
+
+  // HP bar
+  const barY = side === 'top' ? y + half + 4 : y - half - 7;
+  drawHealthBar(canvas, x, barY, half * 2.4, st.hp, st.maxHp, towerColor, p);
+}
+
+function drawTowerBody(
+  canvas: SkCanvas,
+  x: number,
+  y: number,
+  half: number,
+  level: number,
+  skinId: string | undefined,
+  p: SkPaint,
+) {
+  const skin = TOWER_SKINS[skinId || 'default'] || TOWER_SKINS['default'];
+  const body = skin.body;
+
+  const bodyShader = Skia.Shader.MakeLinearGradient(
+    { x: x - half, y: y - half },
+    { x: x + half, y: y + half },
+    [Skia.Color(body[0]), Skia.Color(body[1]), Skia.Color(body[2])],
+    [0, 0.5, 1],
+    TileMode.Clamp,
+  );
+  p.setStyle(PaintStyle.Fill);
+  p.setShader(bodyShader);
+  canvas.drawRect(Skia.XYWHRect(x - half, y - half, half * 2, half * 2), p);
+  p.setShader(null);
+
+  // Highlight
+  p.setColor(Skia.Color('rgba(255,255,255,0.15)'));
+  canvas.drawRect(Skia.XYWHRect(x - half, y - half, half * 2, 3), p);
+
+  // Level pips
+  const pipCount = Math.min(level, 6);
+  const pipR = 2.5;
+  const pipSpacing = 6;
+  const pipsStartX = x - ((pipCount - 1) * pipSpacing) / 2;
+  const pipY = y + half + 6;
+  for (let i = 0; i < pipCount; i++) {
+    p.setColor(Skia.Color(i < 5 ? '#FCD34D' : '#F59E0B'));
+    canvas.drawCircle(pipsStartX + i * pipSpacing, pipY, pipR, p);
+  }
+}
+
+function drawTowerTop(
+  canvas: SkCanvas,
+  type: string,
+  x: number,
+  y: number,
+  half: number,
+  color: string,
+  p: SkPaint,
+) {
+  p.setStyle(PaintStyle.Fill);
+  p.setColor(Skia.Color(color));
 
   switch (type) {
     case 'basic': {
-      // Single spike
-      path.moveTo(cx - h * 0.4, cy - h * 0.1);
-      path.lineTo(cx, cy - h * 1.1);
-      path.lineTo(cx + h * 0.4, cy - h * 0.1);
+      const path = Skia.Path.Make();
+      path.moveTo(x - half * 0.4, y - half * 0.1);
+      path.lineTo(x, y - half * 1.1);
+      path.lineTo(x + half * 0.4, y - half * 0.1);
       path.close();
-      return path;
+      canvas.drawPath(path, p);
+      break;
     }
     case 'sniper': {
-      // Long thin barrel
-      path.addRect(Skia.XYWHRect(cx - h * 0.12, cy - h * 1.5, h * 0.24, h * 1.4));
-      return path;
+      canvas.drawRect(Skia.XYWHRect(x - half * 0.12, y - half * 1.5, half * 0.24, half * 1.4), p);
+      break;
     }
     case 'machinegun': {
-      // 3 thin barrels
       for (let i = -1; i <= 1; i++) {
-        path.addRect(Skia.XYWHRect(cx + i * h * 0.35 - h * 0.08, cy - h * 0.9, h * 0.16, h * 0.8));
+        canvas.drawRect(
+          Skia.XYWHRect(x + i * half * 0.35 - half * 0.08, y - half * 0.9, half * 0.16, half * 0.8),
+          p,
+        );
       }
-      return path;
+      break;
     }
     case 'twin': {
-      // 2 parallel barrels
-      path.addRect(Skia.XYWHRect(cx - h * 0.35, cy - h * 1.0, h * 0.22, h * 0.9));
-      path.addRect(Skia.XYWHRect(cx + h * 0.13, cy - h * 1.0, h * 0.22, h * 0.9));
-      return path;
+      canvas.drawRect(Skia.XYWHRect(x - half * 0.35, y - half * 1.0, half * 0.22, half * 0.9), p);
+      canvas.drawRect(Skia.XYWHRect(x + half * 0.13, y - half * 1.0, half * 0.22, half * 0.9), p);
+      break;
     }
     case 'bomb': {
-      // Round bomb with fuse
-      path.addCircle(cx, cy - h * 0.7, h * 0.45);
-      path.addRect(Skia.XYWHRect(cx - h * 0.06, cy - h * 1.2, h * 0.12, h * 0.2));
-      return path;
+      canvas.drawCircle(x, y - half * 0.7, half * 0.45, p);
+      canvas.drawRect(Skia.XYWHRect(x - half * 0.06, y - half * 1.2, half * 0.12, half * 0.2), p);
+      break;
     }
     case 'bouncer': {
-      // Ball above tower
-      path.addCircle(cx, cy - h * 0.8, h * 0.4);
-      return path;
+      canvas.drawCircle(x, y - half * 0.8, half * 0.4, p);
+      break;
     }
     case 'glacier': {
-      // Ice crystal star
-      const star = makeStarPath(cx, cy - h * 0.6, h * 0.55, h * 0.25, 6);
-      return star;
+      // 6-pointed star
+      const starPath = Skia.Path.Make();
+      const cx2 = x;
+      const cy2 = y - half * 0.6;
+      const outerR = half * 0.55;
+      const innerR = half * 0.25;
+      for (let i = 0; i < 12; i++) {
+        const angle = (Math.PI / 6) * i - Math.PI / 2;
+        const r = i % 2 === 0 ? outerR : innerR;
+        const px = cx2 + r * Math.cos(angle);
+        const py = cy2 + r * Math.sin(angle);
+        if (i === 0) starPath.moveTo(px, py);
+        else starPath.lineTo(px, py);
+      }
+      starPath.close();
+      canvas.drawPath(starPath, p);
+      break;
     }
     case 'arc': {
-      // Lightning bolt
-      path.moveTo(cx + h * 0.2, cy - h * 1.1);
-      path.lineTo(cx - h * 0.05, cy - h * 0.55);
-      path.lineTo(cx + h * 0.15, cy - h * 0.55);
-      path.lineTo(cx - h * 0.2, cy - h * 0.0);
-      path.lineTo(cx + h * 0.05, cy - h * 0.55);
-      path.lineTo(cx - h * 0.15, cy - h * 0.55);
-      path.close();
-      return path;
+      const arcPath = Skia.Path.Make();
+      arcPath.moveTo(x + half * 0.2, y - half * 1.1);
+      arcPath.lineTo(x - half * 0.05, y - half * 0.55);
+      arcPath.lineTo(x + half * 0.15, y - half * 0.55);
+      arcPath.lineTo(x - half * 0.2, y - half * 0.0);
+      arcPath.lineTo(x + half * 0.05, y - half * 0.55);
+      arcPath.lineTo(x - half * 0.15, y - half * 0.55);
+      arcPath.close();
+      canvas.drawPath(arcPath, p);
+      break;
     }
     case 'pyre': {
-      // Flame — 3 teardrop shapes
       for (let i = -1; i <= 1; i++) {
-        const fx = cx + i * h * 0.35;
-        path.moveTo(fx, cy - h * 0.1);
-        path.cubicTo(fx - h * 0.2, cy - h * 0.5, fx - h * 0.15, cy - h * 0.9, fx, cy - h * 1.1);
-        path.cubicTo(fx + h * 0.15, cy - h * 0.9, fx + h * 0.2, cy - h * 0.5, fx, cy - h * 0.1);
+        const fx = x + i * half * 0.35;
+        const firePath = Skia.Path.Make();
+        firePath.moveTo(fx, y - half * 0.1);
+        firePath.cubicTo(fx - half * 0.2, y - half * 0.5, fx - half * 0.15, y - half * 0.9, fx, y - half * 1.1);
+        firePath.cubicTo(fx + half * 0.15, y - half * 0.9, fx + half * 0.2, y - half * 0.5, fx, y - half * 0.1);
+        canvas.drawPath(firePath, p);
       }
-      return path;
+      break;
     }
     case 'venom': {
-      // Two downward fangs
-      path.moveTo(cx - h * 0.35, cy - h * 0.9);
-      path.lineTo(cx - h * 0.15, cy - h * 0.1);
-      path.lineTo(cx + h * 0.05, cy - h * 0.9);
-      path.moveTo(cx - h * 0.05, cy - h * 0.9);
-      path.lineTo(cx + h * 0.15, cy - h * 0.1);
-      path.lineTo(cx + h * 0.35, cy - h * 0.9);
-      return path;
+      const venomPath = Skia.Path.Make();
+      venomPath.moveTo(x - half * 0.35, y - half * 0.9);
+      venomPath.lineTo(x - half * 0.15, y - half * 0.1);
+      venomPath.lineTo(x + half * 0.05, y - half * 0.9);
+      venomPath.moveTo(x - half * 0.05, y - half * 0.9);
+      venomPath.lineTo(x + half * 0.15, y - half * 0.1);
+      venomPath.lineTo(x + half * 0.35, y - half * 0.9);
+      p.setStyle(PaintStyle.Stroke);
+      p.setStrokeWidth(2);
+      canvas.drawPath(venomPath, p);
+      p.setStyle(PaintStyle.Fill);
+      break;
     }
     case 'siege': {
-      // Wide cannon barrel
-      path.addRect(Skia.XYWHRect(cx - h * 0.45, cy - h * 1.0, h * 0.9, h * 0.9));
-      return path;
+      canvas.drawRect(Skia.XYWHRect(x - half * 0.45, y - half * 1.0, half * 0.9, half * 0.9), p);
+      break;
     }
     case 'orb_mortar':
     case 'lava_mortar': {
-      // Short wide mortar tube
-      path.addRect(Skia.XYWHRect(cx - h * 0.4, cy - h * 0.7, h * 0.8, h * 0.6));
-      return path;
+      canvas.drawRect(Skia.XYWHRect(x - half * 0.4, y - half * 0.7, half * 0.8, half * 0.6), p);
+      break;
     }
     case 'repulsor': {
-      // Two outward arrows
-      path.moveTo(cx - h * 0.1, cy - h * 0.8);
-      path.lineTo(cx - h * 0.5, cy - h * 0.4);
-      path.lineTo(cx - h * 0.3, cy - h * 0.4);
-      path.lineTo(cx - h * 0.3, cy - h * 0.1);
-      path.lineTo(cx - h * 0.1, cy - h * 0.1);
-      path.close();
-      path.moveTo(cx + h * 0.1, cy - h * 0.8);
-      path.lineTo(cx + h * 0.5, cy - h * 0.4);
-      path.lineTo(cx + h * 0.3, cy - h * 0.4);
-      path.lineTo(cx + h * 0.3, cy - h * 0.1);
-      path.lineTo(cx + h * 0.1, cy - h * 0.1);
-      path.close();
-      return path;
+      const repPath = Skia.Path.Make();
+      repPath.moveTo(x - half * 0.1, y - half * 0.8);
+      repPath.lineTo(x - half * 0.5, y - half * 0.4);
+      repPath.lineTo(x - half * 0.3, y - half * 0.4);
+      repPath.lineTo(x - half * 0.3, y - half * 0.1);
+      repPath.lineTo(x - half * 0.1, y - half * 0.1);
+      repPath.close();
+      repPath.moveTo(x + half * 0.1, y - half * 0.8);
+      repPath.lineTo(x + half * 0.5, y - half * 0.4);
+      repPath.lineTo(x + half * 0.3, y - half * 0.4);
+      repPath.lineTo(x + half * 0.3, y - half * 0.1);
+      repPath.lineTo(x + half * 0.1, y - half * 0.1);
+      repPath.close();
+      canvas.drawPath(repPath, p);
+      break;
     }
     case 'cryo': {
-      // Rectangular beam emitter
-      path.addRect(Skia.XYWHRect(cx - h * 0.5, cy - h * 0.8, h, h * 0.7));
-      path.addRect(Skia.XYWHRect(cx - h * 0.6, cy - h * 0.85, h * 0.15, h * 0.8));
-      path.addRect(Skia.XYWHRect(cx + h * 0.45, cy - h * 0.85, h * 0.15, h * 0.8));
-      return path;
+      canvas.drawRect(Skia.XYWHRect(x - half * 0.5, y - half * 0.8, half, half * 0.7), p);
+      canvas.drawRect(Skia.XYWHRect(x - half * 0.6, y - half * 0.85, half * 0.15, half * 0.8), p);
+      canvas.drawRect(Skia.XYWHRect(x + half * 0.45, y - half * 0.85, half * 0.15, half * 0.8), p);
+      break;
     }
     case 'seeker': {
-      // Targeting reticle — circle with crosshairs
-      path.addCircle(cx, cy - h * 0.6, h * 0.45);
-      path.addRect(Skia.XYWHRect(cx - h * 0.5, cy - h * 0.63, h, h * 0.06));
-      path.addRect(Skia.XYWHRect(cx - h * 0.03, cy - h * 1.1, h * 0.06, h));
-      return path;
+      canvas.drawCircle(x, y - half * 0.6, half * 0.45, p);
+      canvas.drawRect(Skia.XYWHRect(x - half * 0.5, y - half * 0.63, half, half * 0.06), p);
+      canvas.drawRect(Skia.XYWHRect(x - half * 0.03, y - half * 1.1, half * 0.06, half), p);
+      break;
     }
     case 'prism': {
-      // Diamond/rhombus
-      path.moveTo(cx, cy - h * 1.1);
-      path.lineTo(cx + h * 0.5, cy - h * 0.6);
-      path.lineTo(cx, cy - h * 0.1);
-      path.lineTo(cx - h * 0.5, cy - h * 0.6);
-      path.close();
-      return path;
+      const prismPath = Skia.Path.Make();
+      prismPath.moveTo(x, y - half * 1.1);
+      prismPath.lineTo(x + half * 0.5, y - half * 0.6);
+      prismPath.lineTo(x, y - half * 0.1);
+      prismPath.lineTo(x - half * 0.5, y - half * 0.6);
+      prismPath.close();
+      canvas.drawPath(prismPath, p);
+      break;
     }
     case 'flak': {
-      // Wide flared barrel
-      path.moveTo(cx - h * 0.2, cy - h * 0.9);
-      path.lineTo(cx - h * 0.5, cy - h * 0.1);
-      path.lineTo(cx + h * 0.5, cy - h * 0.1);
-      path.lineTo(cx + h * 0.2, cy - h * 0.9);
-      path.close();
-      return path;
+      const flakPath = Skia.Path.Make();
+      flakPath.moveTo(x - half * 0.2, y - half * 0.9);
+      flakPath.lineTo(x - half * 0.5, y - half * 0.1);
+      flakPath.lineTo(x + half * 0.5, y - half * 0.1);
+      flakPath.lineTo(x + half * 0.2, y - half * 0.9);
+      flakPath.close();
+      canvas.drawPath(flakPath, p);
+      break;
     }
     case 'harpoon': {
-      // Elongated diamond
-      path.moveTo(cx, cy - h * 1.2);
-      path.lineTo(cx + h * 0.2, cy - h * 0.6);
-      path.lineTo(cx, cy - h * 0.1);
-      path.lineTo(cx - h * 0.2, cy - h * 0.6);
-      path.close();
-      return path;
+      const harpPath = Skia.Path.Make();
+      harpPath.moveTo(x, y - half * 1.2);
+      harpPath.lineTo(x + half * 0.2, y - half * 0.6);
+      harpPath.lineTo(x, y - half * 0.1);
+      harpPath.lineTo(x - half * 0.2, y - half * 0.6);
+      harpPath.close();
+      canvas.drawPath(harpPath, p);
+      break;
     }
     case 'boomerang':
     case 'rebound': {
-      // Curved boomerang arc
-      path.moveTo(cx - h * 0.6, cy - h * 0.2);
-      path.cubicTo(cx - h * 0.5, cy - h * 1.1, cx + h * 0.5, cy - h * 1.1, cx + h * 0.6, cy - h * 0.2);
-      path.cubicTo(cx + h * 0.4, cy - h * 0.8, cx - h * 0.4, cy - h * 0.8, cx - h * 0.6, cy - h * 0.2);
-      path.close();
-      return path;
+      const boomPath = Skia.Path.Make();
+      boomPath.moveTo(x - half * 0.6, y - half * 0.2);
+      boomPath.cubicTo(x - half * 0.5, y - half * 1.1, x + half * 0.5, y - half * 1.1, x + half * 0.6, y - half * 0.2);
+      boomPath.cubicTo(x + half * 0.4, y - half * 0.8, x - half * 0.4, y - half * 0.8, x - half * 0.6, y - half * 0.2);
+      boomPath.close();
+      canvas.drawPath(boomPath, p);
+      break;
     }
     case 'tesla': {
-      // Tesla coil — spiral-like shape
-      path.moveTo(cx, cy - h * 0.1);
-      path.lineTo(cx - h * 0.15, cy - h * 0.5);
-      path.lineTo(cx + h * 0.15, cy - h * 0.5);
-      path.lineTo(cx, cy - h * 0.9);
-      path.lineTo(cx - h * 0.1, cy - h * 0.9);
-      path.lineTo(cx + h * 0.1, cy - h * 0.9);
-      path.addCircle(cx, cy - h * 1.1, h * 0.2);
-      return path;
+      const teslaPath = Skia.Path.Make();
+      teslaPath.moveTo(x, y - half * 0.1);
+      teslaPath.lineTo(x - half * 0.15, y - half * 0.5);
+      teslaPath.lineTo(x + half * 0.15, y - half * 0.5);
+      teslaPath.lineTo(x, y - half * 0.9);
+      canvas.drawPath(teslaPath, p);
+      canvas.drawCircle(x, y - half * 1.1, half * 0.2, p);
+      break;
     }
     case 'detonator': {
-      // T-shape plunger
-      path.addRect(Skia.XYWHRect(cx - h * 0.5, cy - h * 0.7, h, h * 0.2));
-      path.addRect(Skia.XYWHRect(cx - h * 0.1, cy - h * 0.9, h * 0.2, h * 0.8));
-      return path;
+      canvas.drawRect(Skia.XYWHRect(x - half * 0.5, y - half * 0.7, half, half * 0.2), p);
+      canvas.drawRect(Skia.XYWHRect(x - half * 0.1, y - half * 0.9, half * 0.2, half * 0.8), p);
+      break;
     }
     case 'magnet': {
-      // Horseshoe U-shape using cubic bezier
-      path.moveTo(cx - h * 0.45, cy - h * 0.1);
-      path.lineTo(cx - h * 0.45, cy - h * 0.75);
-      path.cubicTo(cx - h * 0.45, cy - h * 1.15, cx + h * 0.45, cy - h * 1.15, cx + h * 0.45, cy - h * 0.75);
-      path.lineTo(cx + h * 0.45, cy - h * 0.1);
-      path.lineTo(cx + h * 0.25, cy - h * 0.1);
-      path.lineTo(cx + h * 0.25, cy - h * 0.75);
-      path.cubicTo(cx + h * 0.25, cy - h * 0.95, cx - h * 0.25, cy - h * 0.95, cx - h * 0.25, cy - h * 0.75);
-      path.lineTo(cx - h * 0.25, cy - h * 0.1);
-      path.close();
-      return path;
+      const magPath = Skia.Path.Make();
+      magPath.moveTo(x - half * 0.45, y - half * 0.1);
+      magPath.lineTo(x - half * 0.45, y - half * 0.75);
+      magPath.cubicTo(x - half * 0.45, y - half * 1.15, x + half * 0.45, y - half * 1.15, x + half * 0.45, y - half * 0.75);
+      magPath.lineTo(x + half * 0.45, y - half * 0.1);
+      magPath.lineTo(x + half * 0.25, y - half * 0.1);
+      magPath.lineTo(x + half * 0.25, y - half * 0.75);
+      magPath.cubicTo(x + half * 0.25, y - half * 0.95, x - half * 0.25, y - half * 0.95, x - half * 0.25, y - half * 0.75);
+      magPath.lineTo(x - half * 0.25, y - half * 0.1);
+      magPath.close();
+      canvas.drawPath(magPath, p);
+      break;
     }
     case 'capacitor': {
-      // Two parallel plates
-      path.addRect(Skia.XYWHRect(cx - h * 0.5, cy - h * 0.55, h, h * 0.15));
-      path.addRect(Skia.XYWHRect(cx - h * 0.5, cy - h * 0.85, h, h * 0.15));
-      path.addRect(Skia.XYWHRect(cx - h * 0.06, cy - h * 1.0, h * 0.12, h * 0.5));
-      return path;
+      canvas.drawRect(Skia.XYWHRect(x - half * 0.5, y - half * 0.55, half, half * 0.15), p);
+      canvas.drawRect(Skia.XYWHRect(x - half * 0.5, y - half * 0.85, half, half * 0.15), p);
+      canvas.drawRect(Skia.XYWHRect(x - half * 0.06, y - half * 1.0, half * 0.12, half * 0.5), p);
+      break;
     }
     case 'overcharger': {
-      // Lightning bolt in circle
-      path.addCircle(cx, cy - h * 0.65, h * 0.5);
-      path.moveTo(cx + h * 0.15, cy - h * 1.05);
-      path.lineTo(cx - h * 0.05, cy - h * 0.65);
-      path.lineTo(cx + h * 0.1, cy - h * 0.65);
-      path.lineTo(cx - h * 0.15, cy - h * 0.25);
-      path.lineTo(cx + h * 0.05, cy - h * 0.65);
-      path.lineTo(cx - h * 0.1, cy - h * 0.65);
-      path.close();
-      return path;
+      canvas.drawCircle(x, y - half * 0.65, half * 0.5, p);
+      const boltPath = Skia.Path.Make();
+      boltPath.moveTo(x + half * 0.15, y - half * 1.05);
+      boltPath.lineTo(x - half * 0.05, y - half * 0.65);
+      boltPath.lineTo(x + half * 0.1, y - half * 0.65);
+      boltPath.lineTo(x - half * 0.15, y - half * 0.25);
+      boltPath.lineTo(x + half * 0.05, y - half * 0.65);
+      boltPath.lineTo(x - half * 0.1, y - half * 0.65);
+      boltPath.close();
+      p.setColor(Skia.Color('rgba(255,255,255,0.9)'));
+      canvas.drawPath(boltPath, p);
+      break;
     }
     case 'mine_layer': {
-      // Mine shape — circle with spikes
-      path.addCircle(cx, cy - h * 0.65, h * 0.35);
+      canvas.drawCircle(x, y - half * 0.65, half * 0.35, p);
       for (let i = 0; i < 8; i++) {
         const angle = (Math.PI * 2 / 8) * i;
-        const ix = cx + Math.cos(angle) * h * 0.35;
-        const iy = (cy - h * 0.65) + Math.sin(angle) * h * 0.35;
-        const ox = cx + Math.cos(angle) * h * 0.55;
-        const oy = (cy - h * 0.65) + Math.sin(angle) * h * 0.55;
-        path.moveTo(ix, iy);
-        path.lineTo(ox, oy);
+        const ix = x + Math.cos(angle) * half * 0.35;
+        const iy = (y - half * 0.65) + Math.sin(angle) * half * 0.35;
+        const ox = x + Math.cos(angle) * half * 0.55;
+        const oy = (y - half * 0.65) + Math.sin(angle) * half * 0.55;
+        const spikePath = Skia.Path.Make();
+        spikePath.moveTo(ix, iy);
+        spikePath.lineTo(ox, oy);
+        p.setStyle(PaintStyle.Stroke);
+        p.setStrokeWidth(2);
+        canvas.drawPath(spikePath, p);
+        p.setStyle(PaintStyle.Fill);
       }
-      return path;
+      break;
     }
     default:
-      return null;
+      break;
+  }
+}
+
+function drawFantasyTower(
+  canvas: SkCanvas,
+  t: Tower & { isPlayer?: boolean },
+  side: 'top' | 'bottom',
+  editMode: boolean,
+  selectedTower: string | null,
+  skinId: string | undefined,
+  p: SkPaint,
+) {
+  const x = t.x;
+  const y = t.y;
+  const half = 14;
+  const color = getTowerColor(t.type);
+  const statusColor = t.frozen ? '#BAE6FD' : t.poisoned ? '#84CC16' : t.overclocked ? '#FCD34D' : color;
+  const isSuper = t.level >= 6;
+  const isSelected = selectedTower === t.id;
+
+  // L6 aura
+  if (isSuper) {
+    p.setStyle(PaintStyle.Stroke);
+    p.setStrokeWidth(3);
+    p.setColor(Skia.Color('rgba(251,191,36,0.4)'));
+    canvas.drawCircle(x, y, half * 1.6, p);
+    p.setStyle(PaintStyle.Fill);
+  }
+
+  // Overclock ring
+  if (t.overclocked) {
+    p.setStyle(PaintStyle.Stroke);
+    p.setStrokeWidth(2);
+    p.setColor(Skia.Color('rgba(252,211,77,0.5)'));
+    canvas.drawCircle(x, y, half * 1.4, p);
+    p.setStyle(PaintStyle.Fill);
+  }
+
+  // Edit mode highlight
+  if (editMode && t.isPlayer) {
+    p.setColor(Skia.Color('rgba(59,130,246,0.15)'));
+    canvas.drawCircle(x, y, half * 1.5, p);
+  }
+
+  // Body
+  drawTowerBody(canvas, x, y, half, t.level, skinId, p);
+
+  // Border
+  p.setStyle(PaintStyle.Stroke);
+  p.setStrokeWidth(1.5);
+  p.setColor(Skia.Color(statusColor + 'AA'));
+  canvas.drawRect(Skia.XYWHRect(x - half, y - half, half * 2, half * 2), p);
+  p.setStyle(PaintStyle.Fill);
+
+  // Battlements
+  p.setColor(Skia.Color('rgba(71,85,105,0.95)'));
+  const battDir = side === 'top' ? 1 : -1;
+  for (const i of [-1, 0, 1]) {
+    canvas.drawRect(
+      Skia.XYWHRect(x + i * half * 0.55 - half * 0.16, y + battDir * half - 3.5, half * 0.32, 4.5),
+      p,
+    );
+  }
+
+  // Tower top decoration
+  p.setColor(Skia.Color(statusColor + 'DD'));
+  drawTowerTop(canvas, t.type, x, y, half, statusColor + 'DD', p);
+
+  // Frost overlay
+  if (t.frozen) {
+    p.setColor(Skia.Color('rgba(186,230,253,0.3)'));
+    canvas.drawRect(Skia.XYWHRect(x - half, y - half, half * 2, half * 2), p);
+  }
+
+  // Poison overlay
+  if (t.poisoned) {
+    p.setColor(Skia.Color('rgba(132,204,22,0.25)'));
+    canvas.drawRect(Skia.XYWHRect(x - half, y - half, half * 2, half * 2), p);
+  }
+
+  // HP bar (only if damaged)
+  if (t.hp < t.maxHp) {
+    const barW = half * 2.2;
+    const barY = y - half - 8;
+    drawHealthBar(canvas, x, barY, barW, t.hp, t.maxHp, hpColor(t.hp / t.maxHp), p);
+  }
+
+  // Selected range ring
+  if (isSelected) {
+    p.setStyle(PaintStyle.Stroke);
+    p.setStrokeWidth(2);
+    p.setColor(Skia.Color('rgba(59,130,246,0.5)'));
+    canvas.drawCircle(x, y, getTowerStats(t.type, t.level).range, p);
+    p.setStyle(PaintStyle.Fill);
+  }
+}
+
+function drawOrb(canvas: SkCanvas, orb: Orb, now: number, p: SkPaint, font: SkFont | null) {
+  const r = orb.radius;
+  const orbAny = orb as any;
+  const spawnAge = orbAny.spawnAge ?? 1;
+  let scale = 1;
+  if (spawnAge < 0.3) {
+    const prog = spawnAge / 0.3;
+    scale = 0.3 + 0.7 * prog + Math.sin(prog * Math.PI) * 0.2;
+  }
+
+  // Mine: pulsing danger ring
+  if (orbAny.detonateOnClick) {
+    const pulse = 0.5 + 0.5 * Math.sin(now / 120);
+    p.setStyle(PaintStyle.Stroke);
+    p.setStrokeWidth(3);
+    p.setColor(Skia.Color(`rgba(249,115,22,${(0.4 + pulse * 0.4).toFixed(3)})`));
+    canvas.drawCircle(orb.x, orb.y, r + 8 + pulse * 4, p);
+    p.setStyle(PaintStyle.Fill);
+  }
+
+  canvas.save();
+  canvas.translate(orb.x, orb.y);
+  canvas.scale(scale, scale);
+
+  // Glow
+  p.setMaskFilter(Skia.MaskFilter.MakeBlur(BlurStyle.Normal, orbAny.detonateOnClick ? 7 : 5, true));
+  p.setColor(Skia.Color(orb.color));
+  canvas.drawCircle(0, 0, r, p);
+  p.setMaskFilter(null);
+
+  // Body
+  p.setColor(Skia.Color(orb.color));
+  canvas.drawCircle(0, 0, r, p);
+
+  canvas.restore();
+
+  // Tank armor plates
+  if (orb.type === 'tank') {
+    p.setStyle(PaintStyle.Stroke);
+    p.setStrokeWidth(2);
+    p.setColor(Skia.Color('rgba(15,23,42,0.4)'));
+    canvas.drawCircle(orb.x, orb.y, r - 4, p);
+    p.setStyle(PaintStyle.Fill);
+    p.setColor(Skia.Color('rgba(15,23,42,0.25)'));
+    for (let i = 0; i < 6; i++) {
+      const a = (Math.PI * 2 * i) / 6;
+      canvas.drawCircle(orb.x + Math.cos(a) * (r - 3), orb.y + Math.sin(a) * (r - 3), 2, p);
+    }
+  }
+
+  // Mine fuse spark
+  if (orbAny.detonateOnClick) {
+    const spark = 0.5 + 0.5 * Math.sin(now / 80);
+    p.setColor(Skia.Color(`rgba(254,240,138,${spark.toFixed(3)})`));
+    canvas.drawCircle(orb.x, orb.y - r - 2, 3, p);
+  }
+
+  // Glossy highlight
+  const hg = Skia.Shader.MakeRadialGradient(
+    { x: orb.x - r * 0.35, y: orb.y - r * 0.35 },
+    r,
+    [Skia.Color('rgba(255,255,255,0.7)'), Skia.Color('rgba(255,255,255,0.15)'), Skia.Color('rgba(255,255,255,0)')],
+    [0, 0.4, 1],
+    TileMode.Clamp,
+  );
+  p.setShader(hg);
+  canvas.drawCircle(orb.x, orb.y, r, p);
+  p.setShader(null);
+
+  // Type-specific decorations
+  if (orb.type === 'healer') {
+    p.setColor(Skia.Color('rgba(255,255,255,0.9)'));
+    canvas.drawRect(Skia.XYWHRect(orb.x - r * 0.08, orb.y - r * 0.55, r * 0.16, r * 0.5), p);
+    canvas.drawRect(Skia.XYWHRect(orb.x - r * 0.28, orb.y - r * 0.42, r * 0.56, r * 0.16), p);
+  }
+
+  if (orb.type === 'radioactive') {
+    const pulse2 = 1.05 + 0.1 * Math.sin(now / 250);
+    p.setStyle(PaintStyle.Stroke);
+    p.setStrokeWidth(2);
+    p.setColor(Skia.Color('rgba(132,204,22,0.6)'));
+    canvas.drawCircle(orb.x, orb.y, r * pulse2, p);
+    p.setStyle(PaintStyle.Fill);
+  }
+
+  if (orb.type === 'shadow' || orb.type === 'phantom') {
+    p.setColor(Skia.Color('rgba(15,23,42,0.5)'));
+    canvas.drawCircle(orb.x - r * 0.2, orb.y, r * 0.6, p);
+    p.setColor(Skia.Color('rgba(30,27,75,0.4)'));
+    canvas.drawCircle(orb.x + r * 0.2, orb.y, r * 0.6, p);
+  }
+
+  if (orb.type === 'ice') {
+    p.setStyle(PaintStyle.Stroke);
+    p.setStrokeWidth(1.5);
+    p.setColor(Skia.Color('rgba(103,232,249,0.8)'));
+    for (let i = 0; i < 6; i++) {
+      const angle = (Math.PI / 3) * i;
+      const icePath = Skia.Path.Make();
+      icePath.moveTo(orb.x, orb.y);
+      icePath.lineTo(orb.x + Math.cos(angle) * r * 0.75, orb.y + Math.sin(angle) * r * 0.75);
+      canvas.drawPath(icePath, p);
+    }
+    p.setStyle(PaintStyle.Fill);
+  }
+
+  if (orb.type === 'zap_orb') {
+    p.setStyle(PaintStyle.Stroke);
+    p.setStrokeWidth(1.5);
+    p.setColor(Skia.Color('rgba(59,130,246,0.9)'));
+    for (let i = 0; i < 3; i++) {
+      const angle = (Math.PI * 2 / 3) * i - Math.PI / 2;
+      const bx = orb.x + Math.cos(angle) * r * 0.3;
+      const by = orb.y + Math.sin(angle) * r * 0.3;
+      const ex = orb.x + Math.cos(angle) * r * 0.9;
+      const ey = orb.y + Math.sin(angle) * r * 0.9;
+      const mx = (bx + ex) / 2 + Math.cos(angle + Math.PI / 2) * r * 0.2;
+      const my = (by + ey) / 2 + Math.sin(angle + Math.PI / 2) * r * 0.2;
+      const zapPath = Skia.Path.Make();
+      zapPath.moveTo(bx, by);
+      zapPath.lineTo(mx, my);
+      zapPath.lineTo(ex, ey);
+      canvas.drawPath(zapPath, p);
+    }
+    p.setStyle(PaintStyle.Fill);
+  }
+
+  if (orb.type === 'armored') {
+    const hexPath = Skia.Path.Make();
+    for (let i = 0; i < 6; i++) {
+      const angle = (Math.PI / 3) * i - Math.PI / 6;
+      const px = orb.x + r * 0.75 * Math.cos(angle);
+      const py = orb.y + r * 0.75 * Math.sin(angle);
+      if (i === 0) hexPath.moveTo(px, py);
+      else hexPath.lineTo(px, py);
+    }
+    hexPath.close();
+    p.setStyle(PaintStyle.Stroke);
+    p.setStrokeWidth(1.5);
+    p.setColor(Skia.Color('rgba(100,116,139,0.7)'));
+    canvas.drawPath(hexPath, p);
+    p.setStyle(PaintStyle.Fill);
+  }
+
+  if (orb.type === 'berserker') {
+    const hpPct = orb.maxHp > 0 ? orb.hp / orb.maxHp : 1;
+    const crackIntensity = 1 - hpPct;
+    const crackCount = Math.floor(2 + crackIntensity * 4);
+    p.setStyle(PaintStyle.Stroke);
+    p.setStrokeWidth(1.5);
+    for (let i = 0; i < crackCount; i++) {
+      const angle = (Math.PI * 2 / crackCount) * i + i * 0.3;
+      const crackAlpha = 0.4 + crackIntensity * 0.5;
+      p.setColor(Skia.Color(`rgba(220,38,38,${crackAlpha.toFixed(3)})`));
+      const crackPath = Skia.Path.Make();
+      crackPath.moveTo(orb.x, orb.y);
+      crackPath.lineTo(orb.x + Math.cos(angle) * r * 0.5, orb.y + Math.sin(angle) * r * 0.5);
+      crackPath.lineTo(orb.x + Math.cos(angle + 0.3) * r * 0.85, orb.y + Math.sin(angle + 0.3) * r * 0.85);
+      canvas.drawPath(crackPath, p);
+    }
+    p.setStyle(PaintStyle.Fill);
+  }
+
+  if (orb.type === 'leech') {
+    const leechPulse = 1.05 + 0.1 * Math.sin(now / 300);
+    p.setStyle(PaintStyle.Stroke);
+    p.setStrokeWidth(2);
+    p.setColor(Skia.Color('rgba(190,18,60,0.6)'));
+    canvas.drawCircle(orb.x, orb.y, r * leechPulse, p);
+    p.setStyle(PaintStyle.Fill);
+  }
+
+  if (orb.type === 'summoner') {
+    p.setStyle(PaintStyle.Stroke);
+    p.setStrokeWidth(1.5);
+    p.setColor(Skia.Color('rgba(124,58,237,0.4)'));
+    canvas.drawCircle(orb.x, orb.y, r * (0.7 + 0.15 * Math.sin(now / 400)), p);
+    p.setStrokeWidth(1);
+    p.setColor(Skia.Color('rgba(124,58,237,0.3)'));
+    canvas.drawCircle(orb.x, orb.y, r * (0.45 + 0.1 * Math.sin(now / 300 + 1)), p);
+    p.setStyle(PaintStyle.Fill);
+  }
+
+  if (orb.type === 'growth') {
+    const growthPulse = 1.08 + 0.12 * Math.sin(now / 350);
+    p.setStyle(PaintStyle.Stroke);
+    p.setStrokeWidth(2);
+    p.setColor(Skia.Color('rgba(22,163,74,0.5)'));
+    canvas.drawCircle(orb.x, orb.y, r * growthPulse, p);
+    p.setStyle(PaintStyle.Fill);
+  }
+
+  if (orb.type === 'splitter' || orb.type === 'carrier') {
+    p.setColor(Skia.Color('rgba(255,255,255,0.35)'));
+    for (const i of [-1, 0, 1]) {
+      canvas.drawCircle(
+        orb.x + i * r * 0.35,
+        orb.y + (i === 0 ? -r * 0.25 : r * 0.15),
+        r * 0.2,
+        p,
+      );
+    }
+  }
+
+  if (orb.type === 'swarmer') {
+    p.setColor(Skia.Color('rgba(168,85,247,0.8)'));
+    for (let i = 0; i < 3; i++) {
+      const angle = (Math.PI * 2 / 3) * i + now / 600;
+      canvas.drawCircle(
+        orb.x + Math.cos(angle) * r * 0.65,
+        orb.y + Math.sin(angle) * r * 0.65,
+        r * 0.18,
+        p,
+      );
+    }
+  }
+
+  if (orb.type === 'bomb') {
+    p.setColor(Skia.Color('#FCD34D'));
+    canvas.drawCircle(orb.x, orb.y - r * 0.85, r * 0.12, p);
+  }
+
+  // Shield bubble
+  if (orb.shieldHp != null && orb.shieldHp > 0) {
+    p.setColor(Skia.Color('rgba(147,197,253,0.25)'));
+    canvas.drawCircle(orb.x, orb.y, r + 6, p);
+    p.setStyle(PaintStyle.Stroke);
+    p.setStrokeWidth(1.5);
+    p.setColor(Skia.Color('rgba(147,197,253,0.6)'));
+    canvas.drawCircle(orb.x, orb.y, r + 6, p);
+    p.setStyle(PaintStyle.Fill);
+  }
+
+  // Status overlays
+  if (orb.frozen) {
+    p.setColor(Skia.Color('rgba(186,230,253,0.4)'));
+    canvas.drawCircle(orb.x, orb.y, r, p);
+    p.setStyle(PaintStyle.Stroke);
+    p.setStrokeWidth(1.5);
+    p.setColor(Skia.Color('rgba(147,197,253,0.8)'));
+    canvas.drawCircle(orb.x, orb.y, r, p);
+    p.setStyle(PaintStyle.Fill);
+  } else if (orb.poisoned) {
+    p.setColor(Skia.Color('rgba(132,204,22,0.35)'));
+    canvas.drawCircle(orb.x, orb.y, r, p);
+    p.setStyle(PaintStyle.Stroke);
+    p.setStrokeWidth(1.5);
+    p.setColor(Skia.Color('rgba(132,204,22,0.7)'));
+    canvas.drawCircle(orb.x, orb.y, r, p);
+    p.setStyle(PaintStyle.Fill);
+  } else if (orb.burning) {
+    p.setColor(Skia.Color('rgba(249,115,22,0.35)'));
+    canvas.drawCircle(orb.x, orb.y, r, p);
+    p.setStyle(PaintStyle.Stroke);
+    p.setStrokeWidth(1.5);
+    p.setColor(Skia.Color('rgba(249,115,22,0.7)'));
+    canvas.drawCircle(orb.x, orb.y, r, p);
+    p.setStyle(PaintStyle.Fill);
+  }
+
+  // HP text
+  if (font && orb.hp > 0) {
+    const safeFont = font as SkFont;
+    const hpText = String(Math.ceil(orb.hp));
+    const fontSize = Math.max(13, Math.round(r * 0.95));
+    const fontScale = fontSize / 16;
+
+    // Stroke
+    p.setStyle(PaintStyle.Stroke);
+    p.setStrokeWidth(3);
+    p.setColor(Skia.Color('rgba(15,23,42,0.55)'));
+    canvas.save();
+    canvas.translate(orb.x, orb.y);
+    canvas.scale(fontScale, fontScale);
+    const textWidth = safeFont.measureText(hpText).width;
+    canvas.drawText(hpText, -textWidth / 2, fontSize / 2 / fontScale, p, safeFont);
+    canvas.restore();
+
+    // Fill
+    p.setStyle(PaintStyle.Fill);
+    p.setColor(Skia.Color('#ffffff'));
+    canvas.save();
+    canvas.translate(orb.x, orb.y);
+    canvas.scale(fontScale, fontScale);
+    canvas.drawText(hpText, -textWidth / 2, fontSize / 2 / fontScale, p, safeFont);
+    canvas.restore();
+  }
+}
+
+function drawCoinPickup(canvas: SkCanvas, c: CoinPickup, now: number, p: SkPaint) {
+  const r = 8;
+  const glowR = r * (1 + 0.1 * Math.sin(now / 300 + c.x));
+
+  // Glow
+  p.setColor(Skia.Color('rgba(252,211,77,0.15)'));
+  canvas.drawCircle(c.x, c.y, glowR * 1.5, p);
+
+  // Body gradient
+  const coinShader = Skia.Shader.MakeRadialGradient(
+    { x: c.x - r * 0.2, y: c.y - r * 0.2 },
+    r,
+    [Skia.Color('#FDE68A'), Skia.Color('#F59E0B')],
+    [0, 1],
+    TileMode.Clamp,
+  );
+  p.setShader(coinShader);
+  canvas.drawCircle(c.x, c.y, r, p);
+  p.setShader(null);
+
+  // Highlight
+  const hlShader = Skia.Shader.MakeRadialGradient(
+    { x: c.x - r * 0.2, y: c.y - r * 0.25 },
+    r * 0.35,
+    [Skia.Color('rgba(255,255,255,0.6)'), Skia.Color('rgba(255,255,255,0)')],
+    [0, 1],
+    TileMode.Clamp,
+  );
+  p.setShader(hlShader);
+  canvas.drawCircle(c.x - r * 0.2, c.y - r * 0.25, r * 0.35, p);
+  p.setShader(null);
+}
+
+function drawProjectile(canvas: SkCanvas, proj: Projectile, p: SkPaint) {
+  const r = Math.max(2, proj.radius);
+  const trailR = Math.max(1, r * 0.6);
+
+  // Trail
+  for (let i = 0; i < proj.trail.length; i++) {
+    const trailAlpha = (i / Math.max(1, proj.trail.length)) * 0.4;
+    p.setColor(Skia.Color(proj.color));
+    p.setAlphaf(trailAlpha);
+    canvas.drawCircle(proj.trail[i].x, proj.trail[i].y, trailR, p);
+  }
+  p.setAlphaf(1);
+
+  // Body
+  const projShader = Skia.Shader.MakeRadialGradient(
+    { x: proj.x, y: proj.y },
+    r,
+    [Skia.Color(proj.color), Skia.Color(proj.color + '88')],
+    [0, 1],
+    TileMode.Clamp,
+  );
+  p.setShader(projShader);
+  canvas.drawCircle(proj.x, proj.y, r, p);
+  p.setShader(null);
+}
+
+function drawParticle(canvas: SkCanvas, particle: Particle, p: SkPaint) {
+  if (particle.alpha <= 0) return;
+  p.setColor(Skia.Color(particle.color));
+  p.setAlphaf(Math.max(0, particle.alpha));
+  canvas.drawCircle(particle.x, particle.y, Math.max(1, particle.radius), p);
+  p.setAlphaf(1);
+}
+
+function drawEffect(canvas: SkCanvas, e: Effect, now: number, p: SkPaint, font: SkFont | null) {
+  const alpha = Math.max(0, e.timer / e.maxTimer);
+  const progress = 1 - alpha;
+  const baseR = e.radius ?? 30;
+  const effectColor = e.color ?? '#F97316';
+
+  if (e.type === 'explosion' || e.type === 'station_hit') {
+    const r = baseR * (0.3 + progress * 0.7);
+    p.setColor(Skia.Color(effectColor));
+    p.setAlphaf(alpha * 0.5);
+    canvas.drawCircle(e.x, e.y, r, p);
+    p.setAlphaf(1);
+
+    p.setStyle(PaintStyle.Stroke);
+    p.setStrokeWidth(2);
+    p.setColor(Skia.Color(effectColor));
+    p.setAlphaf(alpha * 0.8);
+    canvas.drawCircle(e.x, e.y, r, p);
+    p.setAlphaf(1);
+    p.setStyle(PaintStyle.Fill);
+
+    for (let i = 0; i < 8; i++) {
+      const angle = (Math.PI * 2 / 8) * i;
+      const rayPath = Skia.Path.Make();
+      rayPath.moveTo(e.x + Math.cos(angle) * r * 0.5, e.y + Math.sin(angle) * r * 0.5);
+      rayPath.lineTo(e.x + Math.cos(angle) * r * 1.2, e.y + Math.sin(angle) * r * 1.2);
+      p.setStyle(PaintStyle.Stroke);
+      p.setStrokeWidth(1.5);
+      p.setColor(Skia.Color(effectColor));
+      p.setAlphaf(alpha * 0.7);
+      canvas.drawPath(rayPath, p);
+      p.setAlphaf(1);
+      p.setStyle(PaintStyle.Fill);
+    }
+    return;
+  }
+
+  if (e.type === 'freeze') {
+    const r = baseR * (0.5 + progress * 0.5);
+    p.setColor(Skia.Color('rgba(186,230,253,1)'));
+    p.setAlphaf(alpha * 0.25);
+    canvas.drawCircle(e.x, e.y, r, p);
+    p.setAlphaf(1);
+    p.setStyle(PaintStyle.Stroke);
+    p.setStrokeWidth(2);
+    p.setColor(Skia.Color('rgba(147,197,253,1)'));
+    p.setAlphaf(alpha * 0.7);
+    canvas.drawCircle(e.x, e.y, r, p);
+    p.setAlphaf(1);
+    p.setStyle(PaintStyle.Fill);
+    return;
+  }
+
+  if (e.type === 'lightning' || e.type === 'zap') {
+    p.setColor(Skia.Color('rgba(253,230,138,1)'));
+    p.setAlphaf(alpha);
+    canvas.drawCircle(e.x, e.y, baseR * 0.35, p);
+    p.setAlphaf(1);
+    return;
+  }
+
+  if (e.type === 'zone') {
+    p.setColor(Skia.Color(effectColor));
+    p.setAlphaf(alpha * 0.35);
+    canvas.drawCircle(e.x, e.y, baseR * (0.5 + progress * 0.5), p);
+    p.setAlphaf(1);
+    return;
+  }
+
+  if (e.type === 'pop') {
+    const r = baseR * (0.3 + progress * 0.7);
+    p.setColor(Skia.Color(effectColor));
+    p.setAlphaf(alpha * 0.6);
+    canvas.drawCircle(e.x, e.y, r, p);
+    p.setAlphaf(1);
+    return;
+  }
+
+  if (e.type === 'portal') {
+    p.setStyle(PaintStyle.Stroke);
+    p.setStrokeWidth(3);
+    p.setColor(Skia.Color('#8b5cf6'));
+    p.setAlphaf(alpha);
+    canvas.drawCircle(e.x, e.y, baseR * (0.5 + progress * 0.5), p);
+    p.setAlphaf(1);
+    p.setStyle(PaintStyle.Fill);
+    return;
+  }
+
+  if (e.type === 'repair' || e.type === 'heal_pulse') {
+    p.setColor(Skia.Color('#10b981'));
+    p.setAlphaf(alpha * 0.5);
+    canvas.drawCircle(e.x, e.y, baseR * (0.5 + progress * 0.5), p);
+    p.setAlphaf(1);
+    return;
+  }
+
+  if (e.type === 'lightning_chain') {
+    const data = e.data as any;
+    if (data?.x2 != null && data?.y2 != null) {
+      drawLightning(canvas, e.x, e.y, data.x2, data.y2, p);
+    }
+    return;
+  }
+
+  if (e.type === 'ash') {
+    p.setColor(Skia.Color('rgba(120,113,108,1)'));
+    p.setAlphaf(alpha * 0.6);
+    canvas.drawCircle(e.x, e.y, baseR * 0.3, p);
+    p.setAlphaf(1);
+    return;
+  }
+
+  if (e.type === 'burner_beam') {
+    const data = e.data as any;
+    if (data?.x2 != null && data?.y2 != null) {
+      p.setStyle(PaintStyle.Stroke);
+      p.setStrokeWidth(4);
+      p.setColor(Skia.Color('#f97316'));
+      p.setAlphaf(alpha * 0.8);
+      const beamPath = Skia.Path.Make();
+      beamPath.moveTo(e.x, e.y);
+      beamPath.lineTo(data.x2, data.y2);
+      canvas.drawPath(beamPath, p);
+      p.setAlphaf(1);
+      p.setStyle(PaintStyle.Fill);
+    }
+    return;
+  }
+
+  if (e.type === 'meteor_aim') {
+    p.setStyle(PaintStyle.Stroke);
+    p.setStrokeWidth(1);
+    p.setColor(Skia.Color('rgba(239,68,68,0.3)'));
+    canvas.drawCircle(e.x, e.y, baseR, p);
+    p.setStyle(PaintStyle.Fill);
+    return;
+  }
+
+  if (e.type === 'glue_drop') {
+    p.setColor(Skia.Color('rgba(101,163,13,0.6)'));
+    p.setAlphaf(alpha);
+    canvas.drawCircle(e.x, e.y, baseR * 0.4, p);
+    p.setAlphaf(1);
+    return;
+  }
+
+  if (e.type === 'poison_cloud') {
+    p.setColor(Skia.Color('rgba(132,204,22,0.4)'));
+    p.setAlphaf(alpha);
+    canvas.drawCircle(e.x, e.y, baseR * (0.5 + progress * 0.5), p);
+    p.setAlphaf(1);
+    return;
+  }
+
+  if (e.type === 'mortar_muzzle') {
+    p.setColor(Skia.Color('#f59e0b'));
+    p.setAlphaf(alpha * 0.8);
+    canvas.drawCircle(e.x, e.y, baseR * 0.4, p);
+    p.setAlphaf(1);
+    return;
+  }
+
+  if (e.type === 'mortar_impact') {
+    const r = baseR * (0.3 + progress * 0.7);
+    p.setColor(Skia.Color('#f97316'));
+    p.setAlphaf(alpha * 0.6);
+    canvas.drawCircle(e.x, e.y, r, p);
+    p.setAlphaf(1);
+    return;
+  }
+
+  if (e.type === 'prism_beam') {
+    const data = e.data as any;
+    if (data?.x2 != null && data?.y2 != null) {
+      p.setStyle(PaintStyle.Stroke);
+      p.setStrokeWidth(3);
+      p.setColor(Skia.Color('#a855f7'));
+      p.setAlphaf(alpha * 0.9);
+      const prismPath = Skia.Path.Make();
+      prismPath.moveTo(e.x, e.y);
+      prismPath.lineTo(data.x2, data.y2);
+      canvas.drawPath(prismPath, p);
+      p.setAlphaf(1);
+      p.setStyle(PaintStyle.Fill);
+    }
+    return;
+  }
+
+  if (e.type === 'zap_arrival') {
+    p.setColor(Skia.Color('rgba(253,230,138,1)'));
+    p.setAlphaf(alpha * 0.8);
+    canvas.drawCircle(e.x, e.y, baseR * 0.5, p);
+    p.setAlphaf(1);
+    return;
+  }
+
+  if (e.type === 'tesla_pulse') {
+    p.setStyle(PaintStyle.Stroke);
+    p.setStrokeWidth(2);
+    p.setColor(Skia.Color('#7c3aed'));
+    p.setAlphaf(alpha * 0.7);
+    canvas.drawCircle(e.x, e.y, baseR * (0.5 + progress * 0.5), p);
+    p.setAlphaf(1);
+    p.setStyle(PaintStyle.Fill);
+    return;
+  }
+
+  if (e.type === 'detonator_pulse') {
+    p.setStyle(PaintStyle.Stroke);
+    p.setStrokeWidth(2);
+    p.setColor(Skia.Color('#dc2626'));
+    p.setAlphaf(alpha * 0.7);
+    canvas.drawCircle(e.x, e.y, baseR * (0.5 + progress * 0.5), p);
+    p.setAlphaf(1);
+    p.setStyle(PaintStyle.Fill);
+    return;
+  }
+
+  if (e.type === 'harpoon_shot') {
+    const data = e.data as any;
+    if (data?.x2 != null && data?.y2 != null) {
+      p.setStyle(PaintStyle.Stroke);
+      p.setStrokeWidth(2);
+      p.setColor(Skia.Color('#0891b2'));
+      p.setAlphaf(alpha);
+      const harpPath = Skia.Path.Make();
+      harpPath.moveTo(e.x, e.y);
+      harpPath.lineTo(data.x2, data.y2);
+      canvas.drawPath(harpPath, p);
+      p.setAlphaf(1);
+      p.setStyle(PaintStyle.Fill);
+    }
+    return;
+  }
+
+  if (e.type === 'shield_bubble_pulse') {
+    p.setStyle(PaintStyle.Stroke);
+    p.setStrokeWidth(2);
+    p.setColor(Skia.Color('#38bdf8'));
+    p.setAlphaf(alpha * 0.6);
+    canvas.drawCircle(e.x, e.y, baseR * (0.5 + progress * 0.5), p);
+    p.setAlphaf(1);
+    p.setStyle(PaintStyle.Fill);
+    return;
+  }
+
+  if (e.type === 'capacitor_beam') {
+    const data = e.data as any;
+    if (data?.x2 != null && data?.y2 != null) {
+      p.setStyle(PaintStyle.Stroke);
+      p.setStrokeWidth(5);
+      p.setColor(Skia.Color('#fbbf24'));
+      p.setAlphaf(alpha * 0.9);
+      const capPath = Skia.Path.Make();
+      capPath.moveTo(e.x, e.y);
+      capPath.lineTo(data.x2, data.y2);
+      canvas.drawPath(capPath, p);
+      p.setAlphaf(1);
+      p.setStyle(PaintStyle.Fill);
+    }
+    return;
+  }
+
+  if (e.type === 'overcharger_pulse') {
+    p.setStyle(PaintStyle.Stroke);
+    p.setStrokeWidth(2);
+    p.setColor(Skia.Color('#22d3ee'));
+    p.setAlphaf(alpha * 0.7);
+    canvas.drawCircle(e.x, e.y, baseR * (0.5 + progress * 0.5), p);
+    p.setAlphaf(1);
+    p.setStyle(PaintStyle.Fill);
+    return;
+  }
+
+  if (e.type === 'reveal_flash') {
+    p.setColor(Skia.Color('#ffffff'));
+    p.setAlphaf(alpha * 0.5);
+    canvas.drawCircle(e.x, e.y, baseR * (0.5 + progress * 0.5), p);
+    p.setAlphaf(1);
+    return;
+  }
+
+  // Default fallback
+  p.setColor(Skia.Color(effectColor));
+  p.setAlphaf(alpha * 0.6);
+  canvas.drawCircle(e.x, e.y, baseR * 0.4, p);
+  p.setAlphaf(1);
+}
+
+function drawGluePuddle(canvas: SkCanvas, g: GlueState, p: SkPaint) {
+  p.setColor(Skia.Color('rgba(120,83,60,0.3)'));
+  canvas.drawCircle(g.x, g.y, g.radius, p);
+  p.setColor(Skia.Color('rgba(101,163,13,0.15)'));
+  canvas.drawCircle(g.x, g.y, g.radius, p);
+  p.setStyle(PaintStyle.Stroke);
+  p.setStrokeWidth(1.5);
+  p.setColor(Skia.Color('rgba(101,163,13,0.5)'));
+  canvas.drawCircle(g.x, g.y, g.radius, p);
+  p.setStyle(PaintStyle.Fill);
+}
+
+function drawMeteor(canvas: SkCanvas, m: MeteorState, p: SkPaint) {
+  const startX = m.x;
+  const startY = -80;
+  const curX = startX + (m.targetX - startX) * m.progress;
+  const curY = startY + (m.targetY - startY) * m.progress;
+  const r = Math.max(5, m.radius * 0.18);
+
+  // Target ring
+  p.setStyle(PaintStyle.Stroke);
+  p.setStrokeWidth(1);
+  p.setColor(Skia.Color('rgba(239,68,68,0.2)'));
+  canvas.drawCircle(m.targetX, m.targetY, m.radius * 0.5, p);
+  p.setStyle(PaintStyle.Fill);
+
+  // Trail
+  for (let i = 0; i < 5; i++) {
+    const t = [0.85, 0.7, 0.55, 0.4, 0.25][i];
+    const tx = startX + (m.targetX - startX) * (m.progress - t * 0.08);
+    const ty = startY + (m.targetY - startY) * (m.progress - t * 0.08);
+    const trailAlpha = (1 - t) * 0.5;
+    p.setColor(Skia.Color('rgba(249,115,22,1)'));
+    p.setAlphaf(trailAlpha);
+    canvas.drawCircle(tx, ty, r * (0.4 + t * 0.6), p);
+    p.setAlphaf(1);
+  }
+
+  // Head
+  const meteorShader = Skia.Shader.MakeRadialGradient(
+    { x: curX, y: curY },
+    r,
+    [Skia.Color('#FDE68A'), Skia.Color('#DC2626')],
+    [0, 1],
+    TileMode.Clamp,
+  );
+  p.setShader(meteorShader);
+  canvas.drawCircle(curX, curY, r, p);
+  p.setShader(null);
+}
+
+function drawMagnet(canvas: SkCanvas, m: MagnetState, p: SkPaint) {
+  p.setColor(Skia.Color('rgba(192,132,252,0.12)'));
+  canvas.drawCircle(m.x, m.y, m.radius, p);
+  p.setStyle(PaintStyle.Stroke);
+  p.setStrokeWidth(1.5);
+  p.setColor(Skia.Color('rgba(192,132,252,0.5)'));
+  canvas.drawCircle(m.x, m.y, m.radius, p);
+  p.setStyle(PaintStyle.Fill);
+}
+
+function drawZone(canvas: SkCanvas, z: ZoneState, p: SkPaint) {
+  const fill =
+    z.type === 'damage' ? 'rgba(239,68,68,0.18)' :
+    z.type === 'slow' ? 'rgba(96,165,250,0.18)' :
+    'rgba(34,197,94,0.18)';
+  const border =
+    z.type === 'damage' ? 'rgba(239,68,68,0.7)' :
+    z.type === 'slow' ? 'rgba(96,165,250,0.7)' :
+    'rgba(34,197,94,0.7)';
+  p.setColor(Skia.Color(fill));
+  canvas.drawCircle(z.x, z.y, z.radius, p);
+  p.setStyle(PaintStyle.Stroke);
+  p.setStrokeWidth(1.5);
+  p.setColor(Skia.Color(border));
+  canvas.drawCircle(z.x, z.y, z.radius, p);
+  p.setStyle(PaintStyle.Fill);
+}
+
+function drawMine(canvas: SkCanvas, m: any, p: SkPaint) {
+  const r = m.radius ?? 12;
+  const pulse = 0.5 + 0.5 * Math.sin(Date.now() / 120);
+  p.setStyle(PaintStyle.Stroke);
+  p.setStrokeWidth(3);
+  p.setColor(Skia.Color(`rgba(249,115,22,${(0.4 + pulse * 0.4).toFixed(3)})`));
+  canvas.drawCircle(m.x, m.y, r + 8 + pulse * 4, p);
+  p.setStyle(PaintStyle.Fill);
+  p.setColor(Skia.Color('#f97316'));
+  canvas.drawCircle(m.x, m.y, r, p);
+  // Spikes
+  for (let i = 0; i < 8; i++) {
+    const angle = (Math.PI * 2 / 8) * i;
+    const spikePath = Skia.Path.Make();
+    spikePath.moveTo(m.x + Math.cos(angle) * r, m.y + Math.sin(angle) * r);
+    spikePath.lineTo(m.x + Math.cos(angle) * (r + 6), m.y + Math.sin(angle) * (r + 6));
+    p.setStyle(PaintStyle.Stroke);
+    p.setStrokeWidth(2);
+    p.setColor(Skia.Color('#f97316'));
+    canvas.drawPath(spikePath, p);
+    p.setStyle(PaintStyle.Fill);
+  }
+}
+
+function drawShieldDome(canvas: SkCanvas, pos: { x: number; y: number }, p: SkPaint) {
+  p.setColor(Skia.Color('rgba(99,102,241,0.1)'));
+  canvas.drawCircle(pos.x, pos.y, 80, p);
+  p.setStyle(PaintStyle.Stroke);
+  p.setStrokeWidth(2);
+  p.setColor(Skia.Color('rgba(99,102,241,0.5)'));
+  canvas.drawCircle(pos.x, pos.y, 80, p);
+  p.setStyle(PaintStyle.Fill);
+}
+
+function drawAimReticle(
+  canvas: SkCanvas,
+  aiming: { x: number; y: number },
+  p: SkPaint,
+) {
+  p.setColor(Skia.Color('rgba(79,142,247,0.12)'));
+  canvas.drawCircle(aiming.x, aiming.y, 70, p);
+  p.setStyle(PaintStyle.Stroke);
+  p.setStrokeWidth(2);
+  p.setColor(Skia.Color('rgba(79,142,247,0.7)'));
+  canvas.drawCircle(aiming.x, aiming.y, 70, p);
+
+  const crossPath = Skia.Path.Make();
+  crossPath.moveTo(aiming.x - 44, aiming.y);
+  crossPath.lineTo(aiming.x + 44, aiming.y);
+  crossPath.moveTo(aiming.x, aiming.y - 44);
+  crossPath.lineTo(aiming.x, aiming.y + 44);
+  canvas.drawPath(crossPath, p);
+  p.setStyle(PaintStyle.Fill);
+}
+
+function drawRageVignette(canvas: SkCanvas, p: SkPaint) {
+  p.setStyle(PaintStyle.Stroke);
+  p.setStrokeWidth(12);
+  p.setColor(Skia.Color('rgba(239,68,68,0.35)'));
+  canvas.drawRect(Skia.XYWHRect(0, 0, GAME_WIDTH, GAME_HEIGHT), p);
+  p.setStyle(PaintStyle.Fill);
+}
+
+function drawFloater(canvas: SkCanvas, f: Floater, p: SkPaint, font: SkFont | null) {
+  if (!font) return;
+  const alpha = Math.max(0, f.timer / f.maxTimer);
+  if (alpha <= 0) return;
+  const fontSize = Math.max(10, f.fontSize);
+  const fontScale = fontSize / 16;
+  const safeFont = font as SkFont;
+
+  p.setAlphaf(alpha);
+  p.setStyle(PaintStyle.Stroke);
+  p.setStrokeWidth(2);
+  p.setColor(Skia.Color('rgba(15,23,42,0.6)'));
+  canvas.save();
+  canvas.translate(f.x, f.y);
+  canvas.scale(fontScale, fontScale);
+  const tw = safeFont.measureText(f.text).width;
+  canvas.drawText(f.text, -tw / 2, 0, p, safeFont);
+  canvas.restore();
+
+  p.setStyle(PaintStyle.Fill);
+  p.setColor(Skia.Color(f.color));
+  p.setAlphaf(alpha);
+  canvas.save();
+  canvas.translate(f.x, f.y);
+  canvas.scale(fontScale, fontScale);
+  canvas.drawText(f.text, -tw / 2, 0, p, safeFont);
+  canvas.restore();
+  p.setAlphaf(1);
+}
+
+function drawWaveBanner(
+  canvas: SkCanvas,
+  wave: number,
+  life: number,
+  now: number,
+  p: SkPaint,
+  font: SkFont | null,
+) {
+  if (!font) return;
+  const safeFont = font as SkFont;
+  const alpha = Math.min(1, life * 2);
+  const text = `WAVE ${wave}`;
+  const fontSize = 28;
+  const fontScale = fontSize / 16;
+
+  p.setColor(Skia.Color('rgba(15,23,42,0.7)'));
+  p.setAlphaf(alpha);
+  canvas.drawRect(Skia.XYWHRect(GAME_WIDTH / 2 - 120, GAME_HEIGHT / 2 - 24, 240, 48), p);
+
+  p.setStyle(PaintStyle.Fill);
+  p.setColor(Skia.Color('#fbbf24'));
+  p.setAlphaf(alpha);
+  canvas.save();
+  canvas.translate(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 10);
+  canvas.scale(fontScale, fontScale);
+  const tw = safeFont.measureText(text).width;
+  canvas.drawText(text, -tw / 2, 0, p, safeFont);
+  canvas.restore();
+  p.setAlphaf(1);
+}
+
+function drawOvertimeBanner(
+  canvas: SkCanvas,
+  tier: string,
+  p: SkPaint,
+  font: SkFont | null,
+) {
+  if (!font) return;
+  const safeFont = font as SkFont;
+  const label = ESCALATION_LABELS[tier] ?? tier.toUpperCase();
+  const color = ESCALATION_COLORS[tier] ?? '#EF4444';
+  const fontSize = 14;
+  const fontScale = fontSize / 16;
+
+  p.setColor(Skia.Color(color + '26'));
+  canvas.drawRect(Skia.XYWHRect(GAME_WIDTH * 0.15, GAME_HEIGHT * 0.455, GAME_WIDTH * 0.7, 28), p);
+
+  p.setStyle(PaintStyle.Stroke);
+  p.setStrokeWidth(1);
+  p.setColor(Skia.Color(color + '80'));
+  canvas.drawRect(Skia.XYWHRect(GAME_WIDTH * 0.15, GAME_HEIGHT * 0.455, GAME_WIDTH * 0.7, 28), p);
+  p.setStyle(PaintStyle.Fill);
+
+  p.setColor(Skia.Color(color));
+  canvas.save();
+  canvas.translate(GAME_WIDTH / 2, GAME_HEIGHT * 0.455 + 20);
+  canvas.scale(fontScale, fontScale);
+  const tw = safeFont.measureText(label).width;
+  canvas.drawText(label, -tw / 2, 0, p, safeFont);
+  canvas.restore();
+}
+
+// ─── Main drawFrame ───────────────────────────────────────────────────────────
+
+interface DrawUI {
+  isAiming?: boolean;
+  aimingAbility?: string | null;
+  placingTower?: string | null;
+  previewPos?: { x: number; y: number } | null;
+  editMode?: boolean;
+  selectedTower?: string | null;
+  playerSkins?: Record<string, string>;
+  oppSkins?: Record<string, string>;
+}
+
+function drawFrame(
+  canvas: SkCanvas,
+  s: GameState,
+  now: number,
+  font: SkFont,
+  ui: DrawUI,
+) {
+  const p = Skia.Paint();
+  p.setAntiAlias(true);
+
+  // ── Shake + zoom transform ──
+  const zoom = s.hitStop > 0 ? 1 + 0.03 * (s.hitStop / 0.07) : 1;
+  const shake = s.shake || 0;
+  canvas.save();
+  if (zoom !== 1) {
+    canvas.translate(GAME_WIDTH / 2, GAME_HEIGHT / 2);
+    canvas.scale(zoom, zoom);
+    canvas.translate(-GAME_WIDTH / 2, -GAME_HEIGHT / 2);
+  }
+  if (shake > 0) {
+    canvas.translate((Math.random() - 0.5) * shake * 16, (Math.random() - 0.5) * shake * 16);
+  }
+
+  // ── 1. Field background ──
+  p.setStyle(PaintStyle.Fill);
+  const bgShader = Skia.Shader.MakeLinearGradient(
+    { x: 0, y: 0 },
+    { x: 0, y: GAME_HEIGHT },
+    [Skia.Color('#f8fafc'), Skia.Color('#ffffff'), Skia.Color('#f1f5f9')],
+    [0, 0.5, 1],
+    TileMode.Clamp,
+  );
+  p.setShader(bgShader);
+  canvas.drawRect(Skia.XYWHRect(0, 0, GAME_WIDTH, GAME_HEIGHT), p);
+  p.setShader(null);
+
+  // Side tints
+  p.setColor(Skia.Color('rgba(244,63,94,0.05)'));
+  canvas.drawRect(Skia.XYWHRect(0, 0, GAME_WIDTH, WALL_Y - WALL_THICKNESS / 2), p);
+  p.setColor(Skia.Color('rgba(59,130,246,0.05)'));
+  canvas.drawRect(Skia.XYWHRect(0, WALL_Y + WALL_THICKNESS / 2, GAME_WIDTH, GAME_HEIGHT - WALL_Y), p);
+
+  // Grid lines
+  p.setStyle(PaintStyle.Stroke);
+  p.setStrokeWidth(1);
+  p.setColor(Skia.Color('rgba(15,23,42,0.04)'));
+  for (let x = 0; x < GAME_WIDTH; x += 60) {
+    const gPath = Skia.Path.Make();
+    gPath.moveTo(x, 0);
+    gPath.lineTo(x, GAME_HEIGHT);
+    canvas.drawPath(gPath, p);
+  }
+  for (let y = 0; y < GAME_HEIGHT; y += 60) {
+    const gPath = Skia.Path.Make();
+    gPath.moveTo(0, y);
+    gPath.lineTo(GAME_WIDTH, y);
+    canvas.drawPath(gPath, p);
+  }
+  p.setStyle(PaintStyle.Fill);
+
+  // Freeze overlay
+  if (s.player.effects.freeze) {
+    p.setColor(Skia.Color('rgba(103,232,249,0.12)'));
+    canvas.drawRect(Skia.XYWHRect(0, WALL_Y, GAME_WIDTH, GAME_HEIGHT - WALL_Y), p);
+  }
+
+  // ── 2. Wall ──
+  drawWall(canvas, p);
+
+  // ── 3. Stations ──
+  const playerSkinId = ui.playerSkins?.station;
+  const oppSkinId = ui.oppSkins?.station;
+
+  drawStation(
+    canvas,
+    { x: PLAYER_STATION_X, y: PLAYER_STATION_Y },
+    s.player.station.hp,
+    s.player.station.maxHp,
+    '#3b82f6',
+    !!(s.player.station.shieldHp && s.player.station.shieldHp > 0),
+    (s as any).playerFlash ?? 0,
+    'bottom',
+    playerSkinId,
+    p,
+  );
+  drawStation(
+    canvas,
+    { x: OPP_STATION_X, y: OPP_STATION_Y },
+    s.opponent.station.hp,
+    s.opponent.station.maxHp,
+    '#f43f5e',
+    !!(s.opponent.station.shieldHp && s.opponent.station.shieldHp > 0),
+    (s as any).oppFlash ?? 0,
+    'top',
+    oppSkinId,
+    p,
+  );
+
+  // ── 4. Side towers ──
+  for (const st of s.player.sideTowers) {
+    drawSideTower(canvas, st, '#3b82f6', 'bottom', p);
+  }
+  for (const st of s.opponent.sideTowers) {
+    drawSideTower(canvas, st, '#f43f5e', 'top', p);
+  }
+
+  // ── 5. Edit mode dim ──
+  const isEditMode = ui.editMode ?? s.editMode;
+  if (isEditMode) {
+    p.setColor(Skia.Color('rgba(15,23,42,0.38)'));
+    canvas.drawRect(Skia.XYWHRect(0, 0, GAME_WIDTH, GAME_HEIGHT), p);
+  }
+
+  // ── 6. Glue puddles ──
+  for (const g of s.glues) {
+    drawGluePuddle(canvas, g, p);
+  }
+
+  // ── 7. Zones ──
+  for (const z of s.zones) {
+    drawZone(canvas, z, p);
+  }
+
+  // ── 8. Magnets ──
+  for (const m of s.magnets) {
+    drawMagnet(canvas, m, p);
+  }
+
+  // ── 9. Towers (opponent first, then player) ──
+  const activeSelectedTower = ui.selectedTower ?? s.player.selectedTower;
+  for (const t of s.opponent.towers) {
+    const skinId = ui.oppSkins?.tower;
+    drawFantasyTower(canvas, { ...t, isPlayer: false }, 'top', isEditMode, activeSelectedTower as string | null, skinId, p);
+  }
+  for (const t of s.player.towers) {
+    const skinId = ui.playerSkins?.tower;
+    drawFantasyTower(canvas, { ...t, isPlayer: true }, 'bottom', isEditMode, activeSelectedTower as string | null, skinId, p);
+  }
+
+  // ── 10. Targeting highlights ──
+  if (s.targeting) {
+    for (const tid of s.targeting.targets) {
+      const orb = s.orbs.find((o) => o.id === tid);
+      if (!orb) continue;
+      p.setColor(Skia.Color('rgba(168,85,247,0.12)'));
+      canvas.drawCircle(orb.x, orb.y, orb.radius + 12, p);
+      p.setStyle(PaintStyle.Stroke);
+      p.setStrokeWidth(2);
+      p.setColor(Skia.Color('rgba(168,85,247,0.8)'));
+      canvas.drawCircle(orb.x, orb.y, orb.radius + 12, p);
+      p.setStyle(PaintStyle.Fill);
+    }
+  }
+
+  // ── 11. Orbs ──
+  for (const orb of s.orbs) {
+    const isStealth = orb.stealth || orb.type === 'shadow' || orb.type === 'phantom';
+    if (isStealth) {
+      canvas.save();
+      p.setAlphaf(0.45);
+    }
+    drawOrb(canvas, orb, now, p, font);
+    if (isStealth) {
+      p.setAlphaf(1);
+      canvas.restore();
+    }
+  }
+
+  // ── 12. Coin pickups ──
+  for (const c of s.coinPickups) {
+    drawCoinPickup(canvas, c, now, p);
+  }
+
+  // ── 13. Projectiles ──
+  for (const proj of s.projectiles) {
+    drawProjectile(canvas, proj, p);
+  }
+
+  // ── 14. Meteors ──
+  for (const m of s.meteors) {
+    drawMeteor(canvas, m, p);
+  }
+
+  // ── 15. Effects ──
+  for (const e of s.effects) {
+    drawEffect(canvas, e, now, p, font);
+  }
+
+  // ── 16. Particles ──
+  for (const particle of s.particles) {
+    drawParticle(canvas, particle, p);
+  }
+
+  // ── 17. Floaters ──
+  for (const f of s.floaters) {
+    drawFloater(canvas, f, p, font);
+  }
+
+  // ── 18. Aiming reticle ──
+  if (s.aiming) {
+    drawAimReticle(canvas, s.aiming, p);
+  }
+
+  // ── 19. Tower placement preview ──
+  if (ui.placingTower && ui.previewPos) {
+    const def = TOWER_TYPES[ui.placingTower as keyof typeof TOWER_TYPES];
+    if (def) {
+      const { col, row, x: gx, y: gy } = snapToGrid(ui.previewPos.x, ui.previewPos.y);
+      const occupied = s.player.towers.some((t) => {
+        const tc = snapToGrid(t.x, t.y);
+        return tc.col === col && tc.row === row;
+      });
+      const inBounds = gy > WALL_Y + WALL_THICKNESS && gy < GAME_HEIGHT - 24 && gx > 20 && gx < GAME_WIDTH - 20;
+      const ok = !occupied && inBounds;
+      p.setColor(Skia.Color(ok ? 'rgba(59,130,246,0.18)' : 'rgba(244,63,94,0.18)'));
+      canvas.drawRect(Skia.XYWHRect(gx - GRID_SIZE / 2, gy - GRID_SIZE / 2, GRID_SIZE, GRID_SIZE), p);
+      p.setStyle(PaintStyle.Stroke);
+      p.setStrokeWidth(2);
+      p.setColor(Skia.Color((ok ? def.color : '#f43f5e') + '80'));
+      canvas.drawCircle(gx, gy, def.range, p);
+      p.setStyle(PaintStyle.Fill);
+    }
+  }
+
+  // ── 20. Shield dome ──
+  if (s.player.effects.shield) {
+    drawShieldDome(canvas, { x: PLAYER_STATION_X, y: PLAYER_STATION_Y }, p);
+  }
+
+  // ── 21. Rage vignette ──
+  if (s.player.effects.rage) {
+    drawRageVignette(canvas, p);
+  }
+
+  canvas.restore(); // end shake/zoom
+
+  // ── 22. Flash overlay (no shake) ──
+  const flash = (s as any).flash ?? 0;
+  if (flash > 0) {
+    p.setColor(Skia.Color('#ffffff'));
+    p.setAlphaf(Math.min(0.85, flash));
+    canvas.drawRect(Skia.XYWHRect(0, 0, GAME_WIDTH, GAME_HEIGHT), p);
+    p.setAlphaf(1);
+  }
+
+  // ── 23. Escalation border ──
+  if (s.escalationTier !== 'none') {
+    const escColor = ESCALATION_COLORS[s.escalationTier] ?? '#EF4444';
+    drawOvertimeBanner(canvas, s.escalationTier, p, font);
+    p.setStyle(PaintStyle.Stroke);
+    p.setStrokeWidth(6);
+    p.setColor(Skia.Color(escColor + '55'));
+    canvas.drawRect(Skia.XYWHRect(0, 0, GAME_WIDTH, GAME_HEIGHT), p);
+    p.setStyle(PaintStyle.Fill);
   }
 }
 
@@ -353,966 +1931,133 @@ export const GameCanvasInner = React.memo(function GameCanvasInner({
   height,
   onOrbTap,
   onFieldTap,
+  onTowerTap,
+  onCoinTap,
+  isAiming,
+  aimingAbility,
+  placingTower,
+  previewPos,
+  editMode: editModeProp,
+  selectedTower: selectedTowerProp,
+  playerSkins,
+  oppSkins,
 }: GameCanvasProps) {
-  // ── Hooks must be called unconditionally ──────────────────────────────────
-  // Font for HP numbers
-  const font = useFont(require('../assets/fonts/SpaceMono-Bold.ttf'), 12);
+  const boldFont = useFont(require('../assets/fonts/SpaceMono-Bold.ttf'), 16);
+  const [picture, setPicture] = useState<SkPicture | null>(null);
+  const stateRef = useRef(state);
+  stateRef.current = state;
 
-  // Track orb spawn times
-  const spawnTimes = useRef<Map<string, number>>(new Map());
+  const scaleX = GAME_WIDTH / width;
+  const scaleY = GAME_HEIGHT / height;
 
-  // Shake offsets ref
-  const shakeRef = useRef({ x: 0, y: 0 });
+  // Stable refs for UI options (avoid re-creating RAF loop on every render)
+  const uiRef = useRef<DrawUI>({});
+  uiRef.current = {
+    isAiming,
+    aimingAbility,
+    placingTower,
+    previewPos,
+    editMode: editModeProp,
+    selectedTower: selectedTowerProp,
+    playerSkins,
+    oppSkins,
+  };
 
-  // Grid lines memo (depends on width/height)
-  const scaleXMemo = width / GAME_WIDTH;
-  const scaleYMemo = height / GAME_HEIGHT;
-  const srMemo = (r: number) => r * Math.min(scaleXMemo, scaleYMemo);
-  const gridLines = useMemo(() => {
-    const lines: { x1: number; y1: number; x2: number; y2: number }[] = [];
-    const step = srMemo(60);
-    for (let x = step; x < width; x += step) {
-      lines.push({ x1: x, y1: 0, x2: x, y2: height });
-    }
-    for (let y = step; y < height; y += step) {
-      lines.push({ x1: 0, y1: y, x2: width, y2: y });
-    }
-    return lines;
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [width, height]);
-
-  if (!state) return null;
-
-  const scaleX = width / GAME_WIDTH;
-  const scaleY = height / GAME_HEIGHT;
-  const sx = (x: number) => x * scaleX;
-  const sy = (y: number) => y * scaleY;
-  const sr = (r: number) => r * Math.min(scaleX, scaleY);
-
-  const wallY = sy(WALL_Y);
-
-  const now = Date.now();
-
-  // Register new orbs
-  for (const orb of state.orbs) {
-    if (!spawnTimes.current.has(orb.id)) {
-      spawnTimes.current.set(orb.id, now);
-    }
-  }
-  // Prune dead orbs
-  if (spawnTimes.current.size > state.orbs.length + 50) {
-    const liveIds = new Set(state.orbs.map((o) => o.id));
-    for (const id of spawnTimes.current.keys()) {
-      if (!liveIds.has(id)) spawnTimes.current.delete(id);
-    }
-  }
-
-  // Shake offsets — only update when shake > 0
-  if (state.shake > 0) {
-    shakeRef.current = {
-      x: (Math.random() - 0.5) * state.shake * 2,
-      y: (Math.random() - 0.5) * state.shake * 2,
+  useEffect(() => {
+    if (!boldFont) return;
+    let rafId: number;
+    const render = () => {
+      const s = stateRef.current;
+      if (!s) {
+        rafId = requestAnimationFrame(render);
+        return;
+      }
+      const recorder = Skia.PictureRecorder();
+      const c = recorder.beginRecording(Skia.XYWHRect(0, 0, GAME_WIDTH, GAME_HEIGHT));
+      const now = Date.now();
+      drawFrame(c, s, now, boldFont, uiRef.current);
+      const pic = recorder.finishRecordingAsPicture();
+      setPicture(pic);
+      rafId = requestAnimationFrame(render);
     };
-  } else {
-    shakeRef.current = { x: 0, y: 0 };
-  }
-  const shakeX = shakeRef.current.x;
-  const shakeY = shakeRef.current.y;
-  const zoom = state.hitStop > 0 ? 1 + state.hitStop * 0.002 : 1;
+    rafId = requestAnimationFrame(render);
+    return () => cancelAnimationFrame(rafId);
+  }, [boldFont]);
 
-  const escalationLabel =
-    ESCALATION_LABELS[state.escalationTier] ??
-    state.escalationTier.toUpperCase();
-  const escalationColor =
-    ESCALATION_COLORS[state.escalationTier] ?? '#EF4444';
-
-  // Build tap gesture
+  // ── Tap gesture ──────────────────────────────────────────────────────────────
   const tapGesture = Gesture.Tap()
     .runOnJS(true)
     .onEnd((e) => {
       const tapX = e.x;
       const tapY = e.y;
-      const gameX = (tapX / width) * GAME_WIDTH;
-      const gameY = (tapY / height) * GAME_HEIGHT;
+      const gameX = tapX * scaleX;
+      const gameY = tapY * scaleY;
+      const s = stateRef.current;
+      if (!s) return;
 
       console.log('[GameCanvas] tap at canvas', tapX.toFixed(1), tapY.toFixed(1), '→ game', gameX.toFixed(1), gameY.toFixed(1));
 
-      let tappedOrb: Orb | null = null;
-      for (const orb of state.orbs) {
-        const ox = sx(orb.x);
-        const oy = sy(orb.y);
-        const r = sr(orb.radius) + 6;
-        const dx = tapX - ox;
-        const dy = tapY - oy;
-        if (dx * dx + dy * dy <= r * r) {
-          tappedOrb = orb;
-          break;
+      // Check coin pickups first
+      for (const coin of s.coinPickups) {
+        if (Math.hypot(coin.x - gameX, coin.y - gameY) < 28) {
+          console.log('[GameCanvas] tapped coin', coin.id);
+          onCoinTap?.(coin.id);
+          return;
         }
       }
 
-      if (tappedOrb) {
-        console.log('[GameCanvas] tapped orb', tappedOrb.id, tappedOrb.type);
-        onOrbTap(tappedOrb.id);
-      } else {
-        console.log('[GameCanvas] tapped field at game coords', gameX.toFixed(1), gameY.toFixed(1));
-        onFieldTap(gameX, gameY);
+      // Check towers (player only)
+      for (const tower of s.player.towers) {
+        if (Math.hypot(tower.x - gameX, tower.y - gameY) < 24) {
+          console.log('[GameCanvas] tapped tower', tower.id, tower.type);
+          onTowerTap?.(tower.id);
+          return;
+        }
       }
+
+      // Check orbs
+      for (const orb of s.orbs) {
+        if (orb.hp > 0 && Math.hypot(orb.x - gameX, orb.y - gameY) < orb.radius + 8) {
+          console.log('[GameCanvas] tapped orb', orb.id, orb.type);
+          onOrbTap(orb.id);
+          return;
+        }
+      }
+
+      console.log('[GameCanvas] tapped field at game coords', gameX.toFixed(1), gameY.toFixed(1));
+      onFieldTap(gameX, gameY);
     });
 
+  // ── Canvas content ───────────────────────────────────────────────────────────
   const canvasContent = (
     <Canvas style={{ width, height }}>
-      <Group transform={[{ translateX: shakeX }, { translateY: shakeY }, { scale: zoom }]}>
-
-        {/* ── 1. Background gradient ── */}
-        <Rect x={0} y={0} width={width} height={height}>
-          <LinearGradient
-            start={vec(0, 0)}
-            end={vec(0, height)}
-            colors={['#0A0E1A', '#111827']}
-          />
-        </Rect>
-
-        {/* ── 2. Grid lines ── */}
-        {gridLines.map((l, i) => (
-          <Line
-            key={i}
-            p1={vec(l.x1, l.y1)}
-            p2={vec(l.x2, l.y2)}
-            color="rgba(255,255,255,0.03)"
-            strokeWidth={1}
-          />
-        ))}
-
-        {/* ── 3. Opponent side tint ── */}
-        <Rect x={0} y={0} width={width} height={wallY} color="rgba(239,68,68,0.06)" />
-
-        {/* ── 4. Player side tint ── */}
-        <Rect x={0} y={wallY} width={width} height={height - wallY} color="rgba(79,142,247,0.04)" />
-
-        {/* ── 5. Freeze overlay ── */}
-        {state.player.effects.freeze && (
-          <Rect x={0} y={wallY} width={width} height={height - wallY} color="rgba(96,165,250,0.18)" />
-        )}
-
-        {/* ── 6. Rage vignette ── */}
-        {state.player.effects.rage && (
-          <>
-            <Rect x={0} y={wallY} width={width} height={height - wallY} color="rgba(239,68,68,0.08)" />
-            <Rect x={0} y={0} width={width} height={height} color="transparent">
-              <Paint color="rgba(239,68,68,0.35)" style="stroke" strokeWidth={12} />
-            </Rect>
-          </>
-        )}
-
-        {/* ── 7. Shield overlay ── */}
-        {state.player.effects.shield && (
-          <Rect x={0} y={wallY} width={width} height={height - wallY} color="rgba(99,102,241,0.1)" />
-        )}
-
-        {/* ── 8. Glue puddles (fill) ── */}
-        {state.glues.map((g: GlueState) => (
-          <Group key={g.id}>
-            <Circle cx={sx(g.x)} cy={sy(g.y)} r={sr(g.radius)} color="rgba(120,83,60,0.3)" />
-            <Circle cx={sx(g.x)} cy={sy(g.y)} r={sr(g.radius)} color="rgba(101,163,13,0.15)" />
-          </Group>
-        ))}
-
-        {/* ── 9. Zones ── */}
-        {state.zones.map((z: ZoneState) => {
-          const zFill =
-            z.type === 'damage' ? 'rgba(239,68,68,0.18)' :
-            z.type === 'slow'   ? 'rgba(96,165,250,0.18)' :
-                                  'rgba(34,197,94,0.18)';
-          return (
-            <Circle key={z.id} cx={sx(z.x)} cy={sy(z.y)} r={sr(z.radius)} color={zFill} />
-          );
-        })}
-
-        {/* ── 10. Magnets ── */}
-        {state.magnets.map((m: MagnetState) => (
-          <Group key={m.id}>
-            <Circle cx={sx(m.x)} cy={sy(m.y)} r={sr(m.radius)} color="rgba(192,132,252,0.12)" />
-            <Circle cx={sx(m.x)} cy={sy(m.y)} r={sr(m.radius)} color="transparent">
-              <Paint color="rgba(192,132,252,0.5)" style="stroke" strokeWidth={1.5} />
-            </Circle>
-          </Group>
-        ))}
-
-        {/* ── 11. Wall glow + line ── */}
-        <Rect x={0} y={wallY - sr(8)} width={width} height={sr(16)} color="rgba(51,65,85,0.5)" />
-        <Rect x={0} y={wallY - sr(3)} width={width} height={sr(6)}>
-          <LinearGradient
-            start={vec(0, wallY - sr(3))}
-            end={vec(0, wallY + sr(3))}
-            colors={['rgba(148,163,184,0.6)', 'rgba(71,85,105,0.4)']}
-          />
-        </Rect>
-        <Line p1={vec(0, wallY)} p2={vec(width, wallY)} color="#475569" strokeWidth={2} />
-
-        {/* ── 12. Stations ── */}
-        {([
-          { station: state.player.station, color: '#4F8EF7' },
-          { station: state.opponent.station, color: '#EF4444' },
-        ] as { station: Station; color: string }[]).map(({ station, color }) => {
-          const cx = sx(station.x);
-          const cy = sy(station.y);
-          const r = sr(35);
-          const hpPct = station.maxHp > 0 ? Math.max(0, station.hp / station.maxHp) : 0;
-          const barW = r * 2.4;
-          const barH = sr(5);
-          const barX = cx - barW / 2;
-          const barY = cy + r + sr(7);
-          const hpBarColor = hpColor(hpPct);
-          const stationKey = `station-${color}`;
-          const lightColor = lightenColor(color, 60);
-          return (
-            <Group key={stationKey}>
-              {/* Outer glow */}
-              <Circle cx={cx} cy={cy} r={r + sr(10)} color={color + '18'} />
-              {/* Shield ring */}
-              {station.shieldHp != null && station.shieldHp > 0 && (
-                <Group>
-                  <Circle cx={cx} cy={cy} r={r + sr(9)} color="rgba(96,165,250,0.2)" />
-                  <Circle cx={cx} cy={cy} r={r + sr(9)} color="transparent">
-                    <Paint color="rgba(96,165,250,0.6)" style="stroke" strokeWidth={2} />
-                  </Circle>
-                </Group>
-              )}
-              {/* Body with radial gradient */}
-              <Circle cx={cx} cy={cy} r={r} color={color + '33'}>
-                <RadialGradient c={vec(cx, cy)} r={r} colors={[color + '55', color + '11']} />
-              </Circle>
-              {/* Border */}
-              <Circle cx={cx} cy={cy} r={r} color="transparent">
-                <Paint color={color} style="stroke" strokeWidth={2.5} />
-              </Circle>
-              {/* Inner highlight */}
-              <Circle cx={cx - r * 0.2} cy={cy - r * 0.25} r={r * 0.35} color="transparent">
-                <RadialGradient
-                  c={vec(cx - r * 0.2, cy - r * 0.25)}
-                  r={r * 0.35}
-                  colors={['rgba(255,255,255,0.25)', 'rgba(255,255,255,0)']}
-                />
-              </Circle>
-              {/* HP bar bg */}
-              <RoundedRect x={barX} y={barY} width={barW} height={barH} r={2} color="rgba(0,0,0,0.5)" />
-              {hpPct > 0 && (
-                <RoundedRect x={barX} y={barY} width={barW * hpPct} height={barH} r={2} color={hpBarColor} />
-              )}
-            </Group>
-          );
-        })}
-
-        {/* ── 13. Side towers ── */}
-        {[...state.player.sideTowers, ...state.opponent.sideTowers].map((tower: SideTower) => {
-          const cx = sx(tower.x);
-          const cy = sy(tower.y);
-          const half = sr(11);
-          const hpPct = tower.maxHp > 0 ? Math.max(0, tower.hp / tower.maxHp) : 0;
-          const towerColor = tower.frozen ? '#BAE6FD' : '#94A3B8';
-          const barW = half * 2.4;
-          const barH = sr(3);
-          const barX = cx - barW / 2;
-          const barY = cy - half - sr(7);
-          const hpBarColor = hpColor(hpPct);
-          return (
-            <Group key={tower.id}>
-              {/* Stone body */}
-              <RoundedRect x={cx - half} y={cy - half} width={half * 2} height={half * 2} r={sr(2)} color="rgba(71,85,105,0.9)" />
-              <RoundedRect x={cx - half} y={cy - half} width={half * 2} height={half * 2} r={sr(2)} color="transparent">
-                <Paint color={towerColor} style="stroke" strokeWidth={1.5} />
-              </RoundedRect>
-              {/* Crenellations */}
-              {[-1, 0, 1].map((i) => (
-                <Rect
-                  key={i}
-                  x={cx + i * half * 0.6 - half * 0.18}
-                  y={cy - half - sr(3)}
-                  width={half * 0.36}
-                  height={sr(4)}
-                  color="rgba(71,85,105,0.9)"
-                />
-              ))}
-              {/* HP bar */}
-              <RoundedRect x={barX} y={barY} width={barW} height={barH} r={1} color="rgba(0,0,0,0.5)" />
-              {hpPct > 0 && (
-                <RoundedRect x={barX} y={barY} width={barW * hpPct} height={barH} r={1} color={hpBarColor} />
-              )}
-            </Group>
-          );
-        })}
-
-        {/* ── 14. Edit mode dim ── */}
-        {state.editMode && (
-          <Rect x={0} y={0} width={width} height={height} color="rgba(0,0,0,0.4)" />
-        )}
-
-        {/* ── 15. Towers ── */}
-        {[...state.player.towers, ...state.opponent.towers].map((tower: Tower) => {
-          const cx = sx(tower.x);
-          const cy = sy(tower.y);
-          const half = sr(14);
-          const color = getTowerColor(tower.type);
-          const hpPct = tower.maxHp > 0 ? Math.max(0, tower.hp / tower.maxHp) : 0;
-          const statusColor = tower.frozen ? '#BAE6FD' : tower.poisoned ? '#84CC16' : tower.overclocked ? '#FCD34D' : color;
-          const barW = half * 2.2;
-          const barH = sr(3);
-          const barX = cx - barW / 2;
-          const barY = cy - half - sr(8);
-          const hpBarColor = hpColor(hpPct);
-          const pipCount = Math.min(tower.level, 6);
-          const pipR = sr(2.5);
-          const pipSpacing = sr(6);
-          const pipsStartX = cx - ((pipCount - 1) * pipSpacing) / 2;
-          const pipY = cy + half + sr(6);
-          const topPath = makeTowerTopPath(tower.type, cx, cy, half);
-          const isSuper = tower.level >= 6;
-
-          return (
-            <Group key={tower.id}>
-              {/* Super perk aura */}
-              {isSuper && (
-                <Circle cx={cx} cy={cy} r={half * 1.6} color="transparent">
-                  <Paint color="rgba(251,191,36,0.4)" style="stroke" strokeWidth={3} />
-                </Circle>
-              )}
-              {/* Overclock aura */}
-              {tower.overclocked && (
-                <Circle cx={cx} cy={cy} r={half * 1.4} color="transparent">
-                  <Paint color="rgba(252,211,77,0.5)" style="stroke" strokeWidth={2} />
-                </Circle>
-              )}
-              {/* Stone trapezoid body */}
-              <RoundedRect
-                x={cx - half}
-                y={cy - half}
-                width={half * 2}
-                height={half * 2}
-                r={sr(3)}
-                color="rgba(71,85,105,0.92)"
-              />
-              <RoundedRect
-                x={cx - half}
-                y={cy - half}
-                width={half * 2}
-                height={half * 2}
-                r={sr(3)}
-                color="transparent"
-              >
-                <Paint color={statusColor + 'AA'} style="stroke" strokeWidth={1.5} />
-              </RoundedRect>
-              {/* Crenellations */}
-              {[-1, 0, 1].map((i) => (
-                <Rect
-                  key={i}
-                  x={cx + i * half * 0.55 - half * 0.16}
-                  y={cy - half - sr(3.5)}
-                  width={half * 0.32}
-                  height={sr(4.5)}
-                  color="rgba(71,85,105,0.95)"
-                />
-              ))}
-              {/* Tower top silhouette */}
-              {topPath && (
-                <Path path={topPath} color={statusColor + 'DD'} />
-              )}
-              {/* Frozen overlay */}
-              {tower.frozen && (
-                <RoundedRect x={cx - half} y={cy - half} width={half * 2} height={half * 2} r={sr(3)} color="rgba(186,230,253,0.3)" />
-              )}
-              {/* Poisoned overlay */}
-              {tower.poisoned && (
-                <RoundedRect x={cx - half} y={cy - half} width={half * 2} height={half * 2} r={sr(3)} color="rgba(132,204,22,0.25)" />
-              )}
-              {/* HP bar */}
-              {hpPct < 1 && (
-                <Group>
-                  <RoundedRect x={barX} y={barY} width={barW} height={barH} r={1} color="rgba(0,0,0,0.5)" />
-                  {hpPct > 0 && (
-                    <RoundedRect x={barX} y={barY} width={barW * hpPct} height={barH} r={1} color={hpBarColor} />
-                  )}
-                </Group>
-              )}
-              {/* Level pips */}
-              {Array.from({ length: pipCount }, (_, i) => i).map((i) => (
-                <Circle
-                  key={i}
-                  cx={pipsStartX + i * pipSpacing}
-                  cy={pipY}
-                  r={pipR}
-                  color={i < 5 ? '#FCD34D' : '#F59E0B'}
-                />
-              ))}
-            </Group>
-          );
-        })}
-
-        {/* ── 16. Targeting highlights ── */}
-        {state.targeting &&
-          state.targeting.targets.map((tid: string) => {
-            const orb = state.orbs.find((o: Orb) => o.id === tid);
-            if (!orb) return null;
-            const cx = sx(orb.x);
-            const cy = sy(orb.y);
-            const r = sr(orb.radius + 12);
-            return (
-              <Group key={`target-${tid}`}>
-                <Circle cx={cx} cy={cy} r={r} color="rgba(168,85,247,0.12)" />
-                <Circle cx={cx} cy={cy} r={r} color="transparent">
-                  <Paint color="rgba(168,85,247,0.8)" style="stroke" strokeWidth={2} />
-                </Circle>
-              </Group>
-            );
-          })}
-
-        {/* ── 17. ORBS ── */}
-        {state.orbs.map((orb: Orb) => {
-          const cx = sx(orb.x);
-          const cy = sy(orb.y);
-          const r = sr(orb.radius);
-          const color = getOrbColor(orb.type);
-          const isStealth = orb.stealth || orb.type === 'shadow' || orb.type === 'phantom';
-          const orbOpacity = isStealth ? 0.45 : 1;
-          const hpPct = orb.maxHp > 0 ? Math.max(0, orb.hp / orb.maxHp) : 1;
-          const barW = r * 2.4;
-          const barH = sr(3);
-          const barX = cx - barW / 2;
-          const barY = cy + r + sr(4);
-          const hpBarColor = hpColor(hpPct);
-
-          // Spawn scale animation
-          const spawnTime = spawnTimes.current.get(orb.id) ?? now;
-          const age = now - spawnTime;
-          const spawnT = Math.min(age / 300, 1);
-          const spawnScale = 0.3 + 0.7 * Math.sin(spawnT * Math.PI / 2);
-
-          // Type-specific decoration
-          const lightC = lightenColor(color, 55);
-          const darkC = darkenColor(color, 40);
-
-          // HP text
-          const hpText = String(Math.ceil(orb.hp));
-          const fontSize = Math.max(10, Math.round(r * 0.85));
-
-          return (
-            <Group
-              key={orb.id}
-              opacity={orbOpacity}
-              transform={[
-                { translateX: cx },
-                { translateY: cy },
-                { scale: spawnScale },
-                { translateX: -cx },
-                { translateY: -cy },
-              ]}
-            >
-              {/* Shield bubble aura */}
-              {orb.shieldHp != null && orb.shieldHp > 0 && (
-                <Group>
-                  <Circle cx={cx} cy={cy} r={r + sr(6)} color="rgba(147,197,253,0.25)" />
-                  <Circle cx={cx} cy={cy} r={r + sr(6)} color="transparent">
-                    <Paint color="rgba(147,197,253,0.6)" style="stroke" strokeWidth={1.5} />
-                  </Circle>
-                </Group>
-              )}
-
-              {/* Orb body with radial gradient */}
-              <Circle cx={cx} cy={cy} r={r} color={lightC}>
-                <RadialGradient
-                  c={vec(cx, cy)}
-                  r={r}
-                  colors={[lightC + 'E6', darkC + 'B3']}
-                />
-              </Circle>
-
-              {/* Status overlays */}
-              {orb.frozen && (
-                <Circle cx={cx} cy={cy} r={r} color="rgba(186,230,253,0.4)">
-                  <Paint color="rgba(147,197,253,0.8)" style="stroke" strokeWidth={1.5} />
-                </Circle>
-              )}
-              {orb.poisoned && !orb.frozen && (
-                <Circle cx={cx} cy={cy} r={r} color="rgba(132,204,22,0.35)">
-                  <Paint color="rgba(132,204,22,0.7)" style="stroke" strokeWidth={1.5} />
-                </Circle>
-              )}
-              {orb.burning && !orb.frozen && !orb.poisoned && (
-                <Circle cx={cx} cy={cy} r={r} color="rgba(249,115,22,0.35)">
-                  <Paint color="rgba(249,115,22,0.7)" style="stroke" strokeWidth={1.5} />
-                </Circle>
-              )}
-
-              {/* Type-specific decorations */}
-              {orb.type === 'mine' && (
-                <Circle cx={cx} cy={cy} r={r * (1.1 + 0.15 * Math.sin(now / 200))} color="transparent">
-                  <Paint color="rgba(239,68,68,0.8)" style="stroke" strokeWidth={1.5} />
-                </Circle>
-              )}
-              {orb.type === 'healer' && (
-                <Group>
-                  <Rect x={cx - r * 0.08} y={cy - r * 0.55} width={r * 0.16} height={r * 0.5} color="rgba(255,255,255,0.9)" />
-                  <Rect x={cx - r * 0.28} y={cy - r * 0.42} width={r * 0.56} height={r * 0.16} color="rgba(255,255,255,0.9)" />
-                </Group>
-              )}
-              {orb.type === 'radioactive' && (
-                <Circle cx={cx} cy={cy} r={r * (1.05 + 0.1 * Math.sin(now / 250))} color="transparent">
-                  <Paint color="rgba(132,204,22,0.6)" style="stroke" strokeWidth={2} />
-                </Circle>
-              )}
-              {(orb.type === 'shadow' || orb.type === 'phantom') && (
-                <Group>
-                  <Circle cx={cx - r * 0.2} cy={cy} r={r * 0.6} color="rgba(15,23,42,0.5)" />
-                  <Circle cx={cx + r * 0.2} cy={cy} r={r * 0.6} color="rgba(30,27,75,0.4)" />
-                </Group>
-              )}
-              {orb.type === 'ice' && (
-                <Group>
-                  {[0, 1, 2, 3, 4, 5].map((i) => {
-                    const angle = (Math.PI / 3) * i;
-                    return (
-                      <Line
-                        key={i}
-                        p1={vec(cx, cy)}
-                        p2={vec(cx + Math.cos(angle) * r * 0.75, cy + Math.sin(angle) * r * 0.75)}
-                        color="rgba(103,232,249,0.8)"
-                        strokeWidth={1.5}
-                      />
-                    );
-                  })}
-                </Group>
-              )}
-              {orb.type === 'zap_orb' && (
-                <Group>
-                  {[0, 1, 2].map((i) => {
-                    const angle = (Math.PI * 2 / 3) * i - Math.PI / 2;
-                    const boltPath = Skia.Path.Make();
-                    const bx = cx + Math.cos(angle) * r * 0.3;
-                    const by = cy + Math.sin(angle) * r * 0.3;
-                    const ex = cx + Math.cos(angle) * r * 0.9;
-                    const ey = cy + Math.sin(angle) * r * 0.9;
-                    const mx = (bx + ex) / 2 + Math.cos(angle + Math.PI / 2) * r * 0.2;
-                    const my = (by + ey) / 2 + Math.sin(angle + Math.PI / 2) * r * 0.2;
-                    boltPath.moveTo(bx, by);
-                    boltPath.lineTo(mx, my);
-                    boltPath.lineTo(ex, ey);
-                    return <Path key={i} path={boltPath} color="rgba(59,130,246,0.9)" style="stroke" strokeWidth={1.5} />;
-                  })}
-                </Group>
-              )}
-              {orb.type === 'armored' && (
-                <Path path={makeHexPath(cx, cy, r * 0.75)} color="transparent">
-                  <Paint color="rgba(100,116,139,0.7)" style="stroke" strokeWidth={1.5} />
-                </Path>
-              )}
-              {orb.type === 'berserker' && (() => {
-                const crackIntensity = 1 - hpPct;
-                const crackCount = Math.floor(2 + crackIntensity * 4);
-                return (
-                  <Group>
-                    {Array.from({ length: crackCount }, (_, i) => {
-                      const angle = (Math.PI * 2 / crackCount) * i + i * 0.3;
-                      const crackPath = Skia.Path.Make();
-                      crackPath.moveTo(cx, cy);
-                      crackPath.lineTo(
-                        cx + Math.cos(angle) * r * 0.5,
-                        cy + Math.sin(angle) * r * 0.5
-                      );
-                      crackPath.lineTo(
-                        cx + Math.cos(angle + 0.3) * r * 0.85,
-                        cy + Math.sin(angle + 0.3) * r * 0.85
-                      );
-                      return (
-                        <Path
-                          key={i}
-                          path={crackPath}
-                          color={`rgba(220,38,38,${(0.4 + crackIntensity * 0.5).toFixed(2)})`}
-                          style="stroke"
-                          strokeWidth={1.5}
-                        />
-                      );
-                    })}
-                  </Group>
-                );
-              })()}
-              {orb.type === 'leech' && (
-                <Circle cx={cx} cy={cy} r={r * (1.05 + 0.1 * Math.sin(now / 300))} color="transparent">
-                  <Paint color="rgba(190,18,60,0.6)" style="stroke" strokeWidth={2} />
-                </Circle>
-              )}
-              {orb.type === 'summoner' && (
-                <Group>
-                  <Circle cx={cx} cy={cy} r={r * (0.7 + 0.15 * Math.sin(now / 400))} color="transparent">
-                    <Paint color="rgba(124,58,237,0.4)" style="stroke" strokeWidth={1.5} />
-                  </Circle>
-                  <Circle cx={cx} cy={cy} r={r * (0.45 + 0.1 * Math.sin(now / 300 + 1))} color="transparent">
-                    <Paint color="rgba(124,58,237,0.3)" style="stroke" strokeWidth={1} />
-                  </Circle>
-                </Group>
-              )}
-              {orb.type === 'growth' && (
-                <Circle cx={cx} cy={cy} r={r * (1.08 + 0.12 * Math.sin(now / 350))} color="transparent">
-                  <Paint color="rgba(22,163,74,0.5)" style="stroke" strokeWidth={2} />
-                </Circle>
-              )}
-              {(orb.type === 'splitter' || orb.type === 'carrier') && (
-                <Group>
-                  {[-1, 0, 1].map((i) => (
-                    <Circle
-                      key={i}
-                      cx={cx + i * r * 0.35}
-                      cy={cy + (i === 0 ? -r * 0.25 : r * 0.15)}
-                      r={r * 0.2}
-                      color="rgba(255,255,255,0.35)"
-                    />
-                  ))}
-                </Group>
-              )}
-              {orb.type === 'swarmer' && (
-                <Group>
-                  {[0, 1, 2].map((i) => {
-                    const angle = (Math.PI * 2 / 3) * i + now / 600;
-                    return (
-                      <Circle
-                        key={i}
-                        cx={cx + Math.cos(angle) * r * 0.65}
-                        cy={cy + Math.sin(angle) * r * 0.65}
-                        r={r * 0.18}
-                        color="rgba(168,85,247,0.8)"
-                      />
-                    );
-                  })}
-                </Group>
-              )}
-              {orb.type === 'tank' && (
-                <Group>
-                  {[0, 1, 2, 3, 4, 5].map((i) => {
-                    const angle = (Math.PI / 3) * i;
-                    const px = cx + Math.cos(angle) * r * 0.82;
-                    const py = cy + Math.sin(angle) * r * 0.82;
-                    return (
-                      <Rect
-                        key={i}
-                        x={px - r * 0.12}
-                        y={py - r * 0.22}
-                        width={r * 0.24}
-                        height={r * 0.44}
-                        color="rgba(55,65,81,0.85)"
-                      />
-                    );
-                  })}
-                </Group>
-              )}
-              {orb.type === 'bomb' && (
-                <Group>
-                  <Circle cx={cx} cy={cy - r * 0.85} r={r * 0.12} color="#FCD34D" />
-                </Group>
-              )}
-
-              {/* Gloss highlight */}
-              <Circle
-                cx={cx - r * 0.25}
-                cy={cy - r * 0.3}
-                r={r * 0.45}
-                color="transparent"
-              >
-                <RadialGradient
-                  c={vec(cx - r * 0.25, cy - r * 0.3)}
-                  r={r * 0.45}
-                  colors={['rgba(255,255,255,0.7)', 'rgba(255,255,255,0)']}
-                />
-              </Circle>
-
-              {/* HP text */}
-              {font && orb.hp > 0 && (
-                <SkiaText
-                  x={cx - (hpText.length * fontSize * 0.32)}
-                  y={cy + fontSize * 0.38}
-                  text={hpText}
-                  font={font}
-                  color="#FFFFFF"
-                />
-              )}
-
-              {/* HP bar (only if damaged) */}
-              {orb.hp < orb.maxHp && (
-                <Group>
-                  <RoundedRect x={barX} y={barY} width={barW} height={barH} r={1} color="rgba(0,0,0,0.5)" />
-                  {hpPct > 0 && (
-                    <RoundedRect x={barX} y={barY} width={barW * hpPct} height={barH} r={1} color={hpBarColor} />
-                  )}
-                </Group>
-              )}
-            </Group>
-          );
-        })}
-
-        {/* ── 18. Coin pickups ── */}
-        {state.coinPickups.map((coin: CoinPickup) => {
-          const cx = sx(coin.x);
-          const cy = sy(coin.y);
-          const r = sr(8);
-          const glowR = r * (1 + 0.1 * Math.sin(now / 300 + coin.x));
-          return (
-            <Group key={coin.id}>
-              {/* Outer glow */}
-              <Circle cx={cx} cy={cy} r={glowR * 1.5} color="rgba(252,211,77,0.15)" />
-              {/* Main body */}
-              <Circle cx={cx} cy={cy} r={r} color="#FCD34D">
-                <RadialGradient c={vec(cx - r * 0.2, cy - r * 0.2)} r={r} colors={['#FDE68A', '#F59E0B']} />
-              </Circle>
-              {/* Gloss */}
-              <Circle cx={cx - r * 0.2} cy={cy - r * 0.25} r={r * 0.35} color="transparent">
-                <RadialGradient
-                  c={vec(cx - r * 0.2, cy - r * 0.25)}
-                  r={r * 0.35}
-                  colors={['rgba(255,255,255,0.6)', 'rgba(255,255,255,0)']}
-                />
-              </Circle>
-            </Group>
-          );
-        })}
-
-        {/* ── 19. Projectiles with trails ── */}
-        {state.projectiles.map((proj: Projectile) => {
-          const cx = sx(proj.x);
-          const cy = sy(proj.y);
-          const r = Math.max(2, sr(proj.radius));
-          const trailR = Math.max(1, r * 0.6);
-          return (
-            <Group key={proj.id}>
-              {/* Trail */}
-              {proj.trail.map((pt, i) => {
-                const trailAlpha = (i / Math.max(1, proj.trail.length)) * 0.4;
-                return (
-                  <Circle
-                    key={i}
-                    cx={sx(pt.x)}
-                    cy={sy(pt.y)}
-                    r={trailR}
-                    color={proj.color}
-                    opacity={trailAlpha}
-                  />
-                );
-              })}
-              {/* Main projectile */}
-              <Circle cx={cx} cy={cy} r={r} color={proj.color}>
-                <RadialGradient c={vec(cx, cy)} r={r} colors={[proj.color + 'FF', proj.color + '88']} />
-              </Circle>
-            </Group>
-          );
-        })}
-
-        {/* ── 20. Glue puddle borders ── */}
-        {state.glues.map((g: GlueState) => (
-          <Circle key={`gb-${g.id}`} cx={sx(g.x)} cy={sy(g.y)} r={sr(g.radius)} color="transparent">
-            <Paint color="rgba(101,163,13,0.5)" style="stroke" strokeWidth={1.5} />
-          </Circle>
-        ))}
-
-        {/* ── 21. Zone borders ── */}
-        {state.zones.map((z: ZoneState) => {
-          const zBorder =
-            z.type === 'damage' ? 'rgba(239,68,68,0.7)' :
-            z.type === 'slow'   ? 'rgba(96,165,250,0.7)' :
-                                  'rgba(34,197,94,0.7)';
-          return (
-            <Circle key={`zb-${z.id}`} cx={sx(z.x)} cy={sy(z.y)} r={sr(z.radius)} color="transparent">
-              <Paint color={zBorder} style="stroke" strokeWidth={1.5} />
-            </Circle>
-          );
-        })}
-
-        {/* ── 22. Meteors ── */}
-        {state.meteors.map((meteor: MeteorState) => {
-          const startX = sx(meteor.x);
-          const startY = sy(-80);
-          const endX = sx(meteor.targetX);
-          const endY = sy(meteor.targetY);
-          const curX = startX + (endX - startX) * meteor.progress;
-          const curY = startY + (endY - startY) * meteor.progress;
-          const r = Math.max(5, sr(meteor.radius * 0.18));
-          return (
-            <Group key={meteor.id}>
-              {/* Impact ring at target */}
-              <Circle cx={endX} cy={endY} r={sr(meteor.radius * 0.5)} color="transparent">
-                <Paint color="rgba(239,68,68,0.2)" style="stroke" strokeWidth={1} />
-              </Circle>
-              {/* Fire trail */}
-              {[0.85, 0.7, 0.55, 0.4, 0.25].map((t, i) => {
-                const tx = startX + (endX - startX) * (meteor.progress - t * 0.08);
-                const ty = startY + (endY - startY) * (meteor.progress - t * 0.08);
-                const trailAlpha = (1 - t) * 0.5;
-                return (
-                  <Circle
-                    key={i}
-                    cx={tx}
-                    cy={ty}
-                    r={r * (0.4 + t * 0.6)}
-                    color={`rgba(249,115,22,${trailAlpha.toFixed(2)})`}
-                  />
-                );
-              })}
-              {/* Main fireball */}
-              <Circle cx={curX} cy={curY} r={r} color="#F97316">
-                <RadialGradient c={vec(curX, curY)} r={r} colors={['#FDE68A', '#DC2626']} />
-              </Circle>
-            </Group>
-          );
-        })}
-
-        {/* ── 23. Effects ── */}
-        {state.effects.map((effect: Effect) => {
-          const cx = sx(effect.x);
-          const cy = sy(effect.y);
-          const alpha = Math.max(0, effect.timer / effect.maxTimer);
-          const progress = 1 - alpha;
-          const baseR = sr(effect.radius ?? 30);
-          const effectColor = effect.color ?? '#F97316';
-
-          if (effect.type === 'explosion' || effect.type === 'station_hit') {
-            const r = baseR * (0.3 + progress * 0.7);
-            return (
-              <Group key={effect.id}>
-                <Circle cx={cx} cy={cy} r={r} color={effectColor + alphaHex(alpha * 0.5)} />
-                <Circle cx={cx} cy={cy} r={r} color="transparent">
-                  <Paint color={effectColor + alphaHex(alpha * 0.8)} style="stroke" strokeWidth={2} />
-                </Circle>
-                {/* Particle rays */}
-                {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => {
-                  const angle = (Math.PI * 2 / 8) * i;
-                  const rayPath = Skia.Path.Make();
-                  rayPath.moveTo(cx + Math.cos(angle) * r * 0.5, cy + Math.sin(angle) * r * 0.5);
-                  rayPath.lineTo(cx + Math.cos(angle) * r * 1.2, cy + Math.sin(angle) * r * 1.2);
-                  return (
-                    <Path
-                      key={i}
-                      path={rayPath}
-                      color={effectColor + alphaHex(alpha * 0.7)}
-                      style="stroke"
-                      strokeWidth={1.5}
-                    />
-                  );
-                })}
-              </Group>
-            );
-          }
-
-          if (effect.type === 'freeze') {
-            const r = baseR * (0.5 + progress * 0.5);
-            return (
-              <Group key={effect.id}>
-                <Circle cx={cx} cy={cy} r={r} color={`rgba(186,230,253,${(alpha * 0.25).toFixed(3)})`} />
-                <Circle cx={cx} cy={cy} r={r} color="transparent">
-                  <Paint color={`rgba(147,197,253,${(alpha * 0.7).toFixed(3)})`} style="stroke" strokeWidth={2} />
-                </Circle>
-              </Group>
-            );
-          }
-
-          if (effect.type === 'lightning') {
-            return (
-              <Circle
-                key={effect.id}
-                cx={cx}
-                cy={cy}
-                r={baseR * 0.35}
-                color={`rgba(253,230,138,${alpha.toFixed(3)})`}
-              />
-            );
-          }
-
-          if (effect.type === 'zone') {
-            return (
-              <Circle
-                key={effect.id}
-                cx={cx}
-                cy={cy}
-                r={baseR * (0.5 + progress * 0.5)}
-                color={effectColor + alphaHex(alpha * 0.35)}
-              />
-            );
-          }
-
-          return (
-            <Circle
-              key={effect.id}
-              cx={cx}
-              cy={cy}
-              r={baseR * 0.4}
-              color={effectColor + alphaHex(alpha * 0.6)}
-            />
-          );
-        })}
-
-        {/* ── 24. Particles ── */}
-        {state.particles.map((p: Particle) => {
-          const alpha = Math.max(0, p.alpha);
-          if (alpha <= 0) return null;
-          return (
-            <Circle
-              key={p.id}
-              cx={sx(p.x)}
-              cy={sy(p.y)}
-              r={Math.max(1, sr(p.radius))}
-              color={p.color}
-              opacity={alpha}
-            />
-          );
-        })}
-
-        {/* ── 26. Aiming overlay ── */}
-        {state.aiming && (
-          <Group>
-            <Circle cx={sx(state.aiming.x)} cy={sy(state.aiming.y)} r={sr(70)} color="rgba(79,142,247,0.12)" />
-            <Circle cx={sx(state.aiming.x)} cy={sy(state.aiming.y)} r={sr(70)} color="transparent">
-              <Paint color="rgba(79,142,247,0.7)" style="stroke" strokeWidth={2} />
-            </Circle>
-            <Line
-              p1={vec(sx(state.aiming.x) - sr(44), sy(state.aiming.y))}
-              p2={vec(sx(state.aiming.x) + sr(44), sy(state.aiming.y))}
-              color="rgba(79,142,247,0.7)"
-              strokeWidth={2}
-            />
-            <Line
-              p1={vec(sx(state.aiming.x), sy(state.aiming.y) - sr(44))}
-              p2={vec(sx(state.aiming.x), sy(state.aiming.y) + sr(44))}
-              color="rgba(79,142,247,0.7)"
-              strokeWidth={2}
-            />
-          </Group>
-        )}
-
-        {/* ── 27. Escalation border ── */}
-        {state.escalationTier !== 'none' && (
-          <Rect x={0} y={0} width={width} height={height} color="transparent">
-            <Paint color={escalationColor + '55'} style="stroke" strokeWidth={6} />
-          </Rect>
-        )}
-
-      </Group>
+      {picture && <Picture picture={picture} />}
     </Canvas>
   );
 
-  // ── RN overlays (floaters, combo, escalation banner) ──────────────────────
+  // ── RN overlays (floaters, combo, escalation) ────────────────────────────────
+  const wallY = (WALL_Y / GAME_HEIGHT) * height;
   const comboOpacity = Math.min(1, state.comboTimer / 500);
   const showCombo = state.combo >= 2 && state.comboTimer > 0;
   const showEscalation = state.escalationTier !== 'none';
+  const escalationLabel = ESCALATION_LABELS[state.escalationTier] ?? state.escalationTier.toUpperCase();
+  const escalationColor = ESCALATION_COLORS[state.escalationTier] ?? '#EF4444';
 
   const overlays = (
     <>
-      {/* 25. Floaters */}
+      {/* Floaters */}
       {state.floaters.map((floater: Floater) => {
         const alpha = Math.max(0, floater.timer / floater.maxTimer);
         if (alpha <= 0) return null;
-        const cx = sx(floater.x);
-        const cy = sy(floater.y);
+        const fx = (floater.x / GAME_WIDTH) * width;
+        const fy = (floater.y / GAME_HEIGHT) * height;
         return (
           <Text
             key={floater.id}
             style={{
               position: 'absolute',
-              left: cx - 24,
-              top: cy - floater.fontSize / 2,
+              left: fx - 24,
+              top: fy - floater.fontSize / 2,
               width: 48,
               textAlign: 'center',
               fontSize: Math.max(8, floater.fontSize * 0.8),
@@ -1327,7 +2072,7 @@ export const GameCanvasInner = React.memo(function GameCanvasInner({
         );
       })}
 
-      {/* 29. Escalation banner */}
+      {/* Escalation banner */}
       {showEscalation && (
         <View
           style={{
@@ -1345,20 +2090,13 @@ export const GameCanvasInner = React.memo(function GameCanvasInner({
             pointerEvents: 'none',
           }}
         >
-          <Text
-            style={{
-              fontSize: 11,
-              fontWeight: '900',
-              color: escalationColor,
-              letterSpacing: 1.5,
-            }}
-          >
+          <Text style={{ fontSize: 11, fontWeight: '900', color: escalationColor, letterSpacing: 1.5 }}>
             {escalationLabel}
           </Text>
         </View>
       )}
 
-      {/* 28. Combo display */}
+      {/* Combo display */}
       {showCombo && (
         <View
           style={{
@@ -1370,25 +2108,10 @@ export const GameCanvasInner = React.memo(function GameCanvasInner({
             pointerEvents: 'none',
           }}
         >
-          <Text
-            style={{
-              fontSize: 22,
-              fontWeight: '900',
-              color: '#FCD34D',
-              opacity: comboOpacity,
-            }}
-          >
+          <Text style={{ fontSize: 22, fontWeight: '900', color: '#FCD34D', opacity: comboOpacity }}>
             {state.combo}
           </Text>
-          <Text
-            style={{
-              fontSize: 13,
-              fontWeight: '900',
-              color: '#FCD34D',
-              opacity: comboOpacity,
-              letterSpacing: 1,
-            }}
-          >
+          <Text style={{ fontSize: 13, fontWeight: '900', color: '#FCD34D', opacity: comboOpacity, letterSpacing: 1 }}>
             x COMBO
           </Text>
         </View>
@@ -1403,31 +2126,36 @@ export const GameCanvasInner = React.memo(function GameCanvasInner({
         onPress={(e) => {
           const tapX = e.nativeEvent.locationX;
           const tapY = e.nativeEvent.locationY;
-          const gameX = (tapX / width) * GAME_WIDTH;
-          const gameY = (tapY / height) * GAME_HEIGHT;
+          const gameX = tapX * scaleX;
+          const gameY = tapY * scaleY;
+          const s = stateRef.current;
+          if (!s) return;
 
           console.log('[GameCanvas] web tap at canvas', tapX.toFixed(1), tapY.toFixed(1), '→ game', gameX.toFixed(1), gameY.toFixed(1));
 
-          let tappedOrb: Orb | null = null;
-          for (const orb of state.orbs) {
-            const ox = sx(orb.x);
-            const oy = sy(orb.y);
-            const r = sr(orb.radius) + 6;
-            const dx = tapX - ox;
-            const dy = tapY - oy;
-            if (dx * dx + dy * dy <= r * r) {
-              tappedOrb = orb;
-              break;
+          for (const coin of s.coinPickups) {
+            if (Math.hypot(coin.x - gameX, coin.y - gameY) < 28) {
+              console.log('[GameCanvas] web tapped coin', coin.id);
+              onCoinTap?.(coin.id);
+              return;
             }
           }
-
-          if (tappedOrb) {
-            console.log('[GameCanvas] web tapped orb', tappedOrb.id, tappedOrb.type);
-            onOrbTap(tappedOrb.id);
-          } else {
-            console.log('[GameCanvas] web tapped field at game coords', gameX.toFixed(1), gameY.toFixed(1));
-            onFieldTap(gameX, gameY);
+          for (const tower of s.player.towers) {
+            if (Math.hypot(tower.x - gameX, tower.y - gameY) < 24) {
+              console.log('[GameCanvas] web tapped tower', tower.id, tower.type);
+              onTowerTap?.(tower.id);
+              return;
+            }
           }
+          for (const orb of s.orbs) {
+            if (orb.hp > 0 && Math.hypot(orb.x - gameX, orb.y - gameY) < orb.radius + 8) {
+              console.log('[GameCanvas] web tapped orb', orb.id, orb.type);
+              onOrbTap(orb.id);
+              return;
+            }
+          }
+          console.log('[GameCanvas] web tapped field at game coords', gameX.toFixed(1), gameY.toFixed(1));
+          onFieldTap(gameX, gameY);
         }}
       >
         {canvasContent}
