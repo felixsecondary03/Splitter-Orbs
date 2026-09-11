@@ -85,7 +85,7 @@ export function AbilityButton({ abilityType, cooldown, maxCooldown, onPress, siz
 
   return (
     <Pressable onPress={handlePress} style={styles.wrapper}>
-      <Animated.View style={{ transform: [{ scale: scaleAnim }], alignItems: 'center', paddingBottom: 18 }}>
+      <Animated.View style={{ transform: [{ scale: scaleAnim }], alignItems: 'center' }}>
         {/* Outer container — 64×64 circle */}
         <View style={[styles.outerCircle, { width: BUTTON_SIZE, height: BUTTON_SIZE, borderRadius: BUTTON_SIZE / 2 }]}>
           {/* Glow aura when ready */}
@@ -178,7 +178,7 @@ export function AbilityButton({ abilityType, cooldown, maxCooldown, onPress, siz
 const styles = StyleSheet.create({
   wrapper: {
     alignItems: 'center',
-    paddingBottom: 0,
+    paddingBottom: 4,
   },
   outerCircle: {
     alignItems: 'center',
@@ -198,13 +198,13 @@ const styles = StyleSheet.create({
     color: '#64748b',
   },
   label: {
-    fontSize: 8,
+    fontSize: 9,
     fontWeight: '700',
     color: '#64748b',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     textAlign: 'center',
     maxWidth: 64,
-    marginTop: 2,
+    marginTop: 4,
   },
 });

@@ -612,6 +612,7 @@ export default function GameScreen() {
   // ── Touch handling ──
   const tapGesture = useMemo(() => Gesture.Tap()
     .runOnJS(true)
+    .maxDuration(250)
     .onEnd((event) => {
       const { x, y } = event;
       const gameX = x / canvasScale;
@@ -899,11 +900,12 @@ export default function GameScreen() {
       />
 
       {/* ── Game Canvas ── */}
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 8 }}>
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 4, overflow: 'hidden' }}>
         <View
           style={{
             aspectRatio: 600 / 900,
             maxWidth: 460,
+            maxHeight: '100%',
             width: '100%',
             borderRadius: 24,
             overflow: 'hidden',
@@ -1312,7 +1314,8 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 4,
-    elevation: 4,
+    elevation: 12,
+    zIndex: 10,
   },
   hudTopRow: {
     flexDirection: 'row',
@@ -1393,21 +1396,21 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#FDE68A',
     borderRadius: 20,
-    paddingHorizontal: 12,
-    paddingVertical: 4,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 6,
   },
   coinDot: {
-    width: 14,
-    height: 14,
-    borderRadius: 7,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
     backgroundColor: '#F59E0B',
   },
   pillText: {
-    fontSize: 12,
-    fontWeight: '700',
+    fontSize: 15,
+    fontWeight: '800',
     color: '#0F172A',
   },
   // Bottom HUD
