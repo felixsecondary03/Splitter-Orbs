@@ -615,8 +615,9 @@ export default function GameScreen() {
   // ── Canvas dimensions ──
   const HUD_TOP_HEIGHT = 80 + insets.top;
   const HUD_BOTTOM_HEIGHT = 180;
-  const canvasHeight = screenHeight - HUD_TOP_HEIGHT - HUD_BOTTOM_HEIGHT;
-  const canvasWidth = screenWidth;
+  const [canvasDims, setCanvasDims] = React.useState({ width: 320, height: 480 });
+  const canvasWidth = canvasDims.width;
+  const canvasHeight = canvasDims.height;
 
   // ── Touch handling ──
   const tapGesture = useMemo(() => Gesture.Tap()
@@ -924,7 +925,25 @@ export default function GameScreen() {
       />
 
       {/* ── Game Canvas ── */}
-      <View style={{ flex: 1, position: 'relative' }}>
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 8 }}>
+        <View
+          style={{
+            aspectRatio: 600 / 900,
+            maxWidth: 460,
+            maxHeight: 690,
+            width: '100%',
+            borderRadius: 24,
+            overflow: 'hidden',
+            borderWidth: 2,
+            borderColor: '#e2e8f0',
+            elevation: 8,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.15,
+            shadowRadius: 12,
+          }}
+          onLayout={(e) => setCanvasDims({ width: e.nativeEvent.layout.width, height: e.nativeEvent.layout.height })}
+        >
         {Platform.OS === 'web' ? (
           <Pressable
             style={{ width: canvasWidth, height: canvasHeight }}
@@ -1004,6 +1023,7 @@ export default function GameScreen() {
             </View>
           </GestureDetector>
         )}
+        </View>
 
         {/* ── Placement Overlay ── */}
         {placementMode.active && (

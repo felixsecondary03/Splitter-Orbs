@@ -11,9 +11,9 @@ import {
   TileMode,
   ClipOp,
   useFont,
-  useCanvasRef,
 } from '@shopify/react-native-skia';
 import type { SkCanvas, SkPaint, SkPicture, SkFont } from '@shopify/react-native-skia';
+import { useSharedValue } from 'react-native-reanimated';
 import { GestureDetector, Gesture } from 'react-native-gesture-handler';
 import {
   GAME_WIDTH,
@@ -44,6 +44,14 @@ import type {
   ZoneState,
   MagnetState,
 } from '@/game/engine-types';
+
+// ─── Reusable paint pool (pre-allocated, never recreated) ─────────────────────
+const _p = Skia.Paint();          // general fill paint
+const _ps = Skia.Paint();         // general stroke paint
+const _pt = Skia.Paint();         // text / overlay paint
+const _pg = Skia.Paint();         // gradient paint (for shaders)
+const _pb = Skia.Paint();         // blur / glow paint
+_ps.setStyle(PaintStyle.Stroke);
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -173,21 +181,19 @@ function drawOrbGloss(canvas: SkCanvas, cx: number, cy: number, r: number): void
     [0, 0.45, 1],
     TileMode.Clamp,
   );
-  const gp = Skia.Paint();
-  gp.setShader(glossShader);
-  canvas.drawCircle(cx, cy, r, gp);
+  _pg.setShader(glossShader);
+  canvas.drawCircle(cx, cy, r, _pg);
+  _pg.setShader(null);
 
-  const rimP = Skia.Paint();
-  rimP.setStyle(PaintStyle.Stroke);
-  rimP.setColor(Skia.Color('rgba(255,255,255,0.35)'));
-  rimP.setStrokeWidth(Math.max(1, r * 0.05));
+  _ps.setColor(Skia.Color('rgba(255,255,255,0.35)'));
+  _ps.setStrokeWidth(Math.max(1, r * 0.05));
   const rimPath = Skia.Path.Make();
   rimPath.addArc(
     { x: cx - r * 0.93, y: cy - r * 0.93, width: r * 1.86, height: r * 1.86 },
     190,
     144,
   );
-  canvas.drawPath(rimPath, rimP);
+  canvas.drawPath(rimPath, _ps);
 }
 
 // ─── Orb pattern drawing ──────────────────────────────────────────────────────
@@ -214,10 +220,14 @@ function drawOrbPattern(canvas: SkCanvas, orb: Orb, r: number): void {
   clipPath.addCircle(cx, cy, r);
   canvas.clipPath(clipPath, ClipOp.Intersect, true);
 
-  const fp = Skia.Paint();
+  const fp = _p;
   fp.setStyle(PaintStyle.Fill);
-  const sp = Skia.Paint();
+  fp.setMaskFilter(null);
+  fp.setShader(null);
+  const sp = _ps;
   sp.setStyle(PaintStyle.Stroke);
+  sp.setMaskFilter(null);
+  sp.setShader(null);
 
   switch (skin.pattern) {
     case 'stripe': {
@@ -569,9 +579,9 @@ function drawOrbPattern(canvas: SkCanvas, orb: Orb, r: number): void {
         [0, 1],
         TileMode.Clamp,
       );
-      const cutP = Skia.Paint();
-      cutP.setShader(cutoutShader);
-      canvas.drawCircle(cx + r * 0.22, cy - r * 0.1, r * 0.45, cutP);
+      _pg.setShader(cutoutShader);
+      canvas.drawCircle(cx + r * 0.22, cy - r * 0.1, r * 0.45, _pg);
+      _pg.setShader(null);
       break;
     }
     case 'sun': {
@@ -656,9 +666,9 @@ function drawOrbPattern(canvas: SkCanvas, orb: Orb, r: number): void {
         [0, 1],
         TileMode.Clamp,
       );
-      const lanternP = Skia.Paint();
-      lanternP.setShader(lanternShader);
-      canvas.drawCircle(cx, cy, r * 0.5, lanternP);
+      _pg.setShader(lanternShader);
+      canvas.drawCircle(cx, cy, r * 0.5, _pg);
+      _pg.setShader(null);
       // Top hook
       sp.setColor(Skia.Color(bodyDeep));
       sp.setStrokeWidth(r * 0.08);
@@ -885,10 +895,14 @@ function drawOrbPattern(canvas: SkCanvas, orb: Orb, r: number): void {
 // ─── Emblem drawing ───────────────────────────────────────────────────────────
 
 function drawSigil(canvas: SkCanvas, x: number, y: number, r: number, shape: string, accent: string): void {
-  const fp = Skia.Paint();
+  const fp = _p;
   fp.setStyle(PaintStyle.Fill);
-  const sp = Skia.Paint();
+  fp.setMaskFilter(null);
+  fp.setShader(null);
+  const sp = _ps;
   sp.setStyle(PaintStyle.Stroke);
+  sp.setMaskFilter(null);
+  sp.setShader(null);
 
   switch (shape) {
     case 'shield': {
@@ -989,11 +1003,13 @@ function drawSigil(canvas: SkCanvas, x: number, y: number, r: number, shape: str
       fp.setAlphaf(0.9);
       canvas.drawCircle(x, y, r * 0.65, fp);
       // Cutout to make crescent
-      const moonCutP = Skia.Paint();
-      moonCutP.setStyle(PaintStyle.Fill);
-      moonCutP.setColor(Skia.Color('rgba(0,0,0,1)'));
-      moonCutP.setBlendMode(8 as any); // DST_OUT
-      canvas.drawCircle(x + r * 0.28, y - r * 0.12, r * 0.52, moonCutP);
+      _pt.setStyle(PaintStyle.Fill);
+      _pt.setMaskFilter(null);
+      _pt.setShader(null);
+      _pt.setColor(Skia.Color('rgba(0,0,0,1)'));
+      _pt.setBlendMode(8 as any); // DST_OUT
+      canvas.drawCircle(x + r * 0.28, y - r * 0.12, r * 0.52, _pt);
+      _pt.setBlendMode(0 as any); // SRC_OVER (reset)
       break;
     }
     case 'flame': {
@@ -1193,37 +1209,41 @@ function drawEmblem(canvas: SkCanvas, x: number, y: number, r: number, emblem: a
 
   // Glow for higher rarities
   if (rarity === 'legendary' || rarity === 'mythical') {
-    const glowP = Skia.Paint();
     const rarityColor = RARITIES[rarity]?.color || accent;
-    glowP.setMaskFilter(Skia.MaskFilter.MakeBlur(BlurStyle.Normal, r * 0.6, true));
-    glowP.setColor(Skia.Color(cssRgba(rarityColor, 0.5)));
-    canvas.drawCircle(x, y, r * 0.8, glowP);
+    _pb.setMaskFilter(Skia.MaskFilter.MakeBlur(BlurStyle.Normal, r * 0.6, true));
+    _pb.setShader(null);
+    _pb.setColor(Skia.Color(cssRgba(rarityColor, 0.5)));
+    canvas.drawCircle(x, y, r * 0.8, _pb);
+    _pb.setMaskFilter(null);
   }
 
   // Background circle for epic+
   if (rarity === 'epic' || rarity === 'legendary' || rarity === 'mythical') {
-    const bgP = Skia.Paint();
-    bgP.setStyle(PaintStyle.Fill);
-    bgP.setColor(Skia.Color(cssRgba(accent, 0.15)));
-    canvas.drawCircle(x, y, r, bgP);
-    const borderP = Skia.Paint();
-    borderP.setStyle(PaintStyle.Stroke);
-    borderP.setStrokeWidth(r * 0.1);
-    borderP.setColor(Skia.Color(cssRgba(accent, 0.5)));
-    canvas.drawCircle(x, y, r, borderP);
+    _p.setStyle(PaintStyle.Fill);
+    _p.setMaskFilter(null);
+    _p.setShader(null);
+    _p.setColor(Skia.Color(cssRgba(accent, 0.15)));
+    canvas.drawCircle(x, y, r, _p);
+    _ps.setStyle(PaintStyle.Stroke);
+    _ps.setMaskFilter(null);
+    _ps.setShader(null);
+    _ps.setStrokeWidth(r * 0.1);
+    _ps.setColor(Skia.Color(cssRgba(accent, 0.5)));
+    canvas.drawCircle(x, y, r, _ps);
   }
 
   // Legendary sparkles (animated)
   if (rarity === 'legendary' || rarity === 'mythical') {
     const t = Date.now() / 1000;
-    const sparkP = Skia.Paint();
-    sparkP.setStyle(PaintStyle.Fill);
+    _p.setStyle(PaintStyle.Fill);
+    _p.setMaskFilter(null);
+    _p.setShader(null);
     for (let i = 0; i < 4; i++) {
       const angle = (Math.PI * 2 / 4) * i + t * 1.5;
       const dist = r * (0.9 + 0.15 * Math.sin(t * 2 + i));
       const alpha = 0.5 + 0.5 * Math.sin(t * 3 + i * 1.2);
-      sparkP.setColor(Skia.Color(cssRgba(accent, alpha)));
-      canvas.drawCircle(x + Math.cos(angle) * dist, y + Math.sin(angle) * dist, r * 0.12, sparkP);
+      _p.setColor(Skia.Color(cssRgba(accent, alpha)));
+      canvas.drawCircle(x + Math.cos(angle) * dist, y + Math.sin(angle) * dist, r * 0.12, _p);
     }
   }
 
@@ -2826,7 +2846,10 @@ function drawFrame(
   font: SkFont,
   ui: DrawUI,
 ) {
-  const p = Skia.Paint();
+  const p = _p;
+  p.setStyle(PaintStyle.Fill);
+  p.setMaskFilter(null);
+  p.setShader(null);
   p.setAntiAlias(true);
 
   // ── Shake + zoom transform ──
@@ -3108,8 +3131,13 @@ export const GameCanvasInner = React.memo(function GameCanvasInner({
   oppSkins,
 }: GameCanvasProps) {
   const boldFont = useFont(require('../assets/fonts/SpaceMono-Bold.ttf'), 16);
-  const pictureRef = useRef<SkPicture | null>(null);
-  const canvasRef = useCanvasRef();
+  // Initialize with an empty picture so the SharedValue is always non-null
+  const emptyPicture = React.useMemo(() => {
+    const rec = Skia.PictureRecorder();
+    rec.beginRecording(Skia.XYWHRect(0, 0, 1, 1));
+    return rec.finishRecordingAsPicture();
+  }, []);
+  const picture = useSharedValue<SkPicture>(emptyPicture);
   const stateRef = useRef(state);
   stateRef.current = state;
 
@@ -3142,14 +3170,13 @@ export const GameCanvasInner = React.memo(function GameCanvasInner({
       const c = recorder.beginRecording(Skia.XYWHRect(0, 0, GAME_WIDTH, GAME_HEIGHT));
       const now = Date.now();
       drawFrame(c, s, now, boldFont, uiRef.current);
-      const pic = recorder.finishRecordingAsPicture();
-      pictureRef.current = pic;
-      canvasRef.current?.redraw();
+      // Assign to SharedValue — Picture component reads this on the UI thread
+      picture.value = recorder.finishRecordingAsPicture();
       rafId = requestAnimationFrame(render);
     };
     rafId = requestAnimationFrame(render);
     return () => cancelAnimationFrame(rafId);
-    // canvasRef is a stable ref from useCanvasRef — intentionally omitted
+    // picture is a stable SharedValue — intentionally omitted
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [boldFont]);
 
@@ -3199,8 +3226,8 @@ export const GameCanvasInner = React.memo(function GameCanvasInner({
 
   // ── Canvas content ───────────────────────────────────────────────────────────
   const canvasContent = (
-    <Canvas ref={canvasRef} style={{ width, height }}>
-      {pictureRef.current && <Picture picture={pictureRef.current} />}
+    <Canvas style={{ width, height }}>
+      <Picture picture={picture} />
     </Canvas>
   );
 
