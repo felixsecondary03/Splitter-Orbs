@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { Platform, Pressable, View, Text } from 'react-native';
 import {
   Canvas,
@@ -11,6 +11,7 @@ import {
   TileMode,
   ClipOp,
   useFont,
+  useCanvasRef,
 } from '@shopify/react-native-skia';
 import type { SkCanvas, SkPaint, SkPicture, SkFont } from '@shopify/react-native-skia';
 import { GestureDetector, Gesture } from 'react-native-gesture-handler';
@@ -1920,14 +1921,15 @@ function drawFantasyTower(
 function drawOrb(canvas: SkCanvas, orb: Orb, now: number, p: SkPaint, font: SkFont | null) {
   const r = orb.radius;
   const orbAny = orb as any;
-  const spawnAge = orbAny.spawnAge ?? 1;
-  let scale = 1;
-  if (spawnAge < 0.3) {
-    const prog = spawnAge / 0.3;
-    scale = 0.3 + 0.7 * prog + Math.sin(prog * Math.PI) * 0.2;
-  }
 
-  // Mine: pulsing danger ring
+  // Spawn scale from engine-provided spawnAge
+  const spawnAge = orbAny.spawnAge !== undefined ? (orbAny.spawnAge as number) : 1;
+  const spawnProgress = Math.min(1, spawnAge / 0.35);
+  const spawnScale = spawnProgress < 1
+    ? 0.3 + 0.7 * Math.sin(spawnProgress * Math.PI / 2)
+    : 1;
+
+  // Mine: pulsing danger ring (drawn before scale transform so it stays at full size)
   if (orbAny.detonateOnClick) {
     const pulse = 0.5 + 0.5 * Math.sin(now / 120);
     p.setStyle(PaintStyle.Stroke);
@@ -1937,9 +1939,10 @@ function drawOrb(canvas: SkCanvas, orb: Orb, now: number, p: SkPaint, font: SkFo
     p.setStyle(PaintStyle.Fill);
   }
 
+  // Apply spawn scale transform — wraps ALL orb drawing so pattern/gloss scale too
   canvas.save();
   canvas.translate(orb.x, orb.y);
-  canvas.scale(scale, scale);
+  canvas.scale(spawnScale, spawnScale);
 
   // Glow
   p.setMaskFilter(Skia.MaskFilter.MakeBlur(BlurStyle.Normal, orbAny.detonateOnClick ? 7 : 5, true));
@@ -1947,9 +1950,27 @@ function drawOrb(canvas: SkCanvas, orb: Orb, now: number, p: SkPaint, font: SkFo
   canvas.drawCircle(0, 0, r, p);
   p.setMaskFilter(null);
 
-  // Body
+  // Body (base circle)
   p.setColor(Skia.Color(orb.color));
   canvas.drawCircle(0, 0, r, p);
+
+  // Pattern overlay — clipped to orb circle, drawn on top of base, under gloss
+  const orbAnyPattern = orbAny.patternId as string | undefined;
+  if (orbAnyPattern) {
+    // drawOrbPattern uses orb.x/orb.y in world space; translate back to world coords
+    canvas.restore();
+    canvas.save();
+    canvas.translate(orb.x, orb.y);
+    canvas.scale(spawnScale, spawnScale);
+    canvas.translate(-orb.x, -orb.y);
+    const clipPath = Skia.Path.Make();
+    clipPath.addCircle(orb.x, orb.y, r);
+    canvas.clipPath(clipPath, ClipOp.Intersect, true);
+    drawOrbPattern(canvas, orb, r);
+  }
+
+  // Gloss highlight — on top of pattern
+  drawOrbGloss(canvas, orb.x, orb.y, r);
 
   canvas.restore();
 
@@ -1973,18 +1994,6 @@ function drawOrb(canvas: SkCanvas, orb: Orb, now: number, p: SkPaint, font: SkFo
     p.setColor(Skia.Color(`rgba(254,240,138,${spark.toFixed(3)})`));
     canvas.drawCircle(orb.x, orb.y - r - 2, 3, p);
   }
-
-  // Glossy highlight
-  const hg = Skia.Shader.MakeRadialGradient(
-    { x: orb.x - r * 0.35, y: orb.y - r * 0.35 },
-    r,
-    [Skia.Color('rgba(255,255,255,0.7)'), Skia.Color('rgba(255,255,255,0.15)'), Skia.Color('rgba(255,255,255,0)')],
-    [0, 0.4, 1],
-    TileMode.Clamp,
-  );
-  p.setShader(hg);
-  canvas.drawCircle(orb.x, orb.y, r, p);
-  p.setShader(null);
 
   // Type-specific decorations
   if (orb.type === 'healer') {
@@ -2176,9 +2185,6 @@ function drawOrb(canvas: SkCanvas, orb: Orb, now: number, p: SkPaint, font: SkFo
     canvas.drawCircle(orb.x, orb.y, r, p);
     p.setStyle(PaintStyle.Fill);
   }
-
-  // Orb pattern overlay
-  drawOrbPattern(canvas, orb, r);
 
   // HP text
   if (font && orb.hp > 0) {
@@ -3102,7 +3108,8 @@ export const GameCanvasInner = React.memo(function GameCanvasInner({
   oppSkins,
 }: GameCanvasProps) {
   const boldFont = useFont(require('../assets/fonts/SpaceMono-Bold.ttf'), 16);
-  const [picture, setPicture] = useState<SkPicture | null>(null);
+  const pictureRef = useRef<SkPicture | null>(null);
+  const canvasRef = useCanvasRef();
   const stateRef = useRef(state);
   stateRef.current = state;
 
@@ -3136,11 +3143,14 @@ export const GameCanvasInner = React.memo(function GameCanvasInner({
       const now = Date.now();
       drawFrame(c, s, now, boldFont, uiRef.current);
       const pic = recorder.finishRecordingAsPicture();
-      setPicture(pic);
+      pictureRef.current = pic;
+      canvasRef.current?.redraw();
       rafId = requestAnimationFrame(render);
     };
     rafId = requestAnimationFrame(render);
     return () => cancelAnimationFrame(rafId);
+    // canvasRef is a stable ref from useCanvasRef — intentionally omitted
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [boldFont]);
 
   // ── Tap gesture ──────────────────────────────────────────────────────────────
@@ -3189,8 +3199,8 @@ export const GameCanvasInner = React.memo(function GameCanvasInner({
 
   // ── Canvas content ───────────────────────────────────────────────────────────
   const canvasContent = (
-    <Canvas style={{ width, height }}>
-      {picture && <Picture picture={picture} />}
+    <Canvas ref={canvasRef} style={{ width, height }}>
+      {pictureRef.current && <Picture picture={pictureRef.current} />}
     </Canvas>
   );
 
