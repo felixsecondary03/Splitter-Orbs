@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-import { Platform, Pressable, View, Text } from 'react-native';
+import { Platform, View, Text } from 'react-native';
 import {
   Canvas,
   Picture,
@@ -11,10 +11,9 @@ import {
   TileMode,
   ClipOp,
   useFont,
-  useCanvasRef,
 } from '@shopify/react-native-skia';
 import type { SkCanvas, SkPaint, SkPicture, SkFont } from '@shopify/react-native-skia';
-import { GestureDetector, Gesture } from 'react-native-gesture-handler';
+import { useSharedValue } from 'react-native-reanimated';
 import {
   GAME_WIDTH,
   GAME_HEIGHT,
@@ -60,10 +59,6 @@ export interface GameCanvasProps {
   liveStateRef?: React.MutableRefObject<GameState | null> | React.MutableRefObject<GameState>;
   width: number;
   height: number;
-  onOrbTap: (orbId: string) => void;
-  onFieldTap: (x: number, y: number) => void;
-  onTowerTap?: (towerId: string) => void;
-  onCoinTap?: (coinId: string) => void;
   isAiming?: boolean;
   aimingAbility?: string | null;
   placingTower?: string | null;
@@ -1382,7 +1377,7 @@ function drawStation(
   const flip = side === 'top';
   const x = pos.x;
   const y = pos.y;
-  const dir = flip ? 1 : -1;
+  const dir = -1;
 
   const skin = STATION_SKINS[skinId || 'default'] || STATION_SKINS['default'];
   const body = skin.body;
@@ -3119,10 +3114,6 @@ export const GameCanvasInner = React.memo(function GameCanvasInner({
   liveStateRef,
   width,
   height,
-  onOrbTap,
-  onFieldTap,
-  onTowerTap,
-  onCoinTap,
   isAiming,
   aimingAbility,
   placingTower,
@@ -3133,8 +3124,12 @@ export const GameCanvasInner = React.memo(function GameCanvasInner({
   oppSkins,
 }: GameCanvasProps) {
   const boldFont = useFont(require('../assets/fonts/SpaceMono-Bold.ttf'), 16);
-  const canvasRef = useCanvasRef();
-  const pictureRef = useRef<SkPicture | null>(null);
+  const emptyPicture = React.useMemo(() => {
+    const r = Skia.PictureRecorder();
+    r.beginRecording(Skia.XYWHRect(0, 0, 1, 1));
+    return r.finishRecordingAsPicture();
+  }, []);
+  const pictureValue = useSharedValue<SkPicture>(emptyPicture);
   const stateRef = useRef(state);
   stateRef.current = state;
   const drawStateRef = liveStateRef ?? stateRef;
@@ -3169,62 +3164,17 @@ export const GameCanvasInner = React.memo(function GameCanvasInner({
       c.scale(scale, scale);
       drawFrame(c, s, now, boldFont, uiRef.current);
       c.restore();
-      pictureRef.current = recorder.finishRecordingAsPicture();
-      canvasRef.current?.redraw();
+      pictureValue.value = recorder.finishRecordingAsPicture();
     };
     rafId = requestAnimationFrame(render);
     return () => cancelAnimationFrame(rafId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [boldFont]);
 
-  // ── Tap gesture ──────────────────────────────────────────────────────────────
-  const tapGesture = Gesture.Tap()
-    .runOnJS(true)
-    .onEnd((e) => {
-      const tapX = e.x;
-      const tapY = e.y;
-      const gameX = tapX / scale;
-      const gameY = tapY / scale;
-      const s = stateRef.current;
-      if (!s) return;
-
-      console.log('[GameCanvas] tap at canvas', tapX.toFixed(1), tapY.toFixed(1), '→ game', gameX.toFixed(1), gameY.toFixed(1));
-
-      // Check coin pickups first
-      for (const coin of s.coinPickups) {
-        if (Math.hypot(coin.x - gameX, coin.y - gameY) < 28) {
-          console.log('[GameCanvas] tapped coin', coin.id);
-          onCoinTap?.(coin.id);
-          return;
-        }
-      }
-
-      // Check towers (player only)
-      for (const tower of s.player.towers) {
-        if (Math.hypot(tower.x - gameX, tower.y - gameY) < 24) {
-          console.log('[GameCanvas] tapped tower', tower.id, tower.type);
-          onTowerTap?.(tower.id);
-          return;
-        }
-      }
-
-      // Check orbs
-      for (const orb of s.orbs) {
-        if (orb.hp > 0 && Math.hypot(orb.x - gameX, orb.y - gameY) < orb.radius + 8) {
-          console.log('[GameCanvas] tapped orb', orb.id, orb.type);
-          onOrbTap(orb.id);
-          return;
-        }
-      }
-
-      console.log('[GameCanvas] tapped field at game coords', gameX.toFixed(1), gameY.toFixed(1));
-      onFieldTap(gameX, gameY);
-    });
-
   // ── Canvas content ───────────────────────────────────────────────────────────
   const canvasContent = (
-    <Canvas ref={canvasRef} style={{ width, height }}>
-      {pictureRef.current && <Picture picture={pictureRef.current} />}
+    <Canvas style={{ width, height }}>
+      <Picture picture={pictureValue} />
     </Canvas>
   );
 
@@ -3314,56 +3264,18 @@ export const GameCanvasInner = React.memo(function GameCanvasInner({
 
   if (Platform.OS === 'web') {
     return (
-      <Pressable
-        style={{ width, height, overflow: 'hidden' }}
-        onPress={(e) => {
-          const tapX = e.nativeEvent.locationX;
-          const tapY = e.nativeEvent.locationY;
-          const gameX = tapX / scale;
-          const gameY = tapY / scale;
-          const s = stateRef.current;
-          if (!s) return;
-
-          console.log('[GameCanvas] web tap at canvas', tapX.toFixed(1), tapY.toFixed(1), '→ game', gameX.toFixed(1), gameY.toFixed(1));
-
-          for (const coin of s.coinPickups) {
-            if (Math.hypot(coin.x - gameX, coin.y - gameY) < 28) {
-              console.log('[GameCanvas] web tapped coin', coin.id);
-              onCoinTap?.(coin.id);
-              return;
-            }
-          }
-          for (const tower of s.player.towers) {
-            if (Math.hypot(tower.x - gameX, tower.y - gameY) < 24) {
-              console.log('[GameCanvas] web tapped tower', tower.id, tower.type);
-              onTowerTap?.(tower.id);
-              return;
-            }
-          }
-          for (const orb of s.orbs) {
-            if (orb.hp > 0 && Math.hypot(orb.x - gameX, orb.y - gameY) < orb.radius + 8) {
-              console.log('[GameCanvas] web tapped orb', orb.id, orb.type);
-              onOrbTap(orb.id);
-              return;
-            }
-          }
-          console.log('[GameCanvas] web tapped field at game coords', gameX.toFixed(1), gameY.toFixed(1));
-          onFieldTap(gameX, gameY);
-        }}
-      >
-        {canvasContent}
-        {overlays}
-      </Pressable>
-    );
-  }
-
-  return (
-    <GestureDetector gesture={tapGesture}>
       <View style={{ width, height, overflow: 'hidden' }}>
         {canvasContent}
         {overlays}
       </View>
-    </GestureDetector>
+    );
+  }
+
+  return (
+    <View style={{ width, height, overflow: 'hidden' }}>
+      {canvasContent}
+      {overlays}
+    </View>
   );
 });
 

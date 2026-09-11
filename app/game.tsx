@@ -969,8 +969,6 @@ export default function GameScreen() {
               liveStateRef={gameStateRef}
               width={canvasWidth}
               height={canvasHeight}
-              onOrbTap={() => {}}
-              onFieldTap={() => {}}
             />
             {isAiming && (
               <View style={styles.aimingBanner}>
@@ -989,8 +987,6 @@ export default function GameScreen() {
                 liveStateRef={gameStateRef}
                 width={canvasWidth}
                 height={canvasHeight}
-                onOrbTap={() => {}}
-                onFieldTap={() => {}}
               />
               {isAiming && (
                 <View style={styles.aimingBanner}>
