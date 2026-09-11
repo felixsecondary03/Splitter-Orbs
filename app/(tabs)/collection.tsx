@@ -158,13 +158,17 @@ export default function CollectionScreen() {
     try {
       console.log('[Lab] Invoking level-up-card', { kind, id });
       const { error } = await supabase.functions.invoke('level-up-card', { body: { kind, id } });
-      if (error) throw error;
+      if (error) {
+        console.warn('[Lab] level-up-card raw error', error?.context?.status, JSON.stringify(error?.context));
+        throw error;
+      }
       console.log('[Lab] Level Up success:', id);
       await refreshProfile();
-    } catch (e: unknown) {
-      const msg = (e as Error)?.message;
-      console.warn('[Lab] level-up-card error', msg);
-      Alert.alert('Error', msg || 'Could not level up card');
+    } catch (e: any) {
+      const status = e?.context?.status ?? e?.status;
+      const body = e?.context ? JSON.stringify(e.context) : e?.message;
+      console.warn('[Lab] level-up-card error', status, body);
+      Alert.alert('Error', e?.message || 'Could not level up card');
     }
     setBusy(null);
   };
@@ -177,13 +181,17 @@ export default function CollectionScreen() {
     try {
       console.log('[Lab] Invoking buy-card-copy', { kind, id });
       const { error } = await supabase.functions.invoke('buy-card-copy', { body: { kind, id } });
-      if (error) throw error;
+      if (error) {
+        console.warn('[Lab] buy-card-copy raw error', error?.context?.status, JSON.stringify(error?.context));
+        throw error;
+      }
       console.log('[Lab] Buy Copy success:', id);
       await refreshProfile();
-    } catch (e: unknown) {
-      const msg = (e as Error)?.message;
-      console.warn('[Lab] buy-card-copy error', msg);
-      Alert.alert('Error', msg || 'Could not buy copy');
+    } catch (e: any) {
+      const status = e?.context?.status ?? e?.status;
+      const body = e?.context ? JSON.stringify(e.context) : e?.message;
+      console.warn('[Lab] buy-card-copy error', status, body);
+      Alert.alert('Error', e?.message || 'Could not buy copy');
     }
     setBusy(null);
   };
@@ -196,13 +204,17 @@ export default function CollectionScreen() {
       const fn = type === 'hand' ? 'upgrade-hand' : 'upgrade-side-tower';
       console.log('[Lab] Invoking', fn);
       const { error } = await supabase.functions.invoke(fn, {});
-      if (error) throw error;
+      if (error) {
+        console.warn('[Lab] upgrade meta raw error', error?.context?.status, JSON.stringify(error?.context));
+        throw error;
+      }
       console.log('[Lab] Upgrade meta success:', type);
       await refreshProfile();
-    } catch (e: unknown) {
-      const msg = (e as Error)?.message;
-      console.warn('[Lab] upgrade meta error', msg);
-      Alert.alert('Error', msg || 'Could not upgrade');
+    } catch (e: any) {
+      const status = e?.context?.status ?? e?.status;
+      const body = e?.context ? JSON.stringify(e.context) : e?.message;
+      console.warn('[Lab] upgrade meta error', status, body);
+      Alert.alert('Error', e?.message || 'Could not upgrade');
     }
     setBusy(null);
   };
@@ -213,11 +225,16 @@ export default function CollectionScreen() {
     try {
       console.log('[Lab] Invoking equip-skin', { field, id });
       const { error } = await supabase.functions.invoke('equip-skin', { body: { field, id } });
-      if (error) throw error;
+      if (error) {
+        console.warn('[Lab] equip-skin raw error', error?.context?.status, JSON.stringify(error?.context));
+        throw error;
+      }
       console.log('[Lab] Equip skin success:', field, id);
       await refreshProfile();
     } catch (e: any) {
-      console.warn('[Lab] equip-skin error', e?.message);
+      const status = e?.context?.status ?? e?.status;
+      const body = e?.context ? JSON.stringify(e.context) : e?.message;
+      console.warn('[Lab] equip-skin error', status, body);
       Alert.alert('Error', e?.message || 'Could not equip skin');
     }
     setBusy(null);
@@ -229,11 +246,16 @@ export default function CollectionScreen() {
     try {
       console.log('[Lab] Invoking buy-skin', { skinId });
       const { error } = await supabase.functions.invoke('buy-skin', { body: { skinId } });
-      if (error) throw error;
+      if (error) {
+        console.warn('[Lab] buy-skin raw error', error?.context?.status, JSON.stringify(error?.context));
+        throw error;
+      }
       console.log('[Lab] Buy skin success:', skinId);
       await refreshProfile();
     } catch (e: any) {
-      console.warn('[Lab] buy-skin error', e?.message);
+      const status = e?.context?.status ?? e?.status;
+      const body = e?.context ? JSON.stringify(e.context) : e?.message;
+      console.warn('[Lab] buy-skin error', status, body);
       Alert.alert('Error', e?.message || 'Could not buy skin');
     }
     setBusy(null);
