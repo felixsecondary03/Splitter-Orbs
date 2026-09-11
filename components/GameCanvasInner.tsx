@@ -57,6 +57,7 @@ _ps.setStyle(PaintStyle.Stroke);
 
 export interface GameCanvasProps {
   state: GameState;
+  liveStateRef?: React.MutableRefObject<GameState | null> | React.MutableRefObject<GameState>;
   width: number;
   height: number;
   onOrbTap: (orbId: string) => void;
@@ -3115,6 +3116,7 @@ function drawFrame(
 
 export const GameCanvasInner = React.memo(function GameCanvasInner({
   state,
+  liveStateRef,
   width,
   height,
   onOrbTap,
@@ -3135,6 +3137,7 @@ export const GameCanvasInner = React.memo(function GameCanvasInner({
   const pictureRef = useRef<SkPicture | null>(null);
   const stateRef = useRef(state);
   stateRef.current = state;
+  const drawStateRef = liveStateRef ?? stateRef;
 
   const scale = Math.min(width / GAME_WIDTH, height / GAME_HEIGHT);
 
@@ -3156,7 +3159,7 @@ export const GameCanvasInner = React.memo(function GameCanvasInner({
     let rafId: number;
     const render = () => {
       rafId = requestAnimationFrame(render);
-      const s = stateRef.current;
+      const s = drawStateRef.current;
       if (!s) return;
       const bounds = Skia.XYWHRect(0, 0, GAME_WIDTH * scale, GAME_HEIGHT * scale);
       const recorder = Skia.PictureRecorder();

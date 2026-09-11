@@ -916,7 +916,11 @@ export default function GameScreen() {
             shadowOpacity: 0.15,
             shadowRadius: 12,
           }}
-          onLayout={(e) => setCanvasDims({ width: e.nativeEvent.layout.width, height: e.nativeEvent.layout.height })}
+          onLayout={(e) => {
+            const { width, height } = e.nativeEvent.layout;
+            // subtract border (2px each side = 4px total) so scale matches gesture coords
+            setCanvasDims({ width: width - 4, height: height - 4 });
+          }}
         >
         {Platform.OS === 'web' ? (
           <Pressable
@@ -962,6 +966,7 @@ export default function GameScreen() {
           >
             <GameCanvas
               state={gameStateRef.current!}
+              liveStateRef={gameStateRef}
               width={canvasWidth}
               height={canvasHeight}
               onOrbTap={() => {}}
@@ -981,6 +986,7 @@ export default function GameScreen() {
             <View collapsable={false} style={{ width: canvasWidth, height: canvasHeight }}>
               <GameCanvas
                 state={gameStateRef.current!}
+                liveStateRef={gameStateRef}
                 width={canvasWidth}
                 height={canvasHeight}
                 onOrbTap={() => {}}
