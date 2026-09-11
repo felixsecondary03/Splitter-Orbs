@@ -974,7 +974,7 @@ export default function GameScreen() {
           </Pressable>
         ) : (
           <GestureDetector gesture={composedGesture}>
-            <View style={{ width: canvasWidth, height: canvasHeight }}>
+            <View collapsable={false} style={{ width: canvasWidth, height: canvasHeight }}>
               <GameCanvas
                 state={gameStateRef.current!}
                 width={canvasWidth}
