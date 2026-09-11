@@ -27,7 +27,7 @@ import {
   OPP_STATION_Y,
 } from '@/game/constants';
 import { getTowerColor, getTowerRange } from '@/game/engine-helpers';
-import { STATION_SKINS, TOWER_SKINS } from '@/game/skins';
+import { STATION_SKINS, TOWER_SKINS, ORB_PATTERNS, RARITIES, EMBLEMS } from '@/game/skins';
 import type {
   GameState,
   Orb,
@@ -98,6 +98,1136 @@ const ESCALATION_COLORS: Record<string, string> = {
   max_pressure: '#DC2626',
   tower_bleed: '#7F1D1D',
 };
+
+// ─── Color utilities ──────────────────────────────────────────────────────────
+
+function darken(hex: string, amount: number): string {
+  let r = 0, g = 0, b = 0;
+  const m = hex.match(/^#([0-9a-f]{3,6})$/i);
+  if (m) {
+    const h = m[1].length === 3
+      ? m[1].split('').map(c => c + c).join('')
+      : m[1];
+    r = parseInt(h.slice(0, 2), 16);
+    g = parseInt(h.slice(2, 4), 16);
+    b = parseInt(h.slice(4, 6), 16);
+  } else {
+    const n = hex.match(/\d+/g);
+    if (n) { r = +n[0]; g = +n[1]; b = +n[2]; }
+  }
+  r = Math.max(0, Math.round(r * (1 - amount)));
+  g = Math.max(0, Math.round(g * (1 - amount)));
+  b = Math.max(0, Math.round(b * (1 - amount)));
+  return `rgb(${r},${g},${b})`;
+}
+
+function lighten(hex: string, amount: number): string {
+  let r = 0, g = 0, b = 0;
+  const m = hex.match(/^#([0-9a-f]{3,6})$/i);
+  if (m) {
+    const h = m[1].length === 3
+      ? m[1].split('').map(c => c + c).join('')
+      : m[1];
+    r = parseInt(h.slice(0, 2), 16);
+    g = parseInt(h.slice(2, 4), 16);
+    b = parseInt(h.slice(4, 6), 16);
+  } else {
+    const n = hex.match(/\d+/g);
+    if (n) { r = +n[0]; g = +n[1]; b = +n[2]; }
+  }
+  r = Math.min(255, Math.round(r + (255 - r) * amount));
+  g = Math.min(255, Math.round(g + (255 - g) * amount));
+  b = Math.min(255, Math.round(b + (255 - b) * amount));
+  return `rgb(${r},${g},${b})`;
+}
+
+function cssRgba(color: string, alpha: number): string {
+  let r = 0, g = 0, b = 0;
+  const m = color.match(/^#([0-9a-f]{3,6})$/i);
+  if (m) {
+    const h = m[1].length === 3
+      ? m[1].split('').map(c => c + c).join('')
+      : m[1];
+    r = parseInt(h.slice(0, 2), 16);
+    g = parseInt(h.slice(2, 4), 16);
+    b = parseInt(h.slice(4, 6), 16);
+  } else {
+    const n = color.match(/\d+/g);
+    if (n) { r = +n[0]; g = +n[1]; b = +n[2]; }
+  }
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
+// ─── Orb gloss ────────────────────────────────────────────────────────────────
+
+function drawOrbGloss(canvas: SkCanvas, cx: number, cy: number, r: number): void {
+  const glossShader = Skia.Shader.MakeRadialGradient(
+    { x: cx - r * 0.35, y: cy - r * 0.35 },
+    r * 0.85,
+    [
+      Skia.Color('rgba(255,255,255,0.32)'),
+      Skia.Color('rgba(255,255,255,0.06)'),
+      Skia.Color('rgba(255,255,255,0)'),
+    ],
+    [0, 0.45, 1],
+    TileMode.Clamp,
+  );
+  const gp = Skia.Paint();
+  gp.setShader(glossShader);
+  canvas.drawCircle(cx, cy, r, gp);
+
+  const rimP = Skia.Paint();
+  rimP.setStyle(PaintStyle.Stroke);
+  rimP.setColor(Skia.Color('rgba(255,255,255,0.35)'));
+  rimP.setStrokeWidth(Math.max(1, r * 0.05));
+  const rimPath = Skia.Path.Make();
+  rimPath.addArc(
+    { x: cx - r * 0.93, y: cy - r * 0.93, width: r * 1.86, height: r * 1.86 },
+    190,
+    144,
+  );
+  canvas.drawPath(rimPath, rimP);
+}
+
+// ─── Orb pattern drawing ──────────────────────────────────────────────────────
+
+function drawOrbPattern(canvas: SkCanvas, orb: Orb, r: number): void {
+  const orbAny = orb as any;
+  const pid = orbAny.patternId as string | undefined;
+  if (!pid) return;
+  const skin = ORB_PATTERNS[pid];
+  if (!skin || skin.pattern === 'none') return;
+
+  const hi = skin.accent || '#ffffff';
+  const base = orb.color || '#60a5fa';
+  const isDefault = pid === 'default';
+  const body = isDefault ? darken(base, 0.42) : hi;
+  const bodyDeep = isDefault ? darken(base, 0.6) : darken(hi, 0.35);
+  const bodyLite = isDefault ? darken(base, 0.22) : lighten(hi, 0.2);
+
+  const cx = orb.x;
+  const cy = orb.y;
+
+  canvas.save();
+  const clipPath = Skia.Path.Make();
+  clipPath.addCircle(cx, cy, r);
+  canvas.clipPath(clipPath, ClipOp.Intersect, true);
+
+  const fp = Skia.Paint();
+  fp.setStyle(PaintStyle.Fill);
+  const sp = Skia.Paint();
+  sp.setStyle(PaintStyle.Stroke);
+
+  switch (skin.pattern) {
+    case 'stripe': {
+      sp.setColor(Skia.Color(body));
+      sp.setStrokeWidth(2);
+      sp.setAlphaf(isDefault ? 0.22 : 0.7);
+      for (let i = -r; i <= r; i += 6) {
+        const linePath = Skia.Path.Make();
+        linePath.moveTo(cx + i - r, cy - r);
+        linePath.lineTo(cx + i + r, cy + r);
+        canvas.drawPath(linePath, sp);
+      }
+      break;
+    }
+    case 'dots': {
+      fp.setColor(Skia.Color(body));
+      fp.setAlphaf(0.85);
+      for (let dx = -r; dx <= r; dx += 6) {
+        for (let dy = -r; dy <= r; dy += 6) {
+          if (dx * dx + dy * dy <= r * r) {
+            canvas.drawCircle(cx + dx, cy + dy, 1.5, fp);
+          }
+        }
+      }
+      break;
+    }
+    case 'crosshatch': {
+      sp.setColor(Skia.Color(body));
+      sp.setStrokeWidth(1);
+      sp.setAlphaf(0.6);
+      for (let i = -r; i <= r; i += 5) {
+        const hPath = Skia.Path.Make();
+        hPath.moveTo(cx - r, cy + i);
+        hPath.lineTo(cx + r, cy + i);
+        canvas.drawPath(hPath, sp);
+        const vPath = Skia.Path.Make();
+        vPath.moveTo(cx + i, cy - r);
+        vPath.lineTo(cx + i, cy + r);
+        canvas.drawPath(vPath, sp);
+      }
+      fp.setColor(Skia.Color(hi));
+      fp.setAlphaf(0.85);
+      for (let dx = -r; dx <= r; dx += 10) {
+        for (let dy = -r; dy <= r; dy += 10) {
+          if (dx * dx + dy * dy <= r * r) {
+            canvas.drawCircle(cx + dx, cy + dy, 1, fp);
+          }
+        }
+      }
+      break;
+    }
+    case 'chevron': {
+      sp.setColor(Skia.Color(body));
+      sp.setStrokeWidth(1.8);
+      sp.setAlphaf(0.75);
+      for (let i = -r; i <= r; i += 7) {
+        const chevPath = Skia.Path.Make();
+        chevPath.moveTo(cx - r, cy + i);
+        chevPath.lineTo(cx, cy + i - 4);
+        chevPath.lineTo(cx + r, cy + i);
+        canvas.drawPath(chevPath, sp);
+      }
+      fp.setColor(Skia.Color(hi));
+      fp.setAlphaf(0.9);
+      for (let i = -r; i <= r; i += 7) {
+        canvas.drawCircle(cx, cy + i - 4, 1.3, fp);
+      }
+      break;
+    }
+    case 'ring': {
+      sp.setColor(Skia.Color(body));
+      sp.setStrokeWidth(2.5);
+      sp.setAlphaf(0.85);
+      canvas.drawCircle(cx, cy, r * 0.85, sp);
+      sp.setColor(Skia.Color(hi));
+      sp.setStrokeWidth(1.5);
+      sp.setAlphaf(0.9);
+      canvas.drawCircle(cx, cy, r * 0.5, sp);
+      break;
+    }
+    case 'tree': {
+      // Trunk
+      fp.setColor(Skia.Color(bodyDeep));
+      fp.setAlphaf(1);
+      canvas.drawRect(Skia.XYWHRect(cx - 2, cy, 4, r * 0.6), fp);
+      // Canopy layers
+      for (let layer = 0; layer < 3; layer++) {
+        const ly = cy - r * 0.1 - layer * r * 0.28;
+        const lw = r * (0.7 - layer * 0.15);
+        fp.setColor(Skia.Color(layer === 0 ? bodyDeep : body));
+        const triPath = Skia.Path.Make();
+        triPath.moveTo(cx, ly - r * 0.35);
+        triPath.lineTo(cx - lw, ly + r * 0.2);
+        triPath.lineTo(cx + lw, ly + r * 0.2);
+        triPath.close();
+        canvas.drawPath(triPath, fp);
+      }
+      break;
+    }
+    case 'fortress': {
+      // Wall
+      fp.setColor(Skia.Color(body));
+      fp.setAlphaf(0.9);
+      canvas.drawRect(Skia.XYWHRect(cx - r * 0.6, cy - r * 0.2, r * 1.2, r * 0.5), fp);
+      // Battlements
+      fp.setColor(Skia.Color(bodyDeep));
+      for (const dx of [-r * 0.35, -r * 0.1, r * 0.15, r * 0.4]) {
+        canvas.drawRect(Skia.XYWHRect(cx + dx, cy - r * 0.45, r * 0.18, r * 0.28), fp);
+      }
+      // Gate
+      fp.setColor(Skia.Color(bodyDeep));
+      canvas.drawRect(Skia.XYWHRect(cx - r * 0.12, cy + r * 0.05, r * 0.24, r * 0.25), fp);
+      break;
+    }
+    case 'diamonds': {
+      fp.setColor(Skia.Color(body));
+      fp.setAlphaf(0.8);
+      for (let dx = -r; dx <= r; dx += 10) {
+        for (let dy = -r; dy <= r; dy += 10) {
+          if (dx * dx + dy * dy <= r * r) {
+            const dPath = Skia.Path.Make();
+            dPath.moveTo(cx + dx, cy + dy - 4);
+            dPath.lineTo(cx + dx + 3, cy + dy);
+            dPath.lineTo(cx + dx, cy + dy + 4);
+            dPath.lineTo(cx + dx - 3, cy + dy);
+            dPath.close();
+            canvas.drawPath(dPath, fp);
+          }
+        }
+      }
+      fp.setColor(Skia.Color(bodyLite));
+      fp.setAlphaf(0.5);
+      for (let dx = -r + 5; dx <= r; dx += 10) {
+        for (let dy = -r + 5; dy <= r; dy += 10) {
+          if (dx * dx + dy * dy <= r * r) {
+            const dPath2 = Skia.Path.Make();
+            dPath2.moveTo(cx + dx, cy + dy - 3);
+            dPath2.lineTo(cx + dx + 2, cy + dy);
+            dPath2.lineTo(cx + dx, cy + dy + 3);
+            dPath2.lineTo(cx + dx - 2, cy + dy);
+            dPath2.close();
+            canvas.drawPath(dPath2, fp);
+          }
+        }
+      }
+      break;
+    }
+    case 'dragon': {
+      // Scales pattern
+      fp.setColor(Skia.Color(body));
+      fp.setAlphaf(0.85);
+      for (let row = 0; row < 5; row++) {
+        const rowY = cy - r * 0.7 + row * r * 0.35;
+        const offset = (row % 2) * r * 0.2;
+        for (let col = -3; col <= 3; col++) {
+          const scaleX = cx + col * r * 0.38 + offset;
+          const scaleY = rowY;
+          if ((scaleX - cx) * (scaleX - cx) + (scaleY - cy) * (scaleY - cy) <= r * r) {
+            const scalePath = Skia.Path.Make();
+            scalePath.moveTo(scaleX, scaleY - r * 0.15);
+            scalePath.cubicTo(scaleX + r * 0.18, scaleY - r * 0.05, scaleX + r * 0.18, scaleY + r * 0.1, scaleX, scaleY + r * 0.15);
+            scalePath.cubicTo(scaleX - r * 0.18, scaleY + r * 0.1, scaleX - r * 0.18, scaleY - r * 0.05, scaleX, scaleY - r * 0.15);
+            canvas.drawPath(scalePath, fp);
+          }
+        }
+      }
+      sp.setColor(Skia.Color(bodyDeep));
+      sp.setStrokeWidth(0.5);
+      sp.setAlphaf(0.5);
+      for (let row = 0; row < 5; row++) {
+        const rowY = cy - r * 0.7 + row * r * 0.35;
+        const offset = (row % 2) * r * 0.2;
+        for (let col = -3; col <= 3; col++) {
+          const scaleX = cx + col * r * 0.38 + offset;
+          const scaleY = rowY;
+          if ((scaleX - cx) * (scaleX - cx) + (scaleY - cy) * (scaleY - cy) <= r * r) {
+            const scalePath2 = Skia.Path.Make();
+            scalePath2.moveTo(scaleX, scaleY - r * 0.15);
+            scalePath2.cubicTo(scaleX + r * 0.18, scaleY - r * 0.05, scaleX + r * 0.18, scaleY + r * 0.1, scaleX, scaleY + r * 0.15);
+            scalePath2.cubicTo(scaleX - r * 0.18, scaleY + r * 0.1, scaleX - r * 0.18, scaleY - r * 0.05, scaleX, scaleY - r * 0.15);
+            canvas.drawPath(scalePath2, sp);
+          }
+        }
+      }
+      break;
+    }
+    case 'smiley': {
+      // Eyes
+      fp.setColor(Skia.Color(body));
+      fp.setAlphaf(0.9);
+      canvas.drawCircle(cx - r * 0.28, cy - r * 0.2, r * 0.12, fp);
+      canvas.drawCircle(cx + r * 0.28, cy - r * 0.2, r * 0.12, fp);
+      // Smile
+      sp.setColor(Skia.Color(body));
+      sp.setStrokeWidth(r * 0.1);
+      sp.setAlphaf(0.9);
+      sp.setStrokeCap(StrokeCap.Round);
+      const smilePath = Skia.Path.Make();
+      smilePath.moveTo(cx - r * 0.35, cy + r * 0.1);
+      smilePath.cubicTo(cx - r * 0.2, cy + r * 0.45, cx + r * 0.2, cy + r * 0.45, cx + r * 0.35, cy + r * 0.1);
+      canvas.drawPath(smilePath, sp);
+      break;
+    }
+    case 'heart': {
+      fp.setColor(Skia.Color(body));
+      fp.setAlphaf(0.9);
+      const heartPath = Skia.Path.Make();
+      const hx = cx;
+      const hy = cy - r * 0.1;
+      const hs = r * 0.55;
+      heartPath.moveTo(hx, hy + hs * 0.4);
+      heartPath.cubicTo(hx, hy - hs * 0.2, hx - hs, hy - hs * 0.2, hx - hs, hy + hs * 0.2);
+      heartPath.cubicTo(hx - hs, hy + hs * 0.7, hx, hy + hs * 1.1, hx, hy + hs * 1.3);
+      heartPath.cubicTo(hx, hy + hs * 1.1, hx + hs, hy + hs * 0.7, hx + hs, hy + hs * 0.2);
+      heartPath.cubicTo(hx + hs, hy - hs * 0.2, hx, hy - hs * 0.2, hx, hy + hs * 0.4);
+      heartPath.close();
+      canvas.drawPath(heartPath, fp);
+      break;
+    }
+    case 'star': {
+      fp.setColor(Skia.Color(body));
+      fp.setAlphaf(0.9);
+      const starPath = Skia.Path.Make();
+      const outerR = r * 0.6;
+      const innerR = r * 0.25;
+      for (let i = 0; i < 10; i++) {
+        const angle = (Math.PI / 5) * i - Math.PI / 2;
+        const sr = i % 2 === 0 ? outerR : innerR;
+        const px = cx + sr * Math.cos(angle);
+        const py = cy + sr * Math.sin(angle);
+        if (i === 0) starPath.moveTo(px, py);
+        else starPath.lineTo(px, py);
+      }
+      starPath.close();
+      canvas.drawPath(starPath, fp);
+      break;
+    }
+    case 'cloud': {
+      fp.setColor(Skia.Color(body));
+      fp.setAlphaf(0.85);
+      canvas.drawCircle(cx, cy - r * 0.05, r * 0.38, fp);
+      canvas.drawCircle(cx - r * 0.3, cy + r * 0.1, r * 0.28, fp);
+      canvas.drawCircle(cx + r * 0.3, cy + r * 0.1, r * 0.28, fp);
+      canvas.drawCircle(cx - r * 0.15, cy + r * 0.22, r * 0.22, fp);
+      canvas.drawCircle(cx + r * 0.15, cy + r * 0.22, r * 0.22, fp);
+      break;
+    }
+    case 'raindrop': {
+      fp.setColor(Skia.Color(body));
+      fp.setAlphaf(0.85);
+      const dropPath = Skia.Path.Make();
+      dropPath.moveTo(cx, cy - r * 0.55);
+      dropPath.cubicTo(cx + r * 0.4, cy - r * 0.1, cx + r * 0.4, cy + r * 0.35, cx, cy + r * 0.55);
+      dropPath.cubicTo(cx - r * 0.4, cy + r * 0.35, cx - r * 0.4, cy - r * 0.1, cx, cy - r * 0.55);
+      dropPath.close();
+      canvas.drawPath(dropPath, fp);
+      break;
+    }
+    case 'wave': {
+      sp.setColor(Skia.Color(body));
+      sp.setStrokeWidth(r * 0.1);
+      sp.setAlphaf(0.8);
+      sp.setStrokeCap(StrokeCap.Round);
+      for (let row = -2; row <= 2; row++) {
+        const wy = cy + row * r * 0.28;
+        const wavePath = Skia.Path.Make();
+        wavePath.moveTo(cx - r * 0.8, wy);
+        for (let wx = -r * 0.8; wx <= r * 0.8; wx += r * 0.2) {
+          wavePath.lineTo(cx + wx + r * 0.1, wy + r * 0.1 * Math.sin((wx / r) * Math.PI * 2));
+        }
+        canvas.drawPath(wavePath, sp);
+      }
+      break;
+    }
+    case 'leaf': {
+      fp.setColor(Skia.Color(body));
+      fp.setAlphaf(0.9);
+      const leafPath = Skia.Path.Make();
+      leafPath.moveTo(cx, cy - r * 0.6);
+      leafPath.cubicTo(cx + r * 0.5, cy - r * 0.3, cx + r * 0.5, cy + r * 0.3, cx, cy + r * 0.6);
+      leafPath.cubicTo(cx - r * 0.5, cy + r * 0.3, cx - r * 0.5, cy - r * 0.3, cx, cy - r * 0.6);
+      leafPath.close();
+      canvas.drawPath(leafPath, fp);
+      // Vein
+      sp.setColor(Skia.Color(bodyDeep));
+      sp.setStrokeWidth(1);
+      sp.setAlphaf(0.6);
+      const veinPath = Skia.Path.Make();
+      veinPath.moveTo(cx, cy - r * 0.6);
+      veinPath.lineTo(cx, cy + r * 0.6);
+      canvas.drawPath(veinPath, sp);
+      break;
+    }
+    case 'feather': {
+      fp.setColor(Skia.Color(body));
+      fp.setAlphaf(0.85);
+      const quillPath = Skia.Path.Make();
+      quillPath.moveTo(cx, cy - r * 0.7);
+      quillPath.lineTo(cx, cy + r * 0.7);
+      sp.setColor(Skia.Color(body));
+      sp.setStrokeWidth(1.5);
+      sp.setAlphaf(0.85);
+      canvas.drawPath(quillPath, sp);
+      for (let i = -5; i <= 5; i++) {
+        const fy = cy + i * r * 0.14;
+        const fw = r * 0.45 * (1 - Math.abs(i) * 0.08);
+        const barbPath = Skia.Path.Make();
+        barbPath.moveTo(cx, fy);
+        barbPath.lineTo(cx + fw, fy - r * 0.08);
+        barbPath.moveTo(cx, fy);
+        barbPath.lineTo(cx - fw, fy - r * 0.08);
+        canvas.drawPath(barbPath, sp);
+      }
+      break;
+    }
+    case 'snowflake': {
+      sp.setColor(Skia.Color(body));
+      sp.setStrokeWidth(r * 0.08);
+      sp.setAlphaf(0.9);
+      sp.setStrokeCap(StrokeCap.Round);
+      for (let i = 0; i < 6; i++) {
+        const angle = (Math.PI / 3) * i;
+        const sfPath = Skia.Path.Make();
+        sfPath.moveTo(cx, cy);
+        sfPath.lineTo(cx + Math.cos(angle) * r * 0.65, cy + Math.sin(angle) * r * 0.65);
+        canvas.drawPath(sfPath, sp);
+        // Branches
+        for (const t of [0.4, 0.65]) {
+          const bx = cx + Math.cos(angle) * r * t;
+          const by = cy + Math.sin(angle) * r * t;
+          const bPath = Skia.Path.Make();
+          bPath.moveTo(bx + Math.cos(angle + Math.PI / 3) * r * 0.18, by + Math.sin(angle + Math.PI / 3) * r * 0.18);
+          bPath.lineTo(bx, by);
+          bPath.lineTo(bx + Math.cos(angle - Math.PI / 3) * r * 0.18, by + Math.sin(angle - Math.PI / 3) * r * 0.18);
+          canvas.drawPath(bPath, sp);
+        }
+      }
+      break;
+    }
+    case 'moon': {
+      fp.setColor(Skia.Color(body));
+      fp.setAlphaf(0.9);
+      canvas.drawCircle(cx, cy, r * 0.55, fp);
+      // Cutout
+      const cutoutShader = Skia.Shader.MakeRadialGradient(
+        { x: cx + r * 0.22, y: cy - r * 0.1 },
+        r * 0.45,
+        [Skia.Color(cssRgba(base, 1)), Skia.Color(cssRgba(base, 1))],
+        [0, 1],
+        TileMode.Clamp,
+      );
+      const cutP = Skia.Paint();
+      cutP.setShader(cutoutShader);
+      canvas.drawCircle(cx + r * 0.22, cy - r * 0.1, r * 0.45, cutP);
+      break;
+    }
+    case 'sun': {
+      fp.setColor(Skia.Color(body));
+      fp.setAlphaf(0.9);
+      canvas.drawCircle(cx, cy, r * 0.4, fp);
+      sp.setColor(Skia.Color(body));
+      sp.setStrokeWidth(r * 0.1);
+      sp.setAlphaf(0.8);
+      sp.setStrokeCap(StrokeCap.Round);
+      for (let i = 0; i < 8; i++) {
+        const angle = (Math.PI / 4) * i;
+        const rayPath = Skia.Path.Make();
+        rayPath.moveTo(cx + Math.cos(angle) * r * 0.5, cy + Math.sin(angle) * r * 0.5);
+        rayPath.lineTo(cx + Math.cos(angle) * r * 0.75, cy + Math.sin(angle) * r * 0.75);
+        canvas.drawPath(rayPath, sp);
+      }
+      break;
+    }
+    case 'mushroom': {
+      // Cap
+      fp.setColor(Skia.Color(body));
+      fp.setAlphaf(0.9);
+      const capPath = Skia.Path.Make();
+      capPath.moveTo(cx - r * 0.55, cy + r * 0.05);
+      capPath.cubicTo(cx - r * 0.55, cy - r * 0.65, cx + r * 0.55, cy - r * 0.65, cx + r * 0.55, cy + r * 0.05);
+      capPath.close();
+      canvas.drawPath(capPath, fp);
+      // Spots
+      fp.setColor(Skia.Color(cssRgba('#ffffff', 0.7)));
+      canvas.drawCircle(cx - r * 0.2, cy - r * 0.25, r * 0.1, fp);
+      canvas.drawCircle(cx + r * 0.2, cy - r * 0.3, r * 0.08, fp);
+      canvas.drawCircle(cx, cy - r * 0.45, r * 0.07, fp);
+      // Stem
+      fp.setColor(Skia.Color(bodyLite));
+      canvas.drawRect(Skia.XYWHRect(cx - r * 0.18, cy + r * 0.05, r * 0.36, r * 0.45), fp);
+      break;
+    }
+    case 'fire': {
+      fp.setColor(Skia.Color(body));
+      fp.setAlphaf(0.9);
+      for (let i = -1; i <= 1; i++) {
+        const fx = cx + i * r * 0.3;
+        const firePath = Skia.Path.Make();
+        firePath.moveTo(fx, cy + r * 0.5);
+        firePath.cubicTo(fx - r * 0.2, cy + r * 0.1, fx - r * 0.15, cy - r * 0.3, fx, cy - r * 0.55);
+        firePath.cubicTo(fx + r * 0.15, cy - r * 0.3, fx + r * 0.2, cy + r * 0.1, fx, cy + r * 0.5);
+        canvas.drawPath(firePath, fp);
+      }
+      fp.setColor(Skia.Color(cssRgba('#fde047', 0.7)));
+      const innerFire = Skia.Path.Make();
+      innerFire.moveTo(cx, cy + r * 0.3);
+      innerFire.cubicTo(cx - r * 0.12, cy, cx - r * 0.1, cy - r * 0.2, cx, cy - r * 0.35);
+      innerFire.cubicTo(cx + r * 0.1, cy - r * 0.2, cx + r * 0.12, cy, cx, cy + r * 0.3);
+      canvas.drawPath(innerFire, fp);
+      break;
+    }
+    case 'lightning': {
+      fp.setColor(Skia.Color(body));
+      fp.setAlphaf(0.9);
+      const boltPath = Skia.Path.Make();
+      boltPath.moveTo(cx + r * 0.15, cy - r * 0.65);
+      boltPath.lineTo(cx - r * 0.1, cy - r * 0.05);
+      boltPath.lineTo(cx + r * 0.15, cy - r * 0.05);
+      boltPath.lineTo(cx - r * 0.15, cy + r * 0.65);
+      boltPath.lineTo(cx + r * 0.1, cy + r * 0.05);
+      boltPath.lineTo(cx - r * 0.15, cy + r * 0.05);
+      boltPath.close();
+      canvas.drawPath(boltPath, fp);
+      break;
+    }
+    case 'lantern': {
+      // Body
+      fp.setColor(Skia.Color(body));
+      fp.setAlphaf(0.85);
+      canvas.drawRect(Skia.XYWHRect(cx - r * 0.3, cy - r * 0.35, r * 0.6, r * 0.7), fp);
+      // Glow
+      const lanternShader = Skia.Shader.MakeRadialGradient(
+        { x: cx, y: cy },
+        r * 0.5,
+        [Skia.Color(cssRgba(hi, 0.6)), Skia.Color(cssRgba(hi, 0))],
+        [0, 1],
+        TileMode.Clamp,
+      );
+      const lanternP = Skia.Paint();
+      lanternP.setShader(lanternShader);
+      canvas.drawCircle(cx, cy, r * 0.5, lanternP);
+      // Top hook
+      sp.setColor(Skia.Color(bodyDeep));
+      sp.setStrokeWidth(r * 0.08);
+      sp.setAlphaf(0.9);
+      const hookPath = Skia.Path.Make();
+      hookPath.moveTo(cx, cy - r * 0.35);
+      hookPath.lineTo(cx, cy - r * 0.55);
+      canvas.drawPath(hookPath, sp);
+      break;
+    }
+    case 'eye': {
+      // White of eye
+      fp.setColor(Skia.Color(cssRgba('#ffffff', 0.9)));
+      fp.setAlphaf(1);
+      const eyeOval = Skia.Path.Make();
+      eyeOval.addOval(Skia.XYWHRect(cx - r * 0.55, cy - r * 0.28, r * 1.1, r * 0.56));
+      canvas.drawPath(eyeOval, fp);
+      // Iris
+      fp.setColor(Skia.Color(body));
+      canvas.drawCircle(cx, cy, r * 0.25, fp);
+      // Pupil
+      fp.setColor(Skia.Color(bodyDeep));
+      canvas.drawCircle(cx, cy, r * 0.12, fp);
+      // Highlight
+      fp.setColor(Skia.Color(cssRgba('#ffffff', 0.8)));
+      canvas.drawCircle(cx + r * 0.08, cy - r * 0.08, r * 0.06, fp);
+      break;
+    }
+    case 'crown': {
+      fp.setColor(Skia.Color(body));
+      fp.setAlphaf(0.9);
+      const crownPath = Skia.Path.Make();
+      crownPath.moveTo(cx - r * 0.5, cy + r * 0.25);
+      crownPath.lineTo(cx - r * 0.5, cy - r * 0.15);
+      crownPath.lineTo(cx - r * 0.25, cy + r * 0.05);
+      crownPath.lineTo(cx, cy - r * 0.4);
+      crownPath.lineTo(cx + r * 0.25, cy + r * 0.05);
+      crownPath.lineTo(cx + r * 0.5, cy - r * 0.15);
+      crownPath.lineTo(cx + r * 0.5, cy + r * 0.25);
+      crownPath.close();
+      canvas.drawPath(crownPath, fp);
+      // Gems
+      fp.setColor(Skia.Color(cssRgba(hi, 0.9)));
+      canvas.drawCircle(cx, cy - r * 0.35, r * 0.08, fp);
+      canvas.drawCircle(cx - r * 0.38, cy - r * 0.1, r * 0.06, fp);
+      canvas.drawCircle(cx + r * 0.38, cy - r * 0.1, r * 0.06, fp);
+      break;
+    }
+    case 'claw': {
+      fp.setColor(Skia.Color(body));
+      fp.setAlphaf(0.9);
+      for (let i = -1; i <= 1; i++) {
+        const clawPath = Skia.Path.Make();
+        const cx2 = cx + i * r * 0.3;
+        clawPath.moveTo(cx2, cy + r * 0.5);
+        clawPath.cubicTo(cx2 - r * 0.12, cy + r * 0.1, cx2 - r * 0.08, cy - r * 0.3, cx2 + r * 0.05, cy - r * 0.55);
+        clawPath.cubicTo(cx2 + r * 0.12, cy - r * 0.3, cx2 + r * 0.1, cy + r * 0.1, cx2, cy + r * 0.5);
+        canvas.drawPath(clawPath, fp);
+      }
+      break;
+    }
+    case 'volcano': {
+      // Mountain
+      fp.setColor(Skia.Color(body));
+      fp.setAlphaf(0.9);
+      const volcPath = Skia.Path.Make();
+      volcPath.moveTo(cx - r * 0.7, cy + r * 0.5);
+      volcPath.lineTo(cx - r * 0.2, cy - r * 0.4);
+      volcPath.lineTo(cx + r * 0.2, cy - r * 0.4);
+      volcPath.lineTo(cx + r * 0.7, cy + r * 0.5);
+      volcPath.close();
+      canvas.drawPath(volcPath, fp);
+      // Lava
+      fp.setColor(Skia.Color(cssRgba('#f97316', 0.9)));
+      const lavaPath = Skia.Path.Make();
+      lavaPath.moveTo(cx - r * 0.15, cy - r * 0.4);
+      lavaPath.cubicTo(cx - r * 0.1, cy - r * 0.6, cx + r * 0.1, cy - r * 0.6, cx + r * 0.15, cy - r * 0.4);
+      lavaPath.lineTo(cx + r * 0.08, cy - r * 0.2);
+      lavaPath.lineTo(cx - r * 0.08, cy - r * 0.2);
+      lavaPath.close();
+      canvas.drawPath(lavaPath, fp);
+      break;
+    }
+    case 'windstorm': {
+      sp.setColor(Skia.Color(body));
+      sp.setStrokeWidth(r * 0.1);
+      sp.setAlphaf(0.8);
+      sp.setStrokeCap(StrokeCap.Round);
+      for (let i = 0; i < 3; i++) {
+        const windPath = Skia.Path.Make();
+        const wy = cy - r * 0.25 + i * r * 0.25;
+        windPath.moveTo(cx - r * 0.6, wy);
+        windPath.cubicTo(cx - r * 0.2, wy - r * 0.2, cx + r * 0.2, wy + r * 0.2, cx + r * 0.6, wy);
+        canvas.drawPath(windPath, sp);
+      }
+      break;
+    }
+    case 'bone': {
+      fp.setColor(Skia.Color(body));
+      fp.setAlphaf(0.9);
+      // Shaft
+      canvas.drawRect(Skia.XYWHRect(cx - r * 0.08, cy - r * 0.55, r * 0.16, r * 1.1), fp);
+      // End knobs
+      canvas.drawCircle(cx, cy - r * 0.5, r * 0.18, fp);
+      canvas.drawCircle(cx, cy + r * 0.5, r * 0.18, fp);
+      canvas.drawCircle(cx - r * 0.15, cy - r * 0.45, r * 0.12, fp);
+      canvas.drawCircle(cx + r * 0.15, cy - r * 0.45, r * 0.12, fp);
+      canvas.drawCircle(cx - r * 0.15, cy + r * 0.45, r * 0.12, fp);
+      canvas.drawCircle(cx + r * 0.15, cy + r * 0.45, r * 0.12, fp);
+      break;
+    }
+    case 'spider': {
+      // Body
+      fp.setColor(Skia.Color(body));
+      fp.setAlphaf(0.9);
+      canvas.drawCircle(cx, cy, r * 0.28, fp);
+      canvas.drawCircle(cx, cy - r * 0.35, r * 0.18, fp);
+      // Legs
+      sp.setColor(Skia.Color(body));
+      sp.setStrokeWidth(r * 0.07);
+      sp.setAlphaf(0.85);
+      sp.setStrokeCap(StrokeCap.Round);
+      for (let i = 0; i < 4; i++) {
+        const side2 = i < 2 ? -1 : 1;
+        const legY = cy - r * 0.1 + (i % 2) * r * 0.25;
+        const legPath = Skia.Path.Make();
+        legPath.moveTo(cx + side2 * r * 0.28, legY);
+        legPath.lineTo(cx + side2 * r * 0.55, legY - r * 0.15);
+        legPath.lineTo(cx + side2 * r * 0.75, legY + r * 0.1);
+        canvas.drawPath(legPath, sp);
+      }
+      break;
+    }
+    case 'phoenix': {
+      fp.setColor(Skia.Color(body));
+      fp.setAlphaf(0.9);
+      // Wings
+      for (const side2 of [-1, 1]) {
+        const wingPath = Skia.Path.Make();
+        wingPath.moveTo(cx, cy);
+        wingPath.cubicTo(cx + side2 * r * 0.3, cy - r * 0.5, cx + side2 * r * 0.7, cy - r * 0.3, cx + side2 * r * 0.75, cy + r * 0.1);
+        wingPath.cubicTo(cx + side2 * r * 0.5, cy + r * 0.05, cx + side2 * r * 0.25, cy + r * 0.2, cx, cy + r * 0.3);
+        wingPath.close();
+        canvas.drawPath(wingPath, fp);
+      }
+      // Body
+      fp.setColor(Skia.Color(cssRgba('#fde047', 0.9)));
+      canvas.drawCircle(cx, cy - r * 0.1, r * 0.22, fp);
+      break;
+    }
+    case 'kraken': {
+      fp.setColor(Skia.Color(body));
+      fp.setAlphaf(0.85);
+      // Head
+      canvas.drawCircle(cx, cy - r * 0.1, r * 0.35, fp);
+      // Tentacles
+      sp.setColor(Skia.Color(body));
+      sp.setStrokeWidth(r * 0.1);
+      sp.setAlphaf(0.8);
+      sp.setStrokeCap(StrokeCap.Round);
+      for (let i = 0; i < 6; i++) {
+        const angle = (Math.PI / 3) * i + Math.PI / 6;
+        const tentPath = Skia.Path.Make();
+        tentPath.moveTo(cx + Math.cos(angle) * r * 0.3, cy - r * 0.1 + Math.sin(angle) * r * 0.3);
+        tentPath.cubicTo(
+          cx + Math.cos(angle) * r * 0.55, cy - r * 0.1 + Math.sin(angle) * r * 0.55,
+          cx + Math.cos(angle + 0.4) * r * 0.7, cy - r * 0.1 + Math.sin(angle + 0.4) * r * 0.7,
+          cx + Math.cos(angle + 0.2) * r * 0.85, cy - r * 0.1 + Math.sin(angle + 0.2) * r * 0.85,
+        );
+        canvas.drawPath(tentPath, sp);
+      }
+      break;
+    }
+    case 'inferno': {
+      // Multi-layer fire
+      const infernoColors = [body, cssRgba('#f97316', 0.85), cssRgba('#fde047', 0.7)];
+      const infernoScales = [1, 0.7, 0.45];
+      for (let layer = 0; layer < 3; layer++) {
+        fp.setColor(Skia.Color(infernoColors[layer]));
+        fp.setAlphaf(1);
+        const scale2 = infernoScales[layer];
+        for (let i = -1; i <= 1; i++) {
+          const fx = cx + i * r * 0.28 * scale2;
+          const infPath = Skia.Path.Make();
+          infPath.moveTo(fx, cy + r * 0.5 * scale2);
+          infPath.cubicTo(fx - r * 0.2 * scale2, cy + r * 0.1 * scale2, fx - r * 0.15 * scale2, cy - r * 0.3 * scale2, fx, cy - r * 0.6 * scale2);
+          infPath.cubicTo(fx + r * 0.15 * scale2, cy - r * 0.3 * scale2, fx + r * 0.2 * scale2, cy + r * 0.1 * scale2, fx, cy + r * 0.5 * scale2);
+          canvas.drawPath(infPath, fp);
+        }
+      }
+      break;
+    }
+    case 'eclipse': {
+      // Dark circle
+      fp.setColor(Skia.Color(body));
+      fp.setAlphaf(0.95);
+      canvas.drawCircle(cx, cy, r * 0.55, fp);
+      // Corona rays
+      sp.setColor(Skia.Color(hi));
+      sp.setStrokeWidth(r * 0.07);
+      sp.setAlphaf(0.8);
+      sp.setStrokeCap(StrokeCap.Round);
+      for (let i = 0; i < 12; i++) {
+        const angle = (Math.PI * 2 / 12) * i;
+        const rayPath = Skia.Path.Make();
+        rayPath.moveTo(cx + Math.cos(angle) * r * 0.62, cy + Math.sin(angle) * r * 0.62);
+        rayPath.lineTo(cx + Math.cos(angle) * r * (0.75 + (i % 3 === 0 ? 0.1 : 0)), cy + Math.sin(angle) * r * (0.75 + (i % 3 === 0 ? 0.1 : 0)));
+        canvas.drawPath(rayPath, sp);
+      }
+      // Highlight crescent
+      fp.setColor(Skia.Color(cssRgba(hi, 0.4)));
+      fp.setAlphaf(1);
+      canvas.drawCircle(cx + r * 0.18, cy - r * 0.18, r * 0.22, fp);
+      break;
+    }
+    default:
+      break;
+  }
+
+  canvas.restore();
+  drawOrbGloss(canvas, cx, cy, r);
+}
+
+// ─── Emblem drawing ───────────────────────────────────────────────────────────
+
+function drawSigil(canvas: SkCanvas, x: number, y: number, r: number, shape: string, accent: string): void {
+  const fp = Skia.Paint();
+  fp.setStyle(PaintStyle.Fill);
+  const sp = Skia.Paint();
+  sp.setStyle(PaintStyle.Stroke);
+
+  switch (shape) {
+    case 'shield': {
+      fp.setColor(Skia.Color(accent));
+      fp.setAlphaf(0.9);
+      const shieldPath = Skia.Path.Make();
+      shieldPath.moveTo(x, y - r);
+      shieldPath.lineTo(x + r * 0.8, y - r * 0.4);
+      shieldPath.lineTo(x + r * 0.8, y + r * 0.2);
+      shieldPath.cubicTo(x + r * 0.8, y + r * 0.7, x, y + r, x, y + r);
+      shieldPath.cubicTo(x, y + r, x - r * 0.8, y + r * 0.7, x - r * 0.8, y + r * 0.2);
+      shieldPath.lineTo(x - r * 0.8, y - r * 0.4);
+      shieldPath.close();
+      canvas.drawPath(shieldPath, fp);
+      break;
+    }
+    case 'crest': {
+      fp.setColor(Skia.Color(accent));
+      fp.setAlphaf(0.85);
+      const crestPath = Skia.Path.Make();
+      crestPath.moveTo(x, y - r);
+      crestPath.lineTo(x + r * 0.7, y - r * 0.3);
+      crestPath.lineTo(x + r * 0.7, y + r * 0.5);
+      crestPath.lineTo(x, y + r * 0.9);
+      crestPath.lineTo(x - r * 0.7, y + r * 0.5);
+      crestPath.lineTo(x - r * 0.7, y - r * 0.3);
+      crestPath.close();
+      canvas.drawPath(crestPath, fp);
+      break;
+    }
+    case 'starburst': {
+      fp.setColor(Skia.Color(accent));
+      fp.setAlphaf(0.9);
+      const sbPath = Skia.Path.Make();
+      for (let i = 0; i < 16; i++) {
+        const angle = (Math.PI * 2 / 16) * i - Math.PI / 2;
+        const sr = i % 2 === 0 ? r : r * 0.45;
+        const px = x + sr * Math.cos(angle);
+        const py = y + sr * Math.sin(angle);
+        if (i === 0) sbPath.moveTo(px, py);
+        else sbPath.lineTo(px, py);
+      }
+      sbPath.close();
+      canvas.drawPath(sbPath, fp);
+      break;
+    }
+    case 'swords': {
+      sp.setColor(Skia.Color(accent));
+      sp.setStrokeWidth(r * 0.18);
+      sp.setAlphaf(0.9);
+      sp.setStrokeCap(StrokeCap.Round);
+      // Sword 1 (diagonal /)
+      const s1 = Skia.Path.Make();
+      s1.moveTo(x - r * 0.6, y + r * 0.6);
+      s1.lineTo(x + r * 0.6, y - r * 0.6);
+      canvas.drawPath(s1, sp);
+      // Sword 2 (diagonal \)
+      const s2 = Skia.Path.Make();
+      s2.moveTo(x + r * 0.6, y + r * 0.6);
+      s2.lineTo(x - r * 0.6, y - r * 0.6);
+      canvas.drawPath(s2, sp);
+      break;
+    }
+    case 'sun': {
+      fp.setColor(Skia.Color(accent));
+      fp.setAlphaf(0.9);
+      canvas.drawCircle(x, y, r * 0.38, fp);
+      sp.setColor(Skia.Color(accent));
+      sp.setStrokeWidth(r * 0.14);
+      sp.setAlphaf(0.85);
+      sp.setStrokeCap(StrokeCap.Round);
+      for (let i = 0; i < 8; i++) {
+        const angle = (Math.PI / 4) * i;
+        const rayPath = Skia.Path.Make();
+        rayPath.moveTo(x + Math.cos(angle) * r * 0.52, y + Math.sin(angle) * r * 0.52);
+        rayPath.lineTo(x + Math.cos(angle) * r * 0.82, y + Math.sin(angle) * r * 0.82);
+        canvas.drawPath(rayPath, sp);
+      }
+      break;
+    }
+    case 'crown': {
+      fp.setColor(Skia.Color(accent));
+      fp.setAlphaf(0.9);
+      const crownPath = Skia.Path.Make();
+      crownPath.moveTo(x - r * 0.75, y + r * 0.35);
+      crownPath.lineTo(x - r * 0.75, y - r * 0.2);
+      crownPath.lineTo(x - r * 0.38, y + r * 0.1);
+      crownPath.lineTo(x, y - r * 0.6);
+      crownPath.lineTo(x + r * 0.38, y + r * 0.1);
+      crownPath.lineTo(x + r * 0.75, y - r * 0.2);
+      crownPath.lineTo(x + r * 0.75, y + r * 0.35);
+      crownPath.close();
+      canvas.drawPath(crownPath, fp);
+      break;
+    }
+    case 'moon': {
+      fp.setColor(Skia.Color(accent));
+      fp.setAlphaf(0.9);
+      canvas.drawCircle(x, y, r * 0.65, fp);
+      // Cutout to make crescent
+      const moonCutP = Skia.Paint();
+      moonCutP.setStyle(PaintStyle.Fill);
+      moonCutP.setColor(Skia.Color('rgba(0,0,0,1)'));
+      moonCutP.setBlendMode(8 as any); // DST_OUT
+      canvas.drawCircle(x + r * 0.28, y - r * 0.12, r * 0.52, moonCutP);
+      break;
+    }
+    case 'flame': {
+      fp.setColor(Skia.Color(accent));
+      fp.setAlphaf(0.9);
+      const flamePath = Skia.Path.Make();
+      flamePath.moveTo(x, y + r * 0.7);
+      flamePath.cubicTo(x - r * 0.35, y + r * 0.2, x - r * 0.3, y - r * 0.3, x, y - r * 0.7);
+      flamePath.cubicTo(x + r * 0.3, y - r * 0.3, x + r * 0.35, y + r * 0.2, x, y + r * 0.7);
+      flamePath.close();
+      canvas.drawPath(flamePath, fp);
+      fp.setColor(Skia.Color(cssRgba('#fde047', 0.7)));
+      const innerFlame = Skia.Path.Make();
+      innerFlame.moveTo(x, y + r * 0.4);
+      innerFlame.cubicTo(x - r * 0.18, y + r * 0.1, x - r * 0.15, y - r * 0.2, x, y - r * 0.45);
+      innerFlame.cubicTo(x + r * 0.15, y - r * 0.2, x + r * 0.18, y + r * 0.1, x, y + r * 0.4);
+      innerFlame.close();
+      canvas.drawPath(innerFlame, fp);
+      break;
+    }
+    case 'eye': {
+      fp.setColor(Skia.Color(cssRgba('#ffffff', 0.9)));
+      fp.setAlphaf(1);
+      const eyeOval = Skia.Path.Make();
+      eyeOval.addOval(Skia.XYWHRect(x - r * 0.85, y - r * 0.42, r * 1.7, r * 0.84));
+      canvas.drawPath(eyeOval, fp);
+      fp.setColor(Skia.Color(accent));
+      canvas.drawCircle(x, y, r * 0.38, fp);
+      fp.setColor(Skia.Color(darken(accent, 0.5)));
+      canvas.drawCircle(x, y, r * 0.2, fp);
+      fp.setColor(Skia.Color(cssRgba('#ffffff', 0.7)));
+      canvas.drawCircle(x + r * 0.1, y - r * 0.1, r * 0.08, fp);
+      break;
+    }
+    case 'fang': {
+      fp.setColor(Skia.Color(accent));
+      fp.setAlphaf(0.9);
+      for (const side2 of [-1, 1]) {
+        const fangPath = Skia.Path.Make();
+        fangPath.moveTo(x + side2 * r * 0.15, y - r * 0.5);
+        fangPath.lineTo(x + side2 * r * 0.55, y - r * 0.5);
+        fangPath.lineTo(x + side2 * r * 0.35, y + r * 0.65);
+        fangPath.close();
+        canvas.drawPath(fangPath, fp);
+      }
+      break;
+    }
+    case 'kraken': {
+      fp.setColor(Skia.Color(accent));
+      fp.setAlphaf(0.85);
+      canvas.drawCircle(x, y - r * 0.15, r * 0.38, fp);
+      sp.setColor(Skia.Color(accent));
+      sp.setStrokeWidth(r * 0.14);
+      sp.setAlphaf(0.8);
+      sp.setStrokeCap(StrokeCap.Round);
+      for (let i = 0; i < 5; i++) {
+        const angle = (Math.PI / 4) * i + Math.PI / 8;
+        const tentPath = Skia.Path.Make();
+        tentPath.moveTo(x + Math.cos(angle) * r * 0.35, y - r * 0.15 + Math.sin(angle) * r * 0.35);
+        tentPath.cubicTo(
+          x + Math.cos(angle) * r * 0.6, y - r * 0.15 + Math.sin(angle) * r * 0.6,
+          x + Math.cos(angle + 0.35) * r * 0.75, y - r * 0.15 + Math.sin(angle + 0.35) * r * 0.75,
+          x + Math.cos(angle + 0.18) * r * 0.9, y - r * 0.15 + Math.sin(angle + 0.18) * r * 0.9,
+        );
+        canvas.drawPath(tentPath, sp);
+      }
+      break;
+    }
+    case 'phoenix': {
+      fp.setColor(Skia.Color(accent));
+      fp.setAlphaf(0.9);
+      for (const side2 of [-1, 1]) {
+        const wingPath = Skia.Path.Make();
+        wingPath.moveTo(x, y);
+        wingPath.cubicTo(x + side2 * r * 0.3, y - r * 0.6, x + side2 * r * 0.8, y - r * 0.35, x + side2 * r * 0.85, y + r * 0.15);
+        wingPath.cubicTo(x + side2 * r * 0.55, y + r * 0.05, x + side2 * r * 0.28, y + r * 0.25, x, y + r * 0.35);
+        wingPath.close();
+        canvas.drawPath(wingPath, fp);
+      }
+      fp.setColor(Skia.Color(cssRgba('#fde047', 0.9)));
+      canvas.drawCircle(x, y - r * 0.1, r * 0.25, fp);
+      break;
+    }
+    case 'anvil': {
+      fp.setColor(Skia.Color(accent));
+      fp.setAlphaf(0.9);
+      // Top face
+      canvas.drawRect(Skia.XYWHRect(x - r * 0.7, y - r * 0.35, r * 1.4, r * 0.35), fp);
+      // Body
+      canvas.drawRect(Skia.XYWHRect(x - r * 0.45, y, r * 0.9, r * 0.45), fp);
+      // Horn
+      const hornPath = Skia.Path.Make();
+      hornPath.moveTo(x - r * 0.7, y - r * 0.35);
+      hornPath.lineTo(x - r * 0.7, y);
+      hornPath.lineTo(x - r * 0.45, y);
+      hornPath.close();
+      canvas.drawPath(hornPath, fp);
+      break;
+    }
+    case 'compass': {
+      sp.setColor(Skia.Color(accent));
+      sp.setStrokeWidth(r * 0.12);
+      sp.setAlphaf(0.85);
+      canvas.drawCircle(x, y, r * 0.8, sp);
+      fp.setColor(Skia.Color(accent));
+      fp.setAlphaf(0.9);
+      // N needle
+      const nPath = Skia.Path.Make();
+      nPath.moveTo(x, y - r * 0.65);
+      nPath.lineTo(x - r * 0.12, y);
+      nPath.lineTo(x + r * 0.12, y);
+      nPath.close();
+      canvas.drawPath(nPath, fp);
+      // S needle
+      fp.setColor(Skia.Color(cssRgba('#ef4444', 0.9)));
+      const sPath = Skia.Path.Make();
+      sPath.moveTo(x, y + r * 0.65);
+      sPath.lineTo(x - r * 0.12, y);
+      sPath.lineTo(x + r * 0.12, y);
+      sPath.close();
+      canvas.drawPath(sPath, fp);
+      break;
+    }
+    case 'serpent': {
+      sp.setColor(Skia.Color(accent));
+      sp.setStrokeWidth(r * 0.2);
+      sp.setAlphaf(0.9);
+      sp.setStrokeCap(StrokeCap.Round);
+      const serpPath = Skia.Path.Make();
+      serpPath.moveTo(x - r * 0.5, y + r * 0.6);
+      serpPath.cubicTo(x - r * 0.5, y, x + r * 0.5, y, x + r * 0.5, y - r * 0.3);
+      serpPath.cubicTo(x + r * 0.5, y - r * 0.7, x - r * 0.2, y - r * 0.7, x - r * 0.1, y - r * 0.5);
+      canvas.drawPath(serpPath, sp);
+      // Head
+      fp.setColor(Skia.Color(accent));
+      fp.setAlphaf(0.9);
+      canvas.drawCircle(x - r * 0.1, y - r * 0.5, r * 0.18, fp);
+      break;
+    }
+    case 'griffin': {
+      fp.setColor(Skia.Color(accent));
+      fp.setAlphaf(0.9);
+      // Wing
+      const griffinWing = Skia.Path.Make();
+      griffinWing.moveTo(x, y);
+      griffinWing.cubicTo(x - r * 0.4, y - r * 0.6, x - r * 0.85, y - r * 0.3, x - r * 0.85, y + r * 0.2);
+      griffinWing.cubicTo(x - r * 0.6, y + r * 0.1, x - r * 0.3, y + r * 0.3, x, y + r * 0.4);
+      griffinWing.close();
+      canvas.drawPath(griffinWing, fp);
+      // Head
+      canvas.drawCircle(x + r * 0.3, y - r * 0.4, r * 0.28, fp);
+      // Beak
+      const beakPath = Skia.Path.Make();
+      beakPath.moveTo(x + r * 0.5, y - r * 0.45);
+      beakPath.lineTo(x + r * 0.75, y - r * 0.35);
+      beakPath.lineTo(x + r * 0.5, y - r * 0.25);
+      beakPath.close();
+      fp.setColor(Skia.Color(cssRgba('#fbbf24', 0.9)));
+      canvas.drawPath(beakPath, fp);
+      break;
+    }
+    case 'titan': {
+      fp.setColor(Skia.Color(accent));
+      fp.setAlphaf(0.9);
+      // Helmet
+      const helmetPath = Skia.Path.Make();
+      helmetPath.moveTo(x - r * 0.55, y + r * 0.2);
+      helmetPath.lineTo(x - r * 0.55, y - r * 0.1);
+      helmetPath.cubicTo(x - r * 0.55, y - r * 0.85, x + r * 0.55, y - r * 0.85, x + r * 0.55, y - r * 0.1);
+      helmetPath.lineTo(x + r * 0.55, y + r * 0.2);
+      helmetPath.close();
+      canvas.drawPath(helmetPath, fp);
+      // Visor
+      fp.setColor(Skia.Color(darken(accent, 0.4)));
+      canvas.drawRect(Skia.XYWHRect(x - r * 0.38, y - r * 0.35, r * 0.76, r * 0.22), fp);
+      // Plume
+      sp.setColor(Skia.Color(cssRgba('#ef4444', 0.9)));
+      sp.setStrokeWidth(r * 0.12);
+      sp.setAlphaf(0.9);
+      sp.setStrokeCap(StrokeCap.Round);
+      const plumePath = Skia.Path.Make();
+      plumePath.moveTo(x, y - r * 0.85);
+      plumePath.cubicTo(x - r * 0.15, y - r * 1.1, x + r * 0.15, y - r * 1.1, x, y - r * 0.85);
+      canvas.drawPath(plumePath, sp);
+      break;
+    }
+    default:
+      break;
+  }
+}
+
+function drawEmblem(canvas: SkCanvas, x: number, y: number, r: number, emblem: any): void {
+  if (!emblem || emblem.shape === 'none') return;
+
+  const accent = emblem.accent || '#ffffff';
+  const rarity = emblem.rarity || 'common';
+
+  // Glow for higher rarities
+  if (rarity === 'legendary' || rarity === 'mythical') {
+    const glowP = Skia.Paint();
+    const rarityColor = RARITIES[rarity]?.color || accent;
+    glowP.setMaskFilter(Skia.MaskFilter.MakeBlur(BlurStyle.Normal, r * 0.6, true));
+    glowP.setColor(Skia.Color(cssRgba(rarityColor, 0.5)));
+    canvas.drawCircle(x, y, r * 0.8, glowP);
+  }
+
+  // Background circle for epic+
+  if (rarity === 'epic' || rarity === 'legendary' || rarity === 'mythical') {
+    const bgP = Skia.Paint();
+    bgP.setStyle(PaintStyle.Fill);
+    bgP.setColor(Skia.Color(cssRgba(accent, 0.15)));
+    canvas.drawCircle(x, y, r, bgP);
+    const borderP = Skia.Paint();
+    borderP.setStyle(PaintStyle.Stroke);
+    borderP.setStrokeWidth(r * 0.1);
+    borderP.setColor(Skia.Color(cssRgba(accent, 0.5)));
+    canvas.drawCircle(x, y, r, borderP);
+  }
+
+  // Legendary sparkles (animated)
+  if (rarity === 'legendary' || rarity === 'mythical') {
+    const t = Date.now() / 1000;
+    const sparkP = Skia.Paint();
+    sparkP.setStyle(PaintStyle.Fill);
+    for (let i = 0; i < 4; i++) {
+      const angle = (Math.PI * 2 / 4) * i + t * 1.5;
+      const dist = r * (0.9 + 0.15 * Math.sin(t * 2 + i));
+      const alpha = 0.5 + 0.5 * Math.sin(t * 3 + i * 1.2);
+      sparkP.setColor(Skia.Color(cssRgba(accent, alpha)));
+      canvas.drawCircle(x + Math.cos(angle) * dist, y + Math.sin(angle) * dist, r * 0.12, sparkP);
+    }
+  }
+
+  drawSigil(canvas, x, y, r * 0.75, emblem.shape, accent);
+}
 
 // ─── Drawing helpers ──────────────────────────────────────────────────────────
 
@@ -225,6 +1355,7 @@ function drawStation(
   side: 'top' | 'bottom',
   skinId: string | undefined,
   p: SkPaint,
+  emblemId?: string,
 ) {
   const flip = side === 'top';
   const x = pos.x;
@@ -340,6 +1471,12 @@ function drawStation(
     p.setStyle(PaintStyle.Fill);
   }
 
+  // Emblem
+  if (emblemId) {
+    const emblem = EMBLEMS[emblemId];
+    if (emblem) drawEmblem(canvas, x, y, 11, emblem);
+  }
+
   // HP bar
   const barY = flip ? y - 34 : y + 34;
   drawHealthBar(canvas, x, barY, 60, hp, maxHp, color, p);
@@ -351,6 +1488,7 @@ function drawSideTower(
   color: string,
   side: 'top' | 'bottom',
   p: SkPaint,
+  emblemId?: string,
 ) {
   const x = st.x;
   const y = st.y;
@@ -377,6 +1515,12 @@ function drawSideTower(
       Skia.XYWHRect(x + i * half * 0.6 - half * 0.18, y + battDir * half - 3, half * 0.36, 4),
       p,
     );
+  }
+
+  // Emblem
+  if (emblemId) {
+    const emblem = EMBLEMS[emblemId];
+    if (emblem) drawEmblem(canvas, x, y - 2, 7, emblem);
   }
 
   // HP bar
@@ -1032,6 +2176,9 @@ function drawOrb(canvas: SkCanvas, orb: Orb, now: number, p: SkPaint, font: SkFo
     canvas.drawCircle(orb.x, orb.y, r, p);
     p.setStyle(PaintStyle.Fill);
   }
+
+  // Orb pattern overlay
+  drawOrbPattern(canvas, orb, r);
 
   // HP text
   if (font && orb.hp > 0) {
@@ -1738,6 +2885,12 @@ function drawFrame(
   // ── 3. Stations ──
   const playerSkinId = ui.playerSkins?.station;
   const oppSkinId = ui.oppSkins?.station;
+  const playerEmblemId = ui.playerSkins?.emblem;
+  const oppEmblemId = ui.oppSkins?.emblem;
+  const playerLeftEmblemId = ui.playerSkins?.leftTower;
+  const playerRightEmblemId = ui.playerSkins?.rightTower;
+  const oppLeftEmblemId = ui.oppSkins?.leftTower;
+  const oppRightEmblemId = ui.oppSkins?.rightTower;
 
   drawStation(
     canvas,
@@ -1750,6 +2903,7 @@ function drawFrame(
     'bottom',
     playerSkinId,
     p,
+    playerEmblemId,
   );
   drawStation(
     canvas,
@@ -1762,14 +2916,19 @@ function drawFrame(
     'top',
     oppSkinId,
     p,
+    oppEmblemId,
   );
 
   // ── 4. Side towers ──
-  for (const st of s.player.sideTowers) {
-    drawSideTower(canvas, st, '#3b82f6', 'bottom', p);
+  for (let stIdx = 0; stIdx < s.player.sideTowers.length; stIdx++) {
+    const st = s.player.sideTowers[stIdx];
+    const towerEmblemId = stIdx === 0 ? playerLeftEmblemId : playerRightEmblemId;
+    drawSideTower(canvas, st, '#3b82f6', 'bottom', p, towerEmblemId);
   }
-  for (const st of s.opponent.sideTowers) {
-    drawSideTower(canvas, st, '#f43f5e', 'top', p);
+  for (let stIdx = 0; stIdx < s.opponent.sideTowers.length; stIdx++) {
+    const st = s.opponent.sideTowers[stIdx];
+    const towerEmblemId = stIdx === 0 ? oppLeftEmblemId : oppRightEmblemId;
+    drawSideTower(canvas, st, '#f43f5e', 'top', p, towerEmblemId);
   }
 
   // ── 5. Edit mode dim ──
