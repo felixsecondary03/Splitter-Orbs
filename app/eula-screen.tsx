@@ -29,6 +29,14 @@ export default function EulaScreen() {
     { title: t('eulaContent.s14t'), body: t('eulaContent.s14b') },
     { title: t('eulaContent.s15t'), body: t('eulaContent.s15b') },
     { title: t('eulaContent.s16t'), body: t('eulaContent.s16b') },
+    { title: t('eulaContent.s17t'), body: t('eulaContent.s17b') },
+    { title: t('eulaContent.s18t'), body: t('eulaContent.s18b') },
+    { title: t('eulaContent.s19t'), body: t('eulaContent.s19b') },
+    { title: t('eulaContent.s20t'), body: t('eulaContent.s20b') },
+    { title: t('eulaContent.s21t'), body: t('eulaContent.s21b') },
+    { title: t('eulaContent.s22t'), body: t('eulaContent.s22b') },
+    { title: t('eulaContent.s23t'), body: t('eulaContent.s23b') },
+    { title: t('eulaContent.s24t'), body: t('eulaContent.s24b') },
   ];
 
   const handleDownloadData = async () => {

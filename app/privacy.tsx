@@ -22,6 +22,12 @@ export default function PrivacyScreen() {
     { title: t('privacyContent.s9t'), body: t('privacyContent.s9b') },
     { title: t('privacyContent.s10t'), body: t('privacyContent.s10b') },
     { title: t('privacyContent.s11t'), body: t('privacyContent.s11b') },
+    { title: t('privacyContent.s12t'), body: t('privacyContent.s12b') },
+    { title: t('privacyContent.s13t'), body: t('privacyContent.s13b') },
+    { title: t('privacyContent.s14t'), body: t('privacyContent.s14b') },
+    { title: t('privacyContent.s15t'), body: t('privacyContent.s15b') },
+    { title: t('privacyContent.s16t'), body: t('privacyContent.s16b') },
+    { title: t('privacyContent.s17t'), body: t('privacyContent.s17b') },
   ];
 
   return (
