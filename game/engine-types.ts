@@ -33,6 +33,13 @@ export interface Orb {
   growthTimer?: number;
   minions?: string[];
   summonTimer?: number;
+  healTimer?: number;
+  bounceTimer?: number;
+  zapState?: string;
+  zapTarget?: { x: number; y: number } | null;
+  zapVisited?: string[];
+  zapNextTarget?: { x: number; y: number; isStation?: boolean } | null;
+  zapTimer?: number;
   radius: number;
   color: string;
   patternId?: string;

@@ -24,7 +24,7 @@ import type {
 import {
   generateId, distance, normalize, createRng,
   getTowerRange, getTowerDamage, getTowerFireRate, getTowerMaxHp,
-  getOrbColor, getOrbRadius, getOrbHp, getOrbDamage, getOrbSpeed,
+  getOrbColor, getTowerColor, getOrbRadius, getOrbHp, getOrbDamage, getOrbSpeed,
 } from './engine-helpers';
 import { updateOrb, spawnOrb, handleOrbDeath, checkOrbReachedStation, isOrbOutOfBounds } from './orb-behaviors';
 import { fireTower, fireSideTower, updateProjectile } from './tower-behaviors';
@@ -215,39 +215,48 @@ export function update(state: GameState, dt: number, aiAction?: AiAction): GameS
   // 9. Spawn orbs
   s = updateSpawn(s, dt);
 
-  // 10. Update orbs
+  // 10. Healer orbs heal nearby allies (before orb movement)
+  s = tickHealers(s, dt);
+
+  // 11. Update orbs
   s = updateOrbs(s, dt);
 
-  // 11. Update towers
+  // 12. Summoner orbs spawn minions (after orb movement)
+  s = tickSummoners(s, dt);
+
+  // 13. Update towers
   s = updateTowers(s, dt);
 
-  // 12. Update side towers
+  // 14. Bouncer towers pull and bounce orbs (after tower update)
+  s = bouncerUpdate(s, dt);
+
+  // 15. Update side towers
   s = updateSideTowers(s, dt);
 
-  // 13. Update projectiles
+  // 16. Update projectiles
   s = updateProjectiles(s, dt);
 
-  // 14. Update meteors
+  // 17. Update meteors
   s = updateMeteors(s, dt);
 
-  // 15. Update glues/zones/magnets
+  // 18. Update glues/zones/magnets
   s = updateZoneEffects(s, dt);
 
-  // 16. Update effects/particles/floaters
+  // 19. Update effects/particles/floaters
   s = updateVisuals(s, dt);
 
-  // 17. Combo timer
+  // 20. Combo timer
   s = updateCombo(s, dt);
 
-  // 18. Coin pickups
+  // 21. Coin pickups
   s = { ...s, coinPickups: s.coinPickups.map(c => ({ ...c, timer: c.timer - dt })).filter(c => c.timer > 0) };
 
-  // 19. AI action
+  // 22. AI action
   if (aiAction && aiAction.type !== 'none') {
     s = applyAiAction(s, aiAction);
   }
 
-  // 20. Win check
+  // 23. Win check
   if (s.player.station.hp <= 0 && !s.winner) {
     console.log('[Engine] Game over — opponent wins');
     s = { ...s, winner: 'opponent', status: 'finished' };
@@ -265,6 +274,155 @@ export function update(state: GameState, dt: number, aiAction?: AiAction): GameS
 }
 
 // ─── Sub-update helpers ───────────────────────────────────────────────────────
+
+function tickHealers(s: GameState, dt: number): GameState {
+  const dtSec = dt / 1000;
+  let newOrbs = [...s.orbs];
+  let newParticles = [...s.particles];
+  let newEffects = [...s.effects];
+
+  for (let i = 0; i < newOrbs.length; i++) {
+    const orb = newOrbs[i];
+    if (orb.type !== 'healer' || orb.hp <= 0) continue;
+
+    const healTimer = (orb.healTimer ?? 0) + dtSec;
+    const interval = 2; // seconds between heal pulses
+    if (healTimer < interval) {
+      newOrbs[i] = { ...orb, healTimer };
+      continue;
+    }
+
+    newOrbs[i] = { ...orb, healTimer: 0 };
+    const radius = 120;
+    const pulse = 8;
+    let healed = false;
+
+    for (let j = 0; j < newOrbs.length; j++) {
+      if (i === j) continue;
+      const ally = newOrbs[j];
+      if (ally.side !== orb.side || ally.hp <= 0 || ally.hp >= ally.maxHp) continue;
+      const d = Math.hypot(ally.x - orb.x, ally.y - orb.y);
+      if (d > radius) continue;
+      newOrbs[j] = { ...ally, hp: Math.min(ally.maxHp, ally.hp + pulse) };
+      healed = true;
+      newParticles.push({
+        id: generateId(), x: orb.x, y: orb.y,
+        vx: (ally.x - orb.x) * 0.5, vy: (ally.y - orb.y) * 0.5,
+        color: '#4ade80', radius: 3, alpha: 1, timer: 400, maxTimer: 400,
+      });
+    }
+
+    if (healed) {
+      newEffects.push({
+        id: generateId(), type: 'heal_pulse',
+        x: orb.x, y: orb.y,
+        timer: 500, maxTimer: 500, color: '#4ade80',
+      });
+    }
+  }
+
+  return { ...s, orbs: newOrbs, particles: newParticles, effects: newEffects };
+}
+
+function tickSummoners(s: GameState, dt: number): GameState {
+  const dtSec = dt / 1000;
+  let newOrbs = [...s.orbs];
+  let newEffects = [...s.effects];
+
+  for (let i = 0; i < newOrbs.length; i++) {
+    const orb = newOrbs[i];
+    if (orb.type !== 'summoner' || orb.hp <= 0) continue;
+
+    const summonTimer = (orb.summonTimer ?? 0) + dtSec;
+    const interval = 2.5;
+    if (summonTimer < interval) {
+      newOrbs[i] = { ...orb, summonTimer };
+      continue;
+    }
+
+    newOrbs[i] = { ...orb, summonTimer: 0 };
+
+    const minion: Orb = {
+      id: generateId(),
+      type: 'normal',
+      side: orb.side,
+      owner: orb.owner,
+      x: orb.x + (Math.random() * 30 - 15),
+      y: orb.y,
+      vx: 0,
+      vy: orb.side === 0 ? 40 : -40,
+      hp: 8,
+      maxHp: 8,
+      damage: 3,
+      speed: 40,
+      radius: 10,
+      color: orb.color,
+    };
+    newOrbs.push(minion);
+    newEffects.push({
+      id: generateId(), type: 'spawn_portal',
+      x: orb.x, y: orb.y,
+      timer: 300, maxTimer: 300, color: orb.color,
+    });
+  }
+
+  return { ...s, orbs: newOrbs, effects: newEffects };
+}
+
+function bouncerUpdate(s: GameState, dt: number): GameState {
+  const dtSec = dt / 1000;
+  let newOrbs = [...s.orbs];
+  let newEffects = [...s.effects];
+
+  const processBouncer = (towers: Tower[], ownerSide: 0 | 1) => {
+    for (const tower of towers) {
+      if (tower.type !== 'bouncer' || tower.hp <= 0 || tower.frozen) continue;
+      const pullRange = getTowerRange(tower.type, tower.level ?? 1);
+
+      for (let i = 0; i < newOrbs.length; i++) {
+        const orb = newOrbs[i];
+        if (orb.side !== ownerSide || orb.hp <= 0 || orb.frozen) continue;
+        if ((orb.bounceTimer ?? 0) > 0) {
+          newOrbs[i] = { ...orb, bounceTimer: Math.max(0, (orb.bounceTimer ?? 0) - dtSec) };
+          continue;
+        }
+
+        const d = Math.hypot(orb.x - tower.x, orb.y - tower.y);
+        if (d > pullRange) continue;
+
+        const dx = tower.x - orb.x;
+        const dy = tower.y - orb.y;
+        const dist = d || 1;
+        const pullSpeed = 160;
+        const newX = orb.x + (dx / dist) * pullSpeed * dtSec;
+        const newY = orb.y + (dy / dist) * pullSpeed * dtSec;
+
+        if (d < 20 + orb.radius) {
+          const bounceSpeed = ownerSide === 0 ? -280 : 280;
+          newOrbs[i] = {
+            ...orb,
+            x: newX, y: newY,
+            vy: bounceSpeed,
+            vx: (orb.x - tower.x) * 1.5,
+            bounceTimer: 1.1,
+          };
+          newEffects.push({
+            id: generateId(), type: 'pop',
+            x: tower.x, y: tower.y,
+            timer: 300, maxTimer: 300, color: getTowerColor(tower.type),
+          });
+        } else {
+          newOrbs[i] = { ...orb, x: newX, y: newY };
+        }
+      }
+    }
+  };
+
+  processBouncer(s.player.towers, 0);
+  processBouncer(s.opponent.towers, 1);
+
+  return { ...s, orbs: newOrbs, effects: newEffects };
+}
 
 function updateEscalation(s: GameState): GameState {
   const thresholds = s.matchMode === 'ranked' ? ESCALATION_RANKED : ESCALATION_CASUAL;
@@ -396,6 +554,19 @@ function updateOrbs(s: GameState, dt: number): GameState {
       newEffects.push(...result.effects);
       newFloaters.push(...result.floaters);
       if (result.coinPickup) newCoinPickups.push(result.coinPickup);
+      continue;
+    }
+
+    // Bouncing: use current velocity, don't seek target
+    if ((orb.bounceTimer ?? 0) > 0) {
+      const dtSec = dt / 1000;
+      const bounced = {
+        ...orb,
+        x: orb.x + orb.vx * dtSec,
+        y: orb.y + orb.vy * dtSec,
+        bounceTimer: Math.max(0, (orb.bounceTimer ?? 0) - dtSec),
+      };
+      if (!isOrbOutOfBounds(bounced)) newOrbs.push(bounced);
       continue;
     }
 

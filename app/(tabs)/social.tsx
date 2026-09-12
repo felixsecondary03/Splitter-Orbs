@@ -136,17 +136,33 @@ const skeletonStyles = StyleSheet.create({
   trophy: { width: 48, height: 14, borderRadius: 6, backgroundColor: COLORS.surfaceSecondary },
 });
 
+const PODIUM_HEIGHTS: Record<1 | 2 | 3, number> = { 1: 90, 2: 70, 3: 60 };
+const PODIUM_COLORS: Record<1 | 2 | 3, string> = { 1: '#F59E0B', 2: '#94A3B8', 3: '#B45309' };
+const PODIUM_BG: Record<1 | 2 | 3, string> = { 1: '#FEF3C7', 2: '#F1F5F9', 3: '#FEF9EE' };
+
 function PodiumCard({ player, rank }: { player: LeaderboardPlayer; rank: 1 | 2 | 3 }) {
-  const rankColor = RANK_COLORS[rank - 1];
-  const heights = { 1: 90, 2: 70, 3: 60 };
-  const podiumHeight = heights[rank];
+  const rankColor = PODIUM_COLORS[rank];
+  const podiumHeight = PODIUM_HEIGHTS[rank];
+  const podiumBg = PODIUM_BG[rank];
   const trophyDisplay = player.trophies.toLocaleString();
+  const rankLabel = `#${rank}`;
+
+  if (player.id.startsWith('placeholder')) {
+    return (
+      <View style={[podiumStyles.card, { opacity: 0.3, borderColor: `${rankColor}44` }]}>
+        <View style={[podiumStyles.avatar, { borderColor: rankColor, backgroundColor: '#E2E8F0' }]} />
+        <Text style={[podiumStyles.rankNum, { color: rankColor }]}>{rankLabel}</Text>
+      </View>
+    );
+  }
+
+  const firstLetter = player.name.charAt(0);
 
   return (
     <View style={[podiumStyles.card, { borderColor: `${rankColor}44` }]}>
-      {rank === 1 && <Crown size={18} color={rankColor} strokeWidth={2} style={podiumStyles.crown} />}
+      {rank === 1 && <Text style={podiumStyles.crownEmoji}>👑</Text>}
       <View style={[podiumStyles.avatar, { borderColor: rankColor }]}>
-        <Text style={podiumStyles.avatarText}>{player.name.charAt(0)}</Text>
+        <Text style={podiumStyles.avatarText}>{firstLetter}</Text>
       </View>
       <Text style={podiumStyles.name} numberOfLines={1}>{player.name}</Text>
       <View style={podiumStyles.trophyRow}>
@@ -154,8 +170,8 @@ function PodiumCard({ player, rank }: { player: LeaderboardPlayer; rank: 1 | 2 |
         <Text style={podiumStyles.trophies}>{trophyDisplay}</Text>
       </View>
       <LeagueBadge trophies={player.trophies} size="sm" />
-      <View style={[podiumStyles.podiumBase, { height: podiumHeight, backgroundColor: `${rankColor}22`, borderColor: `${rankColor}44` }]}>
-        <Text style={[podiumStyles.rankNum, { color: rankColor }]}>#{rank}</Text>
+      <View style={[podiumStyles.podiumBase, { height: podiumHeight, backgroundColor: podiumBg, borderColor: `${rankColor}44` }]}>
+        <Text style={[podiumStyles.rankNum, { color: rankColor }]}>{rankLabel}</Text>
       </View>
     </View>
   );
@@ -171,7 +187,8 @@ const podiumStyles = StyleSheet.create({
     gap: 6,
     borderWidth: 1,
   },
-  crown: {
+  crownEmoji: {
+    fontSize: 18,
     marginBottom: -4,
   },
   avatar: {
@@ -477,7 +494,6 @@ export default function SocialScreen() {
   }, []);
 
   const myTrophies = profile.trophies;
-  const displayRank = myRank ?? '—';
 
   // Leaderboard display helpers
   const top3 = leaderboard.slice(0, 3);
@@ -548,8 +564,11 @@ export default function SocialScreen() {
                 <View style={styles.emptyIconWrap}>
                   <Trophy size={32} color={COLORS.textTertiary} strokeWidth={1.5} />
                 </View>
-                <Text style={styles.emptyTitle}>Leaderboard coming soon</Text>
-                <Text style={styles.emptySub}>Rankings will appear here once matches are played</Text>
+                <Text style={styles.emptyTitle}>Could not load leaderboard</Text>
+                <Text style={styles.emptySub}>{leaderboardError}</Text>
+                <AnimatedPressable style={[styles.addFriendBtn, { marginTop: 12 }]} onPress={fetchLeaderboard}>
+                  <Text style={styles.addFriendBtnText}>Retry</Text>
+                </AnimatedPressable>
               </View>
             </AnimatedListItem>
           ) : leaderboardLoading ? (
@@ -584,7 +603,7 @@ export default function SocialScreen() {
                 <View style={[styles.myRankCard, myRank !== null && { borderColor: `${COLORS.primary}55` }]}>
                   <View style={styles.myRankLeft}>
                     <Text style={styles.myRankLabel}>YOUR RANK</Text>
-                    <Text style={styles.myRankNum}>#{displayRank}</Text>
+                    <Text style={styles.myRankNum}>{myRank !== null ? `#${myRank}` : 'Unranked'}</Text>
                   </View>
                   <View style={styles.myRankRight}>
                     <View style={styles.myRankTrophyRow}>
@@ -615,6 +634,12 @@ export default function SocialScreen() {
                           {isMe ? ' (You)' : ''}
                         </Text>
                         <LeagueBadge trophies={player.trophies} size="sm" />
+                        <Text style={{ fontSize: 9, color: COLORS.textTertiary, marginTop: 1 }}>
+                          {player.wins}
+                          <Text>W </Text>
+                          {player.losses}
+                          <Text>L</Text>
+                        </Text>
                       </View>
                       <View style={styles.leaderTrophyWrap}>
                         <Trophy size={13} color={COLORS.gold} strokeWidth={2} />
