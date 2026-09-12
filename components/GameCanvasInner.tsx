@@ -1377,7 +1377,7 @@ function drawStation(
   const flip = side === 'top';
   const x = pos.x;
   const y = pos.y;
-  const dir = -1;
+  const dir = flip ? -1 : 1;
 
   const skin = STATION_SKINS[skinId || 'default'] || STATION_SKINS['default'];
   const body = skin.body;

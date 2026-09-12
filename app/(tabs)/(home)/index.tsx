@@ -104,6 +104,18 @@ export default function HomeScreen() {
 
   const [activeSession, setActiveSession] = useState<ActiveSession | null>(null);
 
+  // Tutorial redirect: if not done, send to tutorial game
+  const tutorialCheckedRef = useRef(false);
+  useEffect(() => {
+    if (tutorialCheckedRef.current) return;
+    if (!profile.onboarded) return;
+    if (!profile.tutorial_done) {
+      tutorialCheckedRef.current = true;
+      console.log('[Home] tutorial_done=false, redirecting to tutorial');
+      router.replace('/game?mode=tutorial' as any);
+    }
+  }, [profile.onboarded, profile.tutorial_done, router]);
+
   // Logo tap counter for admin access
   const logoTapCount = useRef(0);
   const logoTapTimer = useRef<ReturnType<typeof setTimeout> | null>(null);

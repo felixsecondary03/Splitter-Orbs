@@ -43,6 +43,7 @@ import type { TowerType, AbilityType, OrbType } from '@/game/constants';
 import { TOWER_COSTS, TOWER_TYPES, ORB_TYPES, UPGRADE_COST_MULT_ARRAY, SELL_RATIO, GAME_WIDTH, GAME_HEIGHT, WALL_Y, ORB_SLOTS } from '@/game/constants';
 import { getTowerRange, getTowerDamage, getTowerFireRate } from '@/game/engine-helpers';
 import { TowerIcon } from '@/components/TowerIcon';
+import { TutorialCoachmark } from '@/components/TutorialCoachmark';
 import { distance } from '@/game/engine-helpers';
 import type { MatchMode } from '@/game/engine-types';
 import { useGameLoop } from '@/hooks/useGameLoop';
@@ -425,6 +426,15 @@ export default function GameScreen() {
   const [isPaused, setIsPaused] = useState(false);
   const [showPauseMenu, setShowPauseMenu] = useState(false);
 
+  // ── Tutorial state (only active when mode === 'tutorial') ──
+  const [tutorialStep, setTutorialStep] = useState<number | null>(null);
+  const tutorialStepRef = useRef<number | null>(null);
+  const [orbTapCount, setOrbTapCount] = useState(0);
+  const orbTapCountRef = useRef(0);
+  const [tutorialUpgraded, setTutorialUpgraded] = useState(false);
+  const tutorialUpgradedRef = useRef(false);
+  const [coachmarkHidden, setCoachmarkHidden] = useState(false);
+
   // ── New state variables ──
   const [searching, setSearching] = useState(true);
   const [searchTime, setSearchTime] = useState(15);
@@ -623,6 +633,41 @@ export default function GameScreen() {
     ? Math.min(canvasWidth / GAME_WIDTH, canvasHeight / GAME_HEIGHT)
     : 1;
 
+  // ── Tutorial helpers ──
+  const advanceTutorial = useCallback(() => {
+    const next = tutorialStepRef.current === null ? 0 : tutorialStepRef.current + 1;
+    console.log(`[Tutorial] Advancing to step ${next}`);
+    tutorialStepRef.current = next;
+    setTutorialStep(next);
+    setCoachmarkHidden(true);
+    setTimeout(() => setCoachmarkHidden(false), 300);
+  }, []);
+
+  const completeTutorial = useCallback(async () => {
+    console.log('[Tutorial] Completing tutorial');
+    tutorialStepRef.current = null;
+    setTutorialStep(null);
+    try {
+      await supabase.functions.invoke('complete-tutorial', {});
+      console.log('[Tutorial] complete-tutorial edge function called');
+    } catch (e) {
+      console.warn('[Tutorial] complete-tutorial error', e);
+    }
+    router.replace('/(tabs)/(home)' as any);
+  }, []);
+
+  // ── Initialize tutorial on mount ──
+  useEffect(() => {
+    if (uiMode !== 'tutorial') return;
+    const t = setTimeout(() => {
+      console.log('[Tutorial] Starting tutorial at step 0');
+      tutorialStepRef.current = 0;
+      setTutorialStep(0);
+    }, 500);
+    return () => clearTimeout(t);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // ── Touch handling ──
   const tapGesture = useMemo(() => Gesture.Tap()
     .runOnJS(true)
@@ -659,6 +704,16 @@ export default function GameScreen() {
       const tappedOrb = findOrbAtPosition(state, gameX, gameY);
       if (tappedOrb) {
         dispatch((s) => clickOrb(s, tappedOrb.id));
+        // Tutorial step 0: count orb taps
+        if (tutorialStepRef.current === 0) {
+          const newCount = orbTapCountRef.current + 1;
+          orbTapCountRef.current = newCount;
+          setOrbTapCount(newCount);
+          console.log(`[Tutorial] Orb tapped count=${newCount}`);
+          if (newCount >= 5) {
+            advanceTutorial();
+          }
+        }
         return;
       }
 
@@ -674,10 +729,15 @@ export default function GameScreen() {
 
       if (state.player.selectedTower && gameY > WALL_Y) {
         dispatch((s) => placeTower(s, s.player.selectedTower!, gameX, gameY));
+        // Tutorial step 1: tower placed
+        if (tutorialStepRef.current === 1) {
+          console.log('[Tutorial] Tower placed, advancing');
+          advanceTutorial();
+        }
         return;
       }
     }),
-  [canvasScale, editMode, dispatch, gameStateRef]);
+  [canvasScale, editMode, dispatch, gameStateRef, advanceTutorial]);
 
   const longPressGesture = useMemo(() => Gesture.LongPress()
     .runOnJS(true)
@@ -708,7 +768,12 @@ export default function GameScreen() {
   const handleAbility = useCallback((abilityType: AbilityType) => {
     console.log(`[Game] Activate ability type=${abilityType}`);
     dispatch((s) => activateAbility(s, abilityType));
-  }, [dispatch]);
+    // Tutorial step 3: ability used
+    if (tutorialStepRef.current === 3) {
+      console.log('[Tutorial] Ability used in step 3, advancing in 2.5s');
+      setTimeout(() => advanceTutorial(), 2500);
+    }
+  }, [dispatch, advanceTutorial]);
 
   const handleConfirmTargeting = useCallback(() => {
     console.log('[Game] Confirm targeting (portal)');
@@ -720,6 +785,12 @@ export default function GameScreen() {
     if (!selectedTowerForEdit) return;
     console.log(`[Game] Upgrade tower id=${selectedTowerForEdit.id}`);
     dispatch((s) => upgradeTower(s, selectedTowerForEdit.id));
+    // Tutorial step 2: mark upgrade done
+    if (tutorialStepRef.current === 2) {
+      console.log('[Tutorial] Upgrade tapped in step 2');
+      tutorialUpgradedRef.current = true;
+      setTutorialUpgraded(true);
+    }
     setSelectedTowerForEdit(null);
   }, [selectedTowerForEdit, dispatch]);
 
@@ -759,7 +830,12 @@ export default function GameScreen() {
     console.log(`[Game] Place orb typeId=${typeId} slotIndex=${slotIndex}`);
     dispatch((s) => placeOrbAtSlot(s, typeId, slotIndex));
     setPlacementMode({ active: false, typeId: null });
-  }, [placementMode.typeId, dispatch, gameStateRef]);
+    // Tutorial step 4: orb sent
+    if (tutorialStepRef.current === 4) {
+      console.log('[Tutorial] Orb sent in step 4, advancing in 2.5s');
+      setTimeout(() => advanceTutorial(), 2500);
+    }
+  }, [placementMode.typeId, dispatch, gameStateRef, advanceTutorial]);
 
   const handleCancelPlacement = useCallback(() => {
     setPlacementMode({ active: false, typeId: null });
@@ -1084,7 +1160,14 @@ export default function GameScreen() {
                     })}
                   </View>
                 </View>
-                <Pressable onPress={() => setSelectedTowerForEdit(null)} style={styles.upgradePopupClose}>
+                <Pressable onPress={() => {
+                  // Tutorial step 2: if upgraded, advance on close
+                  if (tutorialStepRef.current === 2 && tutorialUpgradedRef.current) {
+                    console.log('[Tutorial] Edit popup closed after upgrade, advancing');
+                    advanceTutorial();
+                  }
+                  setSelectedTowerForEdit(null);
+                }} style={styles.upgradePopupClose}>
                   <X size={14} color="#94A3B8" strokeWidth={2} />
                 </Pressable>
               </View>
@@ -1303,6 +1386,80 @@ export default function GameScreen() {
           )}
         </View>
       )}
+
+      {/* ── Tutorial Coachmark ── */}
+      {tutorialStep !== null && !searching && !resultData && !coachmarkHidden && (() => {
+        if (tutorialStep === 0) {
+          const pct = Math.min(1, orbTapCount / 5);
+          return (
+            <TutorialCoachmark
+              title="Tap orbs!"
+              body="Tap the orbs coming toward your station to destroy them. Tap 5 orbs to continue."
+              progress={{ label: `${orbTapCount}/5 orbs tapped`, pct }}
+              skippable
+              onSkip={completeTutorial}
+              position="bottom"
+            />
+          );
+        }
+        if (tutorialStep === 1) {
+          return (
+            <TutorialCoachmark
+              title="Place a tower"
+              body="Drag a tower from the tray and drop it on the grid to defend your station."
+              skippable
+              onSkip={completeTutorial}
+              position="bottom"
+            />
+          );
+        }
+        if (tutorialStep === 2) {
+          return (
+            <TutorialCoachmark
+              title="Upgrade it!"
+              body="Tap your tower to select it, then tap Upgrade to level it up."
+              skippable
+              onSkip={completeTutorial}
+              position="bottom"
+            />
+          );
+        }
+        if (tutorialStep === 3) {
+          return (
+            <TutorialCoachmark
+              title="Use an ability!"
+              body="Tap one of your ability buttons to activate a special power."
+              skippable
+              onSkip={completeTutorial}
+              position="bottom"
+            />
+          );
+        }
+        if (tutorialStep === 4) {
+          return (
+            <TutorialCoachmark
+              title="Send orbs!"
+              body="Tap an orb type in the shop to send orbs at your opponent."
+              skippable
+              onSkip={completeTutorial}
+              position="bottom"
+            />
+          );
+        }
+        if (tutorialStep === 5) {
+          return (
+            <TutorialCoachmark
+              title="You're ready!"
+              body="You know the basics. Good luck in your first real match!"
+              cta="Let's go!"
+              onCta={completeTutorial}
+              skippable={false}
+              position="center"
+            />
+          );
+        }
+        return null;
+      })()}
 
       {/* ── Result Screen ── */}
       {resultData !== null && (

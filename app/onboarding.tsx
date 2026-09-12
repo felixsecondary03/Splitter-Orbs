@@ -78,6 +78,7 @@ export default function OnboardingScreen() {
   const [displayName, setDisplayName] = useState('');
   const [nameError, setNameError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isUnder16, setIsUnder16] = useState(false);
 
   const slideAnimRef = useRef(new Animated.Value(0));
   const slideAnim = slideAnimRef.current;
@@ -103,14 +104,24 @@ export default function OnboardingScreen() {
     console.log('[Onboarding] Completing onboarding', { language, displayName: trimmed });
     setIsSubmitting(true);
 
+    const birthDateStr = birthDate.toISOString().split('T')[0];
+    const under16 = checkIsUnder16();
+
     try {
       // Try edge function first
-      const { error: fnError } = await supabase.functions.invoke('acceptEula', {
-        body: { version: CURRENT_EULA_VERSION, display_name: trimmed },
+      const { error: fnError } = await supabase.functions.invoke('accept-eula', {
+        body: {
+          version: CURRENT_EULA_VERSION,
+          display_name: trimmed,
+          birth_date: birthDateStr,
+          age_verified: true,
+          is_under_16: under16,
+          language,
+        },
       });
 
       if (fnError) {
-        console.warn('[Onboarding] acceptEula edge function failed, falling back', fnError.message);
+        console.warn('[Onboarding] accept-eula edge function failed, falling back', fnError.message);
         // Fallback: direct table update
         if (!user) throw new Error('Not authenticated');
         const { error: updateError } = await supabase
@@ -154,6 +165,9 @@ export default function OnboardingScreen() {
       return;
     }
     console.log('[Onboarding] Next pressed', { step });
+    if (step === 1) {
+      setIsUnder16(checkIsUnder16());
+    }
     animateStep(1);
     setStep((s) => s + 1);
   };
@@ -180,17 +194,22 @@ export default function OnboardingScreen() {
   };
 
   const canProceed = () => {
+    if (step === 1) return !isMinor();
     if (step === 2) return eulaAccepted;
     if (step === 3) return displayName.trim().length >= 2 && !isSubmitting;
     return true;
   };
 
-  const isMinor = () => {
+  const getAge = () => {
     const today = new Date();
-    const age = today.getFullYear() - birthDate.getFullYear();
+    let age = today.getFullYear() - birthDate.getFullYear();
     const m = today.getMonth() - birthDate.getMonth();
-    return age < 13 || (age === 13 && m < 0);
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
+    return age;
   };
+
+  const isMinor = () => getAge() < 13;
+  const checkIsUnder16 = () => getAge() < 16;
 
   const nextBtnLabel = step === TOTAL_STEPS - 1 ? 'Start playing' : 'Next';
 
@@ -272,6 +291,13 @@ export default function OnboardingScreen() {
                 </Text>
               </View>
             )}
+            {!isMinor() && checkIsUnder16() && (
+              <View style={[styles.warningCard, { backgroundColor: '#FFFBEB', borderColor: 'rgba(245,158,11,0.3)' }]}>
+                <Text style={[styles.warningText, { color: '#D97706' }]}>
+                  You must be at least 16 to create an account in the EU, or have parental consent.
+                </Text>
+              </View>
+            )}
           </View>
         )}
 
@@ -282,18 +308,21 @@ export default function OnboardingScreen() {
             </View>
             <Text style={styles.stepTitle}>Terms & EULA</Text>
             <Text style={styles.stepSub}>Please read and accept our terms</Text>
-            <ScrollView
-              style={styles.eulaScroll}
-              contentContainerStyle={styles.eulaContent}
-              showsVerticalScrollIndicator
+            <AnimatedPressable
+              style={styles.eulaLinkBtn}
+              onPress={() => {
+                console.log('[Onboarding] Read full EULA pressed');
+                router.push('/eula-screen' as never);
+              }}
             >
-              <Text style={styles.eulaText}>{EULA_TEXT}</Text>
-            </ScrollView>
+              <FileText size={18} color={COLORS.primary} strokeWidth={1.5} />
+              <Text style={styles.eulaLinkText}>Read full EULA</Text>
+            </AnimatedPressable>
             <AnimatedPressable style={styles.checkRow} onPress={handleEulaToggle}>
               <View style={[styles.checkbox, eulaAccepted && styles.checkboxActive]}>
                 {eulaAccepted && <Check size={14} color="#fff" strokeWidth={3} />}
               </View>
-              <Text style={styles.checkLabel}>I have read and accept the EULA</Text>
+              <Text style={styles.checkLabel}>I have read and accept the full EULA and Privacy Policy.</Text>
             </AnimatedPressable>
           </View>
         )}
@@ -473,22 +502,20 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     textAlign: 'center',
   },
-  eulaScroll: {
-    flex: 1,
-    backgroundColor: COLORS.surface,
+  eulaLinkBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: COLORS.primaryMuted,
     borderRadius: 14,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    maxHeight: 280,
-  },
-  eulaContent: {
     padding: 16,
+    borderWidth: 1,
+    borderColor: COLORS.primary,
   },
-  eulaText: {
-    fontSize: 12,
-    color: COLORS.textSecondary,
-    lineHeight: 18,
-    fontFamily: 'SpaceMono',
+  eulaLinkText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: COLORS.primary,
   },
   checkRow: {
     flexDirection: 'row',
