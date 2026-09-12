@@ -14,6 +14,7 @@ import {
   CLICK_DAMAGE_BY_LEAGUE, getLeague,
   OrbType, TowerType, AbilityType,
   LEAGUES,
+  ORB_SLOTS, ORB_TYPES,
 } from './constants';
 import type {
   MatchMode, GameState, PlayerState, Tower, SideTower, Station,
@@ -1277,6 +1278,51 @@ export function confirmTargeting(state: GameState): GameState {
       color: '#818CF8',
     }],
   };
+}
+
+export function addTargetOrb(state: GameState, orbId: string): GameState {
+  console.log(`[Action] addTargetOrb orbId=${orbId}`);
+  if (!state.targeting) return state;
+  const orb = state.orbs.find((o) => o.id === orbId);
+  if (!orb || orb.side !== 0 || orb.hp <= 0) return state;
+  const tg = state.targeting;
+  const idx = tg.targets.indexOf(orbId);
+  if (idx >= 0) {
+    // deselect
+    return { ...state, targeting: { ...tg, targets: tg.targets.filter(id => id !== orbId) } };
+  }
+  if (tg.targets.length >= tg.maxTargets) {
+    // auto-confirm when max reached
+    return confirmTargeting({ ...state, targeting: { ...tg, targets: [...tg.targets, orbId] } });
+  }
+  return { ...state, targeting: { ...tg, targets: [...tg.targets, orbId] } };
+}
+
+export function placeOrbAtSlot(state: GameState, typeId: OrbType, slotIndex: number): GameState {
+  console.log(`[Action] placeOrbAtSlot typeId=${typeId} slotIndex=${slotIndex}`);
+  const def = ORB_TYPES[typeId];
+  if (!def || state.player.coins < def.cost) return state;
+  const slotX = ORB_SLOTS[slotIndex] ?? ORB_SLOTS[0];
+  const newState = { ...state, player: { ...state.player, coins: state.player.coins - def.cost } };
+  // Use spawnOrb with side=1 (player orbs go toward opponent)
+  const orb = spawnOrb(newState, 1);
+  // Override x to the slot position and type/stats to the selected orb type
+  const typedOrb = {
+    ...orb,
+    id: `orb_${Date.now()}_${slotIndex}`,
+    type: typeId,
+    x: slotX,
+    y: WALL_Y + 30,
+    hp: def.hp,
+    maxHp: def.hp,
+    damage: def.damage,
+    speed: def.speed,
+    radius: def.radius,
+    color: def.color,
+    vx: 0,
+    vy: -def.speed,
+  };
+  return { ...newState, orbs: [...newState.orbs, typedOrb] };
 }
 
 export function collectCoin(state: GameState, coinId: string): GameState {

@@ -35,10 +35,13 @@ import {
   confirmTargeting,
   collectCoin,
   selectTower,
+  addTargetOrb,
+  placeOrbAtSlot,
 } from '@/game/engine';
 import type { GameState, Tower, Loadout, AbilityState } from '@/game/engine-types';
 import type { TowerType, AbilityType, OrbType } from '@/game/constants';
-import { TOWER_COSTS, TOWER_TYPES, ORB_TYPES, UPGRADE_COST_MULT_ARRAY, SELL_RATIO, GAME_WIDTH, GAME_HEIGHT, WALL_Y } from '@/game/constants';
+import { TOWER_COSTS, TOWER_TYPES, ORB_TYPES, UPGRADE_COST_MULT_ARRAY, SELL_RATIO, GAME_WIDTH, GAME_HEIGHT, WALL_Y, ORB_SLOTS } from '@/game/constants';
+import { getTowerRange, getTowerDamage, getTowerFireRate } from '@/game/engine-helpers';
 import { TowerIcon } from '@/components/TowerIcon';
 import { distance } from '@/game/engine-helpers';
 import type { MatchMode } from '@/game/engine-types';
@@ -122,6 +125,15 @@ function getTowerSellValue(tower: Tower): number {
     total += Math.round(base * (UPGRADE_COST_MULT_ARRAY[l] ?? 1));
   }
   return Math.round(total * SELL_RATIO);
+}
+
+function getTowerStats(type: string, level: number) {
+  return {
+    damage: getTowerDamage(type as any, level),
+    fireRate: getTowerFireRate(type as any, level),
+    range: getTowerRange(type as any, level),
+    perk: null as { label: string } | null,
+  };
 }
 
 // ─── Result data type ─────────────────────────────────────────────────────────
@@ -627,6 +639,17 @@ export default function GameScreen() {
         return;
       }
 
+      // Portal targeting mode: tap selects/deselects orbs
+      if (state.targeting) {
+        const tappedOrb = findOrbAtPosition(state, gameX, gameY);
+        if (tappedOrb) {
+          console.log(`[Game] Portal target tap orbId=${tappedOrb.id}`);
+          dispatch((s) => addTargetOrb(s, tappedOrb.id));
+          return;
+        }
+        return; // tap outside orb cancels nothing — just ignore
+      }
+
       const coin = findCoinAtPosition(state, gameX, gameY);
       if (coin) {
         dispatch((s) => collectCoin(s, coin.id));
@@ -730,52 +753,11 @@ export default function GameScreen() {
     if (!placementMode.typeId) return;
     const typeId = placementMode.typeId as OrbType;
     const orbDef = ORB_TYPES[typeId];
-    const cost = orbDef?.cost ?? 20;
+    if (!orbDef) return;
     const state = gameStateRef.current as GameState;
-    if (state.player.coins < cost) {
-      return;
-    }
+    if (state.player.coins < orbDef.cost) return;
     console.log(`[Game] Place orb typeId=${typeId} slotIndex=${slotIndex}`);
-    // Spawn orb on player side by deducting coins and adding to orbs array
-    dispatch((s) => {
-      if (s.player.coins < cost) return s;
-      const slotX = (GAME_WIDTH / 6) * (slotIndex + 1);
-      const slotY = WALL_Y + 30;
-      const speed = orbDef?.speed ?? 42;
-      const hp = orbDef?.hp ?? 27;
-      const radius = orbDef?.radius ?? 22;
-      const damage = orbDef?.damage ?? 6;
-      const color = orbDef?.color ?? '#60a5fa';
-      const newOrb = {
-        id: `orb_${Date.now()}_${slotIndex}`,
-        type: typeId,
-        x: slotX,
-        y: slotY,
-        vx: 0,
-        vy: -speed,
-        hp,
-        maxHp: hp,
-        damage,
-        speed,
-        radius,
-        color,
-        side: 0 as const,
-        owner: 'player' as const,
-        frozen: false,
-        frozenTimer: 0,
-        poisoned: false,
-        poisonTimer: 0,
-        poisonDps: 0,
-        shieldHp: 0,
-        growthTimer: 0,
-        summonTimer: 0,
-      };
-      return {
-        ...s,
-        player: { ...s.player, coins: s.player.coins - cost },
-        orbs: [...s.orbs, newOrb],
-      };
-    });
+    dispatch((s) => placeOrbAtSlot(s, typeId, slotIndex));
     setPlacementMode({ active: false, typeId: null });
   }, [placementMode.typeId, dispatch, gameStateRef]);
 
@@ -941,6 +923,17 @@ export default function GameScreen() {
                 return;
               }
 
+              // Portal targeting mode: tap selects/deselects orbs
+              if (state.targeting) {
+                const tappedOrb = findOrbAtPosition(state, gameX, gameY);
+                if (tappedOrb) {
+                  console.log(`[Game] Portal target tap (web) orbId=${tappedOrb.id}`);
+                  dispatch((s) => addTargetOrb(s, tappedOrb.id));
+                  return;
+                }
+                return; // tap outside orb cancels nothing — just ignore
+              }
+
               const coin = findCoinAtPosition(state, gameX, gameY);
               if (coin) {
                 dispatch((s) => collectCoin(s, coin.id));
@@ -1008,8 +1001,8 @@ export default function GameScreen() {
         {placementMode.active && (
           <View style={[StyleSheet.absoluteFill, styles.placementOverlay, { pointerEvents: 'box-none' }]}>
             {Array.from({ length: 5 }, (_, i) => i).map((i) => {
-              const slotLeft = (canvasWidth / 6) * (i + 1) - 20;
-              const slotTop = canvasHeight - 60;
+              const slotLeft = (ORB_SLOTS[i] / GAME_WIDTH) * canvasWidth - 20;
+              const slotTop = (WALL_Y / GAME_HEIGHT) * canvasHeight - 20;
               return (
                 <Pressable
                   key={i}
@@ -1048,59 +1041,131 @@ export default function GameScreen() {
       )}
 
       {/* ── UpgradePopup (edit mode) — outside overflow:hidden canvas View ── */}
-      {editMode && selectedTowerForEdit && (
-        <View style={styles.upgradePopup}>
-          <View style={styles.upgradePopupCard}>
-            <View style={styles.upgradePopupHeader}>
-              <TowerIcon type={selectedTowerForEdit.type} size={32} level={selectedTowerForEdit.level} />
-              <View style={{ flex: 1 }}>
-                <Text style={styles.upgradePopupName}>
-                  {selectedTowerForEdit.type.replace(/_/g, ' ').toUpperCase()}
-                </Text>
-                <Text style={styles.upgradePopupLevel}>Level {selectedTowerForEdit.level}</Text>
+      {editMode && selectedTowerForEdit && (() => {
+        const level = selectedTowerForEdit.level || 1;
+        const stats = getTowerStats(selectedTowerForEdit.type, level);
+        const next = getTowerStats(selectedTowerForEdit.type, level + 1);
+        const maxLevel = 5;
+        const maxed = level >= maxLevel;
+        const isSuper = level >= 6;
+        const upgradeCost = getTowerUpgradeCost(selectedTowerForEdit);
+        const sellValue = getTowerSellValue(selectedTowerForEdit);
+        const canUpgrade = !maxed && playerCoins >= upgradeCost;
+        const dpsNow = stats ? stats.damage / stats.fireRate : 0;
+        const dpsNext = next ? next.damage / next.fireRate : 0;
+        const dDps = next ? Math.round((dpsNext - dpsNow) * 10) / 10 : 0;
+        const dRange = next && stats ? Math.round((next.range - stats.range) * 10) / 10 : 0;
+        const towerNameDisplay = selectedTowerForEdit.type.replace(/_/g, ' ').toUpperCase();
+        const upgradeLabel = isSuper ? '★ SUPER MAX ★' : 'MAX LEVEL';
+        const upgradeBtnBg = level + 1 >= 6 ? '#F59E0B' : '#10B981';
+        const upgradeBtnLabel = level + 1 >= 6 ? `★ SUPER ⬆ Lv ${level}→${level + 1}` : `⬆ Lv ${level}→${level + 1}`;
+        const sellLabel = `Sell · 🪙 ${sellValue}`;
+        return (
+          <View style={styles.upgradePopup}>
+            <View style={[styles.upgradePopupCard, isSuper && { borderColor: '#F59E0B', borderWidth: 2 }]}>
+              {/* Header */}
+              <View style={styles.upgradePopupHeader}>
+                <TowerIcon type={selectedTowerForEdit.type} size={30} level={level} />
+                <View style={{ flex: 1, marginLeft: 8 }}>
+                  <Text style={styles.upgradePopupName} numberOfLines={1}>
+                    {towerNameDisplay}
+                  </Text>
+                  {/* Level pips */}
+                  <View style={{ flexDirection: 'row', gap: 3, marginTop: 2 }}>
+                    {Array.from({ length: maxLevel }, (_, i) => {
+                      const pipFilled = level >= i + 1;
+                      const pipColor = pipFilled ? (level >= 6 ? '#F59E0B' : '#FBBF24') : '#E2E8F0';
+                      return (
+                        <View key={i} style={{
+                          width: 8, height: 8, borderRadius: 4,
+                          backgroundColor: pipColor,
+                        }} />
+                      );
+                    })}
+                  </View>
+                </View>
+                <Pressable onPress={() => setSelectedTowerForEdit(null)} style={styles.upgradePopupClose}>
+                  <X size={14} color="#94A3B8" strokeWidth={2} />
+                </Pressable>
               </View>
-              <HPBar
-                current={selectedTowerForEdit.hp}
-                max={selectedTowerForEdit.maxHp}
-                width={70}
-                height={5}
-                showText
-              />
-              <Pressable onPress={() => { setSelectedTowerForEdit(null); }} style={styles.upgradePopupClose}>
-                <X size={14} color={COLORS.textSecondary} strokeWidth={2} />
-              </Pressable>
-            </View>
-            <View style={styles.upgradePopupActions}>
-              <Pressable
-                style={[
-                  styles.upgradePopupBtn,
-                  styles.upgradePopupBtnUpgrade,
-                  (playerCoins < getTowerUpgradeCost(selectedTowerForEdit) || selectedTowerForEdit.level >= 5) && styles.upgradePopupBtnDisabled,
-                ]}
-                onPress={handleUpgradeTower}
-              >
-                <Text style={styles.upgradePopupBtnText}>Upgrade</Text>
-                <Text style={styles.upgradePopupBtnSub}>{getTowerUpgradeCost(selectedTowerForEdit)} coins</Text>
-              </Pressable>
 
-              {selectedTowerForEdit.poisoned && (
+              {/* Super perk label */}
+              {isSuper && stats?.perk && (
+                <View style={{ alignItems: 'center', marginBottom: 6 }}>
+                  <View style={{ backgroundColor: '#FEF3C7', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 99 }}>
+                    <Text style={{ fontSize: 9, fontWeight: '900', color: '#D97706' }}>
+                      {'★ '}
+                      {stats.perk.label}
+                    </Text>
+                  </View>
+                </View>
+              )}
+
+              {/* Stat deltas */}
+              {!maxed && next && (dDps > 0 || dRange > 0) && (
+                <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 12, marginBottom: 8 }}>
+                  {dDps > 0 && <Text style={{ fontSize: 9, fontWeight: '700', color: '#059669' }}>DPS +{dDps}</Text>}
+                  {dRange > 0 && <Text style={{ fontSize: 9, fontWeight: '700', color: '#059669' }}>Range +{dRange}</Text>}
+                </View>
+              )}
+
+              {/* Upgrade button */}
+              {maxed ? (
+                <View style={{ alignItems: 'center', paddingVertical: 8 }}>
+                  <Text style={{ fontSize: 10, fontWeight: '900', color: '#F59E0B' }}>
+                    {upgradeLabel}
+                  </Text>
+                </View>
+              ) : (
                 <Pressable
-                  style={[styles.upgradePopupBtn, styles.upgradePopupBtnCleanse, playerCoins < 20 && styles.upgradePopupBtnDisabled]}
-                  onPress={handleCleanseTower}
+                  onPress={() => {
+                    console.log(`[Game] Upgrade tower pressed id=${selectedTowerForEdit.id}`);
+                    handleUpgradeTower();
+                  }}
+                  disabled={!canUpgrade}
+                  style={[{
+                    paddingVertical: 10, borderRadius: 12, alignItems: 'center',
+                    flexDirection: 'row', justifyContent: 'center', gap: 6, marginBottom: 6,
+                    backgroundColor: upgradeBtnBg,
+                    opacity: canUpgrade ? 1 : 0.4,
+                  }]}
                 >
-                  <Text style={styles.upgradePopupBtnText}>Cleanse</Text>
-                  <Text style={styles.upgradePopupBtnSub}>20 coins</Text>
+                  <Text style={{ fontSize: 12, fontWeight: '900', color: '#fff' }}>
+                    {upgradeBtnLabel}
+                  </Text>
+                  <Text style={{ fontSize: 11, fontWeight: '700', color: '#fff' }}>
+                    {'🪙 '}
+                    {upgradeCost}
+                  </Text>
                 </Pressable>
               )}
 
-              <Pressable style={[styles.upgradePopupBtn, styles.upgradePopupBtnSell]} onPress={handleSellTower}>
-                <Text style={styles.upgradePopupBtnText}>Sell</Text>
-                <Text style={styles.upgradePopupBtnSub}>+{getTowerSellValue(selectedTowerForEdit)}</Text>
+              {/* Sell button */}
+              <Pressable
+                onPress={() => {
+                  console.log(`[Game] Sell tower pressed id=${selectedTowerForEdit.id}`);
+                  handleSellTower();
+                }}
+                style={{
+                  paddingVertical: 8, borderRadius: 12, alignItems: 'center',
+                  flexDirection: 'row', justifyContent: 'center', gap: 4,
+                  backgroundColor: '#FFF1F2', borderWidth: 1, borderColor: '#FECDD3',
+                }}
+              >
+                <Text style={{ fontSize: 11, fontWeight: '700', color: '#F43F5E' }}>
+                  {sellLabel}
+                </Text>
               </Pressable>
             </View>
+            {/* Pointer triangle */}
+            <View style={{
+              width: 14, height: 14, backgroundColor: '#fff',
+              borderRightWidth: 2, borderBottomWidth: 2, borderColor: '#1E293B',
+              transform: [{ rotate: '45deg' }], alignSelf: 'center', marginTop: -8,
+            }} />
           </View>
-        </View>
-      )}
+        );
+      })()}
 
       {/* ── Bottom HUD (~10fps) ── */}
       <BottomHUD
@@ -1601,16 +1666,17 @@ const styles = StyleSheet.create({
   },
   // UpgradePopup
   upgradePopup: {
-    marginHorizontal: 8,
+    marginHorizontal: 16,
     marginBottom: 4,
+    alignItems: 'center',
   },
   upgradePopupCard: {
-    backgroundColor: COLORS.surfaceElevated,
-    borderRadius: 14,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    gap: 10,
+    width: 176,
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: '#1E293B',
+    padding: 10,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,

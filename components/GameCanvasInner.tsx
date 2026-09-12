@@ -2049,12 +2049,15 @@ function drawFantasyTower(
     canvas.drawRect(Skia.XYWHRect(x - 16, bodyTop, 32, y + 14 - bodyTop), p);
   }
 
-  // Selected range ring
+  // Selected range ring (dashed)
   if (isSelected) {
     p.setStyle(PaintStyle.Stroke);
     p.setStrokeWidth(2);
-    p.setColor(Skia.Color('rgba(59,130,246,0.5)'));
+    p.setColor(Skia.Color('rgba(59,130,246,0.6)'));
+    const dashEffect = Skia.PathEffect.MakeDash([6, 6], 0);
+    p.setPathEffect(dashEffect);
     canvas.drawCircle(x, y, getTowerStats(t.type, t.level).range, p);
+    p.setPathEffect(null);
     p.setStyle(PaintStyle.Fill);
   }
 }
@@ -3116,15 +3119,18 @@ function drawFrame(
 
   // ── 10. Targeting highlights ──
   if (s.targeting) {
-    for (const tid of s.targeting.targets) {
-      const orb = s.orbs.find((o) => o.id === tid);
-      if (!orb) continue;
-      p.setColor(Skia.Color('rgba(168,85,247,0.12)'));
-      canvas.drawCircle(orb.x, orb.y, orb.radius + 12, p);
+    for (const orb of s.orbs) {
+      if (orb.side !== 0 || orb.hp <= 0) continue;
+      const sel = s.targeting.targets.includes(orb.id);
       p.setStyle(PaintStyle.Stroke);
-      p.setStrokeWidth(2);
-      p.setColor(Skia.Color('rgba(168,85,247,0.8)'));
-      canvas.drawCircle(orb.x, orb.y, orb.radius + 12, p);
+      p.setStrokeWidth(sel ? 4 : 2);
+      p.setColor(Skia.Color(sel ? '#818CF8' : 'rgba(129,140,248,0.5)'));
+      if (!sel) {
+        const dashEffect = Skia.PathEffect.MakeDash([5, 5], 0);
+        p.setPathEffect(dashEffect);
+      }
+      canvas.drawCircle(orb.x, orb.y, orb.radius + 6, p);
+      p.setPathEffect(null);
       p.setStyle(PaintStyle.Fill);
     }
   }
@@ -3281,6 +3287,7 @@ export const GameCanvasInner = React.memo(function GameCanvasInner({
   useEffect(() => {
     if (!boldFont) return;
     let rafId: number;
+    const recorder = Skia.PictureRecorder();
     const render = () => {
       rafId = requestAnimationFrame(render);
       const s = drawStateRef.current;
@@ -3288,7 +3295,6 @@ export const GameCanvasInner = React.memo(function GameCanvasInner({
       if (s.orbs.length === 0 && s.projectiles.length === 0 && s.effects.length === 0 && s.status !== 'playing') return;
       const currentScale = scaleRef.current;
       const bounds = Skia.XYWHRect(0, 0, GAME_WIDTH * currentScale, GAME_HEIGHT * currentScale);
-      const recorder = Skia.PictureRecorder();
       const c = recorder.beginRecording(bounds);
       const now = Date.now();
       c.save();
