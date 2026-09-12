@@ -34,36 +34,14 @@ const LANGUAGES = [
   { code: 'pt', label: 'PT', name: 'Português' },
 ];
 
-const EULA_TEXT = `ORBS CLASH — END USER LICENSE AGREEMENT
+const LANG_MIN_AGE: Record<string, number> = {
+  de: 16, nl: 16, ie: 16,
+  fr: 15,
+  es: 14, it: 14,
+  // all others: 13
+};
 
-Version ${CURRENT_EULA_VERSION}
-
-1. ACCEPTANCE
-By using Orb Clash, you agree to these terms. If you do not agree, do not use the app.
-
-2. LICENSE
-We grant you a limited, non-exclusive, non-transferable license to use the app for personal, non-commercial purposes.
-
-3. PROHIBITED CONDUCT
-You may not: (a) cheat, hack, or exploit bugs; (b) harass other players; (c) use automated bots or scripts; (d) reverse-engineer the app.
-
-4. IN-APP PURCHASES
-All purchases are final. Refunds are subject to platform policies (Apple App Store / Google Play).
-
-5. PRIVACY
-We collect minimal data necessary to operate the game. See our Privacy Policy for details.
-
-6. TERMINATION
-We may suspend or terminate your account for violations of these terms.
-
-7. DISCLAIMER
-The app is provided "as is" without warranties of any kind.
-
-8. GOVERNING LAW
-These terms are governed by the laws of Germany.
-
-9. CONTACT
-For support: support@orbclash.game`;
+const getMinAge = (lang: string): number => LANG_MIN_AGE[lang] ?? 13;
 
 export default function OnboardingScreen() {
   const insets = useSafeAreaInsets();
@@ -208,7 +186,8 @@ export default function OnboardingScreen() {
     return age;
   };
 
-  const isMinor = () => getAge() < 13;
+  const minAge = getMinAge(language);
+  const isMinor = () => getAge() < minAge;
   const checkIsUnder16 = () => getAge() < 16;
 
   const nextBtnLabel = step === TOTAL_STEPS - 1 ? 'Start playing' : 'Next';
@@ -266,7 +245,7 @@ export default function OnboardingScreen() {
               <Calendar size={32} color={COLORS.primary} strokeWidth={1.5} />
             </View>
             <Text style={styles.stepTitle}>Age verification</Text>
-            <Text style={styles.stepSub}>You must be at least 13 years old to play</Text>
+            <Text style={styles.stepSub}>You must be at least {minAge} years old to play</Text>
             <View style={styles.datePickerWrap}>
               <DateTimePicker
                 value={birthDate}
@@ -287,7 +266,7 @@ export default function OnboardingScreen() {
             {isMinor() && (
               <View style={styles.warningCard}>
                 <Text style={styles.warningText}>
-                  You must be at least 13 years old to create an account.
+                  You must be at least {minAge} years old to create an account in your region.
                 </Text>
               </View>
             )}

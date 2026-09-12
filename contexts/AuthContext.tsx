@@ -162,29 +162,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     // Call getSession AFTER listener is registered to avoid race with auto-login
-    supabase.auth.getSession().then(async ({ data }) => {
+    supabase.auth.getSession().then(({ data }) => {
       if (data.session) {
-        // Session already exists — listener will have fired INITIAL_SESSION; just ensure loading clears
         setSession(data.session);
         setUser(mapSupabaseUser(data.session.user));
-        setIsLoading(false);
-      } else if (__DEV__) {
-        // Auto-login with admin account in dev mode
-        console.log('[Auth] Dev mode — auto-signing in with admin account');
-        const { error } = await supabase.auth.signInWithPassword({
-          email: 'admin@splitterorbs.com',
-          password: 'SplitterOrbs2025!',
-        });
-        if (error) {
-          console.warn('[Auth] Dev auto-login failed:', error.message);
-          setIsLoading(false);
-        } else {
-          console.log('[Auth] Dev auto-login successful');
-          // onAuthStateChange SIGNED_IN will fire and setIsLoading(false)
-        }
-      } else {
-        setIsLoading(false);
       }
+      setIsLoading(false);
     });
 
     // Handle OAuth deep link callback
