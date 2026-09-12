@@ -24,7 +24,8 @@
         "foregroundImage": "./assets/images/app-icon-jzg.png",
         "backgroundColor": "#FFFFFF"
       },
-      "package": "com.placeholder.app"
+      "package": "com.placeholder.app",
+      "softwareKeyboardLayoutMode": "pan"
     },
     "web": {
       "favicon": "./assets/images/newly.png",

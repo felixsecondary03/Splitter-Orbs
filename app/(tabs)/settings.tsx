@@ -6,6 +6,7 @@ import { COLORS } from '@/constants/Colors';
 import { supabase } from '@/utils/supabase';
 import { useProfile } from '@/contexts/ProfileContext';
 import { useTranslation, LANGS_LAUNCH } from '@/i18n/LanguageContext';
+import { setMuted, setSoundCategory, setHapticsIntensity as setHapticsIntensityFn, setAdvancedHaptics as setAdvancedHapticsFn, syncFromProfile } from '@/game/sound';
 
 export default function SettingsScreen() {
   const router = useRouter();
@@ -50,6 +51,7 @@ export default function SettingsScreen() {
       setTowerMenuAnytime(profile.tower_menu_anytime === true);
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setFitToScreen(profile.fit_to_screen !== false);
+      syncFromProfile(profile);
     }
   }, [profile]);
 
@@ -232,24 +234,24 @@ export default function SettingsScreen() {
           <ToggleRow
             label={t('settings.sound')}
             value={soundOn}
-            onChange={v => { setSoundOn(v); saveField('sound_enabled', v); }}
+            onChange={v => { setSoundOn(v); setMuted(!v); saveField('sound_enabled', v); }}
           />
           {soundOn && (
             <View style={styles.subToggles}>
               <ToggleRow
                 label={t('settings.soundClicks')}
                 value={soundCats.clicks}
-                onChange={v => { setSoundCats(c => ({ ...c, clicks: v })); saveField('sound_categories', { ...soundCats, clicks: v }); }}
+                onChange={v => { setSoundCats(c => ({ ...c, clicks: v })); setSoundCategory('clicks', v); saveField('sound_categories', { ...soundCats, clicks: v }); }}
               />
               <ToggleRow
                 label={t('settings.soundExplosions')}
                 value={soundCats.explosions}
-                onChange={v => { setSoundCats(c => ({ ...c, explosions: v })); saveField('sound_categories', { ...soundCats, explosions: v }); }}
+                onChange={v => { setSoundCats(c => ({ ...c, explosions: v })); setSoundCategory('explosions', v); saveField('sound_categories', { ...soundCats, explosions: v }); }}
               />
               <ToggleRow
                 label={t('settings.soundFanfare')}
                 value={soundCats.fanfare}
-                onChange={v => { setSoundCats(c => ({ ...c, fanfare: v })); saveField('sound_categories', { ...soundCats, fanfare: v }); }}
+                onChange={v => { setSoundCats(c => ({ ...c, fanfare: v })); setSoundCategory('fanfare', v); saveField('sound_categories', { ...soundCats, fanfare: v }); }}
               />
             </View>
           )}
@@ -264,7 +266,7 @@ export default function SettingsScreen() {
                 return (
                   <TouchableOpacity
                     key={lvl}
-                    onPress={() => { console.log('[Settings] Haptics intensity changed', { lvl }); setHapticsIntensity(lvl); saveField('haptics_intensity', lvl); }}
+                    onPress={() => { console.log('[Settings] Haptics intensity changed', { lvl }); setHapticsIntensity(lvl); setHapticsIntensityFn(lvl); saveField('haptics_intensity', lvl); }}
                     style={[styles.hapticBtn, isActive && styles.hapticBtnActive]}
                   >
                     <Text style={[styles.hapticBtnText, isActive && styles.hapticBtnTextActive]}>
@@ -281,7 +283,7 @@ export default function SettingsScreen() {
                 label={t('settings.advancedHaptics')}
                 desc={t('settings.advancedHapticsDesc')}
                 value={advancedHaptics}
-                onChange={v => { setAdvancedHaptics(v); saveField('advanced_haptics_enabled', v); }}
+                onChange={v => { setAdvancedHaptics(v); setAdvancedHapticsFn(v); saveField('advanced_haptics_enabled', v); }}
               />
             </View>
           )}

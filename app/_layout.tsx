@@ -8,6 +8,8 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useColorScheme, Alert } from "react-native";
 import { useNetworkState } from "expo-network";
 import { StatusBar } from "expo-status-bar";
+import * as NavigationBar from "expo-navigation-bar";
+import * as SystemUI from "expo-system-ui";
 import { AppThemeProvider } from "@/contexts/ThemeContext";
 import { WidgetProvider } from "@/contexts/WidgetContext";
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -40,6 +42,13 @@ export default function RootLayout() {
     }
   }, [loaded]);
 
+  useEffect(() => {
+    console.log('[Layout] Setting immersive full-screen mode');
+    // Hide Android navigation bar for immersive full-screen
+    NavigationBar.setVisibilityAsync('hidden').catch(() => {});
+    SystemUI.setBackgroundColorAsync('#0F172A').catch(() => {});
+  }, []);
+
   React.useEffect(() => {
     if (
       !networkState.isConnected &&
@@ -55,7 +64,7 @@ export default function RootLayout() {
   return (
     <LanguageProvider>
     <DevErrorBoundary>
-      <StatusBar style="light" animated />
+      <StatusBar style="light" translucent animated />
       <AppThemeProvider>
         <SafeAreaProvider>
           <AuthProvider>
@@ -77,7 +86,6 @@ export default function RootLayout() {
                     <Stack.Screen name="eula-screen" options={{ headerShown: false }} />
                     <Stack.Screen name="impressum" options={{ headerShown: false }} />
                   </Stack>
-                  <StatusBar style="light" />
                 </GestureHandlerRootView>
               </WidgetProvider>
             </ProfileProvider>

@@ -1,8 +1,12 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
-import { Alert, View, Text, StyleSheet, Pressable } from 'react-native';
+import { Alert, View, Text, StyleSheet, Pressable, Linking } from 'react-native';
 import { router } from 'expo-router';
 import { supabase } from '@/utils/supabase';
 import type { Session, User as SupabaseUser } from '@supabase/supabase-js';
+import * as WebBrowser from 'expo-web-browser';
+import * as AuthSession from 'expo-auth-session';
+
+WebBrowser.maybeCompleteAuthSession();
 
 const APP_VERSION = '1.0.0';
 
@@ -183,8 +187,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     });
 
+    // Handle OAuth deep link callback
+    const handleUrl = async (event: { url: string }) => {
+      console.log('[Auth] Deep link received', event.url);
+      if (event.url.includes('access_token') || event.url.includes('code=')) {
+        const hash = event.url.split('#')[1] ?? '';
+        const params = new URLSearchParams(hash);
+        const at = params.get('access_token');
+        const rt = params.get('refresh_token');
+        if (at) {
+          console.log('[Auth] Setting session from deep link');
+          await supabase.auth.setSession({ access_token: at, refresh_token: rt ?? '' });
+        }
+      }
+    };
+    const linkingSub = Linking.addEventListener('url', handleUrl);
+
     return () => {
       listener.subscription.unsubscribe();
+      linkingSub.remove();
     };
   }, []);
 
@@ -221,19 +242,80 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signInWithGoogle = async () => {
     console.log('[Auth] signInWithGoogle called');
-    const { error } = await supabase.auth.signInWithOAuth({ provider: 'google' });
-    if (error) {
-      console.error('[Auth] signInWithGoogle error', error.message);
-      throw error;
+    try {
+      const redirectUrl = AuthSession.makeRedirectUri({ scheme: 'mindmapai', path: 'auth/callback' });
+      console.log('[Auth] signInWithGoogle redirectUrl', redirectUrl);
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: redirectUrl,
+          skipBrowserRedirect: true,
+        },
+      });
+      if (error) throw error;
+      if (!data.url) throw new Error('No OAuth URL returned');
+      console.log('[Auth] signInWithGoogle opening browser');
+      const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUrl);
+      console.log('[Auth] signInWithGoogle browser result', result.type);
+      if (result.type === 'success' && result.url) {
+        const url = new URL(result.url);
+        const accessToken = url.searchParams.get('access_token');
+        const refreshToken = url.searchParams.get('refresh_token');
+        if (accessToken) {
+          await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken ?? '' });
+        } else {
+          // Try fragment params
+          const hash = result.url.split('#')[1] ?? '';
+          const params = new URLSearchParams(hash);
+          const at = params.get('access_token');
+          const rt = params.get('refresh_token');
+          if (at) {
+            await supabase.auth.setSession({ access_token: at, refresh_token: rt ?? '' });
+          }
+        }
+      }
+    } catch (e) {
+      console.error('[Auth] signInWithGoogle error', e);
+      throw e;
     }
   };
 
   const signInWithApple = async () => {
     console.log('[Auth] signInWithApple called');
-    const { error } = await supabase.auth.signInWithOAuth({ provider: 'apple' });
-    if (error) {
-      console.error('[Auth] signInWithApple error', error.message);
-      throw error;
+    try {
+      const redirectUrl = AuthSession.makeRedirectUri({ scheme: 'mindmapai', path: 'auth/callback' });
+      console.log('[Auth] signInWithApple redirectUrl', redirectUrl);
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'apple',
+        options: {
+          redirectTo: redirectUrl,
+          skipBrowserRedirect: true,
+        },
+      });
+      if (error) throw error;
+      if (!data.url) throw new Error('No OAuth URL returned');
+      console.log('[Auth] signInWithApple opening browser');
+      const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUrl);
+      console.log('[Auth] signInWithApple browser result', result.type);
+      if (result.type === 'success' && result.url) {
+        const url = new URL(result.url);
+        const accessToken = url.searchParams.get('access_token');
+        const refreshToken = url.searchParams.get('refresh_token');
+        if (accessToken) {
+          await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken ?? '' });
+        } else {
+          const hash = result.url.split('#')[1] ?? '';
+          const params = new URLSearchParams(hash);
+          const at = params.get('access_token');
+          const rt = params.get('refresh_token');
+          if (at) {
+            await supabase.auth.setSession({ access_token: at, refresh_token: rt ?? '' });
+          }
+        }
+      }
+    } catch (e) {
+      console.error('[Auth] signInWithApple error', e);
+      throw e;
     }
   };
 
