@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Pressable, Animated } from 'react-native';
+import { View, Text, StyleSheet, Animated } from 'react-native';
+import { Pressable } from 'react-native-gesture-handler';
 import Svg, { Circle } from 'react-native-svg';
 import { ABILITIES } from '@/game/constants';
 import type { AbilityType } from '@/game/constants';

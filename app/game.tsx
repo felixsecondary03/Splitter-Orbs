@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
-import { GestureDetector, Gesture } from 'react-native-gesture-handler';
+import { GestureDetector, Gesture, Pressable as GHPressable } from 'react-native-gesture-handler';
 import { X, Pause, Play, Flag, ArrowLeft } from 'lucide-react-native';
 import { COLORS } from '@/constants/Colors';
 import { useProfile } from '@/contexts/ProfileContext';
@@ -76,6 +76,7 @@ function resolveEngineMode(mode: string, difficulty: string): MatchMode {
 function findOrbAtPosition(state: GameState, gx: number, gy: number): { id: string } | null {
   const TAP_RADIUS = 28;
   for (const orb of state.orbs) {
+    if (orb.side !== 0) continue; // only click opponent orbs (side=0)
     if (distance(orb.x, orb.y, gx, gy) <= orb.radius + TAP_RADIUS) {
       return { id: orb.id };
     }
@@ -288,18 +289,18 @@ const BottomHUD = React.memo(function BottomHUD({
         </View>
         <View style={styles.abilityRightBtns}>
           {!placementModeActive ? (
-            <Pressable style={styles.orbShopCircleBtn} onPress={onOpenOrbShop}>
+            <GHPressable style={styles.orbShopCircleBtn} onPress={onOpenOrbShop}>
               <Text style={styles.orbShopCircleBtnText}>🌀</Text>
-            </Pressable>
+            </GHPressable>
           ) : (
             <View style={{ width: 56, height: 56 }} />
           )}
-          <Pressable
+          <GHPressable
             style={[styles.editToggleBtn, editMode && styles.editToggleBtnActive]}
             onPress={onToggleEditMode}
           >
             <Text style={styles.editToggleBtnText}>{editMode ? '✅' : '✏️'}</Text>
-          </Pressable>
+          </GHPressable>
         </View>
       </View>
 
@@ -316,7 +317,7 @@ const BottomHUD = React.memo(function BottomHUD({
             const canAfford = playerCoinsForTower >= cost;
             const firstName = towerNameFirst(towerType);
             return (
-              <Pressable
+              <GHPressable
                 key={towerType}
                 style={[
                   styles.towerCard,
@@ -338,7 +339,7 @@ const BottomHUD = React.memo(function BottomHUD({
                     {cost}
                   </Text>
                 </View>
-              </Pressable>
+              </GHPressable>
             );
           })}
         </ScrollView>
@@ -900,7 +901,7 @@ export default function GameScreen() {
       />
 
       {/* ── Game Canvas ── */}
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 4, overflow: 'hidden' }}>
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 4, overflow: 'visible' }}>
         <View
           style={{
             aspectRatio: 600 / 900,
@@ -911,11 +912,6 @@ export default function GameScreen() {
             overflow: 'hidden',
             borderWidth: 2,
             borderColor: '#e2e8f0',
-            elevation: 8,
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.15,
-            shadowRadius: 12,
           }}
           onLayout={(e) => {
             const { width, height } = e.nativeEvent.layout;
@@ -1302,6 +1298,7 @@ const styles = StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: '#f1f5f9',
+    zIndex: 0,
   },
   // Top HUD
   topHud: {
@@ -1314,8 +1311,8 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 4,
-    elevation: 12,
-    zIndex: 10,
+    elevation: 20,
+    zIndex: 20,
   },
   hudTopRow: {
     flexDirection: 'row',
