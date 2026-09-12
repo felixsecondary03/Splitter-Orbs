@@ -1082,6 +1082,33 @@ function applyInstantAbility(state: GameState, abilityType: AbilityType, ability
       };
       break;
     }
+    case 'deep_freeze': {
+      // Freeze all opponent towers and side towers
+      const frozenTowers = newState.opponent.towers.map(t =>
+        t.hp > 0 ? { ...t, frozen: true, frozenTimer: 2000 } : t
+      );
+      const frozenSideTowers = newState.opponent.sideTowers.map(st =>
+        st.hp > 0 ? { ...st, frozen: true, frozenTimer: 2000 } : st
+      );
+      newState = {
+        ...newState,
+        opponent: {
+          ...newState.opponent,
+          towers: frozenTowers,
+          sideTowers: frozenSideTowers,
+        },
+        effects: [...newState.effects, {
+          id: generateId(),
+          type: 'freeze' as const,
+          x: GAME_WIDTH / 2,
+          y: WALL_Y - 100,
+          timer: 600,
+          maxTimer: 600,
+          color: '#67E8F9',
+        }],
+      };
+      break;
+    }
   }
 
   return newState;
@@ -1141,6 +1168,54 @@ export function confirmAim(state: GameState, x: number, y: number): GameState {
       newState = { ...newState, zones: [...newState.zones, zone] };
       break;
     }
+    case 'speed_zone': {
+      const zone = {
+        id: generateId(),
+        x,
+        y,
+        radius: 90,
+        timer: 8000,
+        type: 'speed' as const,
+        speedBoost: 0.15,
+      };
+      newState = { ...newState, zones: [...newState.zones, zone] };
+      break;
+    }
+    case 'frost_zone': {
+      // Freeze all opponent towers within radius
+      const frozenTowers = newState.opponent.towers.map(t => {
+        if (t.hp <= 0) return t;
+        const dx = t.x - x;
+        const dy = t.y - y;
+        if (Math.sqrt(dx * dx + dy * dy) <= 90) {
+          return { ...t, frozen: true, frozenTimer: 3000 };
+        }
+        return t;
+      });
+      const frozenSide = newState.opponent.sideTowers.map(st => {
+        if (st.hp <= 0) return st;
+        const dx = st.x - x;
+        const dy = st.y - y;
+        if (Math.sqrt(dx * dx + dy * dy) <= 90) {
+          return { ...st, frozen: true, frozenTimer: 3000 };
+        }
+        return st;
+      });
+      newState = {
+        ...newState,
+        opponent: { ...newState.opponent, towers: frozenTowers, sideTowers: frozenSide },
+        effects: [...newState.effects, {
+          id: generateId(),
+          type: 'freeze' as const,
+          x,
+          y,
+          timer: 600,
+          maxTimer: 600,
+          color: '#67E8F9',
+        }],
+      };
+      break;
+    }
   }
 
   return newState;
@@ -1149,6 +1224,59 @@ export function confirmAim(state: GameState, x: number, y: number): GameState {
 export function cancelAim(state: GameState): GameState {
   console.log('[Action] cancelAim');
   return { ...state, aiming: null, targeting: null };
+}
+
+export function confirmTargeting(state: GameState): GameState {
+  console.log(`[Action] confirmTargeting targets=${state.targeting?.targets?.length ?? 0}`);
+  if (!state.targeting) return state;
+  const { targets } = state.targeting;
+
+  const abilityIndex = state.player.abilities.findIndex(a => a.type === 'portal');
+  const abilities = [...state.player.abilities];
+  if (abilityIndex >= 0) {
+    abilities[abilityIndex] = { ...abilities[abilityIndex], cooldown: ABILITY_COOLDOWNS['portal'] ?? 22000 };
+  }
+
+  // Remove targeted orbs from player's side and re-spawn them on opponent's side
+  const targetSet = new Set(targets);
+  const remainingOrbs = state.orbs.filter(o => !targetSet.has(o.id));
+
+  // Re-spawn each targeted orb heading toward the opponent station
+  const portaledOrbs = targets.map(id => {
+    const orb = state.orbs.find(o => o.id === id);
+    if (!orb) return null;
+    const newX = 50 + state.rng() * (GAME_WIDTH - 100);
+    const newY = WALL_Y + 30; // player side, heading up
+    const dx = OPP_STATION_X - newX;
+    const dy = OPP_STATION_Y - newY;
+    const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+    return {
+      ...orb,
+      id: generateId(),
+      x: newX,
+      y: newY,
+      side: 1 as const,
+      owner: 'player' as const,
+      vx: (dx / dist) * orb.speed,
+      vy: (dy / dist) * orb.speed,
+    };
+  }).filter(Boolean) as typeof state.orbs;
+
+  return {
+    ...state,
+    player: { ...state.player, abilities },
+    orbs: [...remainingOrbs, ...portaledOrbs],
+    targeting: null,
+    effects: [...state.effects, {
+      id: generateId(),
+      type: 'freeze' as const, // reuse freeze visual as portal flash
+      x: GAME_WIDTH / 2,
+      y: WALL_Y,
+      timer: 400,
+      maxTimer: 400,
+      color: '#818CF8',
+    }],
+  };
 }
 
 export function collectCoin(state: GameState, coinId: string): GameState {

@@ -32,6 +32,7 @@ import {
   activateAbility,
   confirmAim,
   cancelAim,
+  confirmTargeting,
   collectCoin,
   selectTower,
 } from '@/game/engine';
@@ -686,6 +687,11 @@ export default function GameScreen() {
     dispatch((s) => activateAbility(s, abilityType));
   }, [dispatch]);
 
+  const handleConfirmTargeting = useCallback(() => {
+    console.log('[Game] Confirm targeting (portal)');
+    dispatch((s) => confirmTargeting(s));
+  }, [dispatch]);
+
   // ── Tower edit actions ──
   const handleUpgradeTower = useCallback(() => {
     if (!selectedTowerForEdit) return;
@@ -1022,6 +1028,24 @@ export default function GameScreen() {
           </View>
         )}
       </View>
+
+      {/* ── Portal Targeting Overlay ── */}
+      {hudState?.targeting && (
+        <View style={{ position: 'absolute', bottom: 8, alignSelf: 'center', flexDirection: 'row', gap: 8, zIndex: 30 }}>
+          <Pressable
+            onPress={handleConfirmTargeting}
+            style={{ backgroundColor: '#818CF8', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8 }}
+          >
+            <Text style={{ color: '#fff', fontWeight: '700' }}>
+              {'Portal ('}
+              {hudState.targeting.targets?.length ?? 0}
+              {'/'}
+              {hudState.targeting.maxTargets}
+              {')'}
+            </Text>
+          </Pressable>
+        </View>
+      )}
 
       {/* ── UpgradePopup (edit mode) — outside overflow:hidden canvas View ── */}
       {editMode && selectedTowerForEdit && (

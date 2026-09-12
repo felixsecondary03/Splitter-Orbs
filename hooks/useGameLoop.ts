@@ -19,6 +19,7 @@ export interface HudState {
   comboTimer: number;
   selectedTower: string | null;
   floaters: import('@/game/engine-types').Floater[];
+  targeting: import('@/game/engine-types').TargetingState | null;
 }
 
 interface UseGameLoopOptions {
@@ -45,6 +46,7 @@ export function useGameLoop({ initialState, mode, onGameEnd }: UseGameLoopOption
     comboTimer: initialState.comboTimer,
     selectedTower: initialState.player.selectedTower ?? null,
     floaters: initialState.floaters,
+    targeting: initialState.targeting,
   }));
   const lastTimeRef = useRef<number>(0);
   const pausedRef = useRef<boolean>(false);
@@ -88,6 +90,7 @@ export function useGameLoop({ initialState, mode, onGameEnd }: UseGameLoopOption
       comboTimer: state.comboTimer,
       selectedTower: state.player.selectedTower ?? null,
       floaters: state.floaters,
+      targeting: state.targeting,
     });
   }, []);
 

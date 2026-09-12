@@ -213,7 +213,7 @@ export interface ZoneState {
   y: number;
   radius: number;
   timer: number;
-  type: 'damage' | 'slow' | 'buff';
+  type: 'damage' | 'slow' | 'buff' | 'speed';
   dps?: number;
 }
 
