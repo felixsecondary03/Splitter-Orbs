@@ -1034,6 +1034,54 @@ function applyInstantAbility(state: GameState, abilityType: AbilityType, ability
       newState = { ...newState, orbs: burnedOrbs };
       break;
     }
+    case 'zap': {
+      // Damage all opponent orbs (side=0)
+      const zapDmg = 30;
+      const zapTargets = newState.orbs.filter(o => o.side === 0 && o.hp > 0);
+      const newOrbs = newState.orbs.map(o => {
+        if (o.side !== 0 || o.hp <= 0) return o;
+        const newHp = o.hp - zapDmg;
+        return { ...o, hp: newHp };
+      }).filter(o => o.hp > 0 || o.side !== 0);
+      // Lightning chain effects — one per target
+      const zapEffects: Effect[] = zapTargets.map(o => ({
+        id: generateId(),
+        type: 'lightning_chain',
+        x: GAME_WIDTH / 2,
+        y: WALL_Y,
+        timer: 500,
+        maxTimer: 500,
+        color: '#FACC15',
+        data: { x2: o.x, y2: o.y },
+      }));
+      newState = {
+        ...newState,
+        orbs: newOrbs,
+        effects: [...newState.effects, ...zapEffects],
+      };
+      break;
+    }
+    case 'repair': {
+      const healAmount = 35;
+      const maxHp = newState.player.station.maxHp ?? 1000;
+      newState = {
+        ...newState,
+        player: {
+          ...newState.player,
+          hp: Math.min(maxHp, newState.player.hp + healAmount),
+        },
+        effects: [...newState.effects, {
+          id: generateId(),
+          type: 'repair',
+          x: PLAYER_STATION_X,
+          y: PLAYER_STATION_Y,
+          timer: 600,
+          maxTimer: 600,
+          color: '#4ADE80',
+        }],
+      };
+      break;
+    }
   }
 
   return newState;

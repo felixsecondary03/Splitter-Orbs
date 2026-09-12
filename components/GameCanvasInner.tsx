@@ -1509,30 +1509,82 @@ function drawSideTower(
 ) {
   const x = st.x;
   const y = st.y;
-  const half = 11;
   const towerColor = st.frozen ? '#BAE6FD' : color;
+  const flip = side === 'top';
+  const dir = flip ? 1 : -1;
 
-  // Body
+  // Shadow ellipse
   p.setStyle(PaintStyle.Fill);
-  p.setColor(Skia.Color('rgba(71,85,105,0.9)'));
-  canvas.drawRect(Skia.XYWHRect(x - half, y - half, half * 2, half * 2), p);
+  p.setColor(Skia.Color('rgba(15,23,42,0.18)'));
+  const shadowPath = Skia.Path.Make();
+  shadowPath.addOval(Skia.XYWHRect(x - 22, y + 19, 44, 12));
+  canvas.drawPath(shadowPath, p);
 
-  // Border
+  if (st.hp <= 0) {
+    p.setColor(Skia.Color('#CBD5E1'));
+    canvas.drawRect(Skia.XYWHRect(x - 14, y + 14, 28, 6), p);
+    return;
+  }
+
+  // Archway accent
   p.setStyle(PaintStyle.Stroke);
-  p.setStrokeWidth(1.5);
-  p.setColor(Skia.Color(towerColor));
-  canvas.drawRect(Skia.XYWHRect(x - half, y - half, half * 2, half * 2), p);
+  p.setStrokeWidth(2.5);
+  p.setColor(Skia.Color(towerColor + '40'));
+  const archPath = Skia.Path.Make();
+  archPath.moveTo(x - 22, y - 6);
+  archPath.cubicTo(x - 22, y - 30, x + 22, y - 30, x + 22, y - 6);
+  canvas.drawPath(archPath, p);
+  p.setStyle(PaintStyle.Fill);
+
+  const baseY = y + 16;
+  const topY = y - 30;
+
+  // Gradient body (tapered trapezoid)
+  const bodyShader = Skia.Shader.MakeLinearGradient(
+    { x: x - 16, y },
+    { x: x + 16, y },
+    [Skia.Color('#CBD5E1'), Skia.Color('#94A3B8'), Skia.Color('#64748B')],
+    [0, 0.5, 1],
+    TileMode.Clamp,
+  );
+  p.setShader(bodyShader);
+  const bodyPath = Skia.Path.Make();
+  bodyPath.moveTo(x - 16, baseY);
+  bodyPath.lineTo(x - 12, topY);
+  bodyPath.lineTo(x + 12, topY);
+  bodyPath.lineTo(x + 16, baseY);
+  bodyPath.close();
+  canvas.drawPath(bodyPath, p);
+  p.setShader(null);
+
+  // Highlight strip
+  p.setColor(Skia.Color('rgba(255,255,255,0.25)'));
+  canvas.drawRect(Skia.XYWHRect(x - 16, topY, 4, baseY - topY), p);
+  // Shadow strip
+  p.setColor(Skia.Color('rgba(15,23,42,0.2)'));
+  canvas.drawRect(Skia.XYWHRect(x + 12, topY, 4, baseY - topY), p);
+  // Horizontal line
+  p.setStyle(PaintStyle.Stroke);
+  p.setStrokeWidth(1);
+  p.setColor(Skia.Color('rgba(15,23,42,0.2)'));
+  const hLine = Skia.Path.Make();
+  hLine.moveTo(x - 16, y + 4);
+  hLine.lineTo(x + 16, y + 4);
+  canvas.drawPath(hLine, p);
+  p.setStyle(PaintStyle.Fill);
 
   // Battlements
-  p.setStyle(PaintStyle.Fill);
-  p.setColor(Skia.Color('rgba(71,85,105,0.9)'));
-  const battDir = side === 'top' ? 1 : -1;
-  for (const i of [-1, 0, 1]) {
-    canvas.drawRect(
-      Skia.XYWHRect(x + i * half * 0.6 - half * 0.18, y + battDir * half - 3, half * 0.36, 4),
-      p,
-    );
-  }
+  const battY = topY + dir * 7;
+  p.setColor(Skia.Color('#CBD5E1'));
+  canvas.drawRect(Skia.XYWHRect(x - 14, battY - 4, 6, 7), p);
+  canvas.drawRect(Skia.XYWHRect(x - 3, battY - 4, 6, 7), p);
+  canvas.drawRect(Skia.XYWHRect(x + 8, battY - 4, 6, 7), p);
+
+  // Color accent dot
+  p.setColor(Skia.Color(towerColor));
+  canvas.drawCircle(x, y - 8, 5, p);
+  p.setColor(Skia.Color('rgba(255,255,255,0.6)'));
+  canvas.drawCircle(x - 1, y - 9, 2, p);
 
   // Emblem
   if (emblemId) {
@@ -1541,8 +1593,8 @@ function drawSideTower(
   }
 
   // HP bar
-  const barY = side === 'top' ? y + half + 4 : y - half - 7;
-  drawHealthBar(canvas, x, barY, half * 2.4, st.hp, st.maxHp, towerColor, p);
+  const barY = side === 'top' ? y + 20 : topY - 7;
+  drawHealthBar(canvas, x, barY, 28, st.hp, st.maxHp, towerColor, p);
 }
 
 function drawTowerBody(
@@ -1851,18 +1903,50 @@ function drawFantasyTower(
 ) {
   const x = t.x;
   const y = t.y;
-  const half = 14;
   const color = getTowerColor(t.type);
   const statusColor = t.frozen ? '#BAE6FD' : t.poisoned ? '#84CC16' : t.overclocked ? '#FCD34D' : color;
-  const isSuper = t.level >= 6;
+  const isSuper = (t.level || 1) >= 6;
   const isSelected = selectedTower === t.id;
+  const level = t.level || 1;
+  const tall = (level - 1) * 10;
+  const flip = side === 'top';
+  const dir = flip ? 1 : -1;
+
+  // Spawn scale animation
+  let scale = 1;
+  const spawnAge = (t as any).spawnAge;
+  if (spawnAge !== undefined && spawnAge < 0.45) {
+    const prog = spawnAge / 0.45;
+    scale = 0.4 + 0.6 * prog + Math.sin(prog * Math.PI) * 0.18;
+  }
+
+  canvas.save();
+  canvas.translate(x, y);
+  canvas.scale(scale, scale);
+  canvas.translate(-x, -y);
+
+  // Shadow ellipse
+  p.setStyle(PaintStyle.Fill);
+  p.setColor(Skia.Color('rgba(15,23,42,0.15)'));
+  const shadowPath = Skia.Path.Make();
+  shadowPath.addOval(Skia.XYWHRect(x - 18, y + 11, 36, 10));
+  canvas.drawPath(shadowPath, p);
+
+  const hp = t.hp ?? 60;
+  const maxHp = t.maxHp ?? 60;
+  if (hp <= 0) {
+    p.setColor(Skia.Color('#CBD5E1'));
+    canvas.drawRect(Skia.XYWHRect(x - 12, y + 8, 24, 6), p);
+    canvas.restore();
+    return;
+  }
 
   // L6 aura
   if (isSuper) {
     p.setStyle(PaintStyle.Stroke);
     p.setStrokeWidth(3);
-    p.setColor(Skia.Color('rgba(251,191,36,0.4)'));
-    canvas.drawCircle(x, y, half * 1.6, p);
+    p.setColor(Skia.Color('rgba(251,191,36,0.5)'));
+    canvas.drawCircle(x, y, 24, p);
     p.setStyle(PaintStyle.Fill);
   }
 
@@ -1871,57 +1955,98 @@ function drawFantasyTower(
     p.setStyle(PaintStyle.Stroke);
     p.setStrokeWidth(2);
     p.setColor(Skia.Color('rgba(252,211,77,0.5)'));
-    canvas.drawCircle(x, y, half * 1.4, p);
+    canvas.drawCircle(x, y, 20, p);
     p.setStyle(PaintStyle.Fill);
   }
 
-  // Edit mode highlight
+  // Edit highlight
   if (editMode && t.isPlayer) {
     p.setColor(Skia.Color('rgba(59,130,246,0.15)'));
-    canvas.drawCircle(x, y, half * 1.5, p);
+    canvas.drawCircle(x, y, 22, p);
   }
 
-  // Body
-  drawTowerBody(canvas, x, y, half, t.level, skinId, p);
+  const bodyTop = y - 2 - tall;
 
-  // Border
+  // Trapezoid body
+  const skin = TOWER_SKINS[skinId || 'default'] || TOWER_SKINS['default'];
+  const bodyColors = skin.body;
+  const bodyShader = Skia.Shader.MakeLinearGradient(
+    { x: x - 16, y },
+    { x: x + 16, y },
+    [Skia.Color(bodyColors[0]), Skia.Color(bodyColors[1]), Skia.Color(bodyColors[2])],
+    [0, 0.5, 1],
+    TileMode.Clamp,
+  );
+  p.setStyle(PaintStyle.Fill);
+  p.setShader(bodyShader);
+  const bodyPath = Skia.Path.Make();
+  bodyPath.moveTo(x - 16, y + 14);
+  bodyPath.lineTo(x - 12, bodyTop);
+  bodyPath.lineTo(x + 12, bodyTop);
+  bodyPath.lineTo(x + 16, y + 14);
+  bodyPath.close();
+  canvas.drawPath(bodyPath, p);
+  p.setShader(null);
+
+  // Highlight strip
+  p.setColor(Skia.Color('rgba(255,255,255,0.25)'));
+  canvas.drawRect(Skia.XYWHRect(x - 16, bodyTop, 4, 14 + (y - bodyTop)), p);
+  // Shadow strip
+  p.setColor(Skia.Color('rgba(15,23,42,0.2)'));
+  canvas.drawRect(Skia.XYWHRect(x + 12, bodyTop, 4, 14 + (y - bodyTop)), p);
+  // Horizontal line
   p.setStyle(PaintStyle.Stroke);
-  p.setStrokeWidth(1.5);
-  p.setColor(Skia.Color(statusColor + 'AA'));
-  canvas.drawRect(Skia.XYWHRect(x - half, y - half, half * 2, half * 2), p);
+  p.setStrokeWidth(1);
+  p.setColor(Skia.Color('rgba(15,23,42,0.2)'));
+  const hLine = Skia.Path.Make();
+  hLine.moveTo(x - 16, y + 6);
+  hLine.lineTo(x + 16, y + 6);
+  canvas.drawPath(hLine, p);
   p.setStyle(PaintStyle.Fill);
 
   // Battlements
-  p.setColor(Skia.Color('rgba(71,85,105,0.95)'));
-  const battDir = side === 'top' ? 1 : -1;
-  for (const i of [-1, 0, 1]) {
-    canvas.drawRect(
-      Skia.XYWHRect(x + i * half * 0.55 - half * 0.16, y + battDir * half - 3.5, half * 0.32, 4.5),
-      p,
-    );
+  const battY = bodyTop + dir * 8;
+  p.setColor(Skia.Color('#CBD5E1'));
+  canvas.drawRect(Skia.XYWHRect(x - 14, battY - 4, 6, 7), p);
+  canvas.drawRect(Skia.XYWHRect(x - 3, battY - 4, 6, 7), p);
+  canvas.drawRect(Skia.XYWHRect(x + 8, battY - 4, 6, 7), p);
+  if (level >= 3) {
+    canvas.drawRect(Skia.XYWHRect(x - 9, battY - 9, 5, 6), p);
+    canvas.drawRect(Skia.XYWHRect(x + 4, battY - 9, 5, 6), p);
   }
 
   // Tower top decoration
-  p.setColor(Skia.Color(statusColor + 'DD'));
-  drawTowerTop(canvas, t.type, x, y, half, statusColor + 'DD', p);
+  p.setColor(Skia.Color(statusColor));
+  drawTowerTop(canvas, t.type, x, y, 14, statusColor, p);
+
+  // Level pips
+  if (level > 1) {
+    const spacing = level <= 3 ? 8 : 6;
+    const pipR = level >= 6 ? 2.5 : 2;
+    const start = x - (level - 1) * spacing / 2;
+    for (let i = 0; i < level; i++) {
+      p.setColor(Skia.Color('#FCD34D'));
+      canvas.drawCircle(start + i * spacing, y + 11, pipR, p);
+    }
+  }
+
+  canvas.restore();
+
+  // HP bar (outside save/restore so it's not scaled)
+  if (hp < maxHp) {
+    drawHealthBar(canvas, x, bodyTop - 6, 32, hp, maxHp, hpColor(hp / maxHp), p);
+  }
 
   // Frost overlay
   if (t.frozen) {
     p.setColor(Skia.Color('rgba(186,230,253,0.3)'));
-    canvas.drawRect(Skia.XYWHRect(x - half, y - half, half * 2, half * 2), p);
+    canvas.drawRect(Skia.XYWHRect(x - 16, bodyTop, 32, y + 14 - bodyTop), p);
   }
 
   // Poison overlay
   if (t.poisoned) {
     p.setColor(Skia.Color('rgba(132,204,22,0.25)'));
-    canvas.drawRect(Skia.XYWHRect(x - half, y - half, half * 2, half * 2), p);
-  }
-
-  // HP bar (only if damaged)
-  if (t.hp < t.maxHp) {
-    const barW = half * 2.2;
-    const barY = y - half - 8;
-    drawHealthBar(canvas, x, barY, barW, t.hp, t.maxHp, hpColor(t.hp / t.maxHp), p);
+    canvas.drawRect(Skia.XYWHRect(x - 16, bodyTop, 32, y + 14 - bodyTop), p);
   }
 
   // Selected range ring
