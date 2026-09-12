@@ -1,68 +1,698 @@
 {
-  "home": { "tagline": "분할 화면 타워 디펜스.", "playNow": "지금 플레이", "trophies": "트로피", "winRate": "승률", "wins": "승리", "losses": "패배", "recentMatches": "최근 경기", "dailyMissions": "일일 미션" },
-  "nav": { "home": "홈", "shop": "상점", "play": "플레이", "cards": "카드", "ranks": "랭크" },
-  "setup": { "title": "로드아웃", "subtitle": "3개의 능력, {towers}개 타워, {orbs}개 오브 선택", "training": "훈련", "casual": "일반", "ranked": "랭크전", "aiDifficulty": "AI 난이도", "towers": "타워", "orbs": "오브", "powers": "능력", "startMatch": "경기 시작", "trophyReq": "🔒 {n}🏆", "crateLock": "🔒 상자", "quickPlay": "빠른 플레이", "quickPlayHint": "저장된 로드아웃으로 참가", "changeLoadout": "로드아웃 변경", "moreInLab": "+{n} 더 보기 →", "rankedBetaDisclaimer": "랭크전에서 AI 대전은 임시입니다." },
-  "difficulty": { "easy": "쉬움", "normal": "보통", "hard": "어려움" },
-  "shop": { "title": "상점", "shards": "{n} 파편", "shardsHint": "연구소에서 카드 레벨업에 사용", "crates": "상자", "freeDaily": "매일 무료", "claimed": "수령 완료 ✓", "freeEveryDay": "매일 무료", "buy": "구매", "free": "무료", "opening": "열기 중…", "youGot": "획득했습니다", "newUnlock": "새 해금!", "leveledUp": "{n} 레벨 달성!", "shardsMaxed": "+{n} 파편 (최대)", "duplicate": "중복 · {n}/{m} 복사본", "awesome": "대단해요!", "cardChanceFull": "카드 보장", "cardChancePct": "{n}% 카드", "gemChancePct": "{n}% 보석", "crateSuffix": "상자", "voucherTitle": "바우처 코드", "voucherHint": "코드를 입력하여 보상 수령", "voucherPlaceholder": "코드 입력", "redeem": "교환", "voucherSuccess": "코드 교환 완료!", "voucherInvalid": "유효하지 않은 코드", "voucherAlreadyUsed": "이미 사용된 코드", "exchangeTitle": "보석 교환", "exchangeRate": "1 💎 = 10 🪙", "handTitle": "핸드", "handDesc": "더 많은 클릭과 빠른 충전", "handCurrent": "{clicks} 클릭 · {recharge}초 재장전", "handNext": "+2 최대 · −0.04초 재장전", "handMaxed": "MAX · {clicks} 클릭 · {recharge}초", "handUpgrade": "업그레이드", "maxLabel": "MAX", "sideTowerTitle": "사이드 타워", "sideTowerDesc": "더 강한 측면", "sideTowerCurrent": "HP {hp} · DMG {dmg} · {rate}초", "sideTowerNext": "+{hp} HP · +{dmg} DMG", "sideTowerUpgrade": "업그레이드", "dailyGemChest": "일일 보석 상자", "dailyGemChestHint": "매일 10~60 보석.", "claimDailyGems": "10~60 보석 수령", "dailyGemsClaimed": "내일 다시 오세요", "gems": "보석", "comingSoon": "곧 출시", "betaSubtext": "프리미엄 기능 곧 출시." },
-  "collection": { "title": "연구소", "hint": "복사본과 파편으로 카드 레벨업.", "towers": "타워", "orbs": "오브", "powers": "능력", "upgrades": "업그레이드", "trophyLock": "🔒 {n} 트로피", "crateLock": "🔒 상자 열기", "maxLevel": "★ MAX", "copies": "복사본", "levelUpFree": "레벨업 (무료)", "levelUpShards": "레벨업 · 💎 {n}", "levelUp": "레벨업", "buyCopy": "복사본 구매 🔷 {n}", "collectMore": "더 수집", "sectionStarter": "스타터", "sectionTrophy": "트로피 해금", "sectionCrate": "상자 전용", "sectionLocked": "잠김", "handTitle": "핸드", "handDesc": "경기당 더 많은 클릭", "sideTowerTitle": "사이드 타워", "sideTowerDesc": "더 강한 자동 방어", "upgrade": "업그레이드", "maxed": "MAX" },
-  "leaderboard": { "title": "리더보드", "loading": "로딩 중…", "you": "(나)", "trophies": "트로피", "tabRanks": "순위", "tabAchievements": "업적" },
-  "game": { "victory": "승리", "defeat": "패배", "trainingWin": "훈련 승리", "trainingLoss": "훈련 패배", "promoted": "승급!", "demoted": "강등", "vs": "vs", "noTrophyChange": "트로피 변화 없음 — 훈련 모드", "trophiesChange": "{n} 트로피", "home": "홈", "playAgain": "다시 플레이", "forfeit": "← 기권", "overtime": "⚡ OT", "intensifying": "⚡ 격화 중", "critical": "⚡ 위기", "suddenDeath": "⚡ 서든데스", "maxPressure": "⚡ 최대 압박", "towerBleed": "⚡ 타워 붕괴", "combo": "콤보 x{n}", "rejoinTitle": "경기 진행 중", "rejoinDesc": "미완료 경기가 있습니다", "rejoin": "재참가", "forfeitMatch": "기권", "searching": "상대 검색 중…", "searchingHint": "아래를 탭하여 AI와 대전", "playVsAi": "AI와 대전", "startingMatch": "경기 시작 중…", "cancel": "취소" },
-  "friends": { "title": "친구", "tabFriends": "친구", "tabRequests": "요청", "addFriend": "친구 추가", "usernamePlaceholder": "사용자 이름 입력", "search": "검색", "add": "추가", "notFound": "플레이어를 찾을 수 없음", "self": "그건 당신이에요!", "requestSent": "요청 전송됨!", "alreadyFriends": "이미 친구", "yourFriends": "내 친구", "noFriends": "아직 친구 없음", "play": "플레이", "waiting": "대기 중…", "cancel": "취소", "friendRequests": "친구 요청", "noRequests": "대기 중인 요청 없음", "accept": "수락" },
-  "settings": { "title": "설정", "friends": "친구", "changeNameTitle": "이름 변경?", "changeNameBody": "이 이름으로 친구들이 당신을 찾습니다.", "confirmChange": "변경", "account": "계정", "language": "언어", "profile": "프로필", "displayName": "표시 이름", "google": "Google", "connected": "연결됨", "connect": "연결", "save": "저장", "saved": "저장됨!", "deleteAccount": "계정 삭제", "signOut": "로그아웃", "accountDesc": "계정을 연결하여 진행 상황 보호", "languageDesc": "선호 언어 선택", "back": "홈", "nameTaken": "이미 사용 중인 이름", "nameError": "이름을 저장할 수 없음", "nameInappropriate": "부적절한 이름", "sound": "음향 효과", "soundDesc": "비프음, 폭발음, 팡파레", "advancedHaptics": "고급 햅틱", "advancedHapticsDesc": "클릭과 코인마다 진동", "soundClicks": "탭과 코인", "soundExplosions": "폭발과 능력", "soundFanfare": "승리 팡파레", "hapticsIntensity": "진동 강도", "hapticsIntensityDesc": "폰이 얼마나 강하게 진동하는지", "hapticOff": "끄기", "hapticLow": "약함", "hapticMedium": "보통", "hapticHigh": "강함", "deleteConfirmTitle": "계정 삭제?", "deleteConfirmBody": "계정과 모든 진행 상황이 영구적으로 삭제됩니다.", "deleteButton": "영구 삭제", "deleteTypeHint": "'delete' 입력하여 확인", "deleting": "삭제 중…", "cancel": "취소", "privacyPolicy": "개인정보 처리방침", "gameplay": "게임플레이", "gameplayDesc": "게임 내 HUD 조정", "towerMenuAnytime": "언제든지 타워 메뉴 열기", "towerMenuAnytimeDesc": "편집 모드 없이 타워 탭하여 업그레이드", "fitToScreen": "화면에 맞추기", "fitToScreenDesc": "게임 필드 크기 조정.", "replayTutorial": "튜토리얼 다시 보기", "eula": "EULA", "impressum": "임프레숨", "downloadData": "내 데이터 다운로드", "reportUser": "플레이어 신고" },
-  "onboarding": { "welcome": "환영합니다!", "chooseLanguage": "언어 선택", "chooseUsername": "사용자 이름 선택", "usernameHint": "이 이름이 경기에서 당신을 나타냅니다.", "usernamePlaceholder": "이름 입력", "checkName": "확인", "nameAvailable": "사용 가능!", "next": "다음", "continue": "계속", "ageGate": "나이 확인", "ageGateHint": "생년월일 입력", "dobDay": "일", "dobMonth": "월", "dobYear": "년", "dobError": "유효한 생년월일을 입력하세요", "saveError": "저장할 수 없습니다. 다시 시도하세요." },
-  "privacy": { "back": "뒤로", "title": "개인정보 처리방침" },
-  "impressum": { "back": "뒤로", "title": "임프레숨", "heading": "Angaben gemäß § 5 TMG:", "name": "Felix Werner", "careOf": "c/o COCENTER", "street": "Koppoldstr. 1", "city": "86551 Aichach", "emailLabel": "Email: info@splitterorbs.com" },
-  "eula": { "back": "뒤로", "title": "최종 사용자 라이선스 계약", "intro": "약관을 검토하고 동의하세요.", "accept": "동의", "decline": "거부", "settingsEula": "EULA", "downloadData": "내 데이터 다운로드", "downloading": "다운로드 중…" },
-  "achievements": { "title": "업적", "subtitle": "도전을 완료하여 보상을 획득하세요", "claim": "수령", "claimAll": "모두 수령", "claimed": "수령 완료 ✓", "first_win": { "name": "첫 승리", "desc": "첫 번째 경기에서 승리" }, "win_10": { "name": "베테랑", "desc": "10경기 승리" }, "win_50": { "name": "챔피언", "desc": "50경기 승리" }, "streak_5": { "name": "불꽃 질주", "desc": "5연승" }, "trophies_100": { "name": "루키", "desc": "트로피 100 달성" }, "trophies_1000": { "name": "챔피언", "desc": "트로피 1000 달성" }, "orbs_1000": { "name": "오브 사냥꾼", "desc": "오브 1000개 파괴" }, "towers_100": { "name": "건설자", "desc": "타워 100개 배치" }, "abilities_50": { "name": "마법사", "desc": "능력 50회 사용" }, "games_100": { "name": "헌신적인 플레이어", "desc": "100경기 플레이" } },
-  "missions": { "title": "일일 미션", "win2": "2경기 승리", "play3": "3경기 플레이", "ranked1": "랭크전 1경기 승리" },
-  "leagues": { "0": "초보자", "1": "루키", "2": "생도", "3": "베테랑", "4": "챔피언", "5": "마스터", "6": "레전드" },
-  "towers": { "basic": { "name": "블래스터", "desc": "신뢰할 수 있는 단일 타겟 사수." }, "machinegun": { "name": "벌컨", "desc": "연사, 낮은 피해." }, "sniper": { "name": "랜서", "desc": "극한 사거리, 막대한 피해." }, "boomerang": { "name": "피어서", "desc": "최대 3개 오브 관통." }, "rebound": { "name": "부메랑", "desc": "날이 날아가서 돌아옴." }, "bomb": { "name": "박격포", "desc": "폭발물 투척." }, "bouncer": { "name": "바운서", "desc": "오브를 끌어당겨 튕김." }, "glacier": { "name": "빙하", "desc": "범위 내 오브 감속." }, "arc": { "name": "아크", "desc": "번개가 오브 사이를 연쇄." }, "pyre": { "name": "파이어", "desc": "단거리 화염과 화상 DoT." }, "venom": { "name": "독", "desc": "시간이 지남에 따라 독 축적." }, "siege": { "name": "공성", "desc": "매우 느리지만 거대한 범위 피해." }, "orb_mortar": { "name": "오브 박격포", "desc": "상대에게 무작위 오브 투척." }, "lava_mortar": { "name": "용암 박격포", "desc": "화염 폭탄 투척." }, "repulsor": { "name": "리펄서", "desc": "오브를 뒤로 밀침." }, "cryo": { "name": "크라이오 캐논", "desc": "오브를 얼리는 빔." }, "seeker": { "name": "시커", "desc": "최저 HP 오브에 유도 미사일." }, "prism": { "name": "프리즘 랜스", "desc": "지속 빔, 피해 증가." }, "flak": { "name": "플랙 캐논", "desc": "5발 산탄." }, "harpoon": { "name": "작살", "desc": "가장 먼 오브를 끌어당김." }, "twin": { "name": "트윈 캐논", "desc": "두 오브를 동시에 조준." }, "tesla": { "name": "테슬라 코일", "desc": "주기적 AoE 펄스." }, "detonator": { "name": "기폭제", "desc": "폭탄 오브 강제 폭발." }, "magnet": { "name": "자석", "desc": "오브를 모으는 인력기 투척." }, "capacitor": { "name": "커패시터", "desc": "충전 후 폭발 방출." }, "overcharger": { "name": "오버차저", "desc": "인접 타워 강화." }, "mine_layer": { "name": "지뢰 설치기", "desc": "지뢰 설치." } },
-  "orbs": { "normal": { "name": "일반", "desc": "균형 잡힌 오브." }, "fast": { "name": "빠름", "desc": "낮은 HP지만 매우 빠름." }, "bomb": { "name": "폭탄", "desc": "사망 시 폭발." }, "splitter": { "name": "분열자", "desc": "더 작은 오브로 분열." }, "tank": { "name": "탱크", "desc": "높은 HP, 타워 공격." }, "mine": { "name": "지뢰", "desc": "클릭하여 폭발." }, "sprint": { "name": "스프린트", "desc": "기지로 직행." }, "swarmer": { "name": "군집", "desc": "세 개씩 무리 지어 등장." }, "shield": { "name": "실더", "desc": "재생 방어막 보유." }, "healer": { "name": "힐러", "desc": "아군에게 주기적 치유." }, "radioactive": { "name": "방사성", "desc": "타워에 독 감염." }, "shadow": { "name": "그림자", "desc": "은신 오브." }, "ice": { "name": "얼음", "desc": "처음 닿는 타워 동결." }, "fog": { "name": "안개", "desc": "은신 오브, 모든 타워 피해." }, "zap_orb": { "name": "잽", "desc": "타워에서 타워로 점프." }, "armored": { "name": "장갑", "desc": "고정 피해 감소." }, "carrier": { "name": "캐리어", "desc": "사망 시 약한 오브 3개 방출." }, "growth": { "name": "성장", "desc": "시간이 지남에 따라 HP와 속도 증가." }, "shield_bubble": { "name": "방어막 버블", "desc": "아군에게 방어막 투영." }, "berserker": { "name": "버서커", "desc": "낮은 HP에서 강해짐." }, "phantom": { "name": "팬텀", "desc": "타워를 통과." }, "leech": { "name": "거머리", "desc": "타워에서 HP 흡수." }, "summoner": { "name": "소환사", "desc": "미니언 오브 소환." } },
-  "abilities": { "zap": { "name": "잽", "desc": "모든 오브에 번개 공격." }, "portal": { "name": "포탈", "desc": "최대 6개 오브를 상대에게 순간이동." }, "repair": { "name": "수리", "desc": "기지 HP 회복." }, "freeze": { "name": "동결", "desc": "내 쪽 모든 오브 동결." }, "rage": { "name": "분노", "desc": "모든 타워 3배 빠른 사격." }, "shield": { "name": "방어막", "desc": "기지에 대한 모든 피해 차단." }, "burner": { "name": "버너", "desc": "길게 눌러 화염 채널링." }, "meteor": { "name": "운석", "desc": "지점을 탭하여 운석 공격 호출." }, "glue": { "name": "접착제", "desc": "오브를 느리게 하는 끈적한 웅덩이." }, "overclock": { "name": "오버클록", "desc": "타워가 더 빠르게 사격하고 관통." }, "speed_zone": { "name": "속도 구역", "desc": "내 오브가 더 빠르게 이동." }, "damage_zone": { "name": "피해 구역", "desc": "내 오브가 더 많은 피해." }, "frost_zone": { "name": "서리 구역", "desc": "내부 타워 동결." }, "deep_freeze": { "name": "딥 프리즈", "desc": "상대의 모든 타워 동결." } },
-  "errors": { "title": "문제가 발생했습니다", "eulaRequired": "약관이 업데이트됨 — 새 EULA에 동의하세요.", "rateLimited": "너무 많은 작업.", "unknown": "예기치 않은 오류가 발생했습니다." },
+  "home": {
+    "tagline": "분할 화면 타워 디펜스.",
+    "playNow": "지금 플레이",
+    "trophies": "트로피",
+    "winRate": "승률",
+    "wins": "승리",
+    "losses": "패배",
+    "recentMatches": "최근 경기",
+    "dailyMissions": "일일 미션"
+  },
+  "nav": {
+    "home": "홈",
+    "shop": "상점",
+    "play": "플레이",
+    "cards": "카드",
+    "ranks": "랭크"
+  },
+  "setup": {
+    "title": "로드아웃",
+    "subtitle": "3개의 능력, {towers}개 타워, {orbs}개 오브 선택",
+    "training": "훈련",
+    "casual": "일반",
+    "ranked": "랭크전",
+    "aiDifficulty": "AI 난이도",
+    "towers": "타워",
+    "orbs": "오브",
+    "powers": "능력",
+    "startMatch": "경기 시작",
+    "trophyReq": "🔒 {n}🏆",
+    "crateLock": "🔒 상자",
+    "quickPlay": "빠른 플레이",
+    "quickPlayHint": "저장된 로드아웃으로 참가",
+    "changeLoadout": "로드아웃 변경",
+    "moreInLab": "+{n} 더 보기 →",
+    "rankedBetaDisclaimer": "랭크전에서 AI 대전은 임시입니다."
+  },
+  "difficulty": {
+    "easy": "쉬움",
+    "normal": "보통",
+    "hard": "어려움"
+  },
+  "shop": {
+    "title": "상점",
+    "shards": "{n} 파편",
+    "shardsHint": "연구소에서 카드 레벨업에 사용",
+    "crates": "상자",
+    "freeDaily": "매일 무료",
+    "claimed": "수령 완료 ✓",
+    "freeEveryDay": "매일 무료",
+    "buy": "구매",
+    "free": "무료",
+    "opening": "열기 중…",
+    "youGot": "획득했습니다",
+    "newUnlock": "새 해금!",
+    "leveledUp": "{n} 레벨 달성!",
+    "shardsMaxed": "+{n} 파편 (최대)",
+    "duplicate": "중복 · {n}/{m} 복사본",
+    "awesome": "대단해요!",
+    "cardChanceFull": "카드 보장",
+    "cardChancePct": "{n}% 카드",
+    "gemChancePct": "{n}% 보석",
+    "crateSuffix": "상자",
+    "voucherTitle": "바우처 코드",
+    "voucherHint": "코드를 입력하여 보상 수령",
+    "voucherPlaceholder": "코드 입력",
+    "redeem": "교환",
+    "voucherSuccess": "코드 교환 완료!",
+    "voucherInvalid": "유효하지 않은 코드",
+    "voucherAlreadyUsed": "이미 사용된 코드",
+    "exchangeTitle": "보석 교환",
+    "exchangeRate": "1 💎 = 10 🪙",
+    "handTitle": "핸드",
+    "handDesc": "더 많은 클릭과 빠른 충전",
+    "handCurrent": "{clicks} 클릭 · {recharge}초 재장전",
+    "handNext": "+2 최대 · −0.04초 재장전",
+    "handMaxed": "MAX · {clicks} 클릭 · {recharge}초",
+    "handUpgrade": "업그레이드",
+    "maxLabel": "MAX",
+    "sideTowerTitle": "사이드 타워",
+    "sideTowerDesc": "더 강한 측면",
+    "sideTowerCurrent": "HP {hp} · DMG {dmg} · {rate}초",
+    "sideTowerNext": "+{hp} HP · +{dmg} DMG",
+    "sideTowerUpgrade": "업그레이드",
+    "dailyGemChest": "일일 보석 상자",
+    "dailyGemChestHint": "매일 10~60 보석.",
+    "claimDailyGems": "10~60 보석 수령",
+    "dailyGemsClaimed": "내일 다시 오세요",
+    "gems": "보석",
+    "comingSoon": "곧 출시",
+    "betaSubtext": "프리미엄 기능 곧 출시."
+  },
+  "collection": {
+    "title": "연구소",
+    "hint": "복사본과 파편으로 카드 레벨업.",
+    "towers": "타워",
+    "orbs": "오브",
+    "powers": "능력",
+    "upgrades": "업그레이드",
+    "trophyLock": "🔒 {n} 트로피",
+    "crateLock": "🔒 상자 열기",
+    "maxLevel": "★ MAX",
+    "copies": "복사본",
+    "levelUpFree": "레벨업 (무료)",
+    "levelUpShards": "레벨업 · 💎 {n}",
+    "levelUp": "레벨업",
+    "buyCopy": "복사본 구매 🔷 {n}",
+    "collectMore": "더 수집",
+    "sectionStarter": "스타터",
+    "sectionTrophy": "트로피 해금",
+    "sectionCrate": "상자 전용",
+    "sectionLocked": "잠김",
+    "handTitle": "핸드",
+    "handDesc": "경기당 더 많은 클릭",
+    "sideTowerTitle": "사이드 타워",
+    "sideTowerDesc": "더 강한 자동 방어",
+    "upgrade": "업그레이드",
+    "maxed": "MAX"
+  },
+  "leaderboard": {
+    "title": "리더보드",
+    "loading": "로딩 중…",
+    "you": "(나)",
+    "trophies": "트로피",
+    "tabRanks": "순위",
+    "tabAchievements": "업적"
+  },
+  "game": {
+    "victory": "승리",
+    "defeat": "패배",
+    "trainingWin": "훈련 승리",
+    "trainingLoss": "훈련 패배",
+    "promoted": "승급!",
+    "demoted": "강등",
+    "vs": "vs",
+    "noTrophyChange": "트로피 변화 없음 — 훈련 모드",
+    "trophiesChange": "{n} 트로피",
+    "home": "홈",
+    "playAgain": "다시 플레이",
+    "forfeit": "← 기권",
+    "overtime": "⚡ OT",
+    "intensifying": "⚡ 격화 중",
+    "critical": "⚡ 위기",
+    "suddenDeath": "⚡ 서든데스",
+    "maxPressure": "⚡ 최대 압박",
+    "towerBleed": "⚡ 타워 붕괴",
+    "combo": "콤보 x{n}",
+    "rejoinTitle": "경기 진행 중",
+    "rejoinDesc": "미완료 경기가 있습니다",
+    "rejoin": "재참가",
+    "forfeitMatch": "기권",
+    "searching": "상대 검색 중…",
+    "searchingHint": "아래를 탭하여 AI와 대전",
+    "playVsAi": "AI와 대전",
+    "startingMatch": "경기 시작 중…",
+    "cancel": "취소"
+  },
+  "friends": {
+    "title": "친구",
+    "tabFriends": "친구",
+    "tabRequests": "요청",
+    "addFriend": "친구 추가",
+    "usernamePlaceholder": "사용자 이름 입력",
+    "search": "검색",
+    "add": "추가",
+    "notFound": "플레이어를 찾을 수 없음",
+    "self": "그건 당신이에요!",
+    "requestSent": "요청 전송됨!",
+    "alreadyFriends": "이미 친구",
+    "yourFriends": "내 친구",
+    "noFriends": "아직 친구 없음",
+    "play": "플레이",
+    "waiting": "대기 중…",
+    "cancel": "취소",
+    "friendRequests": "친구 요청",
+    "noRequests": "대기 중인 요청 없음",
+    "accept": "수락"
+  },
+  "settings": {
+    "title": "설정",
+    "friends": "친구",
+    "changeNameTitle": "이름 변경?",
+    "changeNameBody": "이 이름으로 친구들이 당신을 찾습니다.",
+    "confirmChange": "변경",
+    "account": "계정",
+    "language": "언어",
+    "profile": "프로필",
+    "displayName": "표시 이름",
+    "google": "Google",
+    "connected": "연결됨",
+    "connect": "연결",
+    "save": "저장",
+    "saved": "저장됨!",
+    "deleteAccount": "계정 삭제",
+    "signOut": "로그아웃",
+    "accountDesc": "계정을 연결하여 진행 상황 보호",
+    "languageDesc": "선호 언어 선택",
+    "back": "홈",
+    "nameTaken": "이미 사용 중인 이름",
+    "nameError": "이름을 저장할 수 없음",
+    "nameInappropriate": "부적절한 이름",
+    "sound": "음향 효과",
+    "soundDesc": "비프음, 폭발음, 팡파레",
+    "advancedHaptics": "고급 햅틱",
+    "advancedHapticsDesc": "클릭과 코인마다 진동",
+    "soundClicks": "탭과 코인",
+    "soundExplosions": "폭발과 능력",
+    "soundFanfare": "승리 팡파레",
+    "hapticsIntensity": "진동 강도",
+    "hapticsIntensityDesc": "폰이 얼마나 강하게 진동하는지",
+    "hapticOff": "끄기",
+    "hapticLow": "약함",
+    "hapticMedium": "보통",
+    "hapticHigh": "강함",
+    "deleteConfirmTitle": "계정 삭제?",
+    "deleteConfirmBody": "계정과 모든 진행 상황이 영구적으로 삭제됩니다.",
+    "deleteButton": "영구 삭제",
+    "deleteTypeHint": "'delete' 입력하여 확인",
+    "deleting": "삭제 중…",
+    "cancel": "취소",
+    "privacyPolicy": "개인정보 처리방침",
+    "gameplay": "게임플레이",
+    "gameplayDesc": "게임 내 HUD 조정",
+    "towerMenuAnytime": "언제든지 타워 메뉴 열기",
+    "towerMenuAnytimeDesc": "편집 모드 없이 타워 탭하여 업그레이드",
+    "fitToScreen": "화면에 맞추기",
+    "fitToScreenDesc": "게임 필드 크기 조정.",
+    "replayTutorial": "튜토리얼 다시 보기",
+    "eula": "EULA",
+    "impressum": "임프레숨",
+    "downloadData": "내 데이터 다운로드",
+    "reportUser": "플레이어 신고",
+    "downloadDataTitle": "데이터 내보내기",
+    "downloadDataSuccess": "데이터 내보내기가 완료되었습니다.",
+    "downloadDataErrorTitle": "내보내기 실패",
+    "downloadDataError": "데이터를 내보낼 수 없습니다.",
+    "reportSelf": "자신을 신고할 수 없습니다.",
+    "reportSent": "신고가 제출되었습니다. 감사합니다."
+  },
+  "onboarding": {
+    "welcome": "환영합니다!",
+    "chooseLanguage": "언어 선택",
+    "chooseUsername": "사용자 이름 선택",
+    "usernameHint": "이 이름이 경기에서 당신을 나타냅니다.",
+    "usernamePlaceholder": "이름 입력",
+    "checkName": "확인",
+    "nameAvailable": "사용 가능!",
+    "next": "다음",
+    "continue": "계속",
+    "ageGate": "나이 확인",
+    "ageGateHint": "생년월일 입력",
+    "dobDay": "일",
+    "dobMonth": "월",
+    "dobYear": "년",
+    "dobError": "유효한 생년월일을 입력하세요",
+    "saveError": "저장할 수 없습니다. 다시 시도하세요."
+  },
+  "privacy": {
+    "back": "뒤로",
+    "title": "개인정보 처리방침"
+  },
+  "impressum": {
+    "back": "뒤로",
+    "title": "임프레숨",
+    "heading": "Angaben gemäß § 5 TMG:",
+    "name": "Felix Werner",
+    "careOf": "c/o COCENTER",
+    "street": "Koppoldstr. 1",
+    "city": "86551 Aichach",
+    "emailLabel": "Email: info@splitterorbs.com"
+  },
+  "eula": {
+    "back": "뒤로",
+    "title": "최종 사용자 라이선스 계약",
+    "intro": "약관을 검토하고 동의하세요.",
+    "accept": "동의",
+    "decline": "거부",
+    "settingsEula": "EULA",
+    "downloadData": "내 데이터 다운로드",
+    "downloading": "다운로드 중…"
+  },
+  "achievements": {
+    "title": "업적",
+    "subtitle": "도전을 완료하여 보상을 획득하세요",
+    "claim": "수령",
+    "claimAll": "모두 수령",
+    "claimed": "수령 완료 ✓",
+    "first_win": {
+      "name": "첫 승리",
+      "desc": "첫 번째 경기에서 승리"
+    },
+    "win_10": {
+      "name": "베테랑",
+      "desc": "10경기 승리"
+    },
+    "win_50": {
+      "name": "챔피언",
+      "desc": "50경기 승리"
+    },
+    "streak_5": {
+      "name": "불꽃 질주",
+      "desc": "5연승"
+    },
+    "trophies_100": {
+      "name": "루키",
+      "desc": "트로피 100 달성"
+    },
+    "trophies_1000": {
+      "name": "챔피언",
+      "desc": "트로피 1000 달성"
+    },
+    "orbs_1000": {
+      "name": "오브 사냥꾼",
+      "desc": "오브 1000개 파괴"
+    },
+    "towers_100": {
+      "name": "건설자",
+      "desc": "타워 100개 배치"
+    },
+    "abilities_50": {
+      "name": "마법사",
+      "desc": "능력 50회 사용"
+    },
+    "games_100": {
+      "name": "헌신적인 플레이어",
+      "desc": "100경기 플레이"
+    }
+  },
+  "missions": {
+    "title": "일일 미션",
+    "win2": "2경기 승리",
+    "play3": "3경기 플레이",
+    "ranked1": "랭크전 1경기 승리"
+  },
+  "leagues": {
+    "0": "초보자",
+    "1": "루키",
+    "2": "생도",
+    "3": "베테랑",
+    "4": "챔피언",
+    "5": "마스터",
+    "6": "레전드"
+  },
+  "towers": {
+    "basic": {
+      "name": "블래스터",
+      "desc": "신뢰할 수 있는 단일 타겟 사수."
+    },
+    "machinegun": {
+      "name": "벌컨",
+      "desc": "연사, 낮은 피해."
+    },
+    "sniper": {
+      "name": "랜서",
+      "desc": "극한 사거리, 막대한 피해."
+    },
+    "boomerang": {
+      "name": "피어서",
+      "desc": "최대 3개 오브 관통."
+    },
+    "rebound": {
+      "name": "부메랑",
+      "desc": "날이 날아가서 돌아옴."
+    },
+    "bomb": {
+      "name": "박격포",
+      "desc": "폭발물 투척."
+    },
+    "bouncer": {
+      "name": "바운서",
+      "desc": "오브를 끌어당겨 튕김."
+    },
+    "glacier": {
+      "name": "빙하",
+      "desc": "범위 내 오브 감속."
+    },
+    "arc": {
+      "name": "아크",
+      "desc": "번개가 오브 사이를 연쇄."
+    },
+    "pyre": {
+      "name": "파이어",
+      "desc": "단거리 화염과 화상 DoT."
+    },
+    "venom": {
+      "name": "독",
+      "desc": "시간이 지남에 따라 독 축적."
+    },
+    "siege": {
+      "name": "공성",
+      "desc": "매우 느리지만 거대한 범위 피해."
+    },
+    "orb_mortar": {
+      "name": "오브 박격포",
+      "desc": "상대에게 무작위 오브 투척."
+    },
+    "lava_mortar": {
+      "name": "용암 박격포",
+      "desc": "화염 폭탄 투척."
+    },
+    "repulsor": {
+      "name": "리펄서",
+      "desc": "오브를 뒤로 밀침."
+    },
+    "cryo": {
+      "name": "크라이오 캐논",
+      "desc": "오브를 얼리는 빔."
+    },
+    "seeker": {
+      "name": "시커",
+      "desc": "최저 HP 오브에 유도 미사일."
+    },
+    "prism": {
+      "name": "프리즘 랜스",
+      "desc": "지속 빔, 피해 증가."
+    },
+    "flak": {
+      "name": "플랙 캐논",
+      "desc": "5발 산탄."
+    },
+    "harpoon": {
+      "name": "작살",
+      "desc": "가장 먼 오브를 끌어당김."
+    },
+    "twin": {
+      "name": "트윈 캐논",
+      "desc": "두 오브를 동시에 조준."
+    },
+    "tesla": {
+      "name": "테슬라 코일",
+      "desc": "주기적 AoE 펄스."
+    },
+    "detonator": {
+      "name": "기폭제",
+      "desc": "폭탄 오브 강제 폭발."
+    },
+    "magnet": {
+      "name": "자석",
+      "desc": "오브를 모으는 인력기 투척."
+    },
+    "capacitor": {
+      "name": "커패시터",
+      "desc": "충전 후 폭발 방출."
+    },
+    "overcharger": {
+      "name": "오버차저",
+      "desc": "인접 타워 강화."
+    },
+    "mine_layer": {
+      "name": "지뢰 설치기",
+      "desc": "지뢰 설치."
+    }
+  },
+  "orbs": {
+    "normal": {
+      "name": "일반",
+      "desc": "균형 잡힌 오브."
+    },
+    "fast": {
+      "name": "빠름",
+      "desc": "낮은 HP지만 매우 빠름."
+    },
+    "bomb": {
+      "name": "폭탄",
+      "desc": "사망 시 폭발."
+    },
+    "splitter": {
+      "name": "분열자",
+      "desc": "더 작은 오브로 분열."
+    },
+    "tank": {
+      "name": "탱크",
+      "desc": "높은 HP, 타워 공격."
+    },
+    "mine": {
+      "name": "지뢰",
+      "desc": "클릭하여 폭발."
+    },
+    "sprint": {
+      "name": "스프린트",
+      "desc": "기지로 직행."
+    },
+    "swarmer": {
+      "name": "군집",
+      "desc": "세 개씩 무리 지어 등장."
+    },
+    "shield": {
+      "name": "실더",
+      "desc": "재생 방어막 보유."
+    },
+    "healer": {
+      "name": "힐러",
+      "desc": "아군에게 주기적 치유."
+    },
+    "radioactive": {
+      "name": "방사성",
+      "desc": "타워에 독 감염."
+    },
+    "shadow": {
+      "name": "그림자",
+      "desc": "은신 오브."
+    },
+    "ice": {
+      "name": "얼음",
+      "desc": "처음 닿는 타워 동결."
+    },
+    "fog": {
+      "name": "안개",
+      "desc": "은신 오브, 모든 타워 피해."
+    },
+    "zap_orb": {
+      "name": "잽",
+      "desc": "타워에서 타워로 점프."
+    },
+    "armored": {
+      "name": "장갑",
+      "desc": "고정 피해 감소."
+    },
+    "carrier": {
+      "name": "캐리어",
+      "desc": "사망 시 약한 오브 3개 방출."
+    },
+    "growth": {
+      "name": "성장",
+      "desc": "시간이 지남에 따라 HP와 속도 증가."
+    },
+    "shield_bubble": {
+      "name": "방어막 버블",
+      "desc": "아군에게 방어막 투영."
+    },
+    "berserker": {
+      "name": "버서커",
+      "desc": "낮은 HP에서 강해짐."
+    },
+    "phantom": {
+      "name": "팬텀",
+      "desc": "타워를 통과."
+    },
+    "leech": {
+      "name": "거머리",
+      "desc": "타워에서 HP 흡수."
+    },
+    "summoner": {
+      "name": "소환사",
+      "desc": "미니언 오브 소환."
+    }
+  },
+  "abilities": {
+    "zap": {
+      "name": "잽",
+      "desc": "모든 오브에 번개 공격."
+    },
+    "portal": {
+      "name": "포탈",
+      "desc": "최대 6개 오브를 상대에게 순간이동."
+    },
+    "repair": {
+      "name": "수리",
+      "desc": "기지 HP 회복."
+    },
+    "freeze": {
+      "name": "동결",
+      "desc": "내 쪽 모든 오브 동결."
+    },
+    "rage": {
+      "name": "분노",
+      "desc": "모든 타워 3배 빠른 사격."
+    },
+    "shield": {
+      "name": "방어막",
+      "desc": "기지에 대한 모든 피해 차단."
+    },
+    "burner": {
+      "name": "버너",
+      "desc": "길게 눌러 화염 채널링."
+    },
+    "meteor": {
+      "name": "운석",
+      "desc": "지점을 탭하여 운석 공격 호출."
+    },
+    "glue": {
+      "name": "접착제",
+      "desc": "오브를 느리게 하는 끈적한 웅덩이."
+    },
+    "overclock": {
+      "name": "오버클록",
+      "desc": "타워가 더 빠르게 사격하고 관통."
+    },
+    "speed_zone": {
+      "name": "속도 구역",
+      "desc": "내 오브가 더 빠르게 이동."
+    },
+    "damage_zone": {
+      "name": "피해 구역",
+      "desc": "내 오브가 더 많은 피해."
+    },
+    "frost_zone": {
+      "name": "서리 구역",
+      "desc": "내부 타워 동결."
+    },
+    "deep_freeze": {
+      "name": "딥 프리즈",
+      "desc": "상대의 모든 타워 동결."
+    }
+  },
+  "errors": {
+    "title": "문제가 발생했습니다",
+    "eulaRequired": "약관이 업데이트됨 — 새 EULA에 동의하세요.",
+    "rateLimited": "너무 많은 작업.",
+    "unknown": "예기치 않은 오류가 발생했습니다."
+  },
   "eulaContent": {
-    "s1t": "1. 약관 동의", "s1b": "Splitter Orbs를 다운로드, 설치, 접근 또는 사용함으로써 이 최종 사용자 라이선스 계약에 구속되는 것에 동의합니다. 동의하지 않으면 앱을 사용하지 마십시오.",
-    "s2t": "2. 사용 라이선스", "s2b": "이 EULA 준수를 조건으로, 개발자는 개인적, 비상업적 목적으로 앱을 설치하고 사용할 수 있는 제한적, 비독점적, 양도 불가, 취소 가능한 라이선스를 부여합니다.",
-    "s3t": "3. 계정", "s3b": "귀하는 계정 보안 유지와 계정 하에서 발생하는 모든 활동에 대해 책임이 있습니다.",
-    "s4t": "4. 허용 가능한 사용", "s4b": "다음을 하지 않을 것에 동의합니다: (a) 치트, 해킹 또는 무단 타사 소프트웨어 사용; (b) 버그 또는 취약점 악용; (c) 다른 사용자 괴롭힘 또는 해침; (d) 불법 목적으로 앱 사용; (e) 앱 역공학; (f) 제한을 우회하기 위한 다중 계정 생성.",
-    "s5t": "5. 가상 아이템 및 통화", "s5b": "앱에는 실제 금전적 가치가 없는 가상 아이템과 통화(코인, 젬, 파편)가 포함되어 있습니다. 가상 아이템은 언제든지 보상 없이 초기화되거나 제거될 수 있습니다.",
-    "s6t": "6. 도박 없음", "s6b": "앱에는 무작위 보상 시스템(크레이트)이 포함되어 있습니다. 이것은 도박이 아닙니다. 항상 게임 내 아이템을 받습니다. 가상 아이템은 실제 돈으로 교환할 수 없습니다.",
-    "s7t": "7. 지적 재산권", "s7b": "앱의 모든 콘텐츠는 개발자 또는 라이선서의 소유입니다. 사전 서면 허가 없이 복사, 배포 또는 수정할 수 없습니다.",
-    "s8t": "8. 보증 면책", "s8b": "앱은 어떠한 보증도 없이 '있는 그대로' 제공됩니다. 개발자는 앱이 중단 없이 또는 오류 없이 작동할 것을 보증하지 않습니다.",
-    "s9t": "9. 책임 제한", "s9b": "법률이 허용하는 최대 범위 내에서, 개발자는 간접적, 우발적 또는 결과적 손해에 대해 책임을 지지 않습니다.",
-    "s10t": "10. 면책", "s10b": "이 EULA 위반 또는 앱 오용으로 인한 청구로부터 개발자를 면책하고 무해하게 유지하는 것에 동의합니다.",
-    "s11t": "11. 개인정보 및 데이터", "s11b": "귀하의 데이터는 앱의 개인정보 처리방침에 따라 처리됩니다. 앱을 사용함으로써 개인정보 처리방침에 설명된 데이터 관행에 동의합니다.",
-    "s12t": "12. 연령 요건", "s12b": "귀하의 지역에 대한 최소 연령 요건을 충족해야 합니다: 대부분의 국가에서 13세, 스페인/이탈리아/오스트리아에서 14세, 프랑스에서 15세, 독일/네덜란드/아일랜드에서 16세.",
-    "s13t": "13. 타사 서비스", "s13b": "앱은 타사 서비스(Supabase, Google)를 사용합니다. 개발자는 이러한 타사의 관행에 대해 책임을 지지 않습니다.",
-    "s14t": "14. 약관 변경", "s14b": "개발자는 언제든지 이 EULA를 업데이트할 수 있습니다. 중요한 변경 사항은 업데이트된 약관에 동의하도록 요구합니다.",
-    "s15t": "15. 준거법", "s15b": "이 EULA는 독일 연방 공화국의 법률에 따라 규율됩니다.",
-    "s16t": "16. 연락처", "s16b": "이 EULA에 관한 질문은 info@splitterorbs.com으로 문의하십시오.",
-    "s17t": "17. 불가항력", "s17b": "개발자는 합리적인 통제 범위를 벗어난 원인으로 인한 성능 실패 또는 지연에 대해 책임을 지지 않습니다. 여기에는 천재지변, 인터넷 또는 서버 중단, 제3자 서비스 장애(Supabase 인프라 포함), 사이버 공격, 정부 조치 또는 개발자의 통제 밖의 기타 사건이 포함되나 이에 국한되지 않습니다. 이러한 경우 가상 아이템, 게임 진행 상황 및 계정 데이터가 보상 없이 손실될 수 있습니다.",
-    "s18t": "18. 계약 해지", "s18b": "개발자는 귀하가 이 EULA를 위반하거나 다른 사용자 또는 앱에 해로운 행동을 하는 경우 통지 여부와 관계없이 언제든지 귀하의 계정을 정지하거나 영구적으로 해지할 수 있습니다. 해지 시 앱 사용 라이선스가 즉시 종료되며 모든 가상 아이템, 통화 및 게임 진행 상황은 환불이나 보상 없이 몰수됩니다. 설정 화면을 통해 언제든지 계정을 삭제할 수 있습니다.",
-    "s19t": "19. 분쟁 해결", "s19b": "분쟁 발생 시 먼저 info@splitterorbs.com으로 개발자에게 연락하여 비공식적 해결을 모색하는 데 동의합니다. 30일 이내에 비공식적으로 해결되지 않으면 독일 법원의 전속 관할에 제출됩니다. 이 조항은 적용 가능한 EU 법률에 따른 소비자로서의 법적 권리를 제한하지 않습니다.",
-    "s20t": "20. 분리 가능성", "s20b": "이 EULA의 어떤 조항이 관할 법원에 의해 무효, 불법 또는 집행 불가능하다고 판단되는 경우, 해당 조항은 집행 가능하게 만들기 위해 필요한 최소한의 범위로 수정되거나, 수정이 불가능한 경우 삭제됩니다. 나머지 조항은 완전한 효력을 유지합니다.",
-    "s21t": "21. 완전한 합의", "s21b": "이 EULA는 개인정보 처리방침과 함께 앱 사용에 관한 귀하와 개발자 간의 완전한 합의를 구성하며 모든 이전 합의, 진술 및 이해를 대체합니다. 어떤 조항의 포기도 해당 조항의 추가적이거나 지속적인 포기로 간주되지 않습니다.",
-    "s22t": "22. 강화된 책임 제한", "s22b": "적용 가능한 법률이 허용하는 최대 범위 내에서: (a) 이 EULA 또는 앱 사용으로 인한 청구에 대한 개발자의 총 책임은 청구 전 12개월 동안 귀하가 개발자에게 지불한 금액 또는 지불이 없는 경우 €5를 초과하지 않습니다; (b) 개발자는 원인에 관계없이 게임 진행 상황, 가상 아이템, 게임 내 통화, 계정 데이터 또는 기타 앱 내 콘텐츠의 손실에 대해 책임을 지지 않습니다; (c) 개발자는 Supabase, Google 또는 Apple을 포함한 제3자 서비스 제공업체의 행위 또는 부작위에 대해 책임을 지지 않습니다.",
-    "s23t": "23. 수출 통제", "s23b": "귀하는 미국 정부 금수 조치 대상 국가 또는 '테러 지원' 국가로 지정된 국가에 위치하지 않으며, 미국 정부의 금지 또는 제한 당사자 목록에 등재되지 않았음을 진술합니다. 모든 적용 가능한 수출 및 재수출 통제 법률과 규정을 준수하는 데 동의합니다.",
-    "s24t": "24. 집단 소송 포기", "s24b": "적용 가능한 법률이 허용하는 범위 내에서, 귀하는 개발자에 대한 집단 소송 또는 집단 중재에 참여할 권리를 포기합니다. 모든 청구는 추정되는 집단 또는 대표 소송에서 원고 또는 집단 구성원이 아닌 개인 자격으로 제기되어야 합니다. 참고: 이 포기는 EU 소비자 보호법에 의해 금지된 경우에는 적용되지 않습니다."
+    "s1t": "1. 약관 동의",
+    "s1b": "Splitter Orbs를 다운로드, 설치, 접근 또는 사용함으로써 이 최종 사용자 라이선스 계약에 구속되는 것에 동의합니다. 동의하지 않으면 앱을 사용하지 마십시오.",
+    "s2t": "2. 사용 라이선스",
+    "s2b": "이 EULA 준수를 조건으로, 개발자는 개인적, 비상업적 목적으로 앱을 설치하고 사용할 수 있는 제한적, 비독점적, 양도 불가, 취소 가능한 라이선스를 부여합니다.",
+    "s3t": "3. 계정",
+    "s3b": "귀하는 계정 보안 유지와 계정 하에서 발생하는 모든 활동에 대해 책임이 있습니다.",
+    "s4t": "4. 허용 가능한 사용",
+    "s4b": "다음을 하지 않을 것에 동의합니다: (a) 치트, 해킹 또는 무단 타사 소프트웨어 사용; (b) 버그 또는 취약점 악용; (c) 다른 사용자 괴롭힘 또는 해침; (d) 불법 목적으로 앱 사용; (e) 앱 역공학; (f) 제한을 우회하기 위한 다중 계정 생성.",
+    "s5t": "5. 가상 아이템 및 통화",
+    "s5b": "앱에는 실제 금전적 가치가 없는 가상 아이템과 통화(코인, 젬, 파편)가 포함되어 있습니다. 가상 아이템은 언제든지 보상 없이 초기화되거나 제거될 수 있습니다.",
+    "s6t": "6. 도박 없음",
+    "s6b": "앱에는 무작위 보상 시스템(크레이트)이 포함되어 있습니다. 이것은 도박이 아닙니다. 항상 게임 내 아이템을 받습니다. 가상 아이템은 실제 돈으로 교환할 수 없습니다.",
+    "s7t": "7. 지적 재산권",
+    "s7b": "앱의 모든 콘텐츠는 개발자 또는 라이선서의 소유입니다. 사전 서면 허가 없이 복사, 배포 또는 수정할 수 없습니다.",
+    "s8t": "8. 보증 면책",
+    "s8b": "앱은 어떠한 보증도 없이 '있는 그대로' 제공됩니다. 개발자는 앱이 중단 없이 또는 오류 없이 작동할 것을 보증하지 않습니다.",
+    "s9t": "9. 책임 제한",
+    "s9b": "법률이 허용하는 최대 범위 내에서, 개발자는 간접적, 우발적 또는 결과적 손해에 대해 책임을 지지 않습니다.",
+    "s10t": "10. 면책",
+    "s10b": "이 EULA 위반 또는 앱 오용으로 인한 청구로부터 개발자를 면책하고 무해하게 유지하는 것에 동의합니다.",
+    "s11t": "11. 개인정보 및 데이터",
+    "s11b": "귀하의 데이터는 앱의 개인정보 처리방침에 따라 처리됩니다. 앱을 사용함으로써 개인정보 처리방침에 설명된 데이터 관행에 동의합니다.",
+    "s12t": "12. 연령 요건",
+    "s12b": "귀하의 지역에 대한 최소 연령 요건을 충족해야 합니다: 대부분의 국가에서 13세, 스페인/이탈리아/오스트리아에서 14세, 프랑스에서 15세, 독일/네덜란드/아일랜드에서 16세.",
+    "s13t": "13. 타사 서비스",
+    "s13b": "앱은 타사 서비스(Supabase, Google)를 사용합니다. 개발자는 이러한 타사의 관행에 대해 책임을 지지 않습니다.",
+    "s14t": "14. 약관 변경",
+    "s14b": "개발자는 언제든지 이 EULA를 업데이트할 수 있습니다. 중요한 변경 사항은 업데이트된 약관에 동의하도록 요구합니다.",
+    "s15t": "15. 준거법",
+    "s15b": "이 EULA는 독일 연방 공화국의 법률에 따라 규율됩니다.",
+    "s16t": "16. 연락처",
+    "s16b": "이 EULA에 관한 질문은 info@splitterorbs.com으로 문의하십시오.",
+    "s17t": "17. 불가항력",
+    "s17b": "개발자는 합리적인 통제 범위를 벗어난 원인으로 인한 성능 실패 또는 지연에 대해 책임을 지지 않습니다. 여기에는 천재지변, 인터넷 또는 서버 중단, 제3자 서비스 장애(Supabase 인프라 포함), 사이버 공격, 정부 조치 또는 개발자의 통제 밖의 기타 사건이 포함되나 이에 국한되지 않습니다. 이러한 경우 가상 아이템, 게임 진행 상황 및 계정 데이터가 보상 없이 손실될 수 있습니다.",
+    "s18t": "18. 계약 해지",
+    "s18b": "개발자는 귀하가 이 EULA를 위반하거나 다른 사용자 또는 앱에 해로운 행동을 하는 경우 통지 여부와 관계없이 언제든지 귀하의 계정을 정지하거나 영구적으로 해지할 수 있습니다. 해지 시 앱 사용 라이선스가 즉시 종료되며 모든 가상 아이템, 통화 및 게임 진행 상황은 환불이나 보상 없이 몰수됩니다. 설정 화면을 통해 언제든지 계정을 삭제할 수 있습니다.",
+    "s19t": "19. 분쟁 해결",
+    "s19b": "분쟁 발생 시 먼저 info@splitterorbs.com으로 개발자에게 연락하여 비공식적 해결을 모색하는 데 동의합니다. 30일 이내에 비공식적으로 해결되지 않으면 독일 법원의 전속 관할에 제출됩니다. 이 조항은 적용 가능한 EU 법률에 따른 소비자로서의 법적 권리를 제한하지 않습니다.",
+    "s20t": "20. 분리 가능성",
+    "s20b": "이 EULA의 어떤 조항이 관할 법원에 의해 무효, 불법 또는 집행 불가능하다고 판단되는 경우, 해당 조항은 집행 가능하게 만들기 위해 필요한 최소한의 범위로 수정되거나, 수정이 불가능한 경우 삭제됩니다. 나머지 조항은 완전한 효력을 유지합니다.",
+    "s21t": "21. 완전한 합의",
+    "s21b": "이 EULA는 개인정보 처리방침과 함께 앱 사용에 관한 귀하와 개발자 간의 완전한 합의를 구성하며 모든 이전 합의, 진술 및 이해를 대체합니다. 어떤 조항의 포기도 해당 조항의 추가적이거나 지속적인 포기로 간주되지 않습니다.",
+    "s22t": "22. 강화된 책임 제한",
+    "s22b": "적용 가능한 법률이 허용하는 최대 범위 내에서: (a) 이 EULA 또는 앱 사용으로 인한 청구에 대한 개발자의 총 책임은 청구 전 12개월 동안 귀하가 개발자에게 지불한 금액 또는 지불이 없는 경우 €5를 초과하지 않습니다; (b) 개발자는 원인에 관계없이 게임 진행 상황, 가상 아이템, 게임 내 통화, 계정 데이터 또는 기타 앱 내 콘텐츠의 손실에 대해 책임을 지지 않습니다; (c) 개발자는 Supabase, Google 또는 Apple을 포함한 제3자 서비스 제공업체의 행위 또는 부작위에 대해 책임을 지지 않습니다.",
+    "s23t": "23. 수출 통제",
+    "s23b": "귀하는 미국 정부 금수 조치 대상 국가 또는 '테러 지원' 국가로 지정된 국가에 위치하지 않으며, 미국 정부의 금지 또는 제한 당사자 목록에 등재되지 않았음을 진술합니다. 모든 적용 가능한 수출 및 재수출 통제 법률과 규정을 준수하는 데 동의합니다.",
+    "s24t": "24. 집단 소송 포기",
+    "s24b": "적용 가능한 법률이 허용하는 범위 내에서, 귀하는 개발자에 대한 집단 소송 또는 집단 중재에 참여할 권리를 포기합니다. 모든 청구는 추정되는 집단 또는 대표 소송에서 원고 또는 집단 구성원이 아닌 개인 자격으로 제기되어야 합니다. 참고: 이 포기는 EU 소비자 보호법에 의해 금지된 경우에는 적용되지 않습니다."
   },
   "privacyContent": {
-    "s1t": "1. 소개", "s1b": "이 개인정보 처리방침은 Splitter Orbs가 귀하의 개인 데이터를 어떻게 수집, 사용 및 보호하는지 설명합니다. EU 일반 데이터 보호 규정(GDPR/DSGVO)에 따라 데이터를 처리합니다.",
-    "s2t": "2. 데이터 관리자", "s2b": "데이터 관리자는 앱 개발자입니다. 연락처: info@splitterorbs.com.",
-    "s3t": "3. 수집하는 데이터", "s3b": "계정 및 프로필 데이터: 표시 이름, 게임 진행 상황, 게임 내 통화, 카드 컬렉션 레벨, 잠금 해제된 스킨, 설정, 로그인 연속 데이터. 소셜 데이터: 친구 목록, 매치 기록. 인증 데이터: Google 연결 시 Google 계정 ID 및 이메일. Apple 로그인 사용 시 Apple 계정 ID 및 이메일.",
-    "s4t": "4. 처리의 법적 근거", "s4b": "계약(GDPR 제6조(1)(b)): 게임 진행 처리는 서비스 제공에 필요합니다. 정당한 이익(GDPR 제6조(1)(f)): 보안 조치. 동의(GDPR 제6조(1)(a)): Google 연결은 선택 사항입니다.",
-    "s5t": "5. 데이터 보존", "s5b": "게임 데이터는 계정이 활성화된 동안 저장됩니다. 계정을 삭제하면 모든 데이터가 영구적으로 삭제됩니다.",
-    "s6t": "6. 타사 서비스", "s6b": "Supabase가 데이터베이스와 인증을 호스팅합니다. Google은 선택적 OAuth에 사용됩니다. 데이터를 판매하거나 광고 SDK를 사용하지 않습니다.",
-    "s7t": "7. 귀하의 권리", "s7b": "GDPR/DSGVO에 따라 접근, 수정, 삭제, 이동성, 이의 제기 및 동의 철회 권리가 있습니다. 이의 제기 권리(GDPR 제21조): info@splitterorbs.com으로 연락하여 정당한 이익에 기반한 처리에 언제든지 이의를 제기할 수 있습니다. 연락처: info@splitterorbs.com.",
-    "s8t": "8. 아동 개인정보", "s8b": "최소 연령: 대부분의 국가에서 13세, 스페인/이탈리아/오스트리아에서 14세, 프랑스에서 15세, 독일/네덜란드/아일랜드에서 16세.",
-    "s9t": "9. 이 정책의 변경", "s9b": "이 개인정보 처리방침을 수시로 업데이트할 수 있습니다. 변경 사항은 앱 내에 게시됩니다.",
-    "s10t": "10. 임프레섬", "s10b": "Felix Werner, c/o COCENTER, Koppoldstr. 1, 86551 Aichach. 이메일: info@splitterorbs.com",
-    "s11t": "11. 지리적 제한", "s11b": "이 앱은 다음 국가에서만 사용 가능합니다: 독일, 네덜란드, 프랑스, 스페인, 이탈리아, 영국, 포르투갈, 일본, 스위스, 오스트리아, 폴란드, 스웨덴, 아일랜드, 덴마크, 핀란드, 노르웨이, 루마니아.",
-    "s12t": "12. 데이터 처리자 및 처리 계약", "s12b": "Supabase, Inc.는 GDPR 제28조를 준수하는 데이터 처리 계약(DPA)에 따라 당사를 대신하여 데이터 처리자로 활동합니다. Supabase는 당사의 지시에 따라서만 귀하의 데이터를 처리합니다. Google LLC는 Google Sign-In 사용 시 인증을 위한 데이터 처리자로 활동합니다. 두 처리자 모두 귀하의 데이터를 보호할 계약상 의무가 있습니다.",
-    "s13t": "13. 국제 데이터 이전", "s13b": "Supabase는 미국을 포함하여 유럽 경제 지역(EEA) 외부의 서버에 귀하의 데이터를 저장하고 처리할 수 있습니다. 이러한 이전은 GDPR 제46조 제2항 (c)호에 따라 유럽 위원회가 승인한 표준 계약 조항(SCC)으로 보호됩니다. info@splitterorbs.com으로 연락하여 적용 가능한 이전 보호 조치의 사본을 요청할 수 있습니다.",
-    "s14t": "14. 감독 기관에 불만 제기 권리", "s14b": "GDPR 제77조에 따라, 귀하의 데이터가 불법으로 처리되고 있다고 생각하는 경우 감독 기관에 불만을 제기할 권리가 있습니다. 이 앱의 관할 감독 기관은: Bayerisches Landesamt für Datenschutzaufsicht (BayLDA), Promenade 18, 91522 Ansbach, 독일. 웹사이트: www.lda.bayern.de. 거주 국가의 감독 기관에도 연락할 수 있습니다.",
-    "s15t": "15. 자동화된 의사결정 및 프로파일링", "s15b": "GDPR 제22조에 설명된 바와 같이 법적 효과를 생성하거나 귀하에게 유사하게 중대한 영향을 미치는 자동화된 의사결정이나 프로파일링을 사용하지 않습니다. 매치메이킹과 게임 내 AI는 법적 또는 중대한 실제 효과가 없는 순수한 게임플레이 메커니즘입니다.",
-    "s16t": "16. 로컬 저장소 및 기기 데이터", "s16b": "앱은 AsyncStorage(로컬 저장소에 해당)를 사용하여 게임 설정, 환경 설정 및 세션 토큰을 기기에 로컬로 저장합니다. 추적 쿠키는 사용되지 않습니다. Supabase는 당사의 정당한 이익(GDPR 제6조 제1항 (f)호)에 따라 보안 및 남용 방지 목적으로 귀하의 IP 주소와 기본 기기 메타데이터(운영 체제, 앱 버전)를 자동으로 기록합니다. 이 데이터는 90일 동안 보관됩니다.",
-    "s17t": "17. 데이터 침해 통지", "s17b": "귀하의 권리와 자유에 위험을 초래할 가능성이 있는 개인 데이터 침해 발생 시, GDPR 제33조에 따라 72시간 이내에 관할 감독 기관에 통지합니다. 침해가 귀하의 권리와 자유에 높은 위험을 초래할 가능성이 있는 경우, GDPR 제34조에 따라 귀하의 계정과 연결된 이메일 주소를 통해 부당한 지연 없이 귀하에게도 직접 통지합니다."
+    "s1t": "1. 소개",
+    "s1b": "이 개인정보 처리방침은 Splitter Orbs가 귀하의 개인 데이터를 어떻게 수집, 사용 및 보호하는지 설명합니다. EU 일반 데이터 보호 규정(GDPR/DSGVO)에 따라 데이터를 처리합니다.",
+    "s2t": "2. 데이터 관리자",
+    "s2b": "데이터 관리자는 앱 개발자입니다. 연락처: info@splitterorbs.com.",
+    "s3t": "3. 수집하는 데이터",
+    "s3b": "계정 및 프로필 데이터: 표시 이름, 게임 진행 상황, 게임 내 통화, 카드 컬렉션 레벨, 잠금 해제된 스킨, 설정, 로그인 연속 데이터. 소셜 데이터: 친구 목록, 매치 기록. 인증 데이터: Google 연결 시 Google 계정 ID 및 이메일. Apple 로그인 사용 시 Apple 계정 ID 및 이메일.",
+    "s4t": "4. 처리의 법적 근거",
+    "s4b": "계약(GDPR 제6조(1)(b)): 게임 진행 처리는 서비스 제공에 필요합니다. 정당한 이익(GDPR 제6조(1)(f)): 보안 조치. 동의(GDPR 제6조(1)(a)): Google 연결은 선택 사항입니다.",
+    "s5t": "5. 데이터 보존",
+    "s5b": "게임 데이터는 계정이 활성화된 동안 저장됩니다. 계정을 삭제하면 모든 데이터가 영구적으로 삭제됩니다.",
+    "s6t": "6. 타사 서비스",
+    "s6b": "Supabase가 데이터베이스와 인증을 호스팅합니다. Google은 선택적 OAuth에 사용됩니다. 데이터를 판매하거나 광고 SDK를 사용하지 않습니다.",
+    "s7t": "7. 귀하의 권리",
+    "s7b": "GDPR/DSGVO에 따라 접근, 수정, 삭제, 이동성, 이의 제기 및 동의 철회 권리가 있습니다. 이의 제기 권리(GDPR 제21조): info@splitterorbs.com으로 연락하여 정당한 이익에 기반한 처리에 언제든지 이의를 제기할 수 있습니다. 연락처: info@splitterorbs.com.",
+    "s8t": "8. 아동 개인정보",
+    "s8b": "최소 연령: 대부분의 국가에서 13세, 스페인/이탈리아/오스트리아에서 14세, 프랑스에서 15세, 독일/네덜란드/아일랜드에서 16세.",
+    "s9t": "9. 이 정책의 변경",
+    "s9b": "이 개인정보 처리방침을 수시로 업데이트할 수 있습니다. 변경 사항은 앱 내에 게시됩니다.",
+    "s10t": "10. 임프레섬",
+    "s10b": "Felix Werner, c/o COCENTER, Koppoldstr. 1, 86551 Aichach. 이메일: info@splitterorbs.com",
+    "s11t": "11. 지리적 제한",
+    "s11b": "이 앱은 다음 국가에서만 사용 가능합니다: 독일, 네덜란드, 프랑스, 스페인, 이탈리아, 영국, 포르투갈, 일본, 스위스, 오스트리아, 폴란드, 스웨덴, 아일랜드, 덴마크, 핀란드, 노르웨이, 루마니아.",
+    "s12t": "12. 데이터 처리자 및 처리 계약",
+    "s12b": "Supabase, Inc.는 GDPR 제28조를 준수하는 데이터 처리 계약(DPA)에 따라 당사를 대신하여 데이터 처리자로 활동합니다. Supabase는 당사의 지시에 따라서만 귀하의 데이터를 처리합니다. Google LLC는 Google Sign-In 사용 시 인증을 위한 데이터 처리자로 활동합니다. 두 처리자 모두 귀하의 데이터를 보호할 계약상 의무가 있습니다.",
+    "s13t": "13. 국제 데이터 이전",
+    "s13b": "Supabase는 미국을 포함하여 유럽 경제 지역(EEA) 외부의 서버에 귀하의 데이터를 저장하고 처리할 수 있습니다. 이러한 이전은 GDPR 제46조 제2항 (c)호에 따라 유럽 위원회가 승인한 표준 계약 조항(SCC)으로 보호됩니다. info@splitterorbs.com으로 연락하여 적용 가능한 이전 보호 조치의 사본을 요청할 수 있습니다.",
+    "s14t": "14. 감독 기관에 불만 제기 권리",
+    "s14b": "GDPR 제77조에 따라, 귀하의 데이터가 불법으로 처리되고 있다고 생각하는 경우 감독 기관에 불만을 제기할 권리가 있습니다. 이 앱의 관할 감독 기관은: Bayerisches Landesamt für Datenschutzaufsicht (BayLDA), Promenade 18, 91522 Ansbach, 독일. 웹사이트: www.lda.bayern.de. 거주 국가의 감독 기관에도 연락할 수 있습니다.",
+    "s15t": "15. 자동화된 의사결정 및 프로파일링",
+    "s15b": "GDPR 제22조에 설명된 바와 같이 법적 효과를 생성하거나 귀하에게 유사하게 중대한 영향을 미치는 자동화된 의사결정이나 프로파일링을 사용하지 않습니다. 매치메이킹과 게임 내 AI는 법적 또는 중대한 실제 효과가 없는 순수한 게임플레이 메커니즘입니다.",
+    "s16t": "16. 로컬 저장소 및 기기 데이터",
+    "s16b": "앱은 AsyncStorage(로컬 저장소에 해당)를 사용하여 게임 설정, 환경 설정 및 세션 토큰을 기기에 로컬로 저장합니다. 추적 쿠키는 사용되지 않습니다. Supabase는 당사의 정당한 이익(GDPR 제6조 제1항 (f)호)에 따라 보안 및 남용 방지 목적으로 귀하의 IP 주소와 기본 기기 메타데이터(운영 체제, 앱 버전)를 자동으로 기록합니다. 이 데이터는 90일 동안 보관됩니다.",
+    "s17t": "17. 데이터 침해 통지",
+    "s17b": "귀하의 권리와 자유에 위험을 초래할 가능성이 있는 개인 데이터 침해 발생 시, GDPR 제33조에 따라 72시간 이내에 관할 감독 기관에 통지합니다. 침해가 귀하의 권리와 자유에 높은 위험을 초래할 가능성이 있는 경우, GDPR 제34조에 따라 귀하의 계정과 연결된 이메일 주소를 통해 부당한 지연 없이 귀하에게도 직접 통지합니다."
   }
 }

@@ -1,68 +1,698 @@
 {
-  "home": { "tagline": "Split-Screen Tower Defense.", "playNow": "JETZT SPIELEN", "trophies": "Trophäen", "winRate": "Siegrate", "wins": "Siege", "losses": "Niederlagen", "recentMatches": "Letzte Spiele", "dailyMissions": "Tägliche Missionen" },
-  "nav": { "home": "Start", "shop": "Laden", "play": "Spielen", "cards": "Karten", "ranks": "Ränge" },
-  "setup": { "title": "Loadout", "subtitle": "Wähle 3 Kräfte, {towers} Türme & {orbs} Orbs", "training": "Training", "casual": "Locker", "ranked": "Rangliste", "aiDifficulty": "KI-Schwierigkeit", "towers": "Türme", "orbs": "Orbs", "powers": "Kräfte", "startMatch": "SPIEL STARTEN", "trophyReq": "🔒 {n}🏆", "crateLock": "🔒 Kiste", "quickPlay": "Schnelles Spiel", "quickPlayHint": "Spring mit deinem Loadout ein", "changeLoadout": "Loadout ändern", "moreInLab": "+{n} mehr im Lab →", "rankedBetaDisclaimer": "Gegen KI in der Rangliste ist vorübergehend." },
-  "difficulty": { "easy": "Einfach", "normal": "Normal", "hard": "Schwer" },
-  "shop": { "title": "Laden", "shards": "{n} Splitter", "shardsHint": "Im Lab ausgeben, um Karten aufzuwerten", "crates": "Kisten", "freeDaily": "Täglich gratis", "claimed": "Abgeholt ✓", "freeEveryDay": "Jeden Tag gratis", "buy": "Kaufen", "free": "Kostenlos", "opening": "Öffnet…", "youGot": "Du bekamst", "newUnlock": "NEUE FREISCHALTUNG!", "leveledUp": "AUFGEWERTET auf {n}!", "shardsMaxed": "+{n} Splitter (max)", "duplicate": "Duplikat · {n}/{m} Kopien", "awesome": "Super!", "cardChanceFull": "Garantierte Karte", "cardChancePct": "{n}% Karte", "gemChancePct": "{n}% Edelsteine", "crateSuffix": "Kiste", "voucherTitle": "Gutscheincode", "voucherHint": "Code eingeben, um Belohnungen zu erhalten", "voucherPlaceholder": "CODE EINGEBEN", "redeem": "Einlösen", "voucherSuccess": "Code eingelöst!", "voucherInvalid": "Ungültiger Code", "voucherAlreadyUsed": "Code bereits verwendet", "exchangeTitle": "Edelsteine tauschen", "exchangeRate": "1 💎 = 10 🪙", "handTitle": "Hand", "handDesc": "Mehr Klicks und schnelleres Aufladen", "handCurrent": "{clicks} Klicks · {recharge}s Nachladen", "handNext": "+2 max · −0.04s Nachladen", "handMaxed": "MAX · {clicks} Klicks · {recharge}s", "handUpgrade": "Aufwerten", "maxLabel": "MAX", "sideTowerTitle": "Seitentürme", "sideTowerDesc": "Stärkere Flanken", "sideTowerCurrent": "HP {hp} · DMG {dmg} · {rate}s", "sideTowerNext": "+{hp} HP · +{dmg} DMG", "sideTowerUpgrade": "Aufwerten", "dailyGemChest": "Tägliche Edelstein-Kiste", "dailyGemChestHint": "10–60 Edelsteine jeden Tag.", "claimDailyGems": "10–60 Edelsteine abholen", "dailyGemsClaimed": "Komm morgen wieder", "gems": "Edelsteine", "comingSoon": "Demnächst", "betaSubtext": "Premium-Funktionen kommen bald." },
-  "collection": { "title": "Lab", "hint": "Karten mit Kopien und Splittern aufwerten.", "towers": "Türme", "orbs": "Orbs", "powers": "Kräfte", "upgrades": "Upgrades", "trophyLock": "🔒 {n} Trophäen", "crateLock": "🔒 Kisten öffnen", "maxLevel": "★ MAX", "copies": "Kopien", "levelUpFree": "Aufwerten (gratis)", "levelUpShards": "Aufwerten · 💎 {n}", "levelUp": "Aufwerten", "buyCopy": "Kopie kaufen 🔷 {n}", "collectMore": "Mehr sammeln", "sectionStarter": "Startkarten", "sectionTrophy": "Trophäen-Freischaltungen", "sectionCrate": "Nur aus Kisten", "sectionLocked": "Gesperrt", "handTitle": "Hand", "handDesc": "Mehr Klicks pro Match", "sideTowerTitle": "Seitentürme", "sideTowerDesc": "Stärkere Auto-Verteidigung", "upgrade": "Aufwerten", "maxed": "MAX" },
-  "leaderboard": { "title": "Bestenliste", "loading": "Lädt…", "you": "(Du)", "trophies": "Trophäen", "tabRanks": "Rangliste", "tabAchievements": "Erfolge" },
-  "game": { "victory": "SIEG", "defeat": "NIEDERLAGE", "trainingWin": "TRAINING SIEG", "trainingLoss": "TRAINING NIEDERLAGE", "promoted": "AUFGESTIEGEN!", "demoted": "ABGESTIEGEN", "vs": "vs", "noTrophyChange": "Keine Trophäen — Trainingsmodus", "trophiesChange": "{n} Trophäen", "home": "Start", "playAgain": "Nochmal", "forfeit": "← Aufgeben", "overtime": "⚡ VL", "intensifying": "⚡ VERSTÄRKT", "critical": "⚡ KRITISCH", "suddenDeath": "⚡ PLÖTZLICHER TOD", "maxPressure": "⚡ MAX DRUCK", "towerBleed": "⚡ TURMVERFALL", "combo": "COMBO x{n}", "rejoinTitle": "Match läuft", "rejoinDesc": "Du hast ein offenes Match", "rejoin": "Weitermachen", "forfeitMatch": "Aufgeben", "searching": "Suche nach Gegner…", "searchingHint": "Tippe unten, um gegen KI zu spielen", "playVsAi": "Gegen KI spielen", "startingMatch": "Spiel wird gestartet…", "cancel": "Abbrechen" },
-  "friends": { "title": "Freunde", "tabFriends": "Freunde", "tabRequests": "Anfragen", "addFriend": "Freund hinzufügen", "usernamePlaceholder": "Benutzernamen eingeben", "search": "Suchen", "add": "Hinzufügen", "notFound": "Kein Spieler gefunden", "self": "Das bist du!", "requestSent": "Anfrage gesendet!", "alreadyFriends": "Bereits befreundet", "yourFriends": "Deine Freunde", "noFriends": "Noch keine Freunde", "play": "Spielen", "waiting": "Warten…", "cancel": "Abbrechen", "friendRequests": "Freundschaftsanfragen", "noRequests": "Keine Anfragen", "accept": "Annehmen" },
-  "settings": { "title": "Einstellungen", "friends": "Freunde", "changeNameTitle": "Namen ändern?", "changeNameBody": "Dein Name ist, wie Freunde dich finden.", "confirmChange": "Ändern", "account": "Konto", "language": "Sprache", "profile": "Profil", "displayName": "Anzeigename", "google": "Google", "connected": "Verbunden", "connect": "Verbinden", "save": "Speichern", "saved": "Gespeichert!", "deleteAccount": "Konto löschen", "signOut": "Abmelden", "accountDesc": "Konten verknüpfen, um Fortschritt zu sichern", "languageDesc": "Bevorzugte Sprache wählen", "back": "Start", "nameTaken": "Name vergeben", "nameError": "Fehler beim Speichern", "nameInappropriate": "Unangemessener Name", "sound": "Soundeffekte", "soundDesc": "Pieptöne, Explosionen und Fanfaren", "advancedHaptics": "Erweitertes Haptik", "advancedHapticsDesc": "Bei jedem Klick und Münze vibrieren", "soundClicks": "Tippen & Münzen", "soundExplosions": "Explosionen & Kräfte", "soundFanfare": "Siegesfanfare", "hapticsIntensity": "Vibrationsstärke", "hapticsIntensityDesc": "Wie stark das Telefon vibriert", "hapticOff": "Aus", "hapticLow": "Schwach", "hapticMedium": "Mittel", "hapticHigh": "Stark", "deleteConfirmTitle": "Konto löschen?", "deleteConfirmBody": "Dies löscht dauerhaft dein Konto und alle Fortschritte.", "deleteButton": "Für immer löschen", "deleteTypeHint": "Tippe 'delete' zur Bestätigung", "deleting": "Löschen…", "cancel": "Abbrechen", "privacyPolicy": "Datenschutz", "gameplay": "Gameplay", "gameplayDesc": "HUD im Spiel anpassen", "towerMenuAnytime": "Turmmenü jederzeit", "towerMenuAnytimeDesc": "Turm antippen zum Aufwerten ohne Bearbeitungsmodus", "fitToScreen": "Spiel anpassen", "fitToScreenDesc": "Spielfeld anpassen.", "replayTutorial": "Tutorial wiederholen", "eula": "EULA", "impressum": "Impressum", "downloadData": "Meine Daten", "reportUser": "Spieler melden" },
-  "onboarding": { "welcome": "Willkommen!", "chooseLanguage": "Wähle deine Sprache", "chooseUsername": "Wähle deinen Namen", "usernameHint": "Dieser Name repräsentiert dich in Matches.", "usernamePlaceholder": "Namen eingeben", "checkName": "Prüfen", "nameAvailable": "Verfügbar!", "next": "Weiter", "continue": "Weiter", "ageGate": "Alter bestätigen", "ageGateHint": "Geburtsdatum eingeben", "dobDay": "Tag", "dobMonth": "Monat", "dobYear": "Jahr", "dobError": "Ungültiges Datum", "saveError": "Fehler beim Speichern." },
-  "privacy": { "back": "Zurück", "title": "Datenschutzerklärung" },
-  "impressum": { "back": "Zurück", "title": "Impressum", "heading": "Angaben gemäß § 5 TMG:", "name": "Felix Werner", "careOf": "c/o COCENTER", "street": "Koppoldstr. 1", "city": "86551 Aichach", "emailLabel": "E-Mail: info@splitterorbs.com" },
-  "eula": { "back": "Zurück", "title": "Endbenutzer-Lizenzvereinbarung", "intro": "Bitte Bedingungen lesen und akzeptieren.", "accept": "Akzeptieren", "decline": "Ablehnen", "settingsEula": "EULA", "downloadData": "Meine Daten", "downloading": "Lädt…" },
-  "achievements": { "title": "Erfolge", "subtitle": "Schließe Herausforderungen ab, um Belohnungen zu erhalten", "claim": "Einlösen", "claimAll": "Alle einlösen", "claimed": "Eingelöst ✓", "first_win": { "name": "Erster Sieg", "desc": "Gewinne dein erstes Match" }, "win_10": { "name": "Veteran", "desc": "Gewinne 10 Matches" }, "win_50": { "name": "Champion", "desc": "Gewinne 50 Matches" }, "streak_5": { "name": "Auf Feuer", "desc": "Gewinne 5 in Folge" }, "trophies_100": { "name": "Anfänger", "desc": "Erreiche 100 Trophäen" }, "trophies_1000": { "name": "Champion", "desc": "Erreiche 1000 Trophäen" }, "orbs_1000": { "name": "Orb-Jäger", "desc": "Zerstöre 1000 Orbs" }, "towers_100": { "name": "Baumeister", "desc": "Platziere 100 Türme" }, "abilities_50": { "name": "Zauberer", "desc": "Benutze 50 Fähigkeiten" }, "games_100": { "name": "Engagiert", "desc": "Spiele 100 Matches" } },
-  "missions": { "title": "Tägliche Missionen", "win2": "Gewinne 2 Matches", "play3": "Spiele 3 Matches", "ranked1": "Gewinne 1 Ranglisten-Match" },
-  "leagues": { "0": "Anfänger", "1": "Rookie", "2": "Kadett", "3": "Veteran", "4": "Champion", "5": "Meister", "6": "Legende" },
-  "towers": { "basic": { "name": "Blaster", "desc": "Zuverlässiger Einzelziel-Schütze." }, "machinegun": { "name": "Vulkan", "desc": "Schnellfeuer, geringer Schaden." }, "sniper": { "name": "Lanze", "desc": "Extreme Reichweite, hoher Schaden." }, "boomerang": { "name": "Durchdringer", "desc": "Durchdringt bis zu 3 Orbs." }, "rebound": { "name": "Bumerang", "desc": "Klinge fliegt aus und kehrt zurück." }, "bomb": { "name": "Mörser", "desc": "Wirft Sprengstoff mit Flächenschaden." }, "bouncer": { "name": "Abpraller", "desc": "Zieht Orbs an und lässt sie abprallen." }, "glacier": { "name": "Gletscher", "desc": "Verlangsamt Orbs in Reichweite." }, "arc": { "name": "Bogen", "desc": "Blitz springt zwischen Orbs." }, "pyre": { "name": "Scheiterhaufen", "desc": "Kurzreichweiten-Flamme mit Brandschaden." }, "venom": { "name": "Gift", "desc": "Stapelt Gift über Zeit." }, "siege": { "name": "Belagerung", "desc": "Sehr langsam, riesiger Flächenschaden." }, "orb_mortar": { "name": "Orb-Mörser", "desc": "Wirft zufälligen Orb auf Gegner." }, "lava_mortar": { "name": "Lava-Mörser", "desc": "Wirft Feuerbomben mit Flächenschaden." }, "repulsor": { "name": "Abstoßer", "desc": "Schleudert Orb zurück." }, "cryo": { "name": "Kryo-Kanone", "desc": "Strahl, der Orbs einfriert." }, "seeker": { "name": "Sucher", "desc": "Lenkraketen auf Orbs mit niedrigster HP." }, "prism": { "name": "Prisma-Lanze", "desc": "Kontinuierlicher Strahl, Schaden steigt." }, "flak": { "name": "Flak-Kanone", "desc": "5-Pellet-Streuung." }, "harpoon": { "name": "Harpune", "desc": "Zieht entferntesten Orb zurück." }, "twin": { "name": "Zwillingskanone", "desc": "Zielt gleichzeitig auf zwei Orbs." }, "tesla": { "name": "Tesla-Spule", "desc": "Periodischer AoE-Impuls." }, "detonator": { "name": "Detonator", "desc": "Zwingt Bomben-Orbs zur Detonation." }, "magnet": { "name": "Magnet", "desc": "Wirft Attraktoren, um Orbs zu bündeln." }, "capacitor": { "name": "Kondensator", "desc": "Lädt auf, dann Entladung." }, "overcharger": { "name": "Überlader", "desc": "Stärkt benachbarte Türme." }, "mine_layer": { "name": "Minenleger", "desc": "Legt Landminen." } },
-  "orbs": { "normal": { "name": "Normal", "desc": "Ausgewogener Orb." }, "fast": { "name": "Schnell", "desc": "Wenig HP, aber sehr schnell." }, "bomb": { "name": "Bombe", "desc": "Explodiert beim Tod." }, "splitter": { "name": "Teiler", "desc": "Teilt sich in kleinere Orbs." }, "tank": { "name": "Panzer", "desc": "Hohe HP, greift Türme an." }, "mine": { "name": "Mine", "desc": "Klicken zum Detonieren." }, "sprint": { "name": "Sprint", "desc": "Rennt direkt zur Station." }, "swarmer": { "name": "Schwärmer", "desc": "Erscheint in Dreiergruppen." }, "shield": { "name": "Schildträger", "desc": "Hat einen regenerierenden Schild." }, "healer": { "name": "Heiler", "desc": "Heilt Verbündete pulsartig." }, "radioactive": { "name": "Radioaktiv", "desc": "Infiziert Türme mit Gift." }, "shadow": { "name": "Schatten", "desc": "Tarn-Orb." }, "ice": { "name": "Eis", "desc": "Friert ersten berührten Turm ein." }, "fog": { "name": "Nebel", "desc": "Tarn-Orb, beschädigt alle Türme." }, "zap_orb": { "name": "Zap", "desc": "Springt von Turm zu Turm." }, "armored": { "name": "Gepanzert", "desc": "Flache Schadensreduzierung." }, "carrier": { "name": "Träger", "desc": "Lässt 3 schwache Orbs beim Tod frei." }, "growth": { "name": "Wachstum", "desc": "Gewinnt HP und Geschwindigkeit über Zeit." }, "shield_bubble": { "name": "Schutzblase", "desc": "Projiziert Schild über Verbündete." }, "berserker": { "name": "Berserker", "desc": "Wird bei niedrigen HP stärker." }, "phantom": { "name": "Phantom", "desc": "Geht durch Türme hindurch." }, "leech": { "name": "Blutegel", "desc": "Saugt HP aus Türmen." }, "summoner": { "name": "Beschwörer", "desc": "Erschafft Minion-Orbs." } },
-  "abilities": { "zap": { "name": "Zap", "desc": "Trifft alle Orbs mit Blitz." }, "portal": { "name": "Portal", "desc": "Teleportiert bis zu 6 Orbs zum Gegner." }, "repair": { "name": "Reparatur", "desc": "Stellt HP deiner Station wieder her." }, "freeze": { "name": "Einfrieren", "desc": "Friert alle Orbs auf deiner Seite ein." }, "rage": { "name": "Wut", "desc": "Alle Türme feuern 3× schneller." }, "shield": { "name": "Schild", "desc": "Blockiert allen Schaden an der Station." }, "burner": { "name": "Brenner", "desc": "Halten zum Flammenkanal." }, "meteor": { "name": "Meteor", "desc": "Tippe einen Punkt für Meteoreinschlag." }, "glue": { "name": "Kleber", "desc": "Klebriger Fleck, der Orbs verlangsamt." }, "overclock": { "name": "Übertakten", "desc": "Türme feuern schneller und durchdringen." }, "speed_zone": { "name": "Geschwindigkeitszone", "desc": "Deine Orbs bewegen sich schneller." }, "damage_zone": { "name": "Schadenszone", "desc": "Deine Orbs verursachen mehr Schaden." }, "frost_zone": { "name": "Frostzone", "desc": "Türme darin sind eingefroren." }, "deep_freeze": { "name": "Tiefgefroren", "desc": "Friert ALLE gegnerischen Türme ein." } },
-  "errors": { "title": "Fehler", "eulaRequired": "Nutzungsbedingungen aktualisiert.", "rateLimited": "Zu viele Aktionen.", "unknown": "Unerwarteter Fehler." },
+  "home": {
+    "tagline": "Split-Screen Tower Defense.",
+    "playNow": "JETZT SPIELEN",
+    "trophies": "Trophäen",
+    "winRate": "Siegrate",
+    "wins": "Siege",
+    "losses": "Niederlagen",
+    "recentMatches": "Letzte Spiele",
+    "dailyMissions": "Tägliche Missionen"
+  },
+  "nav": {
+    "home": "Start",
+    "shop": "Laden",
+    "play": "Spielen",
+    "cards": "Karten",
+    "ranks": "Ränge"
+  },
+  "setup": {
+    "title": "Loadout",
+    "subtitle": "Wähle 3 Kräfte, {towers} Türme & {orbs} Orbs",
+    "training": "Training",
+    "casual": "Locker",
+    "ranked": "Rangliste",
+    "aiDifficulty": "KI-Schwierigkeit",
+    "towers": "Türme",
+    "orbs": "Orbs",
+    "powers": "Kräfte",
+    "startMatch": "SPIEL STARTEN",
+    "trophyReq": "🔒 {n}🏆",
+    "crateLock": "🔒 Kiste",
+    "quickPlay": "Schnelles Spiel",
+    "quickPlayHint": "Spring mit deinem Loadout ein",
+    "changeLoadout": "Loadout ändern",
+    "moreInLab": "+{n} mehr im Lab →",
+    "rankedBetaDisclaimer": "Gegen KI in der Rangliste ist vorübergehend."
+  },
+  "difficulty": {
+    "easy": "Einfach",
+    "normal": "Normal",
+    "hard": "Schwer"
+  },
+  "shop": {
+    "title": "Laden",
+    "shards": "{n} Splitter",
+    "shardsHint": "Im Lab ausgeben, um Karten aufzuwerten",
+    "crates": "Kisten",
+    "freeDaily": "Täglich gratis",
+    "claimed": "Abgeholt ✓",
+    "freeEveryDay": "Jeden Tag gratis",
+    "buy": "Kaufen",
+    "free": "Kostenlos",
+    "opening": "Öffnet…",
+    "youGot": "Du bekamst",
+    "newUnlock": "NEUE FREISCHALTUNG!",
+    "leveledUp": "AUFGEWERTET auf {n}!",
+    "shardsMaxed": "+{n} Splitter (max)",
+    "duplicate": "Duplikat · {n}/{m} Kopien",
+    "awesome": "Super!",
+    "cardChanceFull": "Garantierte Karte",
+    "cardChancePct": "{n}% Karte",
+    "gemChancePct": "{n}% Edelsteine",
+    "crateSuffix": "Kiste",
+    "voucherTitle": "Gutscheincode",
+    "voucherHint": "Code eingeben, um Belohnungen zu erhalten",
+    "voucherPlaceholder": "CODE EINGEBEN",
+    "redeem": "Einlösen",
+    "voucherSuccess": "Code eingelöst!",
+    "voucherInvalid": "Ungültiger Code",
+    "voucherAlreadyUsed": "Code bereits verwendet",
+    "exchangeTitle": "Edelsteine tauschen",
+    "exchangeRate": "1 💎 = 10 🪙",
+    "handTitle": "Hand",
+    "handDesc": "Mehr Klicks und schnelleres Aufladen",
+    "handCurrent": "{clicks} Klicks · {recharge}s Nachladen",
+    "handNext": "+2 max · −0.04s Nachladen",
+    "handMaxed": "MAX · {clicks} Klicks · {recharge}s",
+    "handUpgrade": "Aufwerten",
+    "maxLabel": "MAX",
+    "sideTowerTitle": "Seitentürme",
+    "sideTowerDesc": "Stärkere Flanken",
+    "sideTowerCurrent": "HP {hp} · DMG {dmg} · {rate}s",
+    "sideTowerNext": "+{hp} HP · +{dmg} DMG",
+    "sideTowerUpgrade": "Aufwerten",
+    "dailyGemChest": "Tägliche Edelstein-Kiste",
+    "dailyGemChestHint": "10–60 Edelsteine jeden Tag.",
+    "claimDailyGems": "10–60 Edelsteine abholen",
+    "dailyGemsClaimed": "Komm morgen wieder",
+    "gems": "Edelsteine",
+    "comingSoon": "Demnächst",
+    "betaSubtext": "Premium-Funktionen kommen bald."
+  },
+  "collection": {
+    "title": "Lab",
+    "hint": "Karten mit Kopien und Splittern aufwerten.",
+    "towers": "Türme",
+    "orbs": "Orbs",
+    "powers": "Kräfte",
+    "upgrades": "Upgrades",
+    "trophyLock": "🔒 {n} Trophäen",
+    "crateLock": "🔒 Kisten öffnen",
+    "maxLevel": "★ MAX",
+    "copies": "Kopien",
+    "levelUpFree": "Aufwerten (gratis)",
+    "levelUpShards": "Aufwerten · 💎 {n}",
+    "levelUp": "Aufwerten",
+    "buyCopy": "Kopie kaufen 🔷 {n}",
+    "collectMore": "Mehr sammeln",
+    "sectionStarter": "Startkarten",
+    "sectionTrophy": "Trophäen-Freischaltungen",
+    "sectionCrate": "Nur aus Kisten",
+    "sectionLocked": "Gesperrt",
+    "handTitle": "Hand",
+    "handDesc": "Mehr Klicks pro Match",
+    "sideTowerTitle": "Seitentürme",
+    "sideTowerDesc": "Stärkere Auto-Verteidigung",
+    "upgrade": "Aufwerten",
+    "maxed": "MAX"
+  },
+  "leaderboard": {
+    "title": "Bestenliste",
+    "loading": "Lädt…",
+    "you": "(Du)",
+    "trophies": "Trophäen",
+    "tabRanks": "Rangliste",
+    "tabAchievements": "Erfolge"
+  },
+  "game": {
+    "victory": "SIEG",
+    "defeat": "NIEDERLAGE",
+    "trainingWin": "TRAINING SIEG",
+    "trainingLoss": "TRAINING NIEDERLAGE",
+    "promoted": "AUFGESTIEGEN!",
+    "demoted": "ABGESTIEGEN",
+    "vs": "vs",
+    "noTrophyChange": "Keine Trophäen — Trainingsmodus",
+    "trophiesChange": "{n} Trophäen",
+    "home": "Start",
+    "playAgain": "Nochmal",
+    "forfeit": "← Aufgeben",
+    "overtime": "⚡ VL",
+    "intensifying": "⚡ VERSTÄRKT",
+    "critical": "⚡ KRITISCH",
+    "suddenDeath": "⚡ PLÖTZLICHER TOD",
+    "maxPressure": "⚡ MAX DRUCK",
+    "towerBleed": "⚡ TURMVERFALL",
+    "combo": "COMBO x{n}",
+    "rejoinTitle": "Match läuft",
+    "rejoinDesc": "Du hast ein offenes Match",
+    "rejoin": "Weitermachen",
+    "forfeitMatch": "Aufgeben",
+    "searching": "Suche nach Gegner…",
+    "searchingHint": "Tippe unten, um gegen KI zu spielen",
+    "playVsAi": "Gegen KI spielen",
+    "startingMatch": "Spiel wird gestartet…",
+    "cancel": "Abbrechen"
+  },
+  "friends": {
+    "title": "Freunde",
+    "tabFriends": "Freunde",
+    "tabRequests": "Anfragen",
+    "addFriend": "Freund hinzufügen",
+    "usernamePlaceholder": "Benutzernamen eingeben",
+    "search": "Suchen",
+    "add": "Hinzufügen",
+    "notFound": "Kein Spieler gefunden",
+    "self": "Das bist du!",
+    "requestSent": "Anfrage gesendet!",
+    "alreadyFriends": "Bereits befreundet",
+    "yourFriends": "Deine Freunde",
+    "noFriends": "Noch keine Freunde",
+    "play": "Spielen",
+    "waiting": "Warten…",
+    "cancel": "Abbrechen",
+    "friendRequests": "Freundschaftsanfragen",
+    "noRequests": "Keine Anfragen",
+    "accept": "Annehmen"
+  },
+  "settings": {
+    "title": "Einstellungen",
+    "friends": "Freunde",
+    "changeNameTitle": "Namen ändern?",
+    "changeNameBody": "Dein Name ist, wie Freunde dich finden.",
+    "confirmChange": "Ändern",
+    "account": "Konto",
+    "language": "Sprache",
+    "profile": "Profil",
+    "displayName": "Anzeigename",
+    "google": "Google",
+    "connected": "Verbunden",
+    "connect": "Verbinden",
+    "save": "Speichern",
+    "saved": "Gespeichert!",
+    "deleteAccount": "Konto löschen",
+    "signOut": "Abmelden",
+    "accountDesc": "Konten verknüpfen, um Fortschritt zu sichern",
+    "languageDesc": "Bevorzugte Sprache wählen",
+    "back": "Start",
+    "nameTaken": "Name vergeben",
+    "nameError": "Fehler beim Speichern",
+    "nameInappropriate": "Unangemessener Name",
+    "sound": "Soundeffekte",
+    "soundDesc": "Pieptöne, Explosionen und Fanfaren",
+    "advancedHaptics": "Erweitertes Haptik",
+    "advancedHapticsDesc": "Bei jedem Klick und Münze vibrieren",
+    "soundClicks": "Tippen & Münzen",
+    "soundExplosions": "Explosionen & Kräfte",
+    "soundFanfare": "Siegesfanfare",
+    "hapticsIntensity": "Vibrationsstärke",
+    "hapticsIntensityDesc": "Wie stark das Telefon vibriert",
+    "hapticOff": "Aus",
+    "hapticLow": "Schwach",
+    "hapticMedium": "Mittel",
+    "hapticHigh": "Stark",
+    "deleteConfirmTitle": "Konto löschen?",
+    "deleteConfirmBody": "Dies löscht dauerhaft dein Konto und alle Fortschritte.",
+    "deleteButton": "Für immer löschen",
+    "deleteTypeHint": "Tippe 'delete' zur Bestätigung",
+    "deleting": "Löschen…",
+    "cancel": "Abbrechen",
+    "privacyPolicy": "Datenschutz",
+    "gameplay": "Gameplay",
+    "gameplayDesc": "HUD im Spiel anpassen",
+    "towerMenuAnytime": "Turmmenü jederzeit",
+    "towerMenuAnytimeDesc": "Turm antippen zum Aufwerten ohne Bearbeitungsmodus",
+    "fitToScreen": "Spiel anpassen",
+    "fitToScreenDesc": "Spielfeld anpassen.",
+    "replayTutorial": "Tutorial wiederholen",
+    "eula": "EULA",
+    "impressum": "Impressum",
+    "downloadData": "Meine Daten",
+    "reportUser": "Spieler melden",
+    "downloadDataTitle": "Datenexport",
+    "downloadDataSuccess": "Dein Datenexport ist bereit.",
+    "downloadDataErrorTitle": "Export fehlgeschlagen",
+    "downloadDataError": "Daten konnten nicht exportiert werden.",
+    "reportSelf": "Du kannst dich nicht selbst melden.",
+    "reportSent": "Meldung eingereicht. Danke."
+  },
+  "onboarding": {
+    "welcome": "Willkommen!",
+    "chooseLanguage": "Wähle deine Sprache",
+    "chooseUsername": "Wähle deinen Namen",
+    "usernameHint": "Dieser Name repräsentiert dich in Matches.",
+    "usernamePlaceholder": "Namen eingeben",
+    "checkName": "Prüfen",
+    "nameAvailable": "Verfügbar!",
+    "next": "Weiter",
+    "continue": "Weiter",
+    "ageGate": "Alter bestätigen",
+    "ageGateHint": "Geburtsdatum eingeben",
+    "dobDay": "Tag",
+    "dobMonth": "Monat",
+    "dobYear": "Jahr",
+    "dobError": "Ungültiges Datum",
+    "saveError": "Fehler beim Speichern."
+  },
+  "privacy": {
+    "back": "Zurück",
+    "title": "Datenschutzerklärung"
+  },
+  "impressum": {
+    "back": "Zurück",
+    "title": "Impressum",
+    "heading": "Angaben gemäß § 5 TMG:",
+    "name": "Felix Werner",
+    "careOf": "c/o COCENTER",
+    "street": "Koppoldstr. 1",
+    "city": "86551 Aichach",
+    "emailLabel": "E-Mail: info@splitterorbs.com"
+  },
+  "eula": {
+    "back": "Zurück",
+    "title": "Endbenutzer-Lizenzvereinbarung",
+    "intro": "Bitte Bedingungen lesen und akzeptieren.",
+    "accept": "Akzeptieren",
+    "decline": "Ablehnen",
+    "settingsEula": "EULA",
+    "downloadData": "Meine Daten",
+    "downloading": "Lädt…"
+  },
+  "achievements": {
+    "title": "Erfolge",
+    "subtitle": "Schließe Herausforderungen ab, um Belohnungen zu erhalten",
+    "claim": "Einlösen",
+    "claimAll": "Alle einlösen",
+    "claimed": "Eingelöst ✓",
+    "first_win": {
+      "name": "Erster Sieg",
+      "desc": "Gewinne dein erstes Match"
+    },
+    "win_10": {
+      "name": "Veteran",
+      "desc": "Gewinne 10 Matches"
+    },
+    "win_50": {
+      "name": "Champion",
+      "desc": "Gewinne 50 Matches"
+    },
+    "streak_5": {
+      "name": "Auf Feuer",
+      "desc": "Gewinne 5 in Folge"
+    },
+    "trophies_100": {
+      "name": "Anfänger",
+      "desc": "Erreiche 100 Trophäen"
+    },
+    "trophies_1000": {
+      "name": "Champion",
+      "desc": "Erreiche 1000 Trophäen"
+    },
+    "orbs_1000": {
+      "name": "Orb-Jäger",
+      "desc": "Zerstöre 1000 Orbs"
+    },
+    "towers_100": {
+      "name": "Baumeister",
+      "desc": "Platziere 100 Türme"
+    },
+    "abilities_50": {
+      "name": "Zauberer",
+      "desc": "Benutze 50 Fähigkeiten"
+    },
+    "games_100": {
+      "name": "Engagiert",
+      "desc": "Spiele 100 Matches"
+    }
+  },
+  "missions": {
+    "title": "Tägliche Missionen",
+    "win2": "Gewinne 2 Matches",
+    "play3": "Spiele 3 Matches",
+    "ranked1": "Gewinne 1 Ranglisten-Match"
+  },
+  "leagues": {
+    "0": "Anfänger",
+    "1": "Rookie",
+    "2": "Kadett",
+    "3": "Veteran",
+    "4": "Champion",
+    "5": "Meister",
+    "6": "Legende"
+  },
+  "towers": {
+    "basic": {
+      "name": "Blaster",
+      "desc": "Zuverlässiger Einzelziel-Schütze."
+    },
+    "machinegun": {
+      "name": "Vulkan",
+      "desc": "Schnellfeuer, geringer Schaden."
+    },
+    "sniper": {
+      "name": "Lanze",
+      "desc": "Extreme Reichweite, hoher Schaden."
+    },
+    "boomerang": {
+      "name": "Durchdringer",
+      "desc": "Durchdringt bis zu 3 Orbs."
+    },
+    "rebound": {
+      "name": "Bumerang",
+      "desc": "Klinge fliegt aus und kehrt zurück."
+    },
+    "bomb": {
+      "name": "Mörser",
+      "desc": "Wirft Sprengstoff mit Flächenschaden."
+    },
+    "bouncer": {
+      "name": "Abpraller",
+      "desc": "Zieht Orbs an und lässt sie abprallen."
+    },
+    "glacier": {
+      "name": "Gletscher",
+      "desc": "Verlangsamt Orbs in Reichweite."
+    },
+    "arc": {
+      "name": "Bogen",
+      "desc": "Blitz springt zwischen Orbs."
+    },
+    "pyre": {
+      "name": "Scheiterhaufen",
+      "desc": "Kurzreichweiten-Flamme mit Brandschaden."
+    },
+    "venom": {
+      "name": "Gift",
+      "desc": "Stapelt Gift über Zeit."
+    },
+    "siege": {
+      "name": "Belagerung",
+      "desc": "Sehr langsam, riesiger Flächenschaden."
+    },
+    "orb_mortar": {
+      "name": "Orb-Mörser",
+      "desc": "Wirft zufälligen Orb auf Gegner."
+    },
+    "lava_mortar": {
+      "name": "Lava-Mörser",
+      "desc": "Wirft Feuerbomben mit Flächenschaden."
+    },
+    "repulsor": {
+      "name": "Abstoßer",
+      "desc": "Schleudert Orb zurück."
+    },
+    "cryo": {
+      "name": "Kryo-Kanone",
+      "desc": "Strahl, der Orbs einfriert."
+    },
+    "seeker": {
+      "name": "Sucher",
+      "desc": "Lenkraketen auf Orbs mit niedrigster HP."
+    },
+    "prism": {
+      "name": "Prisma-Lanze",
+      "desc": "Kontinuierlicher Strahl, Schaden steigt."
+    },
+    "flak": {
+      "name": "Flak-Kanone",
+      "desc": "5-Pellet-Streuung."
+    },
+    "harpoon": {
+      "name": "Harpune",
+      "desc": "Zieht entferntesten Orb zurück."
+    },
+    "twin": {
+      "name": "Zwillingskanone",
+      "desc": "Zielt gleichzeitig auf zwei Orbs."
+    },
+    "tesla": {
+      "name": "Tesla-Spule",
+      "desc": "Periodischer AoE-Impuls."
+    },
+    "detonator": {
+      "name": "Detonator",
+      "desc": "Zwingt Bomben-Orbs zur Detonation."
+    },
+    "magnet": {
+      "name": "Magnet",
+      "desc": "Wirft Attraktoren, um Orbs zu bündeln."
+    },
+    "capacitor": {
+      "name": "Kondensator",
+      "desc": "Lädt auf, dann Entladung."
+    },
+    "overcharger": {
+      "name": "Überlader",
+      "desc": "Stärkt benachbarte Türme."
+    },
+    "mine_layer": {
+      "name": "Minenleger",
+      "desc": "Legt Landminen."
+    }
+  },
+  "orbs": {
+    "normal": {
+      "name": "Normal",
+      "desc": "Ausgewogener Orb."
+    },
+    "fast": {
+      "name": "Schnell",
+      "desc": "Wenig HP, aber sehr schnell."
+    },
+    "bomb": {
+      "name": "Bombe",
+      "desc": "Explodiert beim Tod."
+    },
+    "splitter": {
+      "name": "Teiler",
+      "desc": "Teilt sich in kleinere Orbs."
+    },
+    "tank": {
+      "name": "Panzer",
+      "desc": "Hohe HP, greift Türme an."
+    },
+    "mine": {
+      "name": "Mine",
+      "desc": "Klicken zum Detonieren."
+    },
+    "sprint": {
+      "name": "Sprint",
+      "desc": "Rennt direkt zur Station."
+    },
+    "swarmer": {
+      "name": "Schwärmer",
+      "desc": "Erscheint in Dreiergruppen."
+    },
+    "shield": {
+      "name": "Schildträger",
+      "desc": "Hat einen regenerierenden Schild."
+    },
+    "healer": {
+      "name": "Heiler",
+      "desc": "Heilt Verbündete pulsartig."
+    },
+    "radioactive": {
+      "name": "Radioaktiv",
+      "desc": "Infiziert Türme mit Gift."
+    },
+    "shadow": {
+      "name": "Schatten",
+      "desc": "Tarn-Orb."
+    },
+    "ice": {
+      "name": "Eis",
+      "desc": "Friert ersten berührten Turm ein."
+    },
+    "fog": {
+      "name": "Nebel",
+      "desc": "Tarn-Orb, beschädigt alle Türme."
+    },
+    "zap_orb": {
+      "name": "Zap",
+      "desc": "Springt von Turm zu Turm."
+    },
+    "armored": {
+      "name": "Gepanzert",
+      "desc": "Flache Schadensreduzierung."
+    },
+    "carrier": {
+      "name": "Träger",
+      "desc": "Lässt 3 schwache Orbs beim Tod frei."
+    },
+    "growth": {
+      "name": "Wachstum",
+      "desc": "Gewinnt HP und Geschwindigkeit über Zeit."
+    },
+    "shield_bubble": {
+      "name": "Schutzblase",
+      "desc": "Projiziert Schild über Verbündete."
+    },
+    "berserker": {
+      "name": "Berserker",
+      "desc": "Wird bei niedrigen HP stärker."
+    },
+    "phantom": {
+      "name": "Phantom",
+      "desc": "Geht durch Türme hindurch."
+    },
+    "leech": {
+      "name": "Blutegel",
+      "desc": "Saugt HP aus Türmen."
+    },
+    "summoner": {
+      "name": "Beschwörer",
+      "desc": "Erschafft Minion-Orbs."
+    }
+  },
+  "abilities": {
+    "zap": {
+      "name": "Zap",
+      "desc": "Trifft alle Orbs mit Blitz."
+    },
+    "portal": {
+      "name": "Portal",
+      "desc": "Teleportiert bis zu 6 Orbs zum Gegner."
+    },
+    "repair": {
+      "name": "Reparatur",
+      "desc": "Stellt HP deiner Station wieder her."
+    },
+    "freeze": {
+      "name": "Einfrieren",
+      "desc": "Friert alle Orbs auf deiner Seite ein."
+    },
+    "rage": {
+      "name": "Wut",
+      "desc": "Alle Türme feuern 3× schneller."
+    },
+    "shield": {
+      "name": "Schild",
+      "desc": "Blockiert allen Schaden an der Station."
+    },
+    "burner": {
+      "name": "Brenner",
+      "desc": "Halten zum Flammenkanal."
+    },
+    "meteor": {
+      "name": "Meteor",
+      "desc": "Tippe einen Punkt für Meteoreinschlag."
+    },
+    "glue": {
+      "name": "Kleber",
+      "desc": "Klebriger Fleck, der Orbs verlangsamt."
+    },
+    "overclock": {
+      "name": "Übertakten",
+      "desc": "Türme feuern schneller und durchdringen."
+    },
+    "speed_zone": {
+      "name": "Geschwindigkeitszone",
+      "desc": "Deine Orbs bewegen sich schneller."
+    },
+    "damage_zone": {
+      "name": "Schadenszone",
+      "desc": "Deine Orbs verursachen mehr Schaden."
+    },
+    "frost_zone": {
+      "name": "Frostzone",
+      "desc": "Türme darin sind eingefroren."
+    },
+    "deep_freeze": {
+      "name": "Tiefgefroren",
+      "desc": "Friert ALLE gegnerischen Türme ein."
+    }
+  },
+  "errors": {
+    "title": "Fehler",
+    "eulaRequired": "Nutzungsbedingungen aktualisiert.",
+    "rateLimited": "Zu viele Aktionen.",
+    "unknown": "Unerwarteter Fehler."
+  },
   "eulaContent": {
-    "s1t": "1. Annahme der Bedingungen", "s1b": "Durch das Herunterladen, Installieren, Aufrufen oder Verwenden von Splitter Orbs erklären Sie sich mit dieser Endbenutzer-Lizenzvereinbarung einverstanden. Wenn Sie nicht einverstanden sind, verwenden Sie die App nicht.",
-    "s2t": "2. Nutzungslizenz", "s2b": "Vorbehaltlich Ihrer Einhaltung dieser EULA gewährt Ihnen der Entwickler eine eingeschränkte, nicht-exklusive, nicht übertragbare, widerrufliche Lizenz zur Installation und Nutzung der App für persönliche, nicht-kommerzielle Zwecke.",
-    "s3t": "3. Ihr Konto", "s3b": "Sie sind verantwortlich für die Sicherheit Ihres Kontos und alle Aktivitäten, die unter Ihrem Konto stattfinden.",
-    "s4t": "4. Zulässige Nutzung", "s4b": "Sie verpflichten sich, nicht: (a) zu schummeln, zu hacken oder nicht autorisierte Drittanbieter-Software zu verwenden; (b) Fehler oder Schwachstellen auszunutzen; (c) andere Nutzer zu belästigen oder zu schädigen; (d) die App für illegale Zwecke zu nutzen; (e) die App zurückzuentwickeln; (f) mehrere Konten zu erstellen, um Einschränkungen zu umgehen.",
-    "s5t": "5. Virtuelle Gegenstände & Währung", "s5b": "Die App enthält virtuelle Gegenstände und Währungen (Münzen, Edelsteine, Scherben), die keinen realen Geldwert haben. Virtuelle Gegenstände können jederzeit ohne Entschädigung zurückgesetzt oder entfernt werden.",
-    "s6t": "6. Kein Glücksspiel", "s6b": "Die App enthält randomisierte Belohnungssysteme (Kisten). Dies ist kein Glücksspiel. Sie erhalten immer In-Game-Gegenstände. Virtuelle Gegenstände können nicht gegen echtes Geld eingetauscht werden.",
-    "s7t": "7. Geistiges Eigentum", "s7b": "Alle Inhalte der App sind Eigentum des Entwicklers oder seiner Lizenzgeber. Sie dürfen diese ohne vorherige schriftliche Genehmigung nicht kopieren, verteilen oder ändern.",
-    "s8t": "8. Gewährleistungsausschluss", "s8b": "DIE APP WIRD 'WIE BESEHEN' OHNE JEGLICHE GEWÄHRLEISTUNG BEREITGESTELLT. DER ENTWICKLER GARANTIERT NICHT, DASS DIE APP UNUNTERBROCHEN ODER FEHLERFREI FUNKTIONIERT.",
-    "s9t": "9. Haftungsbeschränkung", "s9b": "IM GRÖSSTMÖGLICHEN GESETZLICH ZULÄSSIGEN UMFANG HAFTET DER ENTWICKLER NICHT FÜR INDIREKTE, ZUFÄLLIGE ODER FOLGESCHÄDEN.",
-    "s10t": "10. Schadloshaltung", "s10b": "Sie verpflichten sich, den Entwickler von Ansprüchen freizustellen, die aus Ihrer Verletzung dieser EULA oder dem Missbrauch der App entstehen.",
-    "s11t": "11. Datenschutz & Daten", "s11b": "Ihre Daten werden gemäß der Datenschutzrichtlinie der App verarbeitet. Durch die Nutzung der App stimmen Sie den in der Datenschutzrichtlinie beschriebenen Datenpraktiken zu.",
-    "s12t": "12. Altersanforderung", "s12b": "Sie müssen das Mindestalter für Ihre Region erfüllen: 13 in den meisten Ländern, 14 in Spanien/Italien/Österreich, 15 in Frankreich, 16 in Deutschland/Niederlande/Irland.",
-    "s13t": "13. Drittanbieter-Dienste", "s13b": "Die App verwendet Drittanbieter-Dienste (Supabase, Google). Der Entwickler ist nicht verantwortlich für die Praktiken dieser Drittanbieter.",
-    "s14t": "14. Änderungen der Bedingungen", "s14b": "Der Entwickler kann diese EULA jederzeit aktualisieren. Wesentliche Änderungen erfordern Ihre Zustimmung zu den aktualisierten Bedingungen.",
-    "s15t": "15. Anwendbares Recht", "s15b": "Diese EULA unterliegt dem Recht der Bundesrepublik Deutschland.",
-    "s16t": "16. Kontakt", "s16b": "Bei Fragen zu dieser EULA kontaktieren Sie uns unter info@splitterorbs.com.",
-    "s17t": "17. Höhere Gewalt", "s17b": "Der Entwickler haftet nicht für Leistungsausfälle oder -verzögerungen, die auf Ursachen zurückzuführen sind, die außerhalb seiner zumutbaren Kontrolle liegen, einschließlich, aber nicht beschränkt auf: höhere Gewalt, Internet- oder Serverausfälle, Ausfälle von Drittanbieterdiensten (einschließlich der Supabase-Infrastruktur), Cyberangriffe, staatliche Maßnahmen oder sonstige Ereignisse außerhalb der Kontrolle des Entwicklers. In solchen Fällen können virtuelle Gegenstände, Spielfortschritt und Kontodaten ohne Entschädigung verloren gehen.",
-    "s18t": "18. Kündigung", "s18b": "Der Entwickler kann Ihr Konto jederzeit mit oder ohne Vorankündigung sperren oder dauerhaft kündigen, wenn Sie gegen diese EULA verstoßen oder ein Verhalten an den Tag legen, das anderen Nutzern oder der App schadet. Mit der Kündigung endet Ihre Lizenz zur Nutzung der App sofort, und alle virtuellen Gegenstände, Währungen und Spielfortschritte verfallen ohne Rückerstattung oder Entschädigung. Sie können Ihr Konto jederzeit über den Einstellungsbildschirm löschen.",
-    "s19t": "19. Streitbeilegung", "s19b": "Im Streitfall erklären Sie sich bereit, zunächst den Entwickler unter info@splitterorbs.com zu kontaktieren, um eine informelle Lösung zu suchen. Kann der Streit nicht innerhalb von 30 Tagen informell beigelegt werden, wird er der ausschließlichen Zuständigkeit der deutschen Gerichte unterworfen. Diese Klausel schränkt Ihre gesetzlichen Verbraucherrechte nach geltendem EU-Recht nicht ein.",
-    "s20t": "20. Salvatorische Klausel", "s20b": "Sollte eine Bestimmung dieser EULA von einem zuständigen Gericht für ungültig, rechtswidrig oder nicht durchsetzbar befunden werden, wird diese Bestimmung im geringstmöglichen Umfang geändert, um sie durchsetzbar zu machen, oder gestrichen, wenn eine Änderung nicht möglich ist. Die übrigen Bestimmungen bleiben in vollem Umfang in Kraft.",
-    "s21t": "21. Gesamte Vereinbarung", "s21b": "Diese EULA bildet zusammen mit der Datenschutzrichtlinie die gesamte Vereinbarung zwischen Ihnen und dem Entwickler bezüglich Ihrer Nutzung der App und ersetzt alle früheren Vereinbarungen, Zusicherungen und Absprachen. Der Verzicht auf eine Bedingung gilt nicht als weiterer oder fortlaufender Verzicht auf diese Bedingung.",
-    "s22t": "22. Erweiterte Haftungsbeschränkung", "s22b": "IM GRÖSSTMÖGLICHEN GESETZLICH ZULÄSSIGEN UMFANG GILT: (a) DIE GESAMTHAFTUNG DES ENTWICKLERS IHNEN GEGENÜBER FÜR ANSPRÜCHE AUS DIESER EULA ODER IHRER NUTZUNG DER APP ÜBERSTEIGT NICHT DEN BETRAG, DEN SIE DEM ENTWICKLER IN DEN 12 MONATEN VOR DEM ANSPRUCH GEZAHLT HABEN, ODER €5, WENN SIE KEINE ZAHLUNGEN GELEISTET HABEN; (b) DER ENTWICKLER HAFTET NICHT FÜR DEN VERLUST VON SPIELFORTSCHRITT, VIRTUELLEN GEGENSTÄNDEN, IN-GAME-WÄHRUNG, KONTODATEN ODER ANDEREN IN-APP-INHALTEN, UNABHÄNGIG VON DER URSACHE; (c) DER ENTWICKLER HAFTET NICHT FÜR HANDLUNGEN ODER UNTERLASSUNGEN VON DRITTANBIETERN, EINSCHLIESSLICH SUPABASE, GOOGLE ODER APPLE.",
-    "s23t": "23. Exportkontrolle", "s23b": "Sie versichern, dass Sie sich nicht in einem Land befinden, das einem US-Regierungsembargo unterliegt oder als 'terrorismusunterstützendes' Land eingestuft ist, und dass Sie nicht auf einer US-Regierungsliste verbotener oder beschränkter Parteien stehen. Sie verpflichten sich, alle anwendbaren Export- und Reexportkontrollgesetze und -vorschriften einzuhalten.",
-    "s24t": "24. Verzicht auf Sammelklagen", "s24b": "SOWEIT NACH GELTENDEM RECHT ZULÄSSIG, VERZICHTEN SIE AUF DAS RECHT, AN EINER SAMMELKLAGE ODER EINEM SCHIEDSVERFAHREN ALS KLASSE GEGEN DEN ENTWICKLER TEILZUNEHMEN. ALLE ANSPRÜCHE MÜSSEN IN IHRER INDIVIDUELLEN EIGENSCHAFT GELTEND GEMACHT WERDEN UND NICHT ALS KLÄGER ODER KLASSENMITGLIED IN EINEM VERMEINTLICHEN KLASSEN- ODER REPRÄSENTATIVVERFAHREN. Hinweis: Dieser Verzicht gilt nicht, soweit er durch das EU-Verbraucherschutzrecht verboten ist."
+    "s1t": "1. Annahme der Bedingungen",
+    "s1b": "Durch das Herunterladen, Installieren, Aufrufen oder Verwenden von Splitter Orbs erklären Sie sich mit dieser Endbenutzer-Lizenzvereinbarung einverstanden. Wenn Sie nicht einverstanden sind, verwenden Sie die App nicht.",
+    "s2t": "2. Nutzungslizenz",
+    "s2b": "Vorbehaltlich Ihrer Einhaltung dieser EULA gewährt Ihnen der Entwickler eine eingeschränkte, nicht-exklusive, nicht übertragbare, widerrufliche Lizenz zur Installation und Nutzung der App für persönliche, nicht-kommerzielle Zwecke.",
+    "s3t": "3. Ihr Konto",
+    "s3b": "Sie sind verantwortlich für die Sicherheit Ihres Kontos und alle Aktivitäten, die unter Ihrem Konto stattfinden.",
+    "s4t": "4. Zulässige Nutzung",
+    "s4b": "Sie verpflichten sich, nicht: (a) zu schummeln, zu hacken oder nicht autorisierte Drittanbieter-Software zu verwenden; (b) Fehler oder Schwachstellen auszunutzen; (c) andere Nutzer zu belästigen oder zu schädigen; (d) die App für illegale Zwecke zu nutzen; (e) die App zurückzuentwickeln; (f) mehrere Konten zu erstellen, um Einschränkungen zu umgehen.",
+    "s5t": "5. Virtuelle Gegenstände & Währung",
+    "s5b": "Die App enthält virtuelle Gegenstände und Währungen (Münzen, Edelsteine, Scherben), die keinen realen Geldwert haben. Virtuelle Gegenstände können jederzeit ohne Entschädigung zurückgesetzt oder entfernt werden.",
+    "s6t": "6. Kein Glücksspiel",
+    "s6b": "Die App enthält randomisierte Belohnungssysteme (Kisten). Dies ist kein Glücksspiel. Sie erhalten immer In-Game-Gegenstände. Virtuelle Gegenstände können nicht gegen echtes Geld eingetauscht werden.",
+    "s7t": "7. Geistiges Eigentum",
+    "s7b": "Alle Inhalte der App sind Eigentum des Entwicklers oder seiner Lizenzgeber. Sie dürfen diese ohne vorherige schriftliche Genehmigung nicht kopieren, verteilen oder ändern.",
+    "s8t": "8. Gewährleistungsausschluss",
+    "s8b": "DIE APP WIRD 'WIE BESEHEN' OHNE JEGLICHE GEWÄHRLEISTUNG BEREITGESTELLT. DER ENTWICKLER GARANTIERT NICHT, DASS DIE APP UNUNTERBROCHEN ODER FEHLERFREI FUNKTIONIERT.",
+    "s9t": "9. Haftungsbeschränkung",
+    "s9b": "IM GRÖSSTMÖGLICHEN GESETZLICH ZULÄSSIGEN UMFANG HAFTET DER ENTWICKLER NICHT FÜR INDIREKTE, ZUFÄLLIGE ODER FOLGESCHÄDEN.",
+    "s10t": "10. Schadloshaltung",
+    "s10b": "Sie verpflichten sich, den Entwickler von Ansprüchen freizustellen, die aus Ihrer Verletzung dieser EULA oder dem Missbrauch der App entstehen.",
+    "s11t": "11. Datenschutz & Daten",
+    "s11b": "Ihre Daten werden gemäß der Datenschutzrichtlinie der App verarbeitet. Durch die Nutzung der App stimmen Sie den in der Datenschutzrichtlinie beschriebenen Datenpraktiken zu.",
+    "s12t": "12. Altersanforderung",
+    "s12b": "Sie müssen das Mindestalter für Ihre Region erfüllen: 13 in den meisten Ländern, 14 in Spanien/Italien/Österreich, 15 in Frankreich, 16 in Deutschland/Niederlande/Irland.",
+    "s13t": "13. Drittanbieter-Dienste",
+    "s13b": "Die App verwendet Drittanbieter-Dienste (Supabase, Google). Der Entwickler ist nicht verantwortlich für die Praktiken dieser Drittanbieter.",
+    "s14t": "14. Änderungen der Bedingungen",
+    "s14b": "Der Entwickler kann diese EULA jederzeit aktualisieren. Wesentliche Änderungen erfordern Ihre Zustimmung zu den aktualisierten Bedingungen.",
+    "s15t": "15. Anwendbares Recht",
+    "s15b": "Diese EULA unterliegt dem Recht der Bundesrepublik Deutschland.",
+    "s16t": "16. Kontakt",
+    "s16b": "Bei Fragen zu dieser EULA kontaktieren Sie uns unter info@splitterorbs.com.",
+    "s17t": "17. Höhere Gewalt",
+    "s17b": "Der Entwickler haftet nicht für Leistungsausfälle oder -verzögerungen, die auf Ursachen zurückzuführen sind, die außerhalb seiner zumutbaren Kontrolle liegen, einschließlich, aber nicht beschränkt auf: höhere Gewalt, Internet- oder Serverausfälle, Ausfälle von Drittanbieterdiensten (einschließlich der Supabase-Infrastruktur), Cyberangriffe, staatliche Maßnahmen oder sonstige Ereignisse außerhalb der Kontrolle des Entwicklers. In solchen Fällen können virtuelle Gegenstände, Spielfortschritt und Kontodaten ohne Entschädigung verloren gehen.",
+    "s18t": "18. Kündigung",
+    "s18b": "Der Entwickler kann Ihr Konto jederzeit mit oder ohne Vorankündigung sperren oder dauerhaft kündigen, wenn Sie gegen diese EULA verstoßen oder ein Verhalten an den Tag legen, das anderen Nutzern oder der App schadet. Mit der Kündigung endet Ihre Lizenz zur Nutzung der App sofort, und alle virtuellen Gegenstände, Währungen und Spielfortschritte verfallen ohne Rückerstattung oder Entschädigung. Sie können Ihr Konto jederzeit über den Einstellungsbildschirm löschen.",
+    "s19t": "19. Streitbeilegung",
+    "s19b": "Im Streitfall erklären Sie sich bereit, zunächst den Entwickler unter info@splitterorbs.com zu kontaktieren, um eine informelle Lösung zu suchen. Kann der Streit nicht innerhalb von 30 Tagen informell beigelegt werden, wird er der ausschließlichen Zuständigkeit der deutschen Gerichte unterworfen. Diese Klausel schränkt Ihre gesetzlichen Verbraucherrechte nach geltendem EU-Recht nicht ein.",
+    "s20t": "20. Salvatorische Klausel",
+    "s20b": "Sollte eine Bestimmung dieser EULA von einem zuständigen Gericht für ungültig, rechtswidrig oder nicht durchsetzbar befunden werden, wird diese Bestimmung im geringstmöglichen Umfang geändert, um sie durchsetzbar zu machen, oder gestrichen, wenn eine Änderung nicht möglich ist. Die übrigen Bestimmungen bleiben in vollem Umfang in Kraft.",
+    "s21t": "21. Gesamte Vereinbarung",
+    "s21b": "Diese EULA bildet zusammen mit der Datenschutzrichtlinie die gesamte Vereinbarung zwischen Ihnen und dem Entwickler bezüglich Ihrer Nutzung der App und ersetzt alle früheren Vereinbarungen, Zusicherungen und Absprachen. Der Verzicht auf eine Bedingung gilt nicht als weiterer oder fortlaufender Verzicht auf diese Bedingung.",
+    "s22t": "22. Erweiterte Haftungsbeschränkung",
+    "s22b": "IM GRÖSSTMÖGLICHEN GESETZLICH ZULÄSSIGEN UMFANG GILT: (a) DIE GESAMTHAFTUNG DES ENTWICKLERS IHNEN GEGENÜBER FÜR ANSPRÜCHE AUS DIESER EULA ODER IHRER NUTZUNG DER APP ÜBERSTEIGT NICHT DEN BETRAG, DEN SIE DEM ENTWICKLER IN DEN 12 MONATEN VOR DEM ANSPRUCH GEZAHLT HABEN, ODER €5, WENN SIE KEINE ZAHLUNGEN GELEISTET HABEN; (b) DER ENTWICKLER HAFTET NICHT FÜR DEN VERLUST VON SPIELFORTSCHRITT, VIRTUELLEN GEGENSTÄNDEN, IN-GAME-WÄHRUNG, KONTODATEN ODER ANDEREN IN-APP-INHALTEN, UNABHÄNGIG VON DER URSACHE; (c) DER ENTWICKLER HAFTET NICHT FÜR HANDLUNGEN ODER UNTERLASSUNGEN VON DRITTANBIETERN, EINSCHLIESSLICH SUPABASE, GOOGLE ODER APPLE.",
+    "s23t": "23. Exportkontrolle",
+    "s23b": "Sie versichern, dass Sie sich nicht in einem Land befinden, das einem US-Regierungsembargo unterliegt oder als 'terrorismusunterstützendes' Land eingestuft ist, und dass Sie nicht auf einer US-Regierungsliste verbotener oder beschränkter Parteien stehen. Sie verpflichten sich, alle anwendbaren Export- und Reexportkontrollgesetze und -vorschriften einzuhalten.",
+    "s24t": "24. Verzicht auf Sammelklagen",
+    "s24b": "SOWEIT NACH GELTENDEM RECHT ZULÄSSIG, VERZICHTEN SIE AUF DAS RECHT, AN EINER SAMMELKLAGE ODER EINEM SCHIEDSVERFAHREN ALS KLASSE GEGEN DEN ENTWICKLER TEILZUNEHMEN. ALLE ANSPRÜCHE MÜSSEN IN IHRER INDIVIDUELLEN EIGENSCHAFT GELTEND GEMACHT WERDEN UND NICHT ALS KLÄGER ODER KLASSENMITGLIED IN EINEM VERMEINTLICHEN KLASSEN- ODER REPRÄSENTATIVVERFAHREN. Hinweis: Dieser Verzicht gilt nicht, soweit er durch das EU-Verbraucherschutzrecht verboten ist."
   },
   "privacyContent": {
-    "s1t": "1. Einleitung", "s1b": "Diese Datenschutzrichtlinie erklärt, wie Splitter Orbs Ihre personenbezogenen Daten erhebt, verwendet und schützt. Wir verarbeiten Daten gemäß der EU-Datenschutz-Grundverordnung (DSGVO).",
-    "s2t": "2. Verantwortlicher", "s2b": "Der Verantwortliche ist der App-Entwickler. Kontakt: info@splitterorbs.com.",
-    "s3t": "3. Erhobene Daten", "s3b": "Konto- & Profildaten: Anzeigename, Spielfortschritt, In-Game-Währung, Kartensammlungsstufen, freigeschaltete Skins, Einstellungen, Login-Streak-Daten. Soziale Daten: Freundesliste, Matchverlauf. Authentifizierungsdaten: Google-Konto-ID und E-Mail bei Google-Verbindung. Apple-Konto-ID und E-Mail bei Verwendung von Apple-Anmeldung.",
-    "s4t": "4. Rechtsgrundlage der Verarbeitung", "s4b": "Vertrag (Art. 6(1)(b) DSGVO): Verarbeitung Ihres Spielfortschritts ist zur Erbringung des Dienstes erforderlich. Berechtigtes Interesse (Art. 6(1)(f) DSGVO): Sicherheitsmaßnahmen. Einwilligung (Art. 6(1)(a) DSGVO): Google-Verbindung ist optional.",
-    "s5t": "5. Datenspeicherung", "s5b": "Ihre Spieldaten werden gespeichert, solange Ihr Konto aktiv ist. Das Löschen Ihres Kontos löscht alle Daten dauerhaft.",
-    "s6t": "6. Drittanbieter-Dienste", "s6b": "Supabase hostet unsere Datenbank und Authentifizierung. Google wird für optionales OAuth verwendet. Wir verkaufen Ihre Daten nicht und verwenden keine Werbe-SDKs.",
-    "s7t": "7. Ihre Rechte", "s7b": "Gemäß DSGVO haben Sie das Recht auf: Auskunft, Berichtigung, Löschung, Übertragbarkeit, Widerspruch und Widerruf der Einwilligung. Widerspruchsrecht (Art. 21 DSGVO): Sie können der auf berechtigtem Interesse beruhenden Verarbeitung jederzeit widersprechen, indem Sie uns unter info@splitterorbs.com kontaktieren. Kontakt: info@splitterorbs.com.",
-    "s8t": "8. Datenschutz für Kinder", "s8b": "Mindestalter: 13 in den meisten Ländern, 14 in Spanien/Italien/Österreich, 15 in Frankreich, 16 in Deutschland/Niederlande/Irland.",
-    "s9t": "9. Änderungen dieser Richtlinie", "s9b": "Wir können diese Datenschutzrichtlinie von Zeit zu Zeit aktualisieren. Änderungen werden in der App veröffentlicht.",
-    "s10t": "10. Impressum", "s10b": "Felix Werner, c/o COCENTER, Koppoldstr. 1, 86551 Aichach. E-Mail: info@splitterorbs.com",
-    "s11t": "11. Geografische Einschränkung", "s11b": "Diese App ist nur verfügbar in: Deutschland, Niederlande, Frankreich, Spanien, Italien, Vereinigtes Königreich, Portugal, Japan, Schweiz, Österreich, Polen, Schweden, Irland, Dänemark, Finnland, Norwegen und Rumänien.",
-    "s12t": "12. Auftragsverarbeiter & Verarbeitungsverträge", "s12b": "Supabase, Inc. handelt als Auftragsverarbeiter in unserem Auftrag auf Grundlage eines Auftragsverarbeitungsvertrags (AVV) gemäß Art. 28 DSGVO. Supabase verarbeitet Ihre Daten ausschließlich nach unseren Weisungen. Google LLC handelt als Auftragsverarbeiter für die Authentifizierung bei Nutzung von Google-Anmeldung. Beide Auftragsverarbeiter sind vertraglich zum Schutz Ihrer Daten verpflichtet.",
-    "s13t": "13. Internationale Datenübermittlungen", "s13b": "Supabase kann Ihre Daten auf Servern außerhalb des Europäischen Wirtschaftsraums (EWR), einschließlich der Vereinigten Staaten, speichern und verarbeiten. Solche Übermittlungen sind durch Standardvertragsklauseln (SCC) geschützt, die von der Europäischen Kommission gemäß Art. 46 Abs. 2 lit. c DSGVO genehmigt wurden. Sie können eine Kopie der anwendbaren Übermittlungsgarantien unter info@splitterorbs.com anfordern.",
-    "s14t": "14. Beschwerderecht bei einer Aufsichtsbehörde", "s14b": "Gemäß Art. 77 DSGVO haben Sie das Recht, eine Beschwerde bei einer Aufsichtsbehörde einzureichen, wenn Sie der Ansicht sind, dass Ihre Daten rechtswidrig verarbeitet werden. Die zuständige Aufsichtsbehörde für diese App ist: Bayerisches Landesamt für Datenschutzaufsicht (BayLDA), Promenade 18, 91522 Ansbach, Deutschland. Website: www.lda.bayern.de. Sie können sich auch an die Aufsichtsbehörde Ihres Wohnsitzlandes wenden.",
-    "s15t": "15. Automatisierte Entscheidungsfindung & Profiling", "s15b": "Wir verwenden keine automatisierte Entscheidungsfindung oder Profiling, das rechtliche Wirkungen entfaltet oder Sie in ähnlicher Weise erheblich beeinträchtigt, wie in Art. 22 DSGVO beschrieben. Matchmaking und In-Game-KI sind reine Spielmechaniken ohne rechtliche oder erhebliche reale Auswirkungen.",
-    "s16t": "16. Lokale Speicherung & Gerätedaten", "s16b": "Die App speichert Spieleinstellungen, Präferenzen und Sitzungstoken lokal auf Ihrem Gerät mittels AsyncStorage (entspricht lokalem Speicher). Es werden keine Tracking-Cookies verwendet. Supabase protokolliert automatisch Ihre IP-Adresse und grundlegende Gerätemetadaten (Betriebssystem, App-Version) zu Sicherheits- und Missbrauchsverhinderungszwecken auf Grundlage unseres berechtigten Interesses (Art. 6 Abs. 1 lit. f DSGVO). Diese Daten werden 90 Tage aufbewahrt.",
-    "s17t": "17. Benachrichtigung bei Datenschutzverletzungen", "s17b": "Im Falle einer Verletzung des Schutzes personenbezogener Daten, die voraussichtlich zu einem Risiko für Ihre Rechte und Freiheiten führt, werden wir die zuständige Aufsichtsbehörde innerhalb von 72 Stunden gemäß Art. 33 DSGVO benachrichtigen. Wenn die Verletzung voraussichtlich zu einem hohen Risiko für Ihre Rechte und Freiheiten führt, werden wir Sie auch direkt ohne unangemessene Verzögerung gemäß Art. 34 DSGVO über die mit Ihrem Konto verknüpfte E-Mail-Adresse benachrichtigen."
+    "s1t": "1. Einleitung",
+    "s1b": "Diese Datenschutzrichtlinie erklärt, wie Splitter Orbs Ihre personenbezogenen Daten erhebt, verwendet und schützt. Wir verarbeiten Daten gemäß der EU-Datenschutz-Grundverordnung (DSGVO).",
+    "s2t": "2. Verantwortlicher",
+    "s2b": "Der Verantwortliche ist der App-Entwickler. Kontakt: info@splitterorbs.com.",
+    "s3t": "3. Erhobene Daten",
+    "s3b": "Konto- & Profildaten: Anzeigename, Spielfortschritt, In-Game-Währung, Kartensammlungsstufen, freigeschaltete Skins, Einstellungen, Login-Streak-Daten. Soziale Daten: Freundesliste, Matchverlauf. Authentifizierungsdaten: Google-Konto-ID und E-Mail bei Google-Verbindung. Apple-Konto-ID und E-Mail bei Verwendung von Apple-Anmeldung.",
+    "s4t": "4. Rechtsgrundlage der Verarbeitung",
+    "s4b": "Vertrag (Art. 6(1)(b) DSGVO): Verarbeitung Ihres Spielfortschritts ist zur Erbringung des Dienstes erforderlich. Berechtigtes Interesse (Art. 6(1)(f) DSGVO): Sicherheitsmaßnahmen. Einwilligung (Art. 6(1)(a) DSGVO): Google-Verbindung ist optional.",
+    "s5t": "5. Datenspeicherung",
+    "s5b": "Ihre Spieldaten werden gespeichert, solange Ihr Konto aktiv ist. Das Löschen Ihres Kontos löscht alle Daten dauerhaft.",
+    "s6t": "6. Drittanbieter-Dienste",
+    "s6b": "Supabase hostet unsere Datenbank und Authentifizierung. Google wird für optionales OAuth verwendet. Wir verkaufen Ihre Daten nicht und verwenden keine Werbe-SDKs.",
+    "s7t": "7. Ihre Rechte",
+    "s7b": "Gemäß DSGVO haben Sie das Recht auf: Auskunft, Berichtigung, Löschung, Übertragbarkeit, Widerspruch und Widerruf der Einwilligung. Widerspruchsrecht (Art. 21 DSGVO): Sie können der auf berechtigtem Interesse beruhenden Verarbeitung jederzeit widersprechen, indem Sie uns unter info@splitterorbs.com kontaktieren. Kontakt: info@splitterorbs.com.",
+    "s8t": "8. Datenschutz für Kinder",
+    "s8b": "Mindestalter: 13 in den meisten Ländern, 14 in Spanien/Italien/Österreich, 15 in Frankreich, 16 in Deutschland/Niederlande/Irland.",
+    "s9t": "9. Änderungen dieser Richtlinie",
+    "s9b": "Wir können diese Datenschutzrichtlinie von Zeit zu Zeit aktualisieren. Änderungen werden in der App veröffentlicht.",
+    "s10t": "10. Impressum",
+    "s10b": "Felix Werner, c/o COCENTER, Koppoldstr. 1, 86551 Aichach. E-Mail: info@splitterorbs.com",
+    "s11t": "11. Geografische Einschränkung",
+    "s11b": "Diese App ist nur verfügbar in: Deutschland, Niederlande, Frankreich, Spanien, Italien, Vereinigtes Königreich, Portugal, Japan, Schweiz, Österreich, Polen, Schweden, Irland, Dänemark, Finnland, Norwegen und Rumänien.",
+    "s12t": "12. Auftragsverarbeiter & Verarbeitungsverträge",
+    "s12b": "Supabase, Inc. handelt als Auftragsverarbeiter in unserem Auftrag auf Grundlage eines Auftragsverarbeitungsvertrags (AVV) gemäß Art. 28 DSGVO. Supabase verarbeitet Ihre Daten ausschließlich nach unseren Weisungen. Google LLC handelt als Auftragsverarbeiter für die Authentifizierung bei Nutzung von Google-Anmeldung. Beide Auftragsverarbeiter sind vertraglich zum Schutz Ihrer Daten verpflichtet.",
+    "s13t": "13. Internationale Datenübermittlungen",
+    "s13b": "Supabase kann Ihre Daten auf Servern außerhalb des Europäischen Wirtschaftsraums (EWR), einschließlich der Vereinigten Staaten, speichern und verarbeiten. Solche Übermittlungen sind durch Standardvertragsklauseln (SCC) geschützt, die von der Europäischen Kommission gemäß Art. 46 Abs. 2 lit. c DSGVO genehmigt wurden. Sie können eine Kopie der anwendbaren Übermittlungsgarantien unter info@splitterorbs.com anfordern.",
+    "s14t": "14. Beschwerderecht bei einer Aufsichtsbehörde",
+    "s14b": "Gemäß Art. 77 DSGVO haben Sie das Recht, eine Beschwerde bei einer Aufsichtsbehörde einzureichen, wenn Sie der Ansicht sind, dass Ihre Daten rechtswidrig verarbeitet werden. Die zuständige Aufsichtsbehörde für diese App ist: Bayerisches Landesamt für Datenschutzaufsicht (BayLDA), Promenade 18, 91522 Ansbach, Deutschland. Website: www.lda.bayern.de. Sie können sich auch an die Aufsichtsbehörde Ihres Wohnsitzlandes wenden.",
+    "s15t": "15. Automatisierte Entscheidungsfindung & Profiling",
+    "s15b": "Wir verwenden keine automatisierte Entscheidungsfindung oder Profiling, das rechtliche Wirkungen entfaltet oder Sie in ähnlicher Weise erheblich beeinträchtigt, wie in Art. 22 DSGVO beschrieben. Matchmaking und In-Game-KI sind reine Spielmechaniken ohne rechtliche oder erhebliche reale Auswirkungen.",
+    "s16t": "16. Lokale Speicherung & Gerätedaten",
+    "s16b": "Die App speichert Spieleinstellungen, Präferenzen und Sitzungstoken lokal auf Ihrem Gerät mittels AsyncStorage (entspricht lokalem Speicher). Es werden keine Tracking-Cookies verwendet. Supabase protokolliert automatisch Ihre IP-Adresse und grundlegende Gerätemetadaten (Betriebssystem, App-Version) zu Sicherheits- und Missbrauchsverhinderungszwecken auf Grundlage unseres berechtigten Interesses (Art. 6 Abs. 1 lit. f DSGVO). Diese Daten werden 90 Tage aufbewahrt.",
+    "s17t": "17. Benachrichtigung bei Datenschutzverletzungen",
+    "s17b": "Im Falle einer Verletzung des Schutzes personenbezogener Daten, die voraussichtlich zu einem Risiko für Ihre Rechte und Freiheiten führt, werden wir die zuständige Aufsichtsbehörde innerhalb von 72 Stunden gemäß Art. 33 DSGVO benachrichtigen. Wenn die Verletzung voraussichtlich zu einem hohen Risiko für Ihre Rechte und Freiheiten führt, werden wir Sie auch direkt ohne unangemessene Verzögerung gemäß Art. 34 DSGVO über die mit Ihrem Konto verknüpfte E-Mail-Adresse benachrichtigen."
   }
 }

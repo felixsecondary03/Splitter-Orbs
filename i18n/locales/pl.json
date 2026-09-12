@@ -1,68 +1,698 @@
 {
-  "home": { "tagline": "Obrona wieży na podzielonym ekranie.", "playNow": "GRAJ TERAZ", "trophies": "Trofea", "winRate": "Wskaźnik wygranych", "wins": "Wygrane", "losses": "Przegrane", "recentMatches": "Ostatnie mecze", "dailyMissions": "Codzienne misje" },
-  "nav": { "home": "Strona główna", "shop": "Sklep", "play": "Graj", "cards": "Karty", "ranks": "Rangi" },
-  "setup": { "title": "Ekwipunek", "subtitle": "Wybierz 3 moce, {towers} wieże i {orbs} orby", "training": "Trening", "casual": "Casual", "ranked": "Rankingowy", "aiDifficulty": "Trudność AI", "towers": "Wieże", "orbs": "Orby", "powers": "Moce", "startMatch": "ROZPOCZNIJ MECZ", "trophyReq": "🔒 {n}🏆", "crateLock": "🔒 Skrzynka", "quickPlay": "Szybka gra", "quickPlayHint": "Dołącz z zapisanym ekwipunkiem", "changeLoadout": "Zmień ekwipunek", "moreInLab": "+{n} więcej w Laboratorium →", "rankedBetaDisclaimer": "Gra przeciwko AI w rankingowym jest tymczasowa." },
-  "difficulty": { "easy": "Łatwy", "normal": "Normalny", "hard": "Trudny" },
-  "shop": { "title": "Sklep", "shards": "{n} odłamków", "shardsHint": "Wydaj w Laboratorium, aby ulepszać karty", "crates": "Skrzynki", "freeDaily": "Codziennie za darmo", "claimed": "Odebrano ✓", "freeEveryDay": "Za darmo każdego dnia", "buy": "Kup", "free": "Za darmo", "opening": "Otwieranie…", "youGot": "Otrzymałeś", "newUnlock": "NOWE ODBLOKOWANIE!", "leveledUp": "AWANSOWANO do {n}!", "shardsMaxed": "+{n} odłamków (maks)", "duplicate": "Duplikat · {n}/{m} kopii", "awesome": "Świetnie!", "cardChanceFull": "Gwarantowana karta", "cardChancePct": "{n}% karta", "gemChancePct": "{n}% klejnoty", "crateSuffix": "Skrzynka", "voucherTitle": "Kod vouchera", "voucherHint": "Wprowadź kod, aby odebrać nagrody", "voucherPlaceholder": "WPROWADŹ KOD", "redeem": "Zrealizuj", "voucherSuccess": "Kod zrealizowany!", "voucherInvalid": "Nieprawidłowy kod", "voucherAlreadyUsed": "Kod już użyty", "exchangeTitle": "Wymień klejnoty", "exchangeRate": "1 💎 = 10 🪙", "handTitle": "Ręka", "handDesc": "Więcej kliknięć i szybsze ładowanie", "handCurrent": "{clicks} kliknięć · {recharge}s przeładowanie", "handNext": "+2 maks · −0.04s przeładowanie", "handMaxed": "MAX · {clicks} kliknięć · {recharge}s", "handUpgrade": "Ulepsz", "maxLabel": "MAX", "sideTowerTitle": "Wieże boczne", "sideTowerDesc": "Mocniejsze flanki", "sideTowerCurrent": "HP {hp} · DMG {dmg} · {rate}s", "sideTowerNext": "+{hp} HP · +{dmg} DMG", "sideTowerUpgrade": "Ulepsz", "dailyGemChest": "Dzienna skrzynka klejnotów", "dailyGemChestHint": "10–60 klejnotów każdego dnia.", "claimDailyGems": "Odbierz 10–60 klejnotów", "dailyGemsClaimed": "Wróć jutro", "gems": "klejnoty", "comingSoon": "Wkrótce", "betaSubtext": "Funkcje premium wkrótce." },
-  "collection": { "title": "Laboratorium", "hint": "Ulepszaj karty kopiami i odłamkami.", "towers": "Wieże", "orbs": "Orby", "powers": "Moce", "upgrades": "Ulepszenia", "trophyLock": "🔒 {n} trofeów", "crateLock": "🔒 Otwórz skrzynki", "maxLevel": "★ MAX", "copies": "Kopie", "levelUpFree": "Awansuj (za darmo)", "levelUpShards": "Awansuj · 💎 {n}", "levelUp": "Awansuj", "buyCopy": "Kup kopię 🔷 {n}", "collectMore": "Zbierz więcej", "sectionStarter": "Startowe", "sectionTrophy": "Odblokowania trofeów", "sectionCrate": "Tylko skrzynki", "sectionLocked": "Zablokowane", "handTitle": "Ręka", "handDesc": "Więcej kliknięć na mecz", "sideTowerTitle": "Wieże boczne", "sideTowerDesc": "Silniejsza automatyczna obrona", "upgrade": "Ulepsz", "maxed": "MAX" },
-  "leaderboard": { "title": "Tabela wyników", "loading": "Ładowanie…", "you": "(Ty)", "trophies": "Trofea", "tabRanks": "Ranking", "tabAchievements": "Osiągnięcia" },
-  "game": { "victory": "ZWYCIĘSTWO", "defeat": "PORAŻKA", "trainingWin": "ZWYCIĘSTWO TRENINGOWE", "trainingLoss": "PORAŻKA TRENINGOWA", "promoted": "AWANSOWANO!", "demoted": "ZDEGRADOWANO", "vs": "vs", "noTrophyChange": "Brak zmiany trofeów — tryb treningowy", "trophiesChange": "{n} trofeów", "home": "Strona główna", "playAgain": "Zagraj ponownie", "forfeit": "← Poddaj się", "overtime": "⚡ OT", "intensifying": "⚡ INTENSYFIKACJA", "critical": "⚡ KRYTYCZNY", "suddenDeath": "⚡ NAGŁA ŚMIERĆ", "maxPressure": "⚡ MAKS PRESJA", "towerBleed": "⚡ UPADEK WIEŻY", "combo": "KOMBO x{n}", "rejoinTitle": "Mecz w toku", "rejoinDesc": "Masz niedokończony mecz", "rejoin": "Dołącz ponownie", "forfeitMatch": "Poddaj się", "searching": "Szukanie przeciwnika…", "searchingHint": "Dotknij poniżej, aby grać z AI", "playVsAi": "Graj z AI", "startingMatch": "Rozpoczynanie meczu…", "cancel": "Anuluj" },
-  "friends": { "title": "Znajomi", "tabFriends": "Znajomi", "tabRequests": "Zaproszenia", "addFriend": "Dodaj znajomego", "usernamePlaceholder": "Wprowadź ich nazwę użytkownika", "search": "Szukaj", "add": "Dodaj", "notFound": "Nie znaleziono gracza", "self": "To jesteś ty!", "requestSent": "Zaproszenie wysłane!", "alreadyFriends": "Już znajomi", "yourFriends": "Twoi znajomi", "noFriends": "Brak znajomych", "play": "Graj", "waiting": "Oczekiwanie…", "cancel": "Anuluj", "friendRequests": "Zaproszenia do znajomych", "noRequests": "Brak oczekujących zaproszeń", "accept": "Akceptuj" },
-  "settings": { "title": "Ustawienia", "friends": "Znajomi", "changeNameTitle": "Zmienić nazwę?", "changeNameBody": "Twoja nazwa to sposób, w jaki znajomi cię znajdują.", "confirmChange": "Zmień", "account": "Konto", "language": "Język", "profile": "Profil", "displayName": "Wyświetlana nazwa", "google": "Google", "connected": "Połączono", "connect": "Połącz", "save": "Zapisz", "saved": "Zapisano!", "deleteAccount": "Usuń konto", "signOut": "Wyloguj się", "accountDesc": "Połącz konta, aby zabezpieczyć postęp", "languageDesc": "Wybierz preferowany język", "back": "Strona główna", "nameTaken": "Nazwa już zajęta", "nameError": "Nie można zapisać nazwy", "nameInappropriate": "Nieodpowiednia nazwa", "sound": "Efekty dźwiękowe", "soundDesc": "Sygnały, eksplozje i fanfary", "advancedHaptics": "Zaawansowane haptyki", "advancedHapticsDesc": "Wibruj przy każdym kliknięciu i monecie", "soundClicks": "Dotknięcia i monety", "soundExplosions": "Eksplozje i moce", "soundFanfare": "Fanfara zwycięstwa", "hapticsIntensity": "Siła wibracji", "hapticsIntensityDesc": "Jak mocno wibruje telefon", "hapticOff": "Wyłączone", "hapticLow": "Niskie", "hapticMedium": "Średnie", "hapticHigh": "Wysokie", "deleteConfirmTitle": "Usunąć konto?", "deleteConfirmBody": "Spowoduje to trwałe usunięcie konta i wszystkich postępów.", "deleteButton": "Usuń na zawsze", "deleteTypeHint": "Wpisz 'delete', aby potwierdzić", "deleting": "Usuwanie…", "cancel": "Anuluj", "privacyPolicy": "Polityka prywatności", "gameplay": "Rozgrywka", "gameplayDesc": "Dostosuj HUD w grze", "towerMenuAnytime": "Otwórz menu wieży w dowolnym momencie", "towerMenuAnytimeDesc": "Dotknij wieży, aby ulepszyć bez trybu edycji", "fitToScreen": "Dopasuj grę do ekranu", "fitToScreenDesc": "Skaluj pole gry.", "replayTutorial": "Powtórz samouczek", "eula": "EULA", "impressum": "Impressum", "downloadData": "Pobierz moje dane", "reportUser": "Zgłoś gracza" },
-  "onboarding": { "welcome": "Witaj!", "chooseLanguage": "Wybierz swój język", "chooseUsername": "Wybierz nazwę użytkownika", "usernameHint": "Ta nazwa reprezentuje cię w meczach.", "usernamePlaceholder": "Wprowadź nazwę", "checkName": "Sprawdź", "nameAvailable": "Dostępna!", "next": "Dalej", "continue": "Kontynuuj", "ageGate": "Zweryfikuj swój wiek", "ageGateHint": "Wprowadź datę urodzenia", "dobDay": "Dzień", "dobMonth": "Miesiąc", "dobYear": "Rok", "dobError": "Wprowadź prawidłową datę urodzenia", "saveError": "Nie można zapisać. Spróbuj ponownie." },
-  "privacy": { "back": "Wstecz", "title": "Polityka prywatności" },
-  "impressum": { "back": "Wstecz", "title": "Impressum", "heading": "Angaben gemäß § 5 TMG:", "name": "Felix Werner", "careOf": "c/o COCENTER", "street": "Koppoldstr. 1", "city": "86551 Aichach", "emailLabel": "Email: info@splitterorbs.com" },
-  "eula": { "back": "Wstecz", "title": "Umowa licencyjna użytkownika końcowego", "intro": "Przejrzyj i zaakceptuj warunki.", "accept": "Akceptuj", "decline": "Odrzuć", "settingsEula": "EULA", "downloadData": "Pobierz moje dane", "downloading": "Pobieranie…" },
-  "achievements": { "title": "Osiągnięcia", "subtitle": "Ukończ wyzwania, aby zdobyć nagrody", "claim": "Odbierz", "claimAll": "Odbierz wszystko", "claimed": "Odebrano ✓", "first_win": { "name": "Pierwsze zwycięstwo", "desc": "Wygraj swój pierwszy mecz" }, "win_10": { "name": "Weteran", "desc": "Wygraj 10 meczów" }, "win_50": { "name": "Mistrz", "desc": "Wygraj 50 meczów" }, "streak_5": { "name": "W ogniu", "desc": "Wygraj 5 z rzędu" }, "trophies_100": { "name": "Nowicjusz", "desc": "Osiągnij 100 trofeów" }, "trophies_1000": { "name": "Mistrz", "desc": "Osiągnij 1000 trofeów" }, "orbs_1000": { "name": "Łowca Orbów", "desc": "Zniszcz 1000 orbów" }, "towers_100": { "name": "Budowniczy", "desc": "Postaw 100 wież" }, "abilities_50": { "name": "Czarodziej", "desc": "Użyj 50 zdolności" }, "games_100": { "name": "Oddany", "desc": "Zagraj 100 meczów" } },
-  "missions": { "title": "Codzienne misje", "win2": "Wygraj 2 mecze", "play3": "Zagraj 3 mecze", "ranked1": "Wygraj 1 mecz rankingowy" },
-  "leagues": { "0": "Początkujący", "1": "Rekrut", "2": "Kadet", "3": "Weteran", "4": "Mistrz", "5": "Ekspert", "6": "Legenda" },
-  "towers": { "basic": { "name": "Blaster", "desc": "Niezawodny strzelec jednego celu." }, "machinegun": { "name": "Wulkan", "desc": "Szybki ogień, niskie obrażenia." }, "sniper": { "name": "Lancer", "desc": "Ekstremalny zasięg, ogromne obrażenia." }, "boomerang": { "name": "Przebijacz", "desc": "Przebija do 3 orbów." }, "rebound": { "name": "Bumerang", "desc": "Ostrze wylatuje i wraca." }, "bomb": { "name": "Moździerz", "desc": "Rzuca materiałem wybuchowym z rozpryskiem." }, "bouncer": { "name": "Odbijacz", "desc": "Przyciąga orby i odbija je." }, "glacier": { "name": "Lodowiec", "desc": "Spowalnia orby w zasięgu." }, "arc": { "name": "Łuk", "desc": "Błyskawica łańcuchuje między orbami." }, "pyre": { "name": "Stos", "desc": "Krótki płomień z podpaleniem DoT." }, "venom": { "name": "Jad", "desc": "Kumuluje truciznę z czasem." }, "siege": { "name": "Oblężenie", "desc": "Bardzo wolny, ogromny rozprys." }, "orb_mortar": { "name": "Moździerz orbów", "desc": "Rzuca losowym orbem na przeciwnika." }, "lava_mortar": { "name": "Moździerz lawy", "desc": "Rzuca bombami ognia z rozpryskiem." }, "repulsor": { "name": "Odpychacz", "desc": "Odpycha orb do tyłu." }, "cryo": { "name": "Działo kryo", "desc": "Wiązka zamrażająca orby." }, "seeker": { "name": "Poszukiwacz", "desc": "Naprowadzane rakiety na orby z najniższym HP." }, "prism": { "name": "Włócznia pryzmatyczna", "desc": "Ciągła wiązka, obrażenia rosną." }, "flak": { "name": "Działo przeciwlotnicze", "desc": "Rozprys 5 śrutu." }, "harpoon": { "name": "Harpun", "desc": "Przyciąga najdalszy orb z powrotem." }, "twin": { "name": "Podwójne działo", "desc": "Celuje jednocześnie w dwa orby." }, "tesla": { "name": "Cewka Tesli", "desc": "Okresowy impuls AoE." }, "detonator": { "name": "Detonator", "desc": "Wymusza detonację orbów-bomb." }, "magnet": { "name": "Magnes", "desc": "Rzuca atraktorami, aby skupić orby." }, "capacitor": { "name": "Kondensator", "desc": "Gromadzi ładunek, a następnie uwalnia wybuch." }, "overcharger": { "name": "Przeciążacz", "desc": "Wzmacnia sąsiednie wieże." }, "mine_layer": { "name": "Minowiec", "desc": "Kładzie miny lądowe." } },
-  "orbs": { "normal": { "name": "Normalny", "desc": "Zrównoważony orb." }, "fast": { "name": "Szybki", "desc": "Mało HP, ale bardzo szybki." }, "bomb": { "name": "Bomba", "desc": "Wybucha przy śmierci." }, "splitter": { "name": "Rozdzielacz", "desc": "Dzieli się na mniejsze orby." }, "tank": { "name": "Czołg", "desc": "Wysokie HP, atakuje wieże." }, "mine": { "name": "Mina", "desc": "Kliknij, aby zdetonować." }, "sprint": { "name": "Sprint", "desc": "Biegnie prosto do stacji." }, "swarmer": { "name": "Rój", "desc": "Pojawia się w grupach po trzy." }, "shield": { "name": "Tarczownik", "desc": "Ma regenerującą tarczę." }, "healer": { "name": "Uzdrowiciel", "desc": "Pulsuje leczeniem sojuszników." }, "radioactive": { "name": "Radioaktywny", "desc": "Infekuje wieże trucizną." }, "shadow": { "name": "Cień", "desc": "Orb stealth." }, "ice": { "name": "Lód", "desc": "Zamraża pierwszą dotkniętą wieżę." }, "fog": { "name": "Mgła", "desc": "Orb stealth, uszkadza wszystkie wieże." }, "zap_orb": { "name": "Zap", "desc": "Skacze z wieży na wieżę." }, "armored": { "name": "Opancerzony", "desc": "Stałe zmniejszenie obrażeń." }, "carrier": { "name": "Nośnik", "desc": "Uwalnia 3 słabe orby przy śmierci." }, "growth": { "name": "Wzrost", "desc": "Zyskuje HP i prędkość z czasem." }, "shield_bubble": { "name": "Bańka tarczy", "desc": "Projektuje tarczę na sojuszników." }, "berserker": { "name": "Berserker", "desc": "Staje się silniejszy przy niskim HP." }, "phantom": { "name": "Fantom", "desc": "Przechodzi przez wieże." }, "leech": { "name": "Pijawka", "desc": "Wysysa HP z wież." }, "summoner": { "name": "Przywoływacz", "desc": "Przywołuje orby-sługi." } },
-  "abilities": { "zap": { "name": "Zap", "desc": "Uderza wszystkie orby błyskawicą." }, "portal": { "name": "Portal", "desc": "Teleportuje do 6 orbów do przeciwnika." }, "repair": { "name": "Napraw", "desc": "Przywraca HP twojej stacji." }, "freeze": { "name": "Zamroź", "desc": "Zamraża wszystkie orby po twojej stronie." }, "rage": { "name": "Wściekłość", "desc": "Wszystkie wieże strzelają 3× szybciej." }, "shield": { "name": "Tarcza", "desc": "Blokuje wszystkie obrażenia stacji." }, "burner": { "name": "Palnik", "desc": "Przytrzymaj, aby kanalizować płomień." }, "meteor": { "name": "Meteor", "desc": "Dotknij punkt, aby wywołać uderzenie meteoru." }, "glue": { "name": "Klej", "desc": "Lepka kałuża spowalniająca orby." }, "overclock": { "name": "Przetaktowanie", "desc": "Wieże strzelają szybciej i przebijają." }, "speed_zone": { "name": "Strefa prędkości", "desc": "Twoje orby poruszają się szybciej." }, "damage_zone": { "name": "Strefa obrażeń", "desc": "Twoje orby zadają więcej obrażeń." }, "frost_zone": { "name": "Strefa mrozu", "desc": "Wieże w środku są zamrożone." }, "deep_freeze": { "name": "Głębokie zamrożenie", "desc": "Zamraża WSZYSTKIE wieże przeciwnika." } },
-  "errors": { "title": "Coś poszło nie tak", "eulaRequired": "Warunki zaktualizowane — zaakceptuj nowe EULA.", "rateLimited": "Zbyt wiele działań.", "unknown": "Wystąpił nieoczekiwany błąd." },
+  "home": {
+    "tagline": "Obrona wieży na podzielonym ekranie.",
+    "playNow": "GRAJ TERAZ",
+    "trophies": "Trofea",
+    "winRate": "Wskaźnik wygranych",
+    "wins": "Wygrane",
+    "losses": "Przegrane",
+    "recentMatches": "Ostatnie mecze",
+    "dailyMissions": "Codzienne misje"
+  },
+  "nav": {
+    "home": "Strona główna",
+    "shop": "Sklep",
+    "play": "Graj",
+    "cards": "Karty",
+    "ranks": "Rangi"
+  },
+  "setup": {
+    "title": "Ekwipunek",
+    "subtitle": "Wybierz 3 moce, {towers} wieże i {orbs} orby",
+    "training": "Trening",
+    "casual": "Casual",
+    "ranked": "Rankingowy",
+    "aiDifficulty": "Trudność AI",
+    "towers": "Wieże",
+    "orbs": "Orby",
+    "powers": "Moce",
+    "startMatch": "ROZPOCZNIJ MECZ",
+    "trophyReq": "🔒 {n}🏆",
+    "crateLock": "🔒 Skrzynka",
+    "quickPlay": "Szybka gra",
+    "quickPlayHint": "Dołącz z zapisanym ekwipunkiem",
+    "changeLoadout": "Zmień ekwipunek",
+    "moreInLab": "+{n} więcej w Laboratorium →",
+    "rankedBetaDisclaimer": "Gra przeciwko AI w rankingowym jest tymczasowa."
+  },
+  "difficulty": {
+    "easy": "Łatwy",
+    "normal": "Normalny",
+    "hard": "Trudny"
+  },
+  "shop": {
+    "title": "Sklep",
+    "shards": "{n} odłamków",
+    "shardsHint": "Wydaj w Laboratorium, aby ulepszać karty",
+    "crates": "Skrzynki",
+    "freeDaily": "Codziennie za darmo",
+    "claimed": "Odebrano ✓",
+    "freeEveryDay": "Za darmo każdego dnia",
+    "buy": "Kup",
+    "free": "Za darmo",
+    "opening": "Otwieranie…",
+    "youGot": "Otrzymałeś",
+    "newUnlock": "NOWE ODBLOKOWANIE!",
+    "leveledUp": "AWANSOWANO do {n}!",
+    "shardsMaxed": "+{n} odłamków (maks)",
+    "duplicate": "Duplikat · {n}/{m} kopii",
+    "awesome": "Świetnie!",
+    "cardChanceFull": "Gwarantowana karta",
+    "cardChancePct": "{n}% karta",
+    "gemChancePct": "{n}% klejnoty",
+    "crateSuffix": "Skrzynka",
+    "voucherTitle": "Kod vouchera",
+    "voucherHint": "Wprowadź kod, aby odebrać nagrody",
+    "voucherPlaceholder": "WPROWADŹ KOD",
+    "redeem": "Zrealizuj",
+    "voucherSuccess": "Kod zrealizowany!",
+    "voucherInvalid": "Nieprawidłowy kod",
+    "voucherAlreadyUsed": "Kod już użyty",
+    "exchangeTitle": "Wymień klejnoty",
+    "exchangeRate": "1 💎 = 10 🪙",
+    "handTitle": "Ręka",
+    "handDesc": "Więcej kliknięć i szybsze ładowanie",
+    "handCurrent": "{clicks} kliknięć · {recharge}s przeładowanie",
+    "handNext": "+2 maks · −0.04s przeładowanie",
+    "handMaxed": "MAX · {clicks} kliknięć · {recharge}s",
+    "handUpgrade": "Ulepsz",
+    "maxLabel": "MAX",
+    "sideTowerTitle": "Wieże boczne",
+    "sideTowerDesc": "Mocniejsze flanki",
+    "sideTowerCurrent": "HP {hp} · DMG {dmg} · {rate}s",
+    "sideTowerNext": "+{hp} HP · +{dmg} DMG",
+    "sideTowerUpgrade": "Ulepsz",
+    "dailyGemChest": "Dzienna skrzynka klejnotów",
+    "dailyGemChestHint": "10–60 klejnotów każdego dnia.",
+    "claimDailyGems": "Odbierz 10–60 klejnotów",
+    "dailyGemsClaimed": "Wróć jutro",
+    "gems": "klejnoty",
+    "comingSoon": "Wkrótce",
+    "betaSubtext": "Funkcje premium wkrótce."
+  },
+  "collection": {
+    "title": "Laboratorium",
+    "hint": "Ulepszaj karty kopiami i odłamkami.",
+    "towers": "Wieże",
+    "orbs": "Orby",
+    "powers": "Moce",
+    "upgrades": "Ulepszenia",
+    "trophyLock": "🔒 {n} trofeów",
+    "crateLock": "🔒 Otwórz skrzynki",
+    "maxLevel": "★ MAX",
+    "copies": "Kopie",
+    "levelUpFree": "Awansuj (za darmo)",
+    "levelUpShards": "Awansuj · 💎 {n}",
+    "levelUp": "Awansuj",
+    "buyCopy": "Kup kopię 🔷 {n}",
+    "collectMore": "Zbierz więcej",
+    "sectionStarter": "Startowe",
+    "sectionTrophy": "Odblokowania trofeów",
+    "sectionCrate": "Tylko skrzynki",
+    "sectionLocked": "Zablokowane",
+    "handTitle": "Ręka",
+    "handDesc": "Więcej kliknięć na mecz",
+    "sideTowerTitle": "Wieże boczne",
+    "sideTowerDesc": "Silniejsza automatyczna obrona",
+    "upgrade": "Ulepsz",
+    "maxed": "MAX"
+  },
+  "leaderboard": {
+    "title": "Tabela wyników",
+    "loading": "Ładowanie…",
+    "you": "(Ty)",
+    "trophies": "Trofea",
+    "tabRanks": "Ranking",
+    "tabAchievements": "Osiągnięcia"
+  },
+  "game": {
+    "victory": "ZWYCIĘSTWO",
+    "defeat": "PORAŻKA",
+    "trainingWin": "ZWYCIĘSTWO TRENINGOWE",
+    "trainingLoss": "PORAŻKA TRENINGOWA",
+    "promoted": "AWANSOWANO!",
+    "demoted": "ZDEGRADOWANO",
+    "vs": "vs",
+    "noTrophyChange": "Brak zmiany trofeów — tryb treningowy",
+    "trophiesChange": "{n} trofeów",
+    "home": "Strona główna",
+    "playAgain": "Zagraj ponownie",
+    "forfeit": "← Poddaj się",
+    "overtime": "⚡ OT",
+    "intensifying": "⚡ INTENSYFIKACJA",
+    "critical": "⚡ KRYTYCZNY",
+    "suddenDeath": "⚡ NAGŁA ŚMIERĆ",
+    "maxPressure": "⚡ MAKS PRESJA",
+    "towerBleed": "⚡ UPADEK WIEŻY",
+    "combo": "KOMBO x{n}",
+    "rejoinTitle": "Mecz w toku",
+    "rejoinDesc": "Masz niedokończony mecz",
+    "rejoin": "Dołącz ponownie",
+    "forfeitMatch": "Poddaj się",
+    "searching": "Szukanie przeciwnika…",
+    "searchingHint": "Dotknij poniżej, aby grać z AI",
+    "playVsAi": "Graj z AI",
+    "startingMatch": "Rozpoczynanie meczu…",
+    "cancel": "Anuluj"
+  },
+  "friends": {
+    "title": "Znajomi",
+    "tabFriends": "Znajomi",
+    "tabRequests": "Zaproszenia",
+    "addFriend": "Dodaj znajomego",
+    "usernamePlaceholder": "Wprowadź ich nazwę użytkownika",
+    "search": "Szukaj",
+    "add": "Dodaj",
+    "notFound": "Nie znaleziono gracza",
+    "self": "To jesteś ty!",
+    "requestSent": "Zaproszenie wysłane!",
+    "alreadyFriends": "Już znajomi",
+    "yourFriends": "Twoi znajomi",
+    "noFriends": "Brak znajomych",
+    "play": "Graj",
+    "waiting": "Oczekiwanie…",
+    "cancel": "Anuluj",
+    "friendRequests": "Zaproszenia do znajomych",
+    "noRequests": "Brak oczekujących zaproszeń",
+    "accept": "Akceptuj"
+  },
+  "settings": {
+    "title": "Ustawienia",
+    "friends": "Znajomi",
+    "changeNameTitle": "Zmienić nazwę?",
+    "changeNameBody": "Twoja nazwa to sposób, w jaki znajomi cię znajdują.",
+    "confirmChange": "Zmień",
+    "account": "Konto",
+    "language": "Język",
+    "profile": "Profil",
+    "displayName": "Wyświetlana nazwa",
+    "google": "Google",
+    "connected": "Połączono",
+    "connect": "Połącz",
+    "save": "Zapisz",
+    "saved": "Zapisano!",
+    "deleteAccount": "Usuń konto",
+    "signOut": "Wyloguj się",
+    "accountDesc": "Połącz konta, aby zabezpieczyć postęp",
+    "languageDesc": "Wybierz preferowany język",
+    "back": "Strona główna",
+    "nameTaken": "Nazwa już zajęta",
+    "nameError": "Nie można zapisać nazwy",
+    "nameInappropriate": "Nieodpowiednia nazwa",
+    "sound": "Efekty dźwiękowe",
+    "soundDesc": "Sygnały, eksplozje i fanfary",
+    "advancedHaptics": "Zaawansowane haptyki",
+    "advancedHapticsDesc": "Wibruj przy każdym kliknięciu i monecie",
+    "soundClicks": "Dotknięcia i monety",
+    "soundExplosions": "Eksplozje i moce",
+    "soundFanfare": "Fanfara zwycięstwa",
+    "hapticsIntensity": "Siła wibracji",
+    "hapticsIntensityDesc": "Jak mocno wibruje telefon",
+    "hapticOff": "Wyłączone",
+    "hapticLow": "Niskie",
+    "hapticMedium": "Średnie",
+    "hapticHigh": "Wysokie",
+    "deleteConfirmTitle": "Usunąć konto?",
+    "deleteConfirmBody": "Spowoduje to trwałe usunięcie konta i wszystkich postępów.",
+    "deleteButton": "Usuń na zawsze",
+    "deleteTypeHint": "Wpisz 'delete', aby potwierdzić",
+    "deleting": "Usuwanie…",
+    "cancel": "Anuluj",
+    "privacyPolicy": "Polityka prywatności",
+    "gameplay": "Rozgrywka",
+    "gameplayDesc": "Dostosuj HUD w grze",
+    "towerMenuAnytime": "Otwórz menu wieży w dowolnym momencie",
+    "towerMenuAnytimeDesc": "Dotknij wieży, aby ulepszyć bez trybu edycji",
+    "fitToScreen": "Dopasuj grę do ekranu",
+    "fitToScreenDesc": "Skaluj pole gry.",
+    "replayTutorial": "Powtórz samouczek",
+    "eula": "EULA",
+    "impressum": "Impressum",
+    "downloadData": "Pobierz moje dane",
+    "reportUser": "Zgłoś gracza",
+    "downloadDataTitle": "Eksport danych",
+    "downloadDataSuccess": "Twój eksport jest gotowy.",
+    "downloadDataErrorTitle": "Błąd eksportu",
+    "downloadDataError": "Nie można wyeksportować danych.",
+    "reportSelf": "Nie możesz zgłosić siebie.",
+    "reportSent": "Zgłoszenie wysłane. Dziękujemy."
+  },
+  "onboarding": {
+    "welcome": "Witaj!",
+    "chooseLanguage": "Wybierz swój język",
+    "chooseUsername": "Wybierz nazwę użytkownika",
+    "usernameHint": "Ta nazwa reprezentuje cię w meczach.",
+    "usernamePlaceholder": "Wprowadź nazwę",
+    "checkName": "Sprawdź",
+    "nameAvailable": "Dostępna!",
+    "next": "Dalej",
+    "continue": "Kontynuuj",
+    "ageGate": "Zweryfikuj swój wiek",
+    "ageGateHint": "Wprowadź datę urodzenia",
+    "dobDay": "Dzień",
+    "dobMonth": "Miesiąc",
+    "dobYear": "Rok",
+    "dobError": "Wprowadź prawidłową datę urodzenia",
+    "saveError": "Nie można zapisać. Spróbuj ponownie."
+  },
+  "privacy": {
+    "back": "Wstecz",
+    "title": "Polityka prywatności"
+  },
+  "impressum": {
+    "back": "Wstecz",
+    "title": "Impressum",
+    "heading": "Angaben gemäß § 5 TMG:",
+    "name": "Felix Werner",
+    "careOf": "c/o COCENTER",
+    "street": "Koppoldstr. 1",
+    "city": "86551 Aichach",
+    "emailLabel": "Email: info@splitterorbs.com"
+  },
+  "eula": {
+    "back": "Wstecz",
+    "title": "Umowa licencyjna użytkownika końcowego",
+    "intro": "Przejrzyj i zaakceptuj warunki.",
+    "accept": "Akceptuj",
+    "decline": "Odrzuć",
+    "settingsEula": "EULA",
+    "downloadData": "Pobierz moje dane",
+    "downloading": "Pobieranie…"
+  },
+  "achievements": {
+    "title": "Osiągnięcia",
+    "subtitle": "Ukończ wyzwania, aby zdobyć nagrody",
+    "claim": "Odbierz",
+    "claimAll": "Odbierz wszystko",
+    "claimed": "Odebrano ✓",
+    "first_win": {
+      "name": "Pierwsze zwycięstwo",
+      "desc": "Wygraj swój pierwszy mecz"
+    },
+    "win_10": {
+      "name": "Weteran",
+      "desc": "Wygraj 10 meczów"
+    },
+    "win_50": {
+      "name": "Mistrz",
+      "desc": "Wygraj 50 meczów"
+    },
+    "streak_5": {
+      "name": "W ogniu",
+      "desc": "Wygraj 5 z rzędu"
+    },
+    "trophies_100": {
+      "name": "Nowicjusz",
+      "desc": "Osiągnij 100 trofeów"
+    },
+    "trophies_1000": {
+      "name": "Mistrz",
+      "desc": "Osiągnij 1000 trofeów"
+    },
+    "orbs_1000": {
+      "name": "Łowca Orbów",
+      "desc": "Zniszcz 1000 orbów"
+    },
+    "towers_100": {
+      "name": "Budowniczy",
+      "desc": "Postaw 100 wież"
+    },
+    "abilities_50": {
+      "name": "Czarodziej",
+      "desc": "Użyj 50 zdolności"
+    },
+    "games_100": {
+      "name": "Oddany",
+      "desc": "Zagraj 100 meczów"
+    }
+  },
+  "missions": {
+    "title": "Codzienne misje",
+    "win2": "Wygraj 2 mecze",
+    "play3": "Zagraj 3 mecze",
+    "ranked1": "Wygraj 1 mecz rankingowy"
+  },
+  "leagues": {
+    "0": "Początkujący",
+    "1": "Rekrut",
+    "2": "Kadet",
+    "3": "Weteran",
+    "4": "Mistrz",
+    "5": "Ekspert",
+    "6": "Legenda"
+  },
+  "towers": {
+    "basic": {
+      "name": "Blaster",
+      "desc": "Niezawodny strzelec jednego celu."
+    },
+    "machinegun": {
+      "name": "Wulkan",
+      "desc": "Szybki ogień, niskie obrażenia."
+    },
+    "sniper": {
+      "name": "Lancer",
+      "desc": "Ekstremalny zasięg, ogromne obrażenia."
+    },
+    "boomerang": {
+      "name": "Przebijacz",
+      "desc": "Przebija do 3 orbów."
+    },
+    "rebound": {
+      "name": "Bumerang",
+      "desc": "Ostrze wylatuje i wraca."
+    },
+    "bomb": {
+      "name": "Moździerz",
+      "desc": "Rzuca materiałem wybuchowym z rozpryskiem."
+    },
+    "bouncer": {
+      "name": "Odbijacz",
+      "desc": "Przyciąga orby i odbija je."
+    },
+    "glacier": {
+      "name": "Lodowiec",
+      "desc": "Spowalnia orby w zasięgu."
+    },
+    "arc": {
+      "name": "Łuk",
+      "desc": "Błyskawica łańcuchuje między orbami."
+    },
+    "pyre": {
+      "name": "Stos",
+      "desc": "Krótki płomień z podpaleniem DoT."
+    },
+    "venom": {
+      "name": "Jad",
+      "desc": "Kumuluje truciznę z czasem."
+    },
+    "siege": {
+      "name": "Oblężenie",
+      "desc": "Bardzo wolny, ogromny rozprys."
+    },
+    "orb_mortar": {
+      "name": "Moździerz orbów",
+      "desc": "Rzuca losowym orbem na przeciwnika."
+    },
+    "lava_mortar": {
+      "name": "Moździerz lawy",
+      "desc": "Rzuca bombami ognia z rozpryskiem."
+    },
+    "repulsor": {
+      "name": "Odpychacz",
+      "desc": "Odpycha orb do tyłu."
+    },
+    "cryo": {
+      "name": "Działo kryo",
+      "desc": "Wiązka zamrażająca orby."
+    },
+    "seeker": {
+      "name": "Poszukiwacz",
+      "desc": "Naprowadzane rakiety na orby z najniższym HP."
+    },
+    "prism": {
+      "name": "Włócznia pryzmatyczna",
+      "desc": "Ciągła wiązka, obrażenia rosną."
+    },
+    "flak": {
+      "name": "Działo przeciwlotnicze",
+      "desc": "Rozprys 5 śrutu."
+    },
+    "harpoon": {
+      "name": "Harpun",
+      "desc": "Przyciąga najdalszy orb z powrotem."
+    },
+    "twin": {
+      "name": "Podwójne działo",
+      "desc": "Celuje jednocześnie w dwa orby."
+    },
+    "tesla": {
+      "name": "Cewka Tesli",
+      "desc": "Okresowy impuls AoE."
+    },
+    "detonator": {
+      "name": "Detonator",
+      "desc": "Wymusza detonację orbów-bomb."
+    },
+    "magnet": {
+      "name": "Magnes",
+      "desc": "Rzuca atraktorami, aby skupić orby."
+    },
+    "capacitor": {
+      "name": "Kondensator",
+      "desc": "Gromadzi ładunek, a następnie uwalnia wybuch."
+    },
+    "overcharger": {
+      "name": "Przeciążacz",
+      "desc": "Wzmacnia sąsiednie wieże."
+    },
+    "mine_layer": {
+      "name": "Minowiec",
+      "desc": "Kładzie miny lądowe."
+    }
+  },
+  "orbs": {
+    "normal": {
+      "name": "Normalny",
+      "desc": "Zrównoważony orb."
+    },
+    "fast": {
+      "name": "Szybki",
+      "desc": "Mało HP, ale bardzo szybki."
+    },
+    "bomb": {
+      "name": "Bomba",
+      "desc": "Wybucha przy śmierci."
+    },
+    "splitter": {
+      "name": "Rozdzielacz",
+      "desc": "Dzieli się na mniejsze orby."
+    },
+    "tank": {
+      "name": "Czołg",
+      "desc": "Wysokie HP, atakuje wieże."
+    },
+    "mine": {
+      "name": "Mina",
+      "desc": "Kliknij, aby zdetonować."
+    },
+    "sprint": {
+      "name": "Sprint",
+      "desc": "Biegnie prosto do stacji."
+    },
+    "swarmer": {
+      "name": "Rój",
+      "desc": "Pojawia się w grupach po trzy."
+    },
+    "shield": {
+      "name": "Tarczownik",
+      "desc": "Ma regenerującą tarczę."
+    },
+    "healer": {
+      "name": "Uzdrowiciel",
+      "desc": "Pulsuje leczeniem sojuszników."
+    },
+    "radioactive": {
+      "name": "Radioaktywny",
+      "desc": "Infekuje wieże trucizną."
+    },
+    "shadow": {
+      "name": "Cień",
+      "desc": "Orb stealth."
+    },
+    "ice": {
+      "name": "Lód",
+      "desc": "Zamraża pierwszą dotkniętą wieżę."
+    },
+    "fog": {
+      "name": "Mgła",
+      "desc": "Orb stealth, uszkadza wszystkie wieże."
+    },
+    "zap_orb": {
+      "name": "Zap",
+      "desc": "Skacze z wieży na wieżę."
+    },
+    "armored": {
+      "name": "Opancerzony",
+      "desc": "Stałe zmniejszenie obrażeń."
+    },
+    "carrier": {
+      "name": "Nośnik",
+      "desc": "Uwalnia 3 słabe orby przy śmierci."
+    },
+    "growth": {
+      "name": "Wzrost",
+      "desc": "Zyskuje HP i prędkość z czasem."
+    },
+    "shield_bubble": {
+      "name": "Bańka tarczy",
+      "desc": "Projektuje tarczę na sojuszników."
+    },
+    "berserker": {
+      "name": "Berserker",
+      "desc": "Staje się silniejszy przy niskim HP."
+    },
+    "phantom": {
+      "name": "Fantom",
+      "desc": "Przechodzi przez wieże."
+    },
+    "leech": {
+      "name": "Pijawka",
+      "desc": "Wysysa HP z wież."
+    },
+    "summoner": {
+      "name": "Przywoływacz",
+      "desc": "Przywołuje orby-sługi."
+    }
+  },
+  "abilities": {
+    "zap": {
+      "name": "Zap",
+      "desc": "Uderza wszystkie orby błyskawicą."
+    },
+    "portal": {
+      "name": "Portal",
+      "desc": "Teleportuje do 6 orbów do przeciwnika."
+    },
+    "repair": {
+      "name": "Napraw",
+      "desc": "Przywraca HP twojej stacji."
+    },
+    "freeze": {
+      "name": "Zamroź",
+      "desc": "Zamraża wszystkie orby po twojej stronie."
+    },
+    "rage": {
+      "name": "Wściekłość",
+      "desc": "Wszystkie wieże strzelają 3× szybciej."
+    },
+    "shield": {
+      "name": "Tarcza",
+      "desc": "Blokuje wszystkie obrażenia stacji."
+    },
+    "burner": {
+      "name": "Palnik",
+      "desc": "Przytrzymaj, aby kanalizować płomień."
+    },
+    "meteor": {
+      "name": "Meteor",
+      "desc": "Dotknij punkt, aby wywołać uderzenie meteoru."
+    },
+    "glue": {
+      "name": "Klej",
+      "desc": "Lepka kałuża spowalniająca orby."
+    },
+    "overclock": {
+      "name": "Przetaktowanie",
+      "desc": "Wieże strzelają szybciej i przebijają."
+    },
+    "speed_zone": {
+      "name": "Strefa prędkości",
+      "desc": "Twoje orby poruszają się szybciej."
+    },
+    "damage_zone": {
+      "name": "Strefa obrażeń",
+      "desc": "Twoje orby zadają więcej obrażeń."
+    },
+    "frost_zone": {
+      "name": "Strefa mrozu",
+      "desc": "Wieże w środku są zamrożone."
+    },
+    "deep_freeze": {
+      "name": "Głębokie zamrożenie",
+      "desc": "Zamraża WSZYSTKIE wieże przeciwnika."
+    }
+  },
+  "errors": {
+    "title": "Coś poszło nie tak",
+    "eulaRequired": "Warunki zaktualizowane — zaakceptuj nowe EULA.",
+    "rateLimited": "Zbyt wiele działań.",
+    "unknown": "Wystąpił nieoczekiwany błąd."
+  },
   "eulaContent": {
-    "s1t": "1. Akceptacja warunków", "s1b": "Pobierając, instalując, uzyskując dostęp lub korzystając z Splitter Orbs, zgadzasz się być związany niniejszą Umową Licencyjną Użytkownika Końcowego. Jeśli nie zgadzasz się, nie używaj aplikacji.",
-    "s2t": "2. Licencja na użytkowanie", "s2b": "Pod warunkiem przestrzegania niniejszej EULA, deweloper udziela Ci ograniczonej, niewyłącznej, niezbywalnej i odwołalnej licencji na instalację i używanie aplikacji do celów osobistych i niekomercyjnych.",
-    "s3t": "3. Twoje konto", "s3b": "Jesteś odpowiedzialny za utrzymanie bezpieczeństwa swojego konta i wszystkich działań, które mają miejsce na Twoim koncie.",
-    "s4t": "4. Dopuszczalne użytkowanie", "s4b": "Zgadzasz się nie: (a) oszukiwać, hakować ani używać nieautoryzowanego oprogramowania stron trzecich; (b) wykorzystywać błędów lub luk; (c) nękać ani szkodzić innym użytkownikom; (d) używać aplikacji do celów nielegalnych; (e) dokonywać inżynierii wstecznej aplikacji; (f) tworzyć wielu kont w celu obejścia ograniczeń.",
-    "s5t": "5. Wirtualne przedmioty i waluta", "s5b": "Aplikacja zawiera wirtualne przedmioty i waluty (monety, klejnoty, odłamki), które nie mają rzeczywistej wartości pieniężnej. Wirtualne przedmioty mogą być resetowane lub usuwane w dowolnym momencie bez odszkodowania.",
-    "s6t": "6. Brak hazardu", "s6b": "Aplikacja zawiera losowe systemy nagród (skrzynie). Nie jest to hazard. Zawsze otrzymujesz przedmioty w grze. Wirtualnych przedmiotów nie można wymieniać na prawdziwe pieniądze.",
-    "s7t": "7. Własność intelektualna", "s7b": "Wszystkie treści w aplikacji są własnością dewelopera lub jego licencjodawców. Nie możesz ich kopiować, dystrybuować ani modyfikować bez uprzedniej pisemnej zgody.",
-    "s8t": "8. Wyłączenie gwarancji", "s8b": "APLIKACJA JEST DOSTARCZANA 'W STANIE TAKIM, W JAKIM JEST' BEZ JAKICHKOLWIEK GWARANCJI. DEWELOPER NIE GWARANTUJE, ŻE APLIKACJA BĘDZIE NIEPRZERWANA LUB WOLNA OD BŁĘDÓW.",
-    "s9t": "9. Ograniczenie odpowiedzialności", "s9b": "W MAKSYMALNYM ZAKRESIE DOZWOLONYM PRZEZ PRAWO, DEWELOPER NIE PONOSI ODPOWIEDZIALNOŚCI ZA POŚREDNIE, PRZYPADKOWE LUB WYNIKOWE SZKODY.",
-    "s10t": "10. Odszkodowanie", "s10b": "Zgadzasz się zabezpieczyć i zwolnić dewelopera z odpowiedzialności za roszczenia wynikające z naruszenia niniejszej EULA lub nadużycia aplikacji.",
-    "s11t": "11. Prywatność i dane", "s11b": "Twoje dane są przetwarzane zgodnie z Polityką prywatności aplikacji. Korzystając z aplikacji, wyrażasz zgodę na praktyki dotyczące danych opisane w Polityce prywatności.",
-    "s12t": "12. Wymóg wiekowy", "s12b": "Musisz spełniać minimalny wymóg wiekowy dla swojego regionu: 13 w większości krajów, 14 w Hiszpanii/Włoszech/Austrii, 15 we Francji, 16 w Niemczech/Holandii/Irlandii.",
-    "s13t": "13. Usługi stron trzecich", "s13b": "Aplikacja korzysta z usług stron trzecich (Supabase, Google). Deweloper nie ponosi odpowiedzialności za praktyki tych stron trzecich.",
-    "s14t": "14. Zmiany warunków", "s14b": "Deweloper może aktualizować niniejszą EULA w dowolnym momencie. Istotne zmiany będą wymagały zaakceptowania zaktualizowanych warunków.",
-    "s15t": "15. Prawo właściwe", "s15b": "Niniejsza EULA podlega prawu Republiki Federalnej Niemiec.",
-    "s16t": "16. Kontakt", "s16b": "W przypadku pytań dotyczących niniejszej EULA, skontaktuj się z nami pod adresem info@splitterorbs.com.",
-    "s17t": "17. Siła wyższa", "s17b": "Deweloper nie ponosi odpowiedzialności za jakiekolwiek niewykonanie lub opóźnienie w wykonaniu wynikające z przyczyn pozostających poza jego rozsądną kontrolą, w tym między innymi: siły wyższe, awarie internetu lub serwerów, awarie usług stron trzecich (w tym infrastruktury Supabase), cyberataki, działania rządowe lub inne zdarzenia poza kontrolą dewelopera. W takich przypadkach wirtualne przedmioty, postęp w grze i dane konta mogą zostać utracone bez odszkodowania.",
-    "s18t": "18. Rozwiązanie umowy", "s18b": "Deweloper może zawiesić lub trwale zamknąć Twoje konto w dowolnym momencie, z powiadomieniem lub bez, jeśli naruszysz niniejszą EULA lub podejmiesz działania szkodliwe dla innych użytkowników lub aplikacji. Po rozwiązaniu umowy Twoja licencja na korzystanie z aplikacji wygasa natychmiast, a wszystkie wirtualne przedmioty, waluty i postęp w grze przepadają bez zwrotu lub odszkodowania. Możesz usunąć swoje konto w dowolnym momencie za pośrednictwem ekranu Ustawienia.",
-    "s19t": "19. Rozwiązywanie sporów", "s19b": "W przypadku sporu zgadzasz się najpierw skontaktować z deweloperem pod adresem info@splitterorbs.com w celu poszukiwania nieformalnego rozwiązania. Jeśli sporu nie można rozwiązać nieformalnie w ciągu 30 dni, zostanie on poddany wyłącznej jurysdykcji sądów Niemiec. Żadne postanowienie tej klauzuli nie ogranicza Twoich ustawowych praw jako konsumenta na mocy obowiązującego prawa UE.",
-    "s20t": "20. Rozdzielność postanowień", "s20b": "Jeśli jakiekolwiek postanowienie niniejszej EULA zostanie uznane przez właściwy sąd za nieważne, niezgodne z prawem lub niewykonalne, postanowienie to zostanie zmienione w minimalnym zakresie niezbędnym do jego wykonalności lub usunięte, jeśli zmiana nie jest możliwa. Pozostałe postanowienia pozostają w pełnej mocy.",
-    "s21t": "21. Całość umowy", "s21b": "Niniejsza EULA wraz z Polityką prywatności stanowi całość umowy między Tobą a deweloperem dotyczącej korzystania z aplikacji i zastępuje wszystkie wcześniejsze umowy, oświadczenia i porozumienia. Zrzeczenie się jakiegokolwiek warunku nie będzie uznawane za dalsze lub ciągłe zrzeczenie się tego warunku.",
-    "s22t": "22. Rozszerzone ograniczenie odpowiedzialności", "s22b": "W MAKSYMALNYM ZAKRESIE DOZWOLONYM PRZEZ OBOWIĄZUJĄCE PRAWO: (a) CAŁKOWITA ODPOWIEDZIALNOŚĆ DEWELOPERA WOBEC CIEBIE ZA JAKIEKOLWIEK ROSZCZENIE WYNIKAJĄCE Z NINIEJSZEJ EULA LUB KORZYSTANIA Z APLIKACJI NIE PRZEKROCZY KWOTY ZAPŁACONEJ DEWELOPEROWI W CIĄGU 12 MIESIĘCY POPRZEDZAJĄCYCH ROSZCZENIE LUB €5, JEŚLI NIE DOKONAŁEŚ ŻADNYCH PŁATNOŚCI; (b) DEWELOPER NIE PONOSI ODPOWIEDZIALNOŚCI ZA UTRATĘ POSTĘPU W GRZE, WIRTUALNYCH PRZEDMIOTÓW, WALUTY W GRZE, DANYCH KONTA LUB INNYCH TREŚCI W APLIKACJI, NIEZALEŻNIE OD PRZYCZYNY; (c) DEWELOPER NIE PONOSI ODPOWIEDZIALNOŚCI ZA DZIAŁANIA LUB ZANIECHANIA ZEWNĘTRZNYCH DOSTAWCÓW USŁUG, W TYM SUPABASE, GOOGLE LUB APPLE.",
-    "s23t": "23. Kontrola eksportu", "s23b": "Oświadczasz, że nie przebywasz w kraju objętym embargiem rządu USA ani nie jesteś wyznaczony jako kraj 'wspierający terroryzm', oraz że nie figurujesz na żadnej liście zakazanych lub ograniczonych podmiotów rządu USA. Zgadzasz się przestrzegać wszystkich obowiązujących przepisów i regulacji dotyczących kontroli eksportu i reeksportu.",
-    "s24t": "24. Zrzeczenie się pozwów zbiorowych", "s24b": "W ZAKRESIE DOZWOLONYM PRZEZ OBOWIĄZUJĄCE PRAWO ZRZEKASZ SIĘ PRAWA DO UCZESTNICTWA W POZWIE ZBIOROWYM LUB ARBITRAŻU ZBIOROWYM PRZECIWKO DEWELOPEROWI. WSZYSTKIE ROSZCZENIA MUSZĄ BYĆ WNOSZONE W TWOIM INDYWIDUALNYM CHARAKTERZE, A NIE JAKO POWÓD LUB CZŁONEK KLASY W JAKIMKOLWIEK DOMNIEMANYM POSTĘPOWANIU ZBIOROWYM LUB REPREZENTATYWNYM. Uwaga: To zrzeczenie nie ma zastosowania tam, gdzie jest zakazane przez unijne prawo ochrony konsumentów."
+    "s1t": "1. Akceptacja warunków",
+    "s1b": "Pobierając, instalując, uzyskując dostęp lub korzystając z Splitter Orbs, zgadzasz się być związany niniejszą Umową Licencyjną Użytkownika Końcowego. Jeśli nie zgadzasz się, nie używaj aplikacji.",
+    "s2t": "2. Licencja na użytkowanie",
+    "s2b": "Pod warunkiem przestrzegania niniejszej EULA, deweloper udziela Ci ograniczonej, niewyłącznej, niezbywalnej i odwołalnej licencji na instalację i używanie aplikacji do celów osobistych i niekomercyjnych.",
+    "s3t": "3. Twoje konto",
+    "s3b": "Jesteś odpowiedzialny za utrzymanie bezpieczeństwa swojego konta i wszystkich działań, które mają miejsce na Twoim koncie.",
+    "s4t": "4. Dopuszczalne użytkowanie",
+    "s4b": "Zgadzasz się nie: (a) oszukiwać, hakować ani używać nieautoryzowanego oprogramowania stron trzecich; (b) wykorzystywać błędów lub luk; (c) nękać ani szkodzić innym użytkownikom; (d) używać aplikacji do celów nielegalnych; (e) dokonywać inżynierii wstecznej aplikacji; (f) tworzyć wielu kont w celu obejścia ograniczeń.",
+    "s5t": "5. Wirtualne przedmioty i waluta",
+    "s5b": "Aplikacja zawiera wirtualne przedmioty i waluty (monety, klejnoty, odłamki), które nie mają rzeczywistej wartości pieniężnej. Wirtualne przedmioty mogą być resetowane lub usuwane w dowolnym momencie bez odszkodowania.",
+    "s6t": "6. Brak hazardu",
+    "s6b": "Aplikacja zawiera losowe systemy nagród (skrzynie). Nie jest to hazard. Zawsze otrzymujesz przedmioty w grze. Wirtualnych przedmiotów nie można wymieniać na prawdziwe pieniądze.",
+    "s7t": "7. Własność intelektualna",
+    "s7b": "Wszystkie treści w aplikacji są własnością dewelopera lub jego licencjodawców. Nie możesz ich kopiować, dystrybuować ani modyfikować bez uprzedniej pisemnej zgody.",
+    "s8t": "8. Wyłączenie gwarancji",
+    "s8b": "APLIKACJA JEST DOSTARCZANA 'W STANIE TAKIM, W JAKIM JEST' BEZ JAKICHKOLWIEK GWARANCJI. DEWELOPER NIE GWARANTUJE, ŻE APLIKACJA BĘDZIE NIEPRZERWANA LUB WOLNA OD BŁĘDÓW.",
+    "s9t": "9. Ograniczenie odpowiedzialności",
+    "s9b": "W MAKSYMALNYM ZAKRESIE DOZWOLONYM PRZEZ PRAWO, DEWELOPER NIE PONOSI ODPOWIEDZIALNOŚCI ZA POŚREDNIE, PRZYPADKOWE LUB WYNIKOWE SZKODY.",
+    "s10t": "10. Odszkodowanie",
+    "s10b": "Zgadzasz się zabezpieczyć i zwolnić dewelopera z odpowiedzialności za roszczenia wynikające z naruszenia niniejszej EULA lub nadużycia aplikacji.",
+    "s11t": "11. Prywatność i dane",
+    "s11b": "Twoje dane są przetwarzane zgodnie z Polityką prywatności aplikacji. Korzystając z aplikacji, wyrażasz zgodę na praktyki dotyczące danych opisane w Polityce prywatności.",
+    "s12t": "12. Wymóg wiekowy",
+    "s12b": "Musisz spełniać minimalny wymóg wiekowy dla swojego regionu: 13 w większości krajów, 14 w Hiszpanii/Włoszech/Austrii, 15 we Francji, 16 w Niemczech/Holandii/Irlandii.",
+    "s13t": "13. Usługi stron trzecich",
+    "s13b": "Aplikacja korzysta z usług stron trzecich (Supabase, Google). Deweloper nie ponosi odpowiedzialności za praktyki tych stron trzecich.",
+    "s14t": "14. Zmiany warunków",
+    "s14b": "Deweloper może aktualizować niniejszą EULA w dowolnym momencie. Istotne zmiany będą wymagały zaakceptowania zaktualizowanych warunków.",
+    "s15t": "15. Prawo właściwe",
+    "s15b": "Niniejsza EULA podlega prawu Republiki Federalnej Niemiec.",
+    "s16t": "16. Kontakt",
+    "s16b": "W przypadku pytań dotyczących niniejszej EULA, skontaktuj się z nami pod adresem info@splitterorbs.com.",
+    "s17t": "17. Siła wyższa",
+    "s17b": "Deweloper nie ponosi odpowiedzialności za jakiekolwiek niewykonanie lub opóźnienie w wykonaniu wynikające z przyczyn pozostających poza jego rozsądną kontrolą, w tym między innymi: siły wyższe, awarie internetu lub serwerów, awarie usług stron trzecich (w tym infrastruktury Supabase), cyberataki, działania rządowe lub inne zdarzenia poza kontrolą dewelopera. W takich przypadkach wirtualne przedmioty, postęp w grze i dane konta mogą zostać utracone bez odszkodowania.",
+    "s18t": "18. Rozwiązanie umowy",
+    "s18b": "Deweloper może zawiesić lub trwale zamknąć Twoje konto w dowolnym momencie, z powiadomieniem lub bez, jeśli naruszysz niniejszą EULA lub podejmiesz działania szkodliwe dla innych użytkowników lub aplikacji. Po rozwiązaniu umowy Twoja licencja na korzystanie z aplikacji wygasa natychmiast, a wszystkie wirtualne przedmioty, waluty i postęp w grze przepadają bez zwrotu lub odszkodowania. Możesz usunąć swoje konto w dowolnym momencie za pośrednictwem ekranu Ustawienia.",
+    "s19t": "19. Rozwiązywanie sporów",
+    "s19b": "W przypadku sporu zgadzasz się najpierw skontaktować z deweloperem pod adresem info@splitterorbs.com w celu poszukiwania nieformalnego rozwiązania. Jeśli sporu nie można rozwiązać nieformalnie w ciągu 30 dni, zostanie on poddany wyłącznej jurysdykcji sądów Niemiec. Żadne postanowienie tej klauzuli nie ogranicza Twoich ustawowych praw jako konsumenta na mocy obowiązującego prawa UE.",
+    "s20t": "20. Rozdzielność postanowień",
+    "s20b": "Jeśli jakiekolwiek postanowienie niniejszej EULA zostanie uznane przez właściwy sąd za nieważne, niezgodne z prawem lub niewykonalne, postanowienie to zostanie zmienione w minimalnym zakresie niezbędnym do jego wykonalności lub usunięte, jeśli zmiana nie jest możliwa. Pozostałe postanowienia pozostają w pełnej mocy.",
+    "s21t": "21. Całość umowy",
+    "s21b": "Niniejsza EULA wraz z Polityką prywatności stanowi całość umowy między Tobą a deweloperem dotyczącej korzystania z aplikacji i zastępuje wszystkie wcześniejsze umowy, oświadczenia i porozumienia. Zrzeczenie się jakiegokolwiek warunku nie będzie uznawane za dalsze lub ciągłe zrzeczenie się tego warunku.",
+    "s22t": "22. Rozszerzone ograniczenie odpowiedzialności",
+    "s22b": "W MAKSYMALNYM ZAKRESIE DOZWOLONYM PRZEZ OBOWIĄZUJĄCE PRAWO: (a) CAŁKOWITA ODPOWIEDZIALNOŚĆ DEWELOPERA WOBEC CIEBIE ZA JAKIEKOLWIEK ROSZCZENIE WYNIKAJĄCE Z NINIEJSZEJ EULA LUB KORZYSTANIA Z APLIKACJI NIE PRZEKROCZY KWOTY ZAPŁACONEJ DEWELOPEROWI W CIĄGU 12 MIESIĘCY POPRZEDZAJĄCYCH ROSZCZENIE LUB €5, JEŚLI NIE DOKONAŁEŚ ŻADNYCH PŁATNOŚCI; (b) DEWELOPER NIE PONOSI ODPOWIEDZIALNOŚCI ZA UTRATĘ POSTĘPU W GRZE, WIRTUALNYCH PRZEDMIOTÓW, WALUTY W GRZE, DANYCH KONTA LUB INNYCH TREŚCI W APLIKACJI, NIEZALEŻNIE OD PRZYCZYNY; (c) DEWELOPER NIE PONOSI ODPOWIEDZIALNOŚCI ZA DZIAŁANIA LUB ZANIECHANIA ZEWNĘTRZNYCH DOSTAWCÓW USŁUG, W TYM SUPABASE, GOOGLE LUB APPLE.",
+    "s23t": "23. Kontrola eksportu",
+    "s23b": "Oświadczasz, że nie przebywasz w kraju objętym embargiem rządu USA ani nie jesteś wyznaczony jako kraj 'wspierający terroryzm', oraz że nie figurujesz na żadnej liście zakazanych lub ograniczonych podmiotów rządu USA. Zgadzasz się przestrzegać wszystkich obowiązujących przepisów i regulacji dotyczących kontroli eksportu i reeksportu.",
+    "s24t": "24. Zrzeczenie się pozwów zbiorowych",
+    "s24b": "W ZAKRESIE DOZWOLONYM PRZEZ OBOWIĄZUJĄCE PRAWO ZRZEKASZ SIĘ PRAWA DO UCZESTNICTWA W POZWIE ZBIOROWYM LUB ARBITRAŻU ZBIOROWYM PRZECIWKO DEWELOPEROWI. WSZYSTKIE ROSZCZENIA MUSZĄ BYĆ WNOSZONE W TWOIM INDYWIDUALNYM CHARAKTERZE, A NIE JAKO POWÓD LUB CZŁONEK KLASY W JAKIMKOLWIEK DOMNIEMANYM POSTĘPOWANIU ZBIOROWYM LUB REPREZENTATYWNYM. Uwaga: To zrzeczenie nie ma zastosowania tam, gdzie jest zakazane przez unijne prawo ochrony konsumentów."
   },
   "privacyContent": {
-    "s1t": "1. Wprowadzenie", "s1b": "Niniejsza Polityka prywatności wyjaśnia, jak Splitter Orbs zbiera, wykorzystuje i chroni Twoje dane osobowe. Przetwarzamy dane zgodnie z unijnym Ogólnym Rozporządzeniem o Ochronie Danych (RODO/DSGVO).",
-    "s2t": "2. Administrator danych", "s2b": "Administratorem danych jest deweloper aplikacji. Kontakt: info@splitterorbs.com.",
-    "s3t": "3. Dane, które zbieramy", "s3b": "Dane konta i profilu: nazwa wyświetlana, postęp w grze, waluta w grze, poziomy kolekcji kart, odblokowane skórki, ustawienia, dane serii logowań. Dane społecznościowe: lista znajomych, historia meczów. Dane uwierzytelniające: ID konta Google i e-mail, jeśli połączysz Google. ID konta Apple i e-mail przy korzystaniu z logowania Apple.",
-    "s4t": "4. Podstawa prawna przetwarzania", "s4b": "Umowa (Art. 6(1)(b) RODO): Przetwarzanie Twojego postępu jest niezbędne do świadczenia usługi. Uzasadniony interes (Art. 6(1)(f) RODO): Środki bezpieczeństwa. Zgoda (Art. 6(1)(a) RODO): Połączenie Google jest opcjonalne.",
-    "s5t": "5. Przechowywanie danych", "s5b": "Twoje dane gry są przechowywane tak długo, jak Twoje konto jest aktywne. Usunięcie konta trwale usuwa wszystkie dane.",
-    "s6t": "6. Usługi stron trzecich", "s6b": "Supabase hostuje naszą bazę danych i uwierzytelnianie. Google jest używany do opcjonalnego OAuth. Nie sprzedajemy Twoich danych ani nie używamy reklamowych SDK.",
-    "s7t": "7. Twoje prawa", "s7b": "Na mocy RODO/DSGVO masz prawo do: Dostępu, Sprostowania, Usunięcia, Przenoszenia, Sprzeciwu i Wycofania zgody. Prawo do sprzeciwu (Art. 21 RODO): możesz w dowolnym momencie wnieść sprzeciw wobec przetwarzania opartego na uzasadnionym interesie, kontaktując się pod adresem info@splitterorbs.com. Kontakt: info@splitterorbs.com.",
-    "s8t": "8. Prywatność dzieci", "s8b": "Minimalny wiek: 13 w większości krajów, 14 w Hiszpanii/Włoszech/Austrii, 15 we Francji, 16 w Niemczech/Holandii/Irlandii.",
-    "s9t": "9. Zmiany w tej polityce", "s9b": "Możemy od czasu do czasu aktualizować niniejszą Politykę prywatności. Zmiany będą publikowane w aplikacji.",
-    "s10t": "10. Impressum", "s10b": "Felix Werner, c/o COCENTER, Koppoldstr. 1, 86551 Aichach. E-mail: info@splitterorbs.com",
-    "s11t": "11. Ograniczenie geograficzne", "s11b": "Ta aplikacja jest dostępna tylko w: Niemczech, Holandii, Francji, Hiszpanii, Włoszech, Wielkiej Brytanii, Portugalii, Japonii, Szwajcarii, Austrii, Polsce, Szwecji, Irlandii, Danii, Finlandii, Norwegii i Rumunii.",
-    "s12t": "12. Podmioty przetwarzające i umowy o przetwarzaniu", "s12b": "Supabase, Inc. działa jako podmiot przetwarzający w naszym imieniu na podstawie Umowy o przetwarzaniu danych (DPA) zgodnej z Art. 28 RODO. Supabase przetwarza Twoje dane wyłącznie zgodnie z naszymi instrukcjami. Google LLC działa jako podmiot przetwarzający na potrzeby uwierzytelniania przy korzystaniu z Google Sign-In. Oba podmioty są zobowiązane umownie do ochrony Twoich danych.",
-    "s13t": "13. Międzynarodowe transfery danych", "s13b": "Supabase może przechowywać i przetwarzać Twoje dane na serwerach zlokalizowanych poza Europejskim Obszarem Gospodarczym (EOG), w tym w Stanach Zjednoczonych. Takie transfery są chronione Standardowymi Klauzulami Umownymi (SCC) zatwierdzonymi przez Komisję Europejską na podstawie Art. 46(2)(c) RODO. Możesz zażądać kopii obowiązujących zabezpieczeń transferu, kontaktując się pod adresem info@splitterorbs.com.",
-    "s14t": "14. Prawo do wniesienia skargi", "s14b": "Na podstawie Art. 77 RODO masz prawo wnieść skargę do organu nadzorczego, jeśli uważasz, że Twoje dane są przetwarzane niezgodnie z prawem. Właściwym organem nadzorczym dla tej aplikacji jest: Bayerisches Landesamt für Datenschutzaufsicht (BayLDA), Promenade 18, 91522 Ansbach, Niemcy. Strona internetowa: www.lda.bayern.de. Możesz również skontaktować się z organem nadzorczym w swoim kraju zamieszkania.",
-    "s15t": "15. Zautomatyzowane podejmowanie decyzji i profilowanie", "s15b": "Nie stosujemy zautomatyzowanego podejmowania decyzji ani profilowania, które wywołuje skutki prawne lub w podobny sposób istotnie na Ciebie wpływa, jak opisano w Art. 22 RODO. Matchmaking i sztuczna inteligencja w grze to czyste mechaniki rozgrywki bez skutków prawnych ani istotnych skutków w świecie rzeczywistym.",
-    "s16t": "16. Lokalne przechowywanie i dane urządzenia", "s16b": "Aplikacja przechowuje ustawienia gry, preferencje i tokeny sesji lokalnie na Twoim urządzeniu za pomocą AsyncStorage (odpowiednik lokalnego przechowywania). Nie są używane pliki cookie śledzące. Supabase automatycznie rejestruje Twój adres IP i podstawowe metadane urządzenia (system operacyjny, wersja aplikacji) w celach bezpieczeństwa i zapobiegania nadużyciom na podstawie naszego uzasadnionego interesu (Art. 6(1)(f) RODO). Dane te są przechowywane przez 90 dni.",
-    "s17t": "17. Powiadomienie o naruszeniu danych", "s17b": "W przypadku naruszenia ochrony danych osobowych, które może skutkować ryzykiem dla Twoich praw i wolności, powiadomimy właściwy organ nadzorczy w ciągu 72 godzin zgodnie z wymogami Art. 33 RODO. Jeśli naruszenie może skutkować wysokim ryzykiem dla Twoich praw i wolności, powiadomimy Cię również bezpośrednio bez zbędnej zwłoki zgodnie z wymogami Art. 34 RODO, za pośrednictwem adresu e-mail powiązanego z Twoim kontem.""
+    "s1t": "1. Wprowadzenie",
+    "s1b": "Niniejsza Polityka prywatności wyjaśnia, jak Splitter Orbs zbiera, wykorzystuje i chroni Twoje dane osobowe. Przetwarzamy dane zgodnie z unijnym Ogólnym Rozporządzeniem o Ochronie Danych (RODO/DSGVO).",
+    "s2t": "2. Administrator danych",
+    "s2b": "Administratorem danych jest deweloper aplikacji. Kontakt: info@splitterorbs.com.",
+    "s3t": "3. Dane, które zbieramy",
+    "s3b": "Dane konta i profilu: nazwa wyświetlana, postęp w grze, waluta w grze, poziomy kolekcji kart, odblokowane skórki, ustawienia, dane serii logowań. Dane społecznościowe: lista znajomych, historia meczów. Dane uwierzytelniające: ID konta Google i e-mail, jeśli połączysz Google. ID konta Apple i e-mail przy korzystaniu z logowania Apple.",
+    "s4t": "4. Podstawa prawna przetwarzania",
+    "s4b": "Umowa (Art. 6(1)(b) RODO): Przetwarzanie Twojego postępu jest niezbędne do świadczenia usługi. Uzasadniony interes (Art. 6(1)(f) RODO): Środki bezpieczeństwa. Zgoda (Art. 6(1)(a) RODO): Połączenie Google jest opcjonalne.",
+    "s5t": "5. Przechowywanie danych",
+    "s5b": "Twoje dane gry są przechowywane tak długo, jak Twoje konto jest aktywne. Usunięcie konta trwale usuwa wszystkie dane.",
+    "s6t": "6. Usługi stron trzecich",
+    "s6b": "Supabase hostuje naszą bazę danych i uwierzytelnianie. Google jest używany do opcjonalnego OAuth. Nie sprzedajemy Twoich danych ani nie używamy reklamowych SDK.",
+    "s7t": "7. Twoje prawa",
+    "s7b": "Na mocy RODO/DSGVO masz prawo do: Dostępu, Sprostowania, Usunięcia, Przenoszenia, Sprzeciwu i Wycofania zgody. Prawo do sprzeciwu (Art. 21 RODO): możesz w dowolnym momencie wnieść sprzeciw wobec przetwarzania opartego na uzasadnionym interesie, kontaktując się pod adresem info@splitterorbs.com. Kontakt: info@splitterorbs.com.",
+    "s8t": "8. Prywatność dzieci",
+    "s8b": "Minimalny wiek: 13 w większości krajów, 14 w Hiszpanii/Włoszech/Austrii, 15 we Francji, 16 w Niemczech/Holandii/Irlandii.",
+    "s9t": "9. Zmiany w tej polityce",
+    "s9b": "Możemy od czasu do czasu aktualizować niniejszą Politykę prywatności. Zmiany będą publikowane w aplikacji.",
+    "s10t": "10. Impressum",
+    "s10b": "Felix Werner, c/o COCENTER, Koppoldstr. 1, 86551 Aichach. E-mail: info@splitterorbs.com",
+    "s11t": "11. Ograniczenie geograficzne",
+    "s11b": "Ta aplikacja jest dostępna tylko w: Niemczech, Holandii, Francji, Hiszpanii, Włoszech, Wielkiej Brytanii, Portugalii, Japonii, Szwajcarii, Austrii, Polsce, Szwecji, Irlandii, Danii, Finlandii, Norwegii i Rumunii.",
+    "s12t": "12. Podmioty przetwarzające i umowy o przetwarzaniu",
+    "s12b": "Supabase, Inc. działa jako podmiot przetwarzający w naszym imieniu na podstawie Umowy o przetwarzaniu danych (DPA) zgodnej z Art. 28 RODO. Supabase przetwarza Twoje dane wyłącznie zgodnie z naszymi instrukcjami. Google LLC działa jako podmiot przetwarzający na potrzeby uwierzytelniania przy korzystaniu z Google Sign-In. Oba podmioty są zobowiązane umownie do ochrony Twoich danych.",
+    "s13t": "13. Międzynarodowe transfery danych",
+    "s13b": "Supabase może przechowywać i przetwarzać Twoje dane na serwerach zlokalizowanych poza Europejskim Obszarem Gospodarczym (EOG), w tym w Stanach Zjednoczonych. Takie transfery są chronione Standardowymi Klauzulami Umownymi (SCC) zatwierdzonymi przez Komisję Europejską na podstawie Art. 46(2)(c) RODO. Możesz zażądać kopii obowiązujących zabezpieczeń transferu, kontaktując się pod adresem info@splitterorbs.com.",
+    "s14t": "14. Prawo do wniesienia skargi",
+    "s14b": "Na podstawie Art. 77 RODO masz prawo wnieść skargę do organu nadzorczego, jeśli uważasz, że Twoje dane są przetwarzane niezgodnie z prawem. Właściwym organem nadzorczym dla tej aplikacji jest: Bayerisches Landesamt für Datenschutzaufsicht (BayLDA), Promenade 18, 91522 Ansbach, Niemcy. Strona internetowa: www.lda.bayern.de. Możesz również skontaktować się z organem nadzorczym w swoim kraju zamieszkania.",
+    "s15t": "15. Zautomatyzowane podejmowanie decyzji i profilowanie",
+    "s15b": "Nie stosujemy zautomatyzowanego podejmowania decyzji ani profilowania, które wywołuje skutki prawne lub w podobny sposób istotnie na Ciebie wpływa, jak opisano w Art. 22 RODO. Matchmaking i sztuczna inteligencja w grze to czyste mechaniki rozgrywki bez skutków prawnych ani istotnych skutków w świecie rzeczywistym.",
+    "s16t": "16. Lokalne przechowywanie i dane urządzenia",
+    "s16b": "Aplikacja przechowuje ustawienia gry, preferencje i tokeny sesji lokalnie na Twoim urządzeniu za pomocą AsyncStorage (odpowiednik lokalnego przechowywania). Nie są używane pliki cookie śledzące. Supabase automatycznie rejestruje Twój adres IP i podstawowe metadane urządzenia (system operacyjny, wersja aplikacji) w celach bezpieczeństwa i zapobiegania nadużyciom na podstawie naszego uzasadnionego interesu (Art. 6(1)(f) RODO). Dane te są przechowywane przez 90 dni.",
+    "s17t": "17. Powiadomienie o naruszeniu danych",
+    "s17b": "W przypadku naruszenia ochrony danych osobowych, które może skutkować ryzykiem dla Twoich praw i wolności, powiadomimy właściwy organ nadzorczy w ciągu 72 godzin zgodnie z wymogami Art. 33 RODO. Jeśli naruszenie może skutkować wysokim ryzykiem dla Twoich praw i wolności, powiadomimy Cię również bezpośrednio bez zbędnej zwłoki zgodnie z wymogami Art. 34 RODO, za pośrednictwem adresu e-mail powiązanego z Twoim kontem."
   }
 }

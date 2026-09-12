@@ -1,68 +1,698 @@
 {
-  "home": { "tagline": "分屏塔防游戏。", "playNow": "立即游戏", "trophies": "奖杯", "winRate": "胜率", "wins": "胜利", "losses": "失败", "recentMatches": "最近比赛", "dailyMissions": "每日任务" },
-  "nav": { "home": "主页", "shop": "商店", "play": "游戏", "cards": "卡牌", "ranks": "排名" },
-  "setup": { "title": "配置", "subtitle": "选择3个技能、{towers}座塔和{orbs}个球", "training": "训练", "casual": "休闲", "ranked": "排位", "aiDifficulty": "AI难度", "towers": "塔", "orbs": "球", "powers": "技能", "startMatch": "开始对局", "trophyReq": "🔒 {n}🏆", "crateLock": "🔒 箱子", "quickPlay": "快速游戏", "quickPlayHint": "使用保存的配置加入", "changeLoadout": "更改配置", "moreInLab": "+{n} 更多在实验室 →", "rankedBetaDisclaimer": "排位赛中对战AI是临时的。" },
-  "difficulty": { "easy": "简单", "normal": "普通", "hard": "困难" },
-  "shop": { "title": "商店", "shards": "{n} 碎片", "shardsHint": "在实验室中升级卡牌", "crates": "箱子", "freeDaily": "每日免费", "claimed": "已领取 ✓", "freeEveryDay": "每天免费", "buy": "购买", "free": "免费", "opening": "开启中…", "youGot": "你获得了", "newUnlock": "新解锁！", "leveledUp": "升级到{n}！", "shardsMaxed": "+{n} 碎片（已满）", "duplicate": "重复 · {n}/{m} 份", "awesome": "太棒了！", "cardChanceFull": "保证卡牌", "cardChancePct": "{n}% 卡牌", "gemChancePct": "{n}% 宝石", "crateSuffix": "箱子", "voucherTitle": "兑换码", "voucherHint": "输入代码领取奖励", "voucherPlaceholder": "输入代码", "redeem": "兑换", "voucherSuccess": "代码已兑换！", "voucherInvalid": "无效代码", "voucherAlreadyUsed": "代码已使用", "exchangeTitle": "兑换宝石", "exchangeRate": "1 💎 = 10 🪙", "handTitle": "手牌", "handDesc": "更多点击和更快充能", "handCurrent": "{clicks} 次点击 · {recharge}s 重装", "handNext": "+2 最大 · −0.04s 重装", "handMaxed": "MAX · {clicks} 次点击 · {recharge}s", "handUpgrade": "升级", "maxLabel": "MAX", "sideTowerTitle": "侧翼塔", "sideTowerDesc": "更强的侧翼", "sideTowerCurrent": "HP {hp} · DMG {dmg} · {rate}s", "sideTowerNext": "+{hp} HP · +{dmg} DMG", "sideTowerUpgrade": "升级", "dailyGemChest": "每日宝石箱", "dailyGemChestHint": "每天10-60宝石。", "claimDailyGems": "领取10-60宝石", "dailyGemsClaimed": "明天再来", "gems": "宝石", "comingSoon": "即将推出", "betaSubtext": "高级功能即将推出。" },
-  "collection": { "title": "实验室", "hint": "用副本和碎片升级卡牌。", "towers": "塔", "orbs": "球", "powers": "技能", "upgrades": "升级", "trophyLock": "🔒 {n} 奖杯", "crateLock": "🔒 开箱子", "maxLevel": "★ MAX", "copies": "副本", "levelUpFree": "升级（免费）", "levelUpShards": "升级 · 💎 {n}", "levelUp": "升级", "buyCopy": "购买副本 🔷 {n}", "collectMore": "收集更多", "sectionStarter": "新手", "sectionTrophy": "奖杯解锁", "sectionCrate": "仅限箱子", "sectionLocked": "已锁定", "handTitle": "手牌", "handDesc": "每场比赛更多点击", "sideTowerTitle": "侧翼塔", "sideTowerDesc": "更强的自动防御", "upgrade": "升级", "maxed": "MAX" },
-  "leaderboard": { "title": "排行榜", "loading": "加载中…", "you": "(我)", "trophies": "奖杯", "tabRanks": "排名", "tabAchievements": "成就" },
-  "game": { "victory": "胜利", "defeat": "失败", "trainingWin": "训练胜利", "trainingLoss": "训练失败", "promoted": "晋级！", "demoted": "降级", "vs": "vs", "noTrophyChange": "无奖杯变化 — 训练模式", "trophiesChange": "{n} 奖杯", "home": "主页", "playAgain": "再玩一次", "forfeit": "← 认输", "overtime": "⚡ 加时", "intensifying": "⚡ 激烈中", "critical": "⚡ 危急", "suddenDeath": "⚡ 突然死亡", "maxPressure": "⚡ 最大压力", "towerBleed": "⚡ 塔崩溃", "combo": "连击 x{n}", "rejoinTitle": "对局进行中", "rejoinDesc": "你有未完成的对局", "rejoin": "重新加入", "forfeitMatch": "认输", "searching": "正在搜索对手…", "searchingHint": "点击下方与AI对战", "playVsAi": "与AI对战", "startingMatch": "正在开始比赛…", "cancel": "取消" },
-  "friends": { "title": "好友", "tabFriends": "好友", "tabRequests": "请求", "addFriend": "添加好友", "usernamePlaceholder": "输入用户名", "search": "搜索", "add": "添加", "notFound": "未找到玩家", "self": "那是你！", "requestSent": "请求已发送！", "alreadyFriends": "已是好友", "yourFriends": "你的好友", "noFriends": "还没有好友", "play": "游戏", "waiting": "等待中…", "cancel": "取消", "friendRequests": "好友请求", "noRequests": "没有待处理请求", "accept": "接受" },
-  "settings": { "title": "设置", "friends": "好友", "changeNameTitle": "更改名字？", "changeNameBody": "好友通过这个名字找到你。", "confirmChange": "更改", "account": "账户", "language": "语言", "profile": "个人资料", "displayName": "显示名称", "google": "Google", "connected": "已连接", "connect": "连接", "save": "保存", "saved": "已保存！", "deleteAccount": "删除账户", "signOut": "退出登录", "accountDesc": "关联账户以保护进度", "languageDesc": "选择首选语言", "back": "主页", "nameTaken": "名字已被使用", "nameError": "无法保存名字", "nameInappropriate": "不当名字", "sound": "音效", "soundDesc": "哔声、爆炸声和号角声", "advancedHaptics": "高级触觉", "advancedHapticsDesc": "每次点击和硬币时振动", "soundClicks": "点击和硬币", "soundExplosions": "爆炸和技能", "soundFanfare": "胜利号角", "hapticsIntensity": "振动强度", "hapticsIntensityDesc": "手机振动的强度", "hapticOff": "关闭", "hapticLow": "低", "hapticMedium": "中", "hapticHigh": "高", "deleteConfirmTitle": "删除账户？", "deleteConfirmBody": "这将永久删除你的账户和所有进度。", "deleteButton": "永久删除", "deleteTypeHint": "输入'delete'确认", "deleting": "删除中…", "cancel": "取消", "privacyPolicy": "隐私政策", "gameplay": "游戏玩法", "gameplayDesc": "调整游戏内HUD", "towerMenuAnytime": "随时打开塔菜单", "towerMenuAnytimeDesc": "无需编辑模式即可点击塔升级", "fitToScreen": "适应屏幕", "fitToScreenDesc": "缩放游戏场地。", "replayTutorial": "重播教程", "eula": "EULA", "impressum": "版权信息", "downloadData": "下载我的数据", "reportUser": "举报玩家" },
-  "onboarding": { "welcome": "欢迎！", "chooseLanguage": "选择语言", "chooseUsername": "选择用户名", "usernameHint": "这个名字代表你在对局中。", "usernamePlaceholder": "输入名字", "checkName": "检查", "nameAvailable": "可用！", "next": "下一步", "continue": "继续", "ageGate": "验证年龄", "ageGateHint": "输入出生日期", "dobDay": "日", "dobMonth": "月", "dobYear": "年", "dobError": "请输入有效的出生日期", "saveError": "无法保存。请重试。" },
-  "privacy": { "back": "返回", "title": "隐私政策" },
-  "impressum": { "back": "返回", "title": "版权信息", "heading": "Angaben gemäß § 5 TMG:", "name": "Felix Werner", "careOf": "c/o COCENTER", "street": "Koppoldstr. 1", "city": "86551 Aichach", "emailLabel": "Email: info@splitterorbs.com" },
-  "eula": { "back": "返回", "title": "最终用户许可协议", "intro": "请阅读并接受条款。", "accept": "接受", "decline": "拒绝", "settingsEula": "EULA", "downloadData": "下载我的数据", "downloading": "下载中…" },
-  "achievements": { "title": "成就", "subtitle": "完成挑战以获得奖励", "claim": "领取", "claimAll": "全部领取", "claimed": "已领取 ✓", "first_win": { "name": "首胜", "desc": "赢得第一场比赛" }, "win_10": { "name": "老兵", "desc": "赢得10场比赛" }, "win_50": { "name": "冠军", "desc": "赢得50场比赛" }, "streak_5": { "name": "势如破竹", "desc": "连赢5场" }, "trophies_100": { "name": "新手", "desc": "达到100奖杯" }, "trophies_1000": { "name": "冠军", "desc": "达到1000奖杯" }, "orbs_1000": { "name": "球猎手", "desc": "摧毁1000个球" }, "towers_100": { "name": "建造者", "desc": "放置100座塔" }, "abilities_50": { "name": "法师", "desc": "使用50次技能" }, "games_100": { "name": "忠实玩家", "desc": "游玩100场比赛" } },
-  "missions": { "title": "每日任务", "win2": "赢得2场对局", "play3": "进行3场对局", "ranked1": "赢得1场排位赛" },
-  "leagues": { "0": "新手", "1": "菜鸟", "2": "学员", "3": "老兵", "4": "冠军", "5": "大师", "6": "传奇" },
-  "towers": { "basic": { "name": "爆破者", "desc": "可靠的单目标射手。" }, "machinegun": { "name": "火神", "desc": "快速射击，低伤害。" }, "sniper": { "name": "枪骑兵", "desc": "极远射程，巨大伤害。" }, "boomerang": { "name": "穿刺者", "desc": "穿透最多3个球。" }, "rebound": { "name": "回旋镖", "desc": "刀刃飞出后返回。" }, "bomb": { "name": "迫击炮", "desc": "投掷爆炸物带溅射。" }, "bouncer": { "name": "弹射器", "desc": "吸引球并弹射。" }, "glacier": { "name": "冰川", "desc": "减慢范围内的球。" }, "arc": { "name": "电弧", "desc": "闪电在球之间连锁。" }, "pyre": { "name": "火葬堆", "desc": "短程火焰带燃烧DoT。" }, "venom": { "name": "毒液", "desc": "随时间叠加毒素。" }, "siege": { "name": "攻城", "desc": "非常慢，巨大溅射。" }, "orb_mortar": { "name": "球迫击炮", "desc": "向对手投掷随机球。" }, "lava_mortar": { "name": "熔岩迫击炮", "desc": "投掷火焰炸弹带溅射。" }, "repulsor": { "name": "排斥器", "desc": "将球向后弹射。" }, "cryo": { "name": "冰冻炮", "desc": "冻结球的光束。" }, "seeker": { "name": "追踪者", "desc": "向最低HP的球发射追踪导弹。" }, "prism": { "name": "棱镜枪", "desc": "持续光束，伤害递增。" }, "flak": { "name": "高射炮", "desc": "5颗散弹。" }, "harpoon": { "name": "鱼叉", "desc": "将最远的球拉回。" }, "twin": { "name": "双管炮", "desc": "同时瞄准两个球。" }, "tesla": { "name": "特斯拉线圈", "desc": "周期性AoE脉冲。" }, "detonator": { "name": "引爆器", "desc": "强制炸弹球引爆。" }, "magnet": { "name": "磁铁", "desc": "投掷吸引器聚集球。" }, "capacitor": { "name": "电容器", "desc": "积累电荷然后释放爆发。" }, "overcharger": { "name": "过充器", "desc": "增强相邻塔。" }, "mine_layer": { "name": "布雷器", "desc": "放置地雷。" } },
-  "orbs": { "normal": { "name": "普通", "desc": "平衡的球。" }, "fast": { "name": "快速", "desc": "低HP但非常快。" }, "bomb": { "name": "炸弹", "desc": "死亡时爆炸。" }, "splitter": { "name": "分裂者", "desc": "分裂成更小的球。" }, "tank": { "name": "坦克", "desc": "高HP，攻击塔。" }, "mine": { "name": "地雷", "desc": "点击引爆。" }, "sprint": { "name": "冲刺", "desc": "直奔基地。" }, "swarmer": { "name": "蜂群", "desc": "以三个为一组出现。" }, "shield": { "name": "护盾者", "desc": "拥有再生护盾。" }, "healer": { "name": "治疗者", "desc": "脉冲治疗盟友。" }, "radioactive": { "name": "放射性", "desc": "用毒素感染塔。" }, "shadow": { "name": "暗影", "desc": "隐身球。" }, "ice": { "name": "冰", "desc": "冻结接触的第一座塔。" }, "fog": { "name": "迷雾", "desc": "隐身球，伤害所有塔。" }, "zap_orb": { "name": "闪电", "desc": "从塔跳到塔。" }, "armored": { "name": "装甲", "desc": "固定伤害减免。" }, "carrier": { "name": "载体", "desc": "死亡时释放3个弱球。" }, "growth": { "name": "成长", "desc": "随时间获得HP和速度。" }, "shield_bubble": { "name": "护盾泡泡", "desc": "向盟友投射护盾。" }, "berserker": { "name": "狂战士", "desc": "低HP时变强。" }, "phantom": { "name": "幻影", "desc": "穿过塔。" }, "leech": { "name": "水蛭", "desc": "从塔吸取HP。" }, "summoner": { "name": "召唤者", "desc": "召唤小兵球。" } },
-  "abilities": { "zap": { "name": "闪电", "desc": "用闪电击中所有球。" }, "portal": { "name": "传送门", "desc": "将最多6个球传送给对手。" }, "repair": { "name": "修复", "desc": "恢复基地HP。" }, "freeze": { "name": "冻结", "desc": "冻结你这边的所有球。" }, "rage": { "name": "狂怒", "desc": "所有塔射击速度提升3倍。" }, "shield": { "name": "护盾", "desc": "阻挡对基地的所有伤害。" }, "burner": { "name": "燃烧器", "desc": "长按引导火焰。" }, "meteor": { "name": "陨石", "desc": "点击一个点召唤陨石打击。" }, "glue": { "name": "胶水", "desc": "减慢球的粘性水坑。" }, "overclock": { "name": "超频", "desc": "塔射击更快并穿透。" }, "speed_zone": { "name": "速度区", "desc": "你的球移动更快。" }, "damage_zone": { "name": "伤害区", "desc": "你的球造成更多伤害。" }, "frost_zone": { "name": "霜冻区", "desc": "内部的塔被冻结。" }, "deep_freeze": { "name": "深度冻结", "desc": "冻结对手的所有塔。" } },
-  "errors": { "title": "出了点问题", "eulaRequired": "条款已更新 — 请接受新的EULA。", "rateLimited": "操作太频繁。", "unknown": "发生了意外错误。" },
+  "home": {
+    "tagline": "分屏塔防游戏。",
+    "playNow": "立即游戏",
+    "trophies": "奖杯",
+    "winRate": "胜率",
+    "wins": "胜利",
+    "losses": "失败",
+    "recentMatches": "最近比赛",
+    "dailyMissions": "每日任务"
+  },
+  "nav": {
+    "home": "主页",
+    "shop": "商店",
+    "play": "游戏",
+    "cards": "卡牌",
+    "ranks": "排名"
+  },
+  "setup": {
+    "title": "配置",
+    "subtitle": "选择3个技能、{towers}座塔和{orbs}个球",
+    "training": "训练",
+    "casual": "休闲",
+    "ranked": "排位",
+    "aiDifficulty": "AI难度",
+    "towers": "塔",
+    "orbs": "球",
+    "powers": "技能",
+    "startMatch": "开始对局",
+    "trophyReq": "🔒 {n}🏆",
+    "crateLock": "🔒 箱子",
+    "quickPlay": "快速游戏",
+    "quickPlayHint": "使用保存的配置加入",
+    "changeLoadout": "更改配置",
+    "moreInLab": "+{n} 更多在实验室 →",
+    "rankedBetaDisclaimer": "排位赛中对战AI是临时的。"
+  },
+  "difficulty": {
+    "easy": "简单",
+    "normal": "普通",
+    "hard": "困难"
+  },
+  "shop": {
+    "title": "商店",
+    "shards": "{n} 碎片",
+    "shardsHint": "在实验室中升级卡牌",
+    "crates": "箱子",
+    "freeDaily": "每日免费",
+    "claimed": "已领取 ✓",
+    "freeEveryDay": "每天免费",
+    "buy": "购买",
+    "free": "免费",
+    "opening": "开启中…",
+    "youGot": "你获得了",
+    "newUnlock": "新解锁！",
+    "leveledUp": "升级到{n}！",
+    "shardsMaxed": "+{n} 碎片（已满）",
+    "duplicate": "重复 · {n}/{m} 份",
+    "awesome": "太棒了！",
+    "cardChanceFull": "保证卡牌",
+    "cardChancePct": "{n}% 卡牌",
+    "gemChancePct": "{n}% 宝石",
+    "crateSuffix": "箱子",
+    "voucherTitle": "兑换码",
+    "voucherHint": "输入代码领取奖励",
+    "voucherPlaceholder": "输入代码",
+    "redeem": "兑换",
+    "voucherSuccess": "代码已兑换！",
+    "voucherInvalid": "无效代码",
+    "voucherAlreadyUsed": "代码已使用",
+    "exchangeTitle": "兑换宝石",
+    "exchangeRate": "1 💎 = 10 🪙",
+    "handTitle": "手牌",
+    "handDesc": "更多点击和更快充能",
+    "handCurrent": "{clicks} 次点击 · {recharge}s 重装",
+    "handNext": "+2 最大 · −0.04s 重装",
+    "handMaxed": "MAX · {clicks} 次点击 · {recharge}s",
+    "handUpgrade": "升级",
+    "maxLabel": "MAX",
+    "sideTowerTitle": "侧翼塔",
+    "sideTowerDesc": "更强的侧翼",
+    "sideTowerCurrent": "HP {hp} · DMG {dmg} · {rate}s",
+    "sideTowerNext": "+{hp} HP · +{dmg} DMG",
+    "sideTowerUpgrade": "升级",
+    "dailyGemChest": "每日宝石箱",
+    "dailyGemChestHint": "每天10-60宝石。",
+    "claimDailyGems": "领取10-60宝石",
+    "dailyGemsClaimed": "明天再来",
+    "gems": "宝石",
+    "comingSoon": "即将推出",
+    "betaSubtext": "高级功能即将推出。"
+  },
+  "collection": {
+    "title": "实验室",
+    "hint": "用副本和碎片升级卡牌。",
+    "towers": "塔",
+    "orbs": "球",
+    "powers": "技能",
+    "upgrades": "升级",
+    "trophyLock": "🔒 {n} 奖杯",
+    "crateLock": "🔒 开箱子",
+    "maxLevel": "★ MAX",
+    "copies": "副本",
+    "levelUpFree": "升级（免费）",
+    "levelUpShards": "升级 · 💎 {n}",
+    "levelUp": "升级",
+    "buyCopy": "购买副本 🔷 {n}",
+    "collectMore": "收集更多",
+    "sectionStarter": "新手",
+    "sectionTrophy": "奖杯解锁",
+    "sectionCrate": "仅限箱子",
+    "sectionLocked": "已锁定",
+    "handTitle": "手牌",
+    "handDesc": "每场比赛更多点击",
+    "sideTowerTitle": "侧翼塔",
+    "sideTowerDesc": "更强的自动防御",
+    "upgrade": "升级",
+    "maxed": "MAX"
+  },
+  "leaderboard": {
+    "title": "排行榜",
+    "loading": "加载中…",
+    "you": "(我)",
+    "trophies": "奖杯",
+    "tabRanks": "排名",
+    "tabAchievements": "成就"
+  },
+  "game": {
+    "victory": "胜利",
+    "defeat": "失败",
+    "trainingWin": "训练胜利",
+    "trainingLoss": "训练失败",
+    "promoted": "晋级！",
+    "demoted": "降级",
+    "vs": "vs",
+    "noTrophyChange": "无奖杯变化 — 训练模式",
+    "trophiesChange": "{n} 奖杯",
+    "home": "主页",
+    "playAgain": "再玩一次",
+    "forfeit": "← 认输",
+    "overtime": "⚡ 加时",
+    "intensifying": "⚡ 激烈中",
+    "critical": "⚡ 危急",
+    "suddenDeath": "⚡ 突然死亡",
+    "maxPressure": "⚡ 最大压力",
+    "towerBleed": "⚡ 塔崩溃",
+    "combo": "连击 x{n}",
+    "rejoinTitle": "对局进行中",
+    "rejoinDesc": "你有未完成的对局",
+    "rejoin": "重新加入",
+    "forfeitMatch": "认输",
+    "searching": "正在搜索对手…",
+    "searchingHint": "点击下方与AI对战",
+    "playVsAi": "与AI对战",
+    "startingMatch": "正在开始比赛…",
+    "cancel": "取消"
+  },
+  "friends": {
+    "title": "好友",
+    "tabFriends": "好友",
+    "tabRequests": "请求",
+    "addFriend": "添加好友",
+    "usernamePlaceholder": "输入用户名",
+    "search": "搜索",
+    "add": "添加",
+    "notFound": "未找到玩家",
+    "self": "那是你！",
+    "requestSent": "请求已发送！",
+    "alreadyFriends": "已是好友",
+    "yourFriends": "你的好友",
+    "noFriends": "还没有好友",
+    "play": "游戏",
+    "waiting": "等待中…",
+    "cancel": "取消",
+    "friendRequests": "好友请求",
+    "noRequests": "没有待处理请求",
+    "accept": "接受"
+  },
+  "settings": {
+    "title": "设置",
+    "friends": "好友",
+    "changeNameTitle": "更改名字？",
+    "changeNameBody": "好友通过这个名字找到你。",
+    "confirmChange": "更改",
+    "account": "账户",
+    "language": "语言",
+    "profile": "个人资料",
+    "displayName": "显示名称",
+    "google": "Google",
+    "connected": "已连接",
+    "connect": "连接",
+    "save": "保存",
+    "saved": "已保存！",
+    "deleteAccount": "删除账户",
+    "signOut": "退出登录",
+    "accountDesc": "关联账户以保护进度",
+    "languageDesc": "选择首选语言",
+    "back": "主页",
+    "nameTaken": "名字已被使用",
+    "nameError": "无法保存名字",
+    "nameInappropriate": "不当名字",
+    "sound": "音效",
+    "soundDesc": "哔声、爆炸声和号角声",
+    "advancedHaptics": "高级触觉",
+    "advancedHapticsDesc": "每次点击和硬币时振动",
+    "soundClicks": "点击和硬币",
+    "soundExplosions": "爆炸和技能",
+    "soundFanfare": "胜利号角",
+    "hapticsIntensity": "振动强度",
+    "hapticsIntensityDesc": "手机振动的强度",
+    "hapticOff": "关闭",
+    "hapticLow": "低",
+    "hapticMedium": "中",
+    "hapticHigh": "高",
+    "deleteConfirmTitle": "删除账户？",
+    "deleteConfirmBody": "这将永久删除你的账户和所有进度。",
+    "deleteButton": "永久删除",
+    "deleteTypeHint": "输入'delete'确认",
+    "deleting": "删除中…",
+    "cancel": "取消",
+    "privacyPolicy": "隐私政策",
+    "gameplay": "游戏玩法",
+    "gameplayDesc": "调整游戏内HUD",
+    "towerMenuAnytime": "随时打开塔菜单",
+    "towerMenuAnytimeDesc": "无需编辑模式即可点击塔升级",
+    "fitToScreen": "适应屏幕",
+    "fitToScreenDesc": "缩放游戏场地。",
+    "replayTutorial": "重播教程",
+    "eula": "EULA",
+    "impressum": "版权信息",
+    "downloadData": "下载我的数据",
+    "reportUser": "举报玩家",
+    "downloadDataTitle": "数据导出",
+    "downloadDataSuccess": "您的数据已准备好。",
+    "downloadDataErrorTitle": "导出失败",
+    "downloadDataError": "无法导出数据。",
+    "reportSelf": "你不能举报自己。",
+    "reportSent": "举报已提交。谢谢。"
+  },
+  "onboarding": {
+    "welcome": "欢迎！",
+    "chooseLanguage": "选择语言",
+    "chooseUsername": "选择用户名",
+    "usernameHint": "这个名字代表你在对局中。",
+    "usernamePlaceholder": "输入名字",
+    "checkName": "检查",
+    "nameAvailable": "可用！",
+    "next": "下一步",
+    "continue": "继续",
+    "ageGate": "验证年龄",
+    "ageGateHint": "输入出生日期",
+    "dobDay": "日",
+    "dobMonth": "月",
+    "dobYear": "年",
+    "dobError": "请输入有效的出生日期",
+    "saveError": "无法保存。请重试。"
+  },
+  "privacy": {
+    "back": "返回",
+    "title": "隐私政策"
+  },
+  "impressum": {
+    "back": "返回",
+    "title": "版权信息",
+    "heading": "Angaben gemäß § 5 TMG:",
+    "name": "Felix Werner",
+    "careOf": "c/o COCENTER",
+    "street": "Koppoldstr. 1",
+    "city": "86551 Aichach",
+    "emailLabel": "Email: info@splitterorbs.com"
+  },
+  "eula": {
+    "back": "返回",
+    "title": "最终用户许可协议",
+    "intro": "请阅读并接受条款。",
+    "accept": "接受",
+    "decline": "拒绝",
+    "settingsEula": "EULA",
+    "downloadData": "下载我的数据",
+    "downloading": "下载中…"
+  },
+  "achievements": {
+    "title": "成就",
+    "subtitle": "完成挑战以获得奖励",
+    "claim": "领取",
+    "claimAll": "全部领取",
+    "claimed": "已领取 ✓",
+    "first_win": {
+      "name": "首胜",
+      "desc": "赢得第一场比赛"
+    },
+    "win_10": {
+      "name": "老兵",
+      "desc": "赢得10场比赛"
+    },
+    "win_50": {
+      "name": "冠军",
+      "desc": "赢得50场比赛"
+    },
+    "streak_5": {
+      "name": "势如破竹",
+      "desc": "连赢5场"
+    },
+    "trophies_100": {
+      "name": "新手",
+      "desc": "达到100奖杯"
+    },
+    "trophies_1000": {
+      "name": "冠军",
+      "desc": "达到1000奖杯"
+    },
+    "orbs_1000": {
+      "name": "球猎手",
+      "desc": "摧毁1000个球"
+    },
+    "towers_100": {
+      "name": "建造者",
+      "desc": "放置100座塔"
+    },
+    "abilities_50": {
+      "name": "法师",
+      "desc": "使用50次技能"
+    },
+    "games_100": {
+      "name": "忠实玩家",
+      "desc": "游玩100场比赛"
+    }
+  },
+  "missions": {
+    "title": "每日任务",
+    "win2": "赢得2场对局",
+    "play3": "进行3场对局",
+    "ranked1": "赢得1场排位赛"
+  },
+  "leagues": {
+    "0": "新手",
+    "1": "菜鸟",
+    "2": "学员",
+    "3": "老兵",
+    "4": "冠军",
+    "5": "大师",
+    "6": "传奇"
+  },
+  "towers": {
+    "basic": {
+      "name": "爆破者",
+      "desc": "可靠的单目标射手。"
+    },
+    "machinegun": {
+      "name": "火神",
+      "desc": "快速射击，低伤害。"
+    },
+    "sniper": {
+      "name": "枪骑兵",
+      "desc": "极远射程，巨大伤害。"
+    },
+    "boomerang": {
+      "name": "穿刺者",
+      "desc": "穿透最多3个球。"
+    },
+    "rebound": {
+      "name": "回旋镖",
+      "desc": "刀刃飞出后返回。"
+    },
+    "bomb": {
+      "name": "迫击炮",
+      "desc": "投掷爆炸物带溅射。"
+    },
+    "bouncer": {
+      "name": "弹射器",
+      "desc": "吸引球并弹射。"
+    },
+    "glacier": {
+      "name": "冰川",
+      "desc": "减慢范围内的球。"
+    },
+    "arc": {
+      "name": "电弧",
+      "desc": "闪电在球之间连锁。"
+    },
+    "pyre": {
+      "name": "火葬堆",
+      "desc": "短程火焰带燃烧DoT。"
+    },
+    "venom": {
+      "name": "毒液",
+      "desc": "随时间叠加毒素。"
+    },
+    "siege": {
+      "name": "攻城",
+      "desc": "非常慢，巨大溅射。"
+    },
+    "orb_mortar": {
+      "name": "球迫击炮",
+      "desc": "向对手投掷随机球。"
+    },
+    "lava_mortar": {
+      "name": "熔岩迫击炮",
+      "desc": "投掷火焰炸弹带溅射。"
+    },
+    "repulsor": {
+      "name": "排斥器",
+      "desc": "将球向后弹射。"
+    },
+    "cryo": {
+      "name": "冰冻炮",
+      "desc": "冻结球的光束。"
+    },
+    "seeker": {
+      "name": "追踪者",
+      "desc": "向最低HP的球发射追踪导弹。"
+    },
+    "prism": {
+      "name": "棱镜枪",
+      "desc": "持续光束，伤害递增。"
+    },
+    "flak": {
+      "name": "高射炮",
+      "desc": "5颗散弹。"
+    },
+    "harpoon": {
+      "name": "鱼叉",
+      "desc": "将最远的球拉回。"
+    },
+    "twin": {
+      "name": "双管炮",
+      "desc": "同时瞄准两个球。"
+    },
+    "tesla": {
+      "name": "特斯拉线圈",
+      "desc": "周期性AoE脉冲。"
+    },
+    "detonator": {
+      "name": "引爆器",
+      "desc": "强制炸弹球引爆。"
+    },
+    "magnet": {
+      "name": "磁铁",
+      "desc": "投掷吸引器聚集球。"
+    },
+    "capacitor": {
+      "name": "电容器",
+      "desc": "积累电荷然后释放爆发。"
+    },
+    "overcharger": {
+      "name": "过充器",
+      "desc": "增强相邻塔。"
+    },
+    "mine_layer": {
+      "name": "布雷器",
+      "desc": "放置地雷。"
+    }
+  },
+  "orbs": {
+    "normal": {
+      "name": "普通",
+      "desc": "平衡的球。"
+    },
+    "fast": {
+      "name": "快速",
+      "desc": "低HP但非常快。"
+    },
+    "bomb": {
+      "name": "炸弹",
+      "desc": "死亡时爆炸。"
+    },
+    "splitter": {
+      "name": "分裂者",
+      "desc": "分裂成更小的球。"
+    },
+    "tank": {
+      "name": "坦克",
+      "desc": "高HP，攻击塔。"
+    },
+    "mine": {
+      "name": "地雷",
+      "desc": "点击引爆。"
+    },
+    "sprint": {
+      "name": "冲刺",
+      "desc": "直奔基地。"
+    },
+    "swarmer": {
+      "name": "蜂群",
+      "desc": "以三个为一组出现。"
+    },
+    "shield": {
+      "name": "护盾者",
+      "desc": "拥有再生护盾。"
+    },
+    "healer": {
+      "name": "治疗者",
+      "desc": "脉冲治疗盟友。"
+    },
+    "radioactive": {
+      "name": "放射性",
+      "desc": "用毒素感染塔。"
+    },
+    "shadow": {
+      "name": "暗影",
+      "desc": "隐身球。"
+    },
+    "ice": {
+      "name": "冰",
+      "desc": "冻结接触的第一座塔。"
+    },
+    "fog": {
+      "name": "迷雾",
+      "desc": "隐身球，伤害所有塔。"
+    },
+    "zap_orb": {
+      "name": "闪电",
+      "desc": "从塔跳到塔。"
+    },
+    "armored": {
+      "name": "装甲",
+      "desc": "固定伤害减免。"
+    },
+    "carrier": {
+      "name": "载体",
+      "desc": "死亡时释放3个弱球。"
+    },
+    "growth": {
+      "name": "成长",
+      "desc": "随时间获得HP和速度。"
+    },
+    "shield_bubble": {
+      "name": "护盾泡泡",
+      "desc": "向盟友投射护盾。"
+    },
+    "berserker": {
+      "name": "狂战士",
+      "desc": "低HP时变强。"
+    },
+    "phantom": {
+      "name": "幻影",
+      "desc": "穿过塔。"
+    },
+    "leech": {
+      "name": "水蛭",
+      "desc": "从塔吸取HP。"
+    },
+    "summoner": {
+      "name": "召唤者",
+      "desc": "召唤小兵球。"
+    }
+  },
+  "abilities": {
+    "zap": {
+      "name": "闪电",
+      "desc": "用闪电击中所有球。"
+    },
+    "portal": {
+      "name": "传送门",
+      "desc": "将最多6个球传送给对手。"
+    },
+    "repair": {
+      "name": "修复",
+      "desc": "恢复基地HP。"
+    },
+    "freeze": {
+      "name": "冻结",
+      "desc": "冻结你这边的所有球。"
+    },
+    "rage": {
+      "name": "狂怒",
+      "desc": "所有塔射击速度提升3倍。"
+    },
+    "shield": {
+      "name": "护盾",
+      "desc": "阻挡对基地的所有伤害。"
+    },
+    "burner": {
+      "name": "燃烧器",
+      "desc": "长按引导火焰。"
+    },
+    "meteor": {
+      "name": "陨石",
+      "desc": "点击一个点召唤陨石打击。"
+    },
+    "glue": {
+      "name": "胶水",
+      "desc": "减慢球的粘性水坑。"
+    },
+    "overclock": {
+      "name": "超频",
+      "desc": "塔射击更快并穿透。"
+    },
+    "speed_zone": {
+      "name": "速度区",
+      "desc": "你的球移动更快。"
+    },
+    "damage_zone": {
+      "name": "伤害区",
+      "desc": "你的球造成更多伤害。"
+    },
+    "frost_zone": {
+      "name": "霜冻区",
+      "desc": "内部的塔被冻结。"
+    },
+    "deep_freeze": {
+      "name": "深度冻结",
+      "desc": "冻结对手的所有塔。"
+    }
+  },
+  "errors": {
+    "title": "出了点问题",
+    "eulaRequired": "条款已更新 — 请接受新的EULA。",
+    "rateLimited": "操作太频繁。",
+    "unknown": "发生了意外错误。"
+  },
   "eulaContent": {
-    "s1t": "1. 接受条款", "s1b": "通过下载、安装、访问或使用Splitter Orbs，您同意受本最终用户许可协议的约束。如果您不同意，请勿使用本应用。",
-    "s2t": "2. 使用许可", "s2b": "在您遵守本EULA的前提下，开发者授予您有限的、非独占的、不可转让的、可撤销的许可，用于个人非商业目的安装和使用本应用。",
-    "s3t": "3. 您的账户", "s3b": "您负责维护账户安全以及账户下发生的所有活动。",
-    "s4t": "4. 可接受的使用", "s4b": "您同意不：(a) 作弊、黑客攻击或使用未经授权的第三方软件；(b) 利用漏洞或安全缺陷；(c) 骚扰或伤害其他用户；(d) 将应用用于非法目的；(e) 对应用进行逆向工程；(f) 创建多个账户以规避限制。",
-    "s5t": "5. 虚拟物品和货币", "s5b": "应用包含虚拟物品和货币（金币、宝石、碎片），没有实际货币价值。虚拟物品可能随时被重置或删除，不予补偿。",
-    "s6t": "6. 非赌博", "s6b": "应用包含随机奖励系统（箱子）。这不是赌博。您始终会收到游戏内物品。虚拟物品不能兑换为真实货币。",
-    "s7t": "7. 知识产权", "s7b": "应用中的所有内容均归开发者或其许可方所有。未经事先书面许可，您不得复制、分发或修改。",
-    "s8t": "8. 免责声明", "s8b": "应用按「原样」提供，不提供任何形式的保证。开发者不保证应用将不间断或无错误运行。",
-    "s9t": "9. 责任限制", "s9b": "在法律允许的最大范围内，开发者不对任何间接、偶然或后果性损害承担责任。",
-    "s10t": "10. 赔偿", "s10b": "您同意就因违反本EULA或滥用应用而产生的索赔对开发者进行赔偿并使其免受损害。",
-    "s11t": "11. 隐私和数据", "s11b": "您的数据根据应用的隐私政策进行处理。使用应用即表示您同意隐私政策中描述的数据实践。",
-    "s12t": "12. 年龄要求", "s12b": "您必须满足所在地区的最低年龄要求：大多数国家13岁，西班牙/意大利/奥地利14岁，法国15岁，德国/荷兰/爱尔兰16岁。",
-    "s13t": "13. 第三方服务", "s13b": "应用使用第三方服务（Supabase、Google）。开发者不对这些第三方的做法负责。",
-    "s14t": "14. 条款变更", "s14b": "开发者可随时更新本EULA。重大变更将要求您接受更新后的条款。",
-    "s15t": "15. 适用法律", "s15b": "本EULA受德意志联邦共和国法律管辖。",
-    "s16t": "16. 联系方式", "s16b": "如有关于本EULA的问题，请通过info@splitterorbs.com联系我们。",
-    "s17t": "17. 不可抗力", "s17b": "开发者对因其合理控制范围之外的原因导致的任何履行失败或延迟不承担责任，包括但不限于：天灾、互联网或服务器中断、第三方服务故障（包括Supabase基础设施）、网络攻击、政府行为或开发者控制之外的任何其他事件。在此类情况下，虚拟物品、游戏进度和账户数据可能在不予补偿的情况下丢失。",
-    "s18t": "18. 终止", "s18b": "如果您违反本EULA或从事对其他用户或应用有害的行为，开发者可随时在有或无通知的情况下暂停或永久终止您的账户。终止后，您使用应用的许可立即结束，所有虚拟物品、货币和游戏进度将被没收，不予退款或补偿。您可随时通过设置界面删除您的账户。",
-    "s19t": "19. 争议解决", "s19b": "如发生争议，您同意首先通过info@splitterorbs.com联系开发者寻求非正式解决。如争议在30天内无法非正式解决，则提交德国法院专属管辖。本条款不限制您作为消费者在适用欧盟法律下的法定权利。",
-    "s20t": "20. 可分割性", "s20b": "如本EULA的任何条款被有管辖权的法院认定为无效、违法或不可执行，该条款将被修改至使其可执行所需的最低程度，或在无法修改时予以删除。其余条款继续完全有效。",
-    "s21t": "21. 完整协议", "s21b": "本EULA与隐私政策共同构成您与开发者之间关于您使用应用的完整协议，并取代所有先前的协议、陈述和谅解。对任何条款的放弃不视为对该条款的进一步或持续放弃。",
-    "s22t": "22. 增强责任限制", "s22b": "在适用法律允许的最大范围内：(a) 开发者就本EULA或您使用应用产生的任何索赔对您的总责任不超过您在索赔前12个月内向开发者支付的金额，或如您未付款则为€5；(b) 开发者不对游戏进度、虚拟物品、游戏内货币、账户数据或任何其他应用内容的损失承担责任，无论原因如何；(c) 开发者不对第三方服务提供商（包括Supabase、Google或Apple）的行为或不作为承担责任。",
-    "s23t": "23. 出口管制", "s23b": "您声明您不在受美国政府禁运的国家或被指定为"支持恐怖主义"的国家，且您未被列入任何美国政府禁止或限制方名单。您同意遵守所有适用的出口和再出口管制法律法规。",
-    "s24t": "24. 集体诉讼放弃", "s24b": "在适用法律允许的范围内，您放弃参与针对开发者的集体诉讼或集体仲裁的任何权利。所有索赔必须以您的个人身份提出，而非作为任何所谓集体或代表性诉讼中的原告或集体成员。注意：此放弃在欧盟消费者保护法禁止的情况下不适用。"
+    "s1t": "1. 接受条款",
+    "s1b": "通过下载、安装、访问或使用Splitter Orbs，您同意受本最终用户许可协议的约束。如果您不同意，请勿使用本应用。",
+    "s2t": "2. 使用许可",
+    "s2b": "在您遵守本EULA的前提下，开发者授予您有限的、非独占的、不可转让的、可撤销的许可，用于个人非商业目的安装和使用本应用。",
+    "s3t": "3. 您的账户",
+    "s3b": "您负责维护账户安全以及账户下发生的所有活动。",
+    "s4t": "4. 可接受的使用",
+    "s4b": "您同意不：(a) 作弊、黑客攻击或使用未经授权的第三方软件；(b) 利用漏洞或安全缺陷；(c) 骚扰或伤害其他用户；(d) 将应用用于非法目的；(e) 对应用进行逆向工程；(f) 创建多个账户以规避限制。",
+    "s5t": "5. 虚拟物品和货币",
+    "s5b": "应用包含虚拟物品和货币（金币、宝石、碎片），没有实际货币价值。虚拟物品可能随时被重置或删除，不予补偿。",
+    "s6t": "6. 非赌博",
+    "s6b": "应用包含随机奖励系统（箱子）。这不是赌博。您始终会收到游戏内物品。虚拟物品不能兑换为真实货币。",
+    "s7t": "7. 知识产权",
+    "s7b": "应用中的所有内容均归开发者或其许可方所有。未经事先书面许可，您不得复制、分发或修改。",
+    "s8t": "8. 免责声明",
+    "s8b": "应用按「原样」提供，不提供任何形式的保证。开发者不保证应用将不间断或无错误运行。",
+    "s9t": "9. 责任限制",
+    "s9b": "在法律允许的最大范围内，开发者不对任何间接、偶然或后果性损害承担责任。",
+    "s10t": "10. 赔偿",
+    "s10b": "您同意就因违反本EULA或滥用应用而产生的索赔对开发者进行赔偿并使其免受损害。",
+    "s11t": "11. 隐私和数据",
+    "s11b": "您的数据根据应用的隐私政策进行处理。使用应用即表示您同意隐私政策中描述的数据实践。",
+    "s12t": "12. 年龄要求",
+    "s12b": "您必须满足所在地区的最低年龄要求：大多数国家13岁，西班牙/意大利/奥地利14岁，法国15岁，德国/荷兰/爱尔兰16岁。",
+    "s13t": "13. 第三方服务",
+    "s13b": "应用使用第三方服务（Supabase、Google）。开发者不对这些第三方的做法负责。",
+    "s14t": "14. 条款变更",
+    "s14b": "开发者可随时更新本EULA。重大变更将要求您接受更新后的条款。",
+    "s15t": "15. 适用法律",
+    "s15b": "本EULA受德意志联邦共和国法律管辖。",
+    "s16t": "16. 联系方式",
+    "s16b": "如有关于本EULA的问题，请通过info@splitterorbs.com联系我们。",
+    "s17t": "17. 不可抗力",
+    "s17b": "开发者对因其合理控制范围之外的原因导致的任何履行失败或延迟不承担责任，包括但不限于：天灾、互联网或服务器中断、第三方服务故障（包括Supabase基础设施）、网络攻击、政府行为或开发者控制之外的任何其他事件。在此类情况下，虚拟物品、游戏进度和账户数据可能在不予补偿的情况下丢失。",
+    "s18t": "18. 终止",
+    "s18b": "如果您违反本EULA或从事对其他用户或应用有害的行为，开发者可随时在有或无通知的情况下暂停或永久终止您的账户。终止后，您使用应用的许可立即结束，所有虚拟物品、货币和游戏进度将被没收，不予退款或补偿。您可随时通过设置界面删除您的账户。",
+    "s19t": "19. 争议解决",
+    "s19b": "如发生争议，您同意首先通过info@splitterorbs.com联系开发者寻求非正式解决。如争议在30天内无法非正式解决，则提交德国法院专属管辖。本条款不限制您作为消费者在适用欧盟法律下的法定权利。",
+    "s20t": "20. 可分割性",
+    "s20b": "如本EULA的任何条款被有管辖权的法院认定为无效、违法或不可执行，该条款将被修改至使其可执行所需的最低程度，或在无法修改时予以删除。其余条款继续完全有效。",
+    "s21t": "21. 完整协议",
+    "s21b": "本EULA与隐私政策共同构成您与开发者之间关于您使用应用的完整协议，并取代所有先前的协议、陈述和谅解。对任何条款的放弃不视为对该条款的进一步或持续放弃。",
+    "s22t": "22. 增强责任限制",
+    "s22b": "在适用法律允许的最大范围内：(a) 开发者就本EULA或您使用应用产生的任何索赔对您的总责任不超过您在索赔前12个月内向开发者支付的金额，或如您未付款则为€5；(b) 开发者不对游戏进度、虚拟物品、游戏内货币、账户数据或任何其他应用内容的损失承担责任，无论原因如何；(c) 开发者不对第三方服务提供商（包括Supabase、Google或Apple）的行为或不作为承担责任。",
+    "s23t": "23. 出口管制",
+    "s23b": "您声明您不在受美国政府禁运的国家或被指定为\"支持恐怖主义\"的国家，且您未被列入任何美国政府禁止或限制方名单。您同意遵守所有适用的出口和再出口管制法律法规。",
+    "s24t": "24. 集体诉讼放弃",
+    "s24b": "在适用法律允许的范围内，您放弃参与针对开发者的集体诉讼或集体仲裁的任何权利。所有索赔必须以您的个人身份提出，而非作为任何所谓集体或代表性诉讼中的原告或集体成员。注意：此放弃在欧盟消费者保护法禁止的情况下不适用。"
   },
   "privacyContent": {
-    "s1t": "1. 简介", "s1b": "本隐私政策说明Splitter Orbs如何收集、使用和保护您的个人数据。我们根据欧盟《通用数据保护条例》（GDPR/DSGVO）处理数据。",
-    "s2t": "2. 数据控制者", "s2b": "数据控制者是应用开发者。联系方式：info@splitterorbs.com。",
-    "s3t": "3. 我们收集的数据", "s3b": "账户和个人资料数据：显示名称、游戏进度、游戏内货币、卡牌收集等级、已解锁皮肤、设置、登录连续数据。社交数据：好友列表、对战记录。认证数据：连接Google时的Google账户ID和电子邮件。使用Apple登录时的Apple账户ID和电子邮件。",
-    "s4t": "4. 处理的法律依据", "s4b": "合同（GDPR第6条(1)(b)）：处理您的游戏进度是提供服务所必需的。合法利益（GDPR第6条(1)(f)）：安全措施。同意（GDPR第6条(1)(a)）：连接Google是可选的。",
-    "s5t": "5. 数据保留", "s5b": "您的游戏数据在账户活跃期间存储。删除账户将永久清除所有数据。",
-    "s6t": "6. 第三方服务", "s6b": "Supabase托管我们的数据库和身份验证。Google用于可选的OAuth。我们不出售您的数据，也不使用广告SDK。",
-    "s7t": "7. 您的权利", "s7b": "根据GDPR/DSGVO，您有权：访问、更正、删除、数据可携带、反对和撤回同意。反对权（GDPR第21条）：您可随时通过联系info@splitterorbs.com对基于合法利益的处理提出反对。联系方式：info@splitterorbs.com。",
-    "s8t": "8. 儿童隐私", "s8b": "最低年龄：大多数国家13岁，西班牙/意大利/奥地利14岁，法国15岁，德国/荷兰/爱尔兰16岁。",
-    "s9t": "9. 本政策的变更", "s9b": "我们可能会不时更新本隐私政策。变更将在应用内发布。",
-    "s10t": "10. 版权信息", "s10b": "Felix Werner, c/o COCENTER, Koppoldstr. 1, 86551 Aichach. 电子邮件：info@splitterorbs.com",
-    "s11t": "11. 地理限制", "s11b": "本应用仅在以下国家/地区提供：德国、荷兰、法国、西班牙、意大利、英国、葡萄牙、日本、瑞士、奥地利、波兰、瑞典、爱尔兰、丹麦、芬兰、挪威和罗马尼亚。",
-    "s12t": "12. 数据处理者及处理协议", "s12b": "Supabase, Inc.依据符合GDPR第28条的数据处理协议（DPA）代表我们作为数据处理者。Supabase仅按照我们的指示处理您的数据。Google LLC在您使用Google登录时作为身份验证的数据处理者。两家处理者均在合同上有义务保护您的数据。",
-    "s13t": "13. 国际数据传输", "s13b": "Supabase可能在欧洲经济区（EEA）以外的服务器（包括美国）上存储和处理您的数据。此类传输受欧盟委员会依据GDPR第46条第2款第(c)项批准的标准合同条款（SCC）保护。您可通过联系info@splitterorbs.com请求获取适用传输保障措施的副本。",
-    "s14t": "14. 向监管机构投诉的权利", "s14b": "根据GDPR第77条，如果您认为您的数据被非法处理，您有权向监管机构提出投诉。本应用的主管监管机构为：巴伐利亚州数据保护监督局（BayLDA），Promenade 18, 91522 Ansbach，德国。网站：www.lda.bayern.de。您也可以联系您居住国的监管机构。",
-    "s15t": "15. 自动化决策与画像", "s15b": "我们不使用GDPR第22条所述的、产生法律效果或对您产生类似重大影响的自动化决策或画像。匹配系统和游戏内AI纯粹是游戏机制，不产生法律或重大现实影响。",
-    "s16t": "16. 本地存储与设备数据", "s16b": "应用使用AsyncStorage（相当于本地存储）在您的设备上本地存储游戏设置、偏好和会话令牌。不使用追踪Cookie。Supabase基于我们的合法利益（GDPR第6条第1款第(f)项），自动记录您的IP地址和基本设备元数据（操作系统、应用版本），用于安全和防止滥用目的。这些数据保留90天。",
-    "s17t": "17. 数据泄露通知", "s17b": "如发生可能对您的权利和自由造成风险的个人数据泄露，我们将按照GDPR第33条的要求在72小时内通知主管监管机构。如果泄露可能对您的权利和自由造成高风险，我们还将按照GDPR第34条的要求，通过与您账户关联的电子邮件地址，及时直接通知您。"
+    "s1t": "1. 简介",
+    "s1b": "本隐私政策说明Splitter Orbs如何收集、使用和保护您的个人数据。我们根据欧盟《通用数据保护条例》（GDPR/DSGVO）处理数据。",
+    "s2t": "2. 数据控制者",
+    "s2b": "数据控制者是应用开发者。联系方式：info@splitterorbs.com。",
+    "s3t": "3. 我们收集的数据",
+    "s3b": "账户和个人资料数据：显示名称、游戏进度、游戏内货币、卡牌收集等级、已解锁皮肤、设置、登录连续数据。社交数据：好友列表、对战记录。认证数据：连接Google时的Google账户ID和电子邮件。使用Apple登录时的Apple账户ID和电子邮件。",
+    "s4t": "4. 处理的法律依据",
+    "s4b": "合同（GDPR第6条(1)(b)）：处理您的游戏进度是提供服务所必需的。合法利益（GDPR第6条(1)(f)）：安全措施。同意（GDPR第6条(1)(a)）：连接Google是可选的。",
+    "s5t": "5. 数据保留",
+    "s5b": "您的游戏数据在账户活跃期间存储。删除账户将永久清除所有数据。",
+    "s6t": "6. 第三方服务",
+    "s6b": "Supabase托管我们的数据库和身份验证。Google用于可选的OAuth。我们不出售您的数据，也不使用广告SDK。",
+    "s7t": "7. 您的权利",
+    "s7b": "根据GDPR/DSGVO，您有权：访问、更正、删除、数据可携带、反对和撤回同意。反对权（GDPR第21条）：您可随时通过联系info@splitterorbs.com对基于合法利益的处理提出反对。联系方式：info@splitterorbs.com。",
+    "s8t": "8. 儿童隐私",
+    "s8b": "最低年龄：大多数国家13岁，西班牙/意大利/奥地利14岁，法国15岁，德国/荷兰/爱尔兰16岁。",
+    "s9t": "9. 本政策的变更",
+    "s9b": "我们可能会不时更新本隐私政策。变更将在应用内发布。",
+    "s10t": "10. 版权信息",
+    "s10b": "Felix Werner, c/o COCENTER, Koppoldstr. 1, 86551 Aichach. 电子邮件：info@splitterorbs.com",
+    "s11t": "11. 地理限制",
+    "s11b": "本应用仅在以下国家/地区提供：德国、荷兰、法国、西班牙、意大利、英国、葡萄牙、日本、瑞士、奥地利、波兰、瑞典、爱尔兰、丹麦、芬兰、挪威和罗马尼亚。",
+    "s12t": "12. 数据处理者及处理协议",
+    "s12b": "Supabase, Inc.依据符合GDPR第28条的数据处理协议（DPA）代表我们作为数据处理者。Supabase仅按照我们的指示处理您的数据。Google LLC在您使用Google登录时作为身份验证的数据处理者。两家处理者均在合同上有义务保护您的数据。",
+    "s13t": "13. 国际数据传输",
+    "s13b": "Supabase可能在欧洲经济区（EEA）以外的服务器（包括美国）上存储和处理您的数据。此类传输受欧盟委员会依据GDPR第46条第2款第(c)项批准的标准合同条款（SCC）保护。您可通过联系info@splitterorbs.com请求获取适用传输保障措施的副本。",
+    "s14t": "14. 向监管机构投诉的权利",
+    "s14b": "根据GDPR第77条，如果您认为您的数据被非法处理，您有权向监管机构提出投诉。本应用的主管监管机构为：巴伐利亚州数据保护监督局（BayLDA），Promenade 18, 91522 Ansbach，德国。网站：www.lda.bayern.de。您也可以联系您居住国的监管机构。",
+    "s15t": "15. 自动化决策与画像",
+    "s15b": "我们不使用GDPR第22条所述的、产生法律效果或对您产生类似重大影响的自动化决策或画像。匹配系统和游戏内AI纯粹是游戏机制，不产生法律或重大现实影响。",
+    "s16t": "16. 本地存储与设备数据",
+    "s16b": "应用使用AsyncStorage（相当于本地存储）在您的设备上本地存储游戏设置、偏好和会话令牌。不使用追踪Cookie。Supabase基于我们的合法利益（GDPR第6条第1款第(f)项），自动记录您的IP地址和基本设备元数据（操作系统、应用版本），用于安全和防止滥用目的。这些数据保留90天。",
+    "s17t": "17. 数据泄露通知",
+    "s17b": "如发生可能对您的权利和自由造成风险的个人数据泄露，我们将按照GDPR第33条的要求在72小时内通知主管监管机构。如果泄露可能对您的权利和自由造成高风险，我们还将按照GDPR第34条的要求，通过与您账户关联的电子邮件地址，及时直接通知您。"
   }
 }

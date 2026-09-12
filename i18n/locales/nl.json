@@ -1,68 +1,698 @@
 {
-  "home": { "tagline": "Gesplitst scherm torenverdediging.", "playNow": "SPEEL NU", "trophies": "Trofeeën", "winRate": "Winstpercentage", "wins": "Overwinningen", "losses": "Verlies", "recentMatches": "Recente wedstrijden", "dailyMissions": "Dagelijkse missies" },
-  "nav": { "home": "Thuis", "shop": "Winkel", "play": "Spelen", "cards": "Kaarten", "ranks": "Rangen" },
-  "setup": { "title": "Uitrusting", "subtitle": "Kies 3 krachten, {towers} torens en {orbs} orbs", "training": "Training", "casual": "Casual", "ranked": "Gerangschikt", "aiDifficulty": "AI-moeilijkheid", "towers": "Torens", "orbs": "Orbs", "powers": "Krachten", "startMatch": "START WEDSTRIJD", "trophyReq": "🔒 {n}🏆", "crateLock": "🔒 Krat", "quickPlay": "Snel spelen", "quickPlayHint": "Doe mee met je opgeslagen uitrusting", "changeLoadout": "Uitrusting wijzigen", "moreInLab": "+{n} meer in het Lab →", "rankedBetaDisclaimer": "Spelen tegen AI in gerangschikt is tijdelijk." },
-  "difficulty": { "easy": "Makkelijk", "normal": "Normaal", "hard": "Moeilijk" },
-  "shop": { "title": "Winkel", "shards": "{n} scherven", "shardsHint": "Besteed in het Lab om kaarten te upgraden", "crates": "Kratten", "freeDaily": "Dagelijks gratis", "claimed": "Geclaimd ✓", "freeEveryDay": "Elke dag gratis", "buy": "Kopen", "free": "Gratis", "opening": "Openen…", "youGot": "Je hebt gekregen", "newUnlock": "NIEUW ONTGRENDELD!", "leveledUp": "NIVEAU {n} BEREIKT!", "shardsMaxed": "+{n} scherven (max)", "duplicate": "Duplicaat · {n}/{m} kopieën", "awesome": "Geweldig!", "cardChanceFull": "Gegarandeerde kaart", "cardChancePct": "{n}% kaart", "gemChancePct": "{n}% edelstenen", "crateSuffix": "Krat", "voucherTitle": "Vouchercode", "voucherHint": "Voer een code in om beloningen te claimen", "voucherPlaceholder": "CODE INVOEREN", "redeem": "Inwisselen", "voucherSuccess": "Code ingewisseld!", "voucherInvalid": "Ongeldige code", "voucherAlreadyUsed": "Code al gebruikt", "exchangeTitle": "Edelstenen ruilen", "exchangeRate": "1 💎 = 10 🪙", "handTitle": "Hand", "handDesc": "Meer klikken en sneller opladen", "handCurrent": "{clicks} klikken · {recharge}s herladen", "handNext": "+2 max · −0.04s herladen", "handMaxed": "MAX · {clicks} klikken · {recharge}s", "handUpgrade": "Upgraden", "maxLabel": "MAX", "sideTowerTitle": "Zijtorens", "sideTowerDesc": "Sterkere flanken", "sideTowerCurrent": "HP {hp} · DMG {dmg} · {rate}s", "sideTowerNext": "+{hp} HP · +{dmg} DMG", "sideTowerUpgrade": "Upgraden", "dailyGemChest": "Dagelijkse edelsteenkist", "dailyGemChestHint": "10–60 edelstenen elke dag.", "claimDailyGems": "Claim 10–60 edelstenen", "dailyGemsClaimed": "Kom morgen terug", "gems": "edelstenen", "comingSoon": "Binnenkort", "betaSubtext": "Premium functies binnenkort." },
-  "collection": { "title": "Lab", "hint": "Upgrade kaarten met kopieën en scherven.", "towers": "Torens", "orbs": "Orbs", "powers": "Krachten", "upgrades": "Upgrades", "trophyLock": "🔒 {n} trofeeën", "crateLock": "🔒 Kratten openen", "maxLevel": "★ MAX", "copies": "Kopieën", "levelUpFree": "Niveau omhoog (gratis)", "levelUpShards": "Niveau omhoog · 💎 {n}", "levelUp": "Niveau omhoog", "buyCopy": "Kopie kopen 🔷 {n}", "collectMore": "Meer verzamelen", "sectionStarter": "Starter", "sectionTrophy": "Trofee-ontgrendelingen", "sectionCrate": "Alleen krat", "sectionLocked": "Vergrendeld", "handTitle": "Hand", "handDesc": "Meer klikken per wedstrijd", "sideTowerTitle": "Zijtorens", "sideTowerDesc": "Sterkere automatische verdediging", "upgrade": "Upgraden", "maxed": "MAX" },
-  "leaderboard": { "title": "Ranglijst", "loading": "Laden…", "you": "(Jij)", "trophies": "Trofeeën", "tabRanks": "Ranglijst", "tabAchievements": "Prestaties" },
-  "game": { "victory": "OVERWINNING", "defeat": "VERLIES", "trainingWin": "TRAININGSOVERWINNING", "trainingLoss": "TRAININGSVERLIES", "promoted": "GEPROMOVEERD!", "demoted": "GEDEGRADEERD", "vs": "vs", "noTrophyChange": "Geen trofeewijziging — trainingsmodus", "trophiesChange": "{n} trofeeën", "home": "Thuis", "playAgain": "Opnieuw spelen", "forfeit": "← Opgeven", "overtime": "⚡ VT", "intensifying": "⚡ INTENSIVERING", "critical": "⚡ KRITIEK", "suddenDeath": "⚡ PLOTSELINGE DOOD", "maxPressure": "⚡ MAX DRUK", "towerBleed": "⚡ TOREN INSTORTING", "combo": "COMBO x{n}", "rejoinTitle": "Wedstrijd bezig", "rejoinDesc": "Je hebt een onafgemaakte wedstrijd", "rejoin": "Opnieuw deelnemen", "forfeitMatch": "Opgeven", "searching": "Tegenstander zoeken…", "searchingHint": "Tik hieronder om tegen AI te spelen", "playVsAi": "Speel tegen AI", "startingMatch": "Wedstrijd starten…", "cancel": "Annuleren" },
-  "friends": { "title": "Vrienden", "tabFriends": "Vrienden", "tabRequests": "Verzoeken", "addFriend": "Vriend toevoegen", "usernamePlaceholder": "Voer hun gebruikersnaam in", "search": "Zoeken", "add": "Toevoegen", "notFound": "Geen speler gevonden", "self": "Dat ben jij!", "requestSent": "Verzoek verzonden!", "alreadyFriends": "Al vrienden", "yourFriends": "Jouw vrienden", "noFriends": "Nog geen vrienden", "play": "Spelen", "waiting": "Wachten…", "cancel": "Annuleren", "friendRequests": "Vriendschapsverzoeken", "noRequests": "Geen openstaande verzoeken", "accept": "Accepteren" },
-  "settings": { "title": "Instellingen", "friends": "Vrienden", "changeNameTitle": "Naam wijzigen?", "changeNameBody": "Je naam is hoe vrienden je vinden.", "confirmChange": "Wijzigen", "account": "Account", "language": "Taal", "profile": "Profiel", "displayName": "Weergavenaam", "google": "Google", "connected": "Verbonden", "connect": "Verbinden", "save": "Opslaan", "saved": "Opgeslagen!", "deleteAccount": "Account verwijderen", "signOut": "Uitloggen", "accountDesc": "Koppel accounts om voortgang te beveiligen", "languageDesc": "Kies je voorkeurstaal", "back": "Thuis", "nameTaken": "Naam al in gebruik", "nameError": "Naam kon niet worden opgeslagen", "nameInappropriate": "Ongepaste naam", "sound": "Geluidseffecten", "soundDesc": "Piepjes, explosies en fanfares", "advancedHaptics": "Geavanceerde haptics", "advancedHapticsDesc": "Trillen bij elke klik en munt", "soundClicks": "Tikken en munten", "soundExplosions": "Explosies en krachten", "soundFanfare": "Overwinningsfanfare", "hapticsIntensity": "Trilsterkte", "hapticsIntensityDesc": "Hoe sterk de telefoon trilt", "hapticOff": "Uit", "hapticLow": "Laag", "hapticMedium": "Gemiddeld", "hapticHigh": "Hoog", "deleteConfirmTitle": "Account verwijderen?", "deleteConfirmBody": "Dit verwijdert je account en alle voortgang permanent.", "deleteButton": "Voor altijd verwijderen", "deleteTypeHint": "Typ 'delete' om te bevestigen", "deleting": "Verwijderen…", "cancel": "Annuleren", "privacyPolicy": "Privacybeleid", "gameplay": "Gameplay", "gameplayDesc": "Pas de HUD in het spel aan", "towerMenuAnytime": "Torenmenu altijd openen", "towerMenuAnytimeDesc": "Tik op een toren om te upgraden zonder bewerkingsmodus", "fitToScreen": "Spel aanpassen aan scherm", "fitToScreenDesc": "Schaal het speelveld.", "replayTutorial": "Tutorial herspelen", "eula": "EULA", "impressum": "Impressum", "downloadData": "Mijn gegevens downloaden", "reportUser": "Speler melden" },
-  "onboarding": { "welcome": "Welkom!", "chooseLanguage": "Kies je taal", "chooseUsername": "Kies je gebruikersnaam", "usernameHint": "Deze naam vertegenwoordigt jou in wedstrijden.", "usernamePlaceholder": "Voer een naam in", "checkName": "Controleren", "nameAvailable": "Beschikbaar!", "next": "Volgende", "continue": "Doorgaan", "ageGate": "Verifieer je leeftijd", "ageGateHint": "Voer je geboortedatum in", "dobDay": "Dag", "dobMonth": "Maand", "dobYear": "Jaar", "dobError": "Voer een geldige geboortedatum in", "saveError": "Kon niet opslaan. Probeer opnieuw." },
-  "privacy": { "back": "Terug", "title": "Privacybeleid" },
-  "impressum": { "back": "Terug", "title": "Impressum", "heading": "Angaben gemäß § 5 TMG:", "name": "Felix Werner", "careOf": "c/o COCENTER", "street": "Koppoldstr. 1", "city": "86551 Aichach", "emailLabel": "Email: info@splitterorbs.com" },
-  "eula": { "back": "Terug", "title": "Eindgebruikerslicentieovereenkomst", "intro": "Lees en accepteer de voorwaarden.", "accept": "Accepteren", "decline": "Weigeren", "settingsEula": "EULA", "downloadData": "Mijn gegevens downloaden", "downloading": "Downloaden…" },
-  "achievements": { "title": "Prestaties", "subtitle": "Voltooi uitdagingen om beloningen te verdienen", "claim": "Claimen", "claimAll": "Alles claimen", "claimed": "Geclaimd ✓", "first_win": { "name": "Eerste overwinning", "desc": "Win je eerste wedstrijd" }, "win_10": { "name": "Veteraan", "desc": "Win 10 wedstrijden" }, "win_50": { "name": "Kampioen", "desc": "Win 50 wedstrijden" }, "streak_5": { "name": "In vuur en vlam", "desc": "Win 5 op rij" }, "trophies_100": { "name": "Beginner", "desc": "Bereik 100 trofeeën" }, "trophies_1000": { "name": "Kampioen", "desc": "Bereik 1000 trofeeën" }, "orbs_1000": { "name": "Orb-jager", "desc": "Vernietig 1000 orbs" }, "towers_100": { "name": "Bouwer", "desc": "Plaats 100 torens" }, "abilities_50": { "name": "Tovenaar", "desc": "Gebruik 50 vaardigheden" }, "games_100": { "name": "Toegewijd", "desc": "Speel 100 wedstrijden" } },
-  "missions": { "title": "Dagelijkse missies", "win2": "Win 2 wedstrijden", "play3": "Speel 3 wedstrijden", "ranked1": "Win 1 gerangschikte wedstrijd" },
-  "leagues": { "0": "Beginner", "1": "Rookie", "2": "Cadet", "3": "Veteraan", "4": "Kampioen", "5": "Meester", "6": "Legende" },
-  "towers": { "basic": { "name": "Blaster", "desc": "Betrouwbare enkeldoelschutter." }, "machinegun": { "name": "Vulcaan", "desc": "Snel vuur, laag schade." }, "sniper": { "name": "Lancer", "desc": "Extreem bereik, enorme schade." }, "boomerang": { "name": "Doorboorder", "desc": "Doorboort tot 3 orbs." }, "rebound": { "name": "Boemerang", "desc": "Blad vliegt uit en keert terug." }, "bomb": { "name": "Mortier", "desc": "Gooit explosief met splash." }, "bouncer": { "name": "Bouncer", "desc": "Trekt orbs aan en stuitert ze." }, "glacier": { "name": "Gletsjer", "desc": "Vertraagt orbs in bereik." }, "arc": { "name": "Boog", "desc": "Bliksem ketst tussen orbs." }, "pyre": { "name": "Brandstapel", "desc": "Korte vlam met brandschade." }, "venom": { "name": "Gif", "desc": "Stapelt gif op in de tijd." }, "siege": { "name": "Belegering", "desc": "Zeer langzaam, enorme splash." }, "orb_mortar": { "name": "Orb-mortier", "desc": "Gooit willekeurige orb naar tegenstander." }, "lava_mortar": { "name": "Lava-mortier", "desc": "Gooit vuurbommen met splash." }, "repulsor": { "name": "Afstotend", "desc": "Stoot orb achteruit." }, "cryo": { "name": "Cryo-kanon", "desc": "Straal die orbs bevriest." }, "seeker": { "name": "Zoeker", "desc": "Geleide raketten op laagste HP orbs." }, "prism": { "name": "Prismalans", "desc": "Continue straal, schade neemt toe." }, "flak": { "name": "Flakkanon", "desc": "5-korrel spreiding." }, "harpoon": { "name": "Harpoen", "desc": "Trekt verste orb terug." }, "twin": { "name": "Tweelingkanon", "desc": "Richt tegelijkertijd op twee orbs." }, "tesla": { "name": "Tesla-spoel", "desc": "Periodieke AoE-puls." }, "detonator": { "name": "Detonator", "desc": "Dwingt bom-orbs te detoneren." }, "magnet": { "name": "Magneet", "desc": "Gooit attractors om orbs te clusteren." }, "capacitor": { "name": "Condensator", "desc": "Bouwt lading op en laat dan los." }, "overcharger": { "name": "Overlader", "desc": "Versterkt aangrenzende torens." }, "mine_layer": { "name": "Mijnlegger", "desc": "Legt landmijnen." } },
-  "orbs": { "normal": { "name": "Normaal", "desc": "Gebalanceerde orb." }, "fast": { "name": "Snel", "desc": "Weinig HP maar zeer snel." }, "bomb": { "name": "Bom", "desc": "Explodeert bij dood." }, "splitter": { "name": "Splitter", "desc": "Splitst in kleinere orbs." }, "tank": { "name": "Tank", "desc": "Hoog HP, valt torens aan." }, "mine": { "name": "Mijn", "desc": "Klik om te detoneren." }, "sprint": { "name": "Sprint", "desc": "Gaat recht naar het station." }, "swarmer": { "name": "Zwermaar", "desc": "Verschijnt in groepen van drie." }, "shield": { "name": "Schilddrager", "desc": "Heeft een regenererend schild." }, "healer": { "name": "Genezer", "desc": "Pulseert genezing naar bondgenoten." }, "radioactive": { "name": "Radioactief", "desc": "Infecteert torens met gif." }, "shadow": { "name": "Schaduw", "desc": "Stealth orb." }, "ice": { "name": "IJs", "desc": "Bevriest eerste aangeraakte toren." }, "fog": { "name": "Mist", "desc": "Stealth orb, beschadigt alle torens." }, "zap_orb": { "name": "Zap", "desc": "Springt van toren naar toren." }, "armored": { "name": "Gepantserd", "desc": "Vaste schadevermindering." }, "carrier": { "name": "Drager", "desc": "Laat 3 zwakke orbs vrij bij dood." }, "growth": { "name": "Groei", "desc": "Wint HP en snelheid in de tijd." }, "shield_bubble": { "name": "Schildbel", "desc": "Projecteert schild over bondgenoten." }, "berserker": { "name": "Berserker", "desc": "Wordt sterker bij laag HP." }, "phantom": { "name": "Fantoom", "desc": "Gaat door torens heen." }, "leech": { "name": "Bloedzuiger", "desc": "Zuigt HP uit torens." }, "summoner": { "name": "Oproeper", "desc": "Roept minion orbs op." } },
-  "abilities": { "zap": { "name": "Zap", "desc": "Treft alle orbs met bliksem." }, "portal": { "name": "Portaal", "desc": "Teleporteert tot 6 orbs naar tegenstander." }, "repair": { "name": "Repareren", "desc": "Herstelt HP van je station." }, "freeze": { "name": "Bevriezen", "desc": "Bevriest alle orbs aan jouw kant." }, "rage": { "name": "Woede", "desc": "Alle torens vuren 3× sneller." }, "shield": { "name": "Schild", "desc": "Blokkeert alle schade aan het station." }, "burner": { "name": "Brander", "desc": "Houd ingedrukt om vlam te kanaliseren." }, "meteor": { "name": "Meteoor", "desc": "Tik een punt voor meteorinslag." }, "glue": { "name": "Lijm", "desc": "Kleverige plas die orbs vertraagt." }, "overclock": { "name": "Overklokken", "desc": "Torens vuren sneller en doorboren." }, "speed_zone": { "name": "Snelheidszone", "desc": "Jouw orbs bewegen sneller." }, "damage_zone": { "name": "Schadezone", "desc": "Jouw orbs doen meer schade." }, "frost_zone": { "name": "Vorstzone", "desc": "Torens erin zijn bevroren." }, "deep_freeze": { "name": "Diepe bevriezing", "desc": "Bevriest ALLE torens van tegenstander." } },
-  "errors": { "title": "Er ging iets mis", "eulaRequired": "Voorwaarden bijgewerkt — accepteer de nieuwe EULA.", "rateLimited": "Te veel acties.", "unknown": "Er is een onverwachte fout opgetreden." },
+  "home": {
+    "tagline": "Gesplitst scherm torenverdediging.",
+    "playNow": "SPEEL NU",
+    "trophies": "Trofeeën",
+    "winRate": "Winstpercentage",
+    "wins": "Overwinningen",
+    "losses": "Verlies",
+    "recentMatches": "Recente wedstrijden",
+    "dailyMissions": "Dagelijkse missies"
+  },
+  "nav": {
+    "home": "Thuis",
+    "shop": "Winkel",
+    "play": "Spelen",
+    "cards": "Kaarten",
+    "ranks": "Rangen"
+  },
+  "setup": {
+    "title": "Uitrusting",
+    "subtitle": "Kies 3 krachten, {towers} torens en {orbs} orbs",
+    "training": "Training",
+    "casual": "Casual",
+    "ranked": "Gerangschikt",
+    "aiDifficulty": "AI-moeilijkheid",
+    "towers": "Torens",
+    "orbs": "Orbs",
+    "powers": "Krachten",
+    "startMatch": "START WEDSTRIJD",
+    "trophyReq": "🔒 {n}🏆",
+    "crateLock": "🔒 Krat",
+    "quickPlay": "Snel spelen",
+    "quickPlayHint": "Doe mee met je opgeslagen uitrusting",
+    "changeLoadout": "Uitrusting wijzigen",
+    "moreInLab": "+{n} meer in het Lab →",
+    "rankedBetaDisclaimer": "Spelen tegen AI in gerangschikt is tijdelijk."
+  },
+  "difficulty": {
+    "easy": "Makkelijk",
+    "normal": "Normaal",
+    "hard": "Moeilijk"
+  },
+  "shop": {
+    "title": "Winkel",
+    "shards": "{n} scherven",
+    "shardsHint": "Besteed in het Lab om kaarten te upgraden",
+    "crates": "Kratten",
+    "freeDaily": "Dagelijks gratis",
+    "claimed": "Geclaimd ✓",
+    "freeEveryDay": "Elke dag gratis",
+    "buy": "Kopen",
+    "free": "Gratis",
+    "opening": "Openen…",
+    "youGot": "Je hebt gekregen",
+    "newUnlock": "NIEUW ONTGRENDELD!",
+    "leveledUp": "NIVEAU {n} BEREIKT!",
+    "shardsMaxed": "+{n} scherven (max)",
+    "duplicate": "Duplicaat · {n}/{m} kopieën",
+    "awesome": "Geweldig!",
+    "cardChanceFull": "Gegarandeerde kaart",
+    "cardChancePct": "{n}% kaart",
+    "gemChancePct": "{n}% edelstenen",
+    "crateSuffix": "Krat",
+    "voucherTitle": "Vouchercode",
+    "voucherHint": "Voer een code in om beloningen te claimen",
+    "voucherPlaceholder": "CODE INVOEREN",
+    "redeem": "Inwisselen",
+    "voucherSuccess": "Code ingewisseld!",
+    "voucherInvalid": "Ongeldige code",
+    "voucherAlreadyUsed": "Code al gebruikt",
+    "exchangeTitle": "Edelstenen ruilen",
+    "exchangeRate": "1 💎 = 10 🪙",
+    "handTitle": "Hand",
+    "handDesc": "Meer klikken en sneller opladen",
+    "handCurrent": "{clicks} klikken · {recharge}s herladen",
+    "handNext": "+2 max · −0.04s herladen",
+    "handMaxed": "MAX · {clicks} klikken · {recharge}s",
+    "handUpgrade": "Upgraden",
+    "maxLabel": "MAX",
+    "sideTowerTitle": "Zijtorens",
+    "sideTowerDesc": "Sterkere flanken",
+    "sideTowerCurrent": "HP {hp} · DMG {dmg} · {rate}s",
+    "sideTowerNext": "+{hp} HP · +{dmg} DMG",
+    "sideTowerUpgrade": "Upgraden",
+    "dailyGemChest": "Dagelijkse edelsteenkist",
+    "dailyGemChestHint": "10–60 edelstenen elke dag.",
+    "claimDailyGems": "Claim 10–60 edelstenen",
+    "dailyGemsClaimed": "Kom morgen terug",
+    "gems": "edelstenen",
+    "comingSoon": "Binnenkort",
+    "betaSubtext": "Premium functies binnenkort."
+  },
+  "collection": {
+    "title": "Lab",
+    "hint": "Upgrade kaarten met kopieën en scherven.",
+    "towers": "Torens",
+    "orbs": "Orbs",
+    "powers": "Krachten",
+    "upgrades": "Upgrades",
+    "trophyLock": "🔒 {n} trofeeën",
+    "crateLock": "🔒 Kratten openen",
+    "maxLevel": "★ MAX",
+    "copies": "Kopieën",
+    "levelUpFree": "Niveau omhoog (gratis)",
+    "levelUpShards": "Niveau omhoog · 💎 {n}",
+    "levelUp": "Niveau omhoog",
+    "buyCopy": "Kopie kopen 🔷 {n}",
+    "collectMore": "Meer verzamelen",
+    "sectionStarter": "Starter",
+    "sectionTrophy": "Trofee-ontgrendelingen",
+    "sectionCrate": "Alleen krat",
+    "sectionLocked": "Vergrendeld",
+    "handTitle": "Hand",
+    "handDesc": "Meer klikken per wedstrijd",
+    "sideTowerTitle": "Zijtorens",
+    "sideTowerDesc": "Sterkere automatische verdediging",
+    "upgrade": "Upgraden",
+    "maxed": "MAX"
+  },
+  "leaderboard": {
+    "title": "Ranglijst",
+    "loading": "Laden…",
+    "you": "(Jij)",
+    "trophies": "Trofeeën",
+    "tabRanks": "Ranglijst",
+    "tabAchievements": "Prestaties"
+  },
+  "game": {
+    "victory": "OVERWINNING",
+    "defeat": "VERLIES",
+    "trainingWin": "TRAININGSOVERWINNING",
+    "trainingLoss": "TRAININGSVERLIES",
+    "promoted": "GEPROMOVEERD!",
+    "demoted": "GEDEGRADEERD",
+    "vs": "vs",
+    "noTrophyChange": "Geen trofeewijziging — trainingsmodus",
+    "trophiesChange": "{n} trofeeën",
+    "home": "Thuis",
+    "playAgain": "Opnieuw spelen",
+    "forfeit": "← Opgeven",
+    "overtime": "⚡ VT",
+    "intensifying": "⚡ INTENSIVERING",
+    "critical": "⚡ KRITIEK",
+    "suddenDeath": "⚡ PLOTSELINGE DOOD",
+    "maxPressure": "⚡ MAX DRUK",
+    "towerBleed": "⚡ TOREN INSTORTING",
+    "combo": "COMBO x{n}",
+    "rejoinTitle": "Wedstrijd bezig",
+    "rejoinDesc": "Je hebt een onafgemaakte wedstrijd",
+    "rejoin": "Opnieuw deelnemen",
+    "forfeitMatch": "Opgeven",
+    "searching": "Tegenstander zoeken…",
+    "searchingHint": "Tik hieronder om tegen AI te spelen",
+    "playVsAi": "Speel tegen AI",
+    "startingMatch": "Wedstrijd starten…",
+    "cancel": "Annuleren"
+  },
+  "friends": {
+    "title": "Vrienden",
+    "tabFriends": "Vrienden",
+    "tabRequests": "Verzoeken",
+    "addFriend": "Vriend toevoegen",
+    "usernamePlaceholder": "Voer hun gebruikersnaam in",
+    "search": "Zoeken",
+    "add": "Toevoegen",
+    "notFound": "Geen speler gevonden",
+    "self": "Dat ben jij!",
+    "requestSent": "Verzoek verzonden!",
+    "alreadyFriends": "Al vrienden",
+    "yourFriends": "Jouw vrienden",
+    "noFriends": "Nog geen vrienden",
+    "play": "Spelen",
+    "waiting": "Wachten…",
+    "cancel": "Annuleren",
+    "friendRequests": "Vriendschapsverzoeken",
+    "noRequests": "Geen openstaande verzoeken",
+    "accept": "Accepteren"
+  },
+  "settings": {
+    "title": "Instellingen",
+    "friends": "Vrienden",
+    "changeNameTitle": "Naam wijzigen?",
+    "changeNameBody": "Je naam is hoe vrienden je vinden.",
+    "confirmChange": "Wijzigen",
+    "account": "Account",
+    "language": "Taal",
+    "profile": "Profiel",
+    "displayName": "Weergavenaam",
+    "google": "Google",
+    "connected": "Verbonden",
+    "connect": "Verbinden",
+    "save": "Opslaan",
+    "saved": "Opgeslagen!",
+    "deleteAccount": "Account verwijderen",
+    "signOut": "Uitloggen",
+    "accountDesc": "Koppel accounts om voortgang te beveiligen",
+    "languageDesc": "Kies je voorkeurstaal",
+    "back": "Thuis",
+    "nameTaken": "Naam al in gebruik",
+    "nameError": "Naam kon niet worden opgeslagen",
+    "nameInappropriate": "Ongepaste naam",
+    "sound": "Geluidseffecten",
+    "soundDesc": "Piepjes, explosies en fanfares",
+    "advancedHaptics": "Geavanceerde haptics",
+    "advancedHapticsDesc": "Trillen bij elke klik en munt",
+    "soundClicks": "Tikken en munten",
+    "soundExplosions": "Explosies en krachten",
+    "soundFanfare": "Overwinningsfanfare",
+    "hapticsIntensity": "Trilsterkte",
+    "hapticsIntensityDesc": "Hoe sterk de telefoon trilt",
+    "hapticOff": "Uit",
+    "hapticLow": "Laag",
+    "hapticMedium": "Gemiddeld",
+    "hapticHigh": "Hoog",
+    "deleteConfirmTitle": "Account verwijderen?",
+    "deleteConfirmBody": "Dit verwijdert je account en alle voortgang permanent.",
+    "deleteButton": "Voor altijd verwijderen",
+    "deleteTypeHint": "Typ 'delete' om te bevestigen",
+    "deleting": "Verwijderen…",
+    "cancel": "Annuleren",
+    "privacyPolicy": "Privacybeleid",
+    "gameplay": "Gameplay",
+    "gameplayDesc": "Pas de HUD in het spel aan",
+    "towerMenuAnytime": "Torenmenu altijd openen",
+    "towerMenuAnytimeDesc": "Tik op een toren om te upgraden zonder bewerkingsmodus",
+    "fitToScreen": "Spel aanpassen aan scherm",
+    "fitToScreenDesc": "Schaal het speelveld.",
+    "replayTutorial": "Tutorial herspelen",
+    "eula": "EULA",
+    "impressum": "Impressum",
+    "downloadData": "Mijn gegevens downloaden",
+    "reportUser": "Speler melden",
+    "downloadDataTitle": "Gegevensexport",
+    "downloadDataSuccess": "Uw gegevensexport is klaar.",
+    "downloadDataErrorTitle": "Export mislukt",
+    "downloadDataError": "Gegevens konden niet worden geëxporteerd.",
+    "reportSelf": "Je kunt jezelf niet melden.",
+    "reportSent": "Melding ingediend. Dank u."
+  },
+  "onboarding": {
+    "welcome": "Welkom!",
+    "chooseLanguage": "Kies je taal",
+    "chooseUsername": "Kies je gebruikersnaam",
+    "usernameHint": "Deze naam vertegenwoordigt jou in wedstrijden.",
+    "usernamePlaceholder": "Voer een naam in",
+    "checkName": "Controleren",
+    "nameAvailable": "Beschikbaar!",
+    "next": "Volgende",
+    "continue": "Doorgaan",
+    "ageGate": "Verifieer je leeftijd",
+    "ageGateHint": "Voer je geboortedatum in",
+    "dobDay": "Dag",
+    "dobMonth": "Maand",
+    "dobYear": "Jaar",
+    "dobError": "Voer een geldige geboortedatum in",
+    "saveError": "Kon niet opslaan. Probeer opnieuw."
+  },
+  "privacy": {
+    "back": "Terug",
+    "title": "Privacybeleid"
+  },
+  "impressum": {
+    "back": "Terug",
+    "title": "Impressum",
+    "heading": "Angaben gemäß § 5 TMG:",
+    "name": "Felix Werner",
+    "careOf": "c/o COCENTER",
+    "street": "Koppoldstr. 1",
+    "city": "86551 Aichach",
+    "emailLabel": "Email: info@splitterorbs.com"
+  },
+  "eula": {
+    "back": "Terug",
+    "title": "Eindgebruikerslicentieovereenkomst",
+    "intro": "Lees en accepteer de voorwaarden.",
+    "accept": "Accepteren",
+    "decline": "Weigeren",
+    "settingsEula": "EULA",
+    "downloadData": "Mijn gegevens downloaden",
+    "downloading": "Downloaden…"
+  },
+  "achievements": {
+    "title": "Prestaties",
+    "subtitle": "Voltooi uitdagingen om beloningen te verdienen",
+    "claim": "Claimen",
+    "claimAll": "Alles claimen",
+    "claimed": "Geclaimd ✓",
+    "first_win": {
+      "name": "Eerste overwinning",
+      "desc": "Win je eerste wedstrijd"
+    },
+    "win_10": {
+      "name": "Veteraan",
+      "desc": "Win 10 wedstrijden"
+    },
+    "win_50": {
+      "name": "Kampioen",
+      "desc": "Win 50 wedstrijden"
+    },
+    "streak_5": {
+      "name": "In vuur en vlam",
+      "desc": "Win 5 op rij"
+    },
+    "trophies_100": {
+      "name": "Beginner",
+      "desc": "Bereik 100 trofeeën"
+    },
+    "trophies_1000": {
+      "name": "Kampioen",
+      "desc": "Bereik 1000 trofeeën"
+    },
+    "orbs_1000": {
+      "name": "Orb-jager",
+      "desc": "Vernietig 1000 orbs"
+    },
+    "towers_100": {
+      "name": "Bouwer",
+      "desc": "Plaats 100 torens"
+    },
+    "abilities_50": {
+      "name": "Tovenaar",
+      "desc": "Gebruik 50 vaardigheden"
+    },
+    "games_100": {
+      "name": "Toegewijd",
+      "desc": "Speel 100 wedstrijden"
+    }
+  },
+  "missions": {
+    "title": "Dagelijkse missies",
+    "win2": "Win 2 wedstrijden",
+    "play3": "Speel 3 wedstrijden",
+    "ranked1": "Win 1 gerangschikte wedstrijd"
+  },
+  "leagues": {
+    "0": "Beginner",
+    "1": "Rookie",
+    "2": "Cadet",
+    "3": "Veteraan",
+    "4": "Kampioen",
+    "5": "Meester",
+    "6": "Legende"
+  },
+  "towers": {
+    "basic": {
+      "name": "Blaster",
+      "desc": "Betrouwbare enkeldoelschutter."
+    },
+    "machinegun": {
+      "name": "Vulcaan",
+      "desc": "Snel vuur, laag schade."
+    },
+    "sniper": {
+      "name": "Lancer",
+      "desc": "Extreem bereik, enorme schade."
+    },
+    "boomerang": {
+      "name": "Doorboorder",
+      "desc": "Doorboort tot 3 orbs."
+    },
+    "rebound": {
+      "name": "Boemerang",
+      "desc": "Blad vliegt uit en keert terug."
+    },
+    "bomb": {
+      "name": "Mortier",
+      "desc": "Gooit explosief met splash."
+    },
+    "bouncer": {
+      "name": "Bouncer",
+      "desc": "Trekt orbs aan en stuitert ze."
+    },
+    "glacier": {
+      "name": "Gletsjer",
+      "desc": "Vertraagt orbs in bereik."
+    },
+    "arc": {
+      "name": "Boog",
+      "desc": "Bliksem ketst tussen orbs."
+    },
+    "pyre": {
+      "name": "Brandstapel",
+      "desc": "Korte vlam met brandschade."
+    },
+    "venom": {
+      "name": "Gif",
+      "desc": "Stapelt gif op in de tijd."
+    },
+    "siege": {
+      "name": "Belegering",
+      "desc": "Zeer langzaam, enorme splash."
+    },
+    "orb_mortar": {
+      "name": "Orb-mortier",
+      "desc": "Gooit willekeurige orb naar tegenstander."
+    },
+    "lava_mortar": {
+      "name": "Lava-mortier",
+      "desc": "Gooit vuurbommen met splash."
+    },
+    "repulsor": {
+      "name": "Afstotend",
+      "desc": "Stoot orb achteruit."
+    },
+    "cryo": {
+      "name": "Cryo-kanon",
+      "desc": "Straal die orbs bevriest."
+    },
+    "seeker": {
+      "name": "Zoeker",
+      "desc": "Geleide raketten op laagste HP orbs."
+    },
+    "prism": {
+      "name": "Prismalans",
+      "desc": "Continue straal, schade neemt toe."
+    },
+    "flak": {
+      "name": "Flakkanon",
+      "desc": "5-korrel spreiding."
+    },
+    "harpoon": {
+      "name": "Harpoen",
+      "desc": "Trekt verste orb terug."
+    },
+    "twin": {
+      "name": "Tweelingkanon",
+      "desc": "Richt tegelijkertijd op twee orbs."
+    },
+    "tesla": {
+      "name": "Tesla-spoel",
+      "desc": "Periodieke AoE-puls."
+    },
+    "detonator": {
+      "name": "Detonator",
+      "desc": "Dwingt bom-orbs te detoneren."
+    },
+    "magnet": {
+      "name": "Magneet",
+      "desc": "Gooit attractors om orbs te clusteren."
+    },
+    "capacitor": {
+      "name": "Condensator",
+      "desc": "Bouwt lading op en laat dan los."
+    },
+    "overcharger": {
+      "name": "Overlader",
+      "desc": "Versterkt aangrenzende torens."
+    },
+    "mine_layer": {
+      "name": "Mijnlegger",
+      "desc": "Legt landmijnen."
+    }
+  },
+  "orbs": {
+    "normal": {
+      "name": "Normaal",
+      "desc": "Gebalanceerde orb."
+    },
+    "fast": {
+      "name": "Snel",
+      "desc": "Weinig HP maar zeer snel."
+    },
+    "bomb": {
+      "name": "Bom",
+      "desc": "Explodeert bij dood."
+    },
+    "splitter": {
+      "name": "Splitter",
+      "desc": "Splitst in kleinere orbs."
+    },
+    "tank": {
+      "name": "Tank",
+      "desc": "Hoog HP, valt torens aan."
+    },
+    "mine": {
+      "name": "Mijn",
+      "desc": "Klik om te detoneren."
+    },
+    "sprint": {
+      "name": "Sprint",
+      "desc": "Gaat recht naar het station."
+    },
+    "swarmer": {
+      "name": "Zwermaar",
+      "desc": "Verschijnt in groepen van drie."
+    },
+    "shield": {
+      "name": "Schilddrager",
+      "desc": "Heeft een regenererend schild."
+    },
+    "healer": {
+      "name": "Genezer",
+      "desc": "Pulseert genezing naar bondgenoten."
+    },
+    "radioactive": {
+      "name": "Radioactief",
+      "desc": "Infecteert torens met gif."
+    },
+    "shadow": {
+      "name": "Schaduw",
+      "desc": "Stealth orb."
+    },
+    "ice": {
+      "name": "IJs",
+      "desc": "Bevriest eerste aangeraakte toren."
+    },
+    "fog": {
+      "name": "Mist",
+      "desc": "Stealth orb, beschadigt alle torens."
+    },
+    "zap_orb": {
+      "name": "Zap",
+      "desc": "Springt van toren naar toren."
+    },
+    "armored": {
+      "name": "Gepantserd",
+      "desc": "Vaste schadevermindering."
+    },
+    "carrier": {
+      "name": "Drager",
+      "desc": "Laat 3 zwakke orbs vrij bij dood."
+    },
+    "growth": {
+      "name": "Groei",
+      "desc": "Wint HP en snelheid in de tijd."
+    },
+    "shield_bubble": {
+      "name": "Schildbel",
+      "desc": "Projecteert schild over bondgenoten."
+    },
+    "berserker": {
+      "name": "Berserker",
+      "desc": "Wordt sterker bij laag HP."
+    },
+    "phantom": {
+      "name": "Fantoom",
+      "desc": "Gaat door torens heen."
+    },
+    "leech": {
+      "name": "Bloedzuiger",
+      "desc": "Zuigt HP uit torens."
+    },
+    "summoner": {
+      "name": "Oproeper",
+      "desc": "Roept minion orbs op."
+    }
+  },
+  "abilities": {
+    "zap": {
+      "name": "Zap",
+      "desc": "Treft alle orbs met bliksem."
+    },
+    "portal": {
+      "name": "Portaal",
+      "desc": "Teleporteert tot 6 orbs naar tegenstander."
+    },
+    "repair": {
+      "name": "Repareren",
+      "desc": "Herstelt HP van je station."
+    },
+    "freeze": {
+      "name": "Bevriezen",
+      "desc": "Bevriest alle orbs aan jouw kant."
+    },
+    "rage": {
+      "name": "Woede",
+      "desc": "Alle torens vuren 3× sneller."
+    },
+    "shield": {
+      "name": "Schild",
+      "desc": "Blokkeert alle schade aan het station."
+    },
+    "burner": {
+      "name": "Brander",
+      "desc": "Houd ingedrukt om vlam te kanaliseren."
+    },
+    "meteor": {
+      "name": "Meteoor",
+      "desc": "Tik een punt voor meteorinslag."
+    },
+    "glue": {
+      "name": "Lijm",
+      "desc": "Kleverige plas die orbs vertraagt."
+    },
+    "overclock": {
+      "name": "Overklokken",
+      "desc": "Torens vuren sneller en doorboren."
+    },
+    "speed_zone": {
+      "name": "Snelheidszone",
+      "desc": "Jouw orbs bewegen sneller."
+    },
+    "damage_zone": {
+      "name": "Schadezone",
+      "desc": "Jouw orbs doen meer schade."
+    },
+    "frost_zone": {
+      "name": "Vorstzone",
+      "desc": "Torens erin zijn bevroren."
+    },
+    "deep_freeze": {
+      "name": "Diepe bevriezing",
+      "desc": "Bevriest ALLE torens van tegenstander."
+    }
+  },
+  "errors": {
+    "title": "Er ging iets mis",
+    "eulaRequired": "Voorwaarden bijgewerkt — accepteer de nieuwe EULA.",
+    "rateLimited": "Te veel acties.",
+    "unknown": "Er is een onverwachte fout opgetreden."
+  },
   "eulaContent": {
-    "s1t": "1. Acceptatie van voorwaarden", "s1b": "Door Splitter Orbs te downloaden, installeren, openen of gebruiken, ga je akkoord met deze Eindgebruikerslicentieovereenkomst. Als je niet akkoord gaat, gebruik de app dan niet.",
-    "s2t": "2. Gebruikslicentie", "s2b": "Onder voorbehoud van naleving van deze EULA verleent de ontwikkelaar je een beperkte, niet-exclusieve, niet-overdraagbare en herroepbare licentie om de app te installeren en te gebruiken voor persoonlijke, niet-commerciële doeleinden.",
-    "s3t": "3. Jouw account", "s3b": "Je bent verantwoordelijk voor het handhaven van de beveiliging van je account en alle activiteiten die onder je account plaatsvinden.",
-    "s4t": "4. Acceptabel gebruik", "s4b": "Je gaat ermee akkoord niet te: (a) valsspelen, hacken of ongeautoriseerde software van derden te gebruiken; (b) bugs of kwetsbaarheden te misbruiken; (c) andere gebruikers te lastigvallen of te schaden; (d) de app voor illegale doeleinden te gebruiken; (e) de app te reverse-engineeren; (f) meerdere accounts aan te maken om beperkingen te omzeilen.",
-    "s5t": "5. Virtuele items en valuta", "s5b": "De app bevat virtuele items en valuta (munten, edelstenen, scherven) die geen echte monetaire waarde hebben. Virtuele items kunnen op elk moment zonder compensatie worden gereset of verwijderd.",
-    "s6t": "6. Geen gokken", "s6b": "De app bevat gerandomiseerde beloningssystemen (kisten). Dit is geen gokken. Je ontvangt altijd in-game items. Virtuele items kunnen niet worden ingewisseld voor echt geld.",
-    "s7t": "7. Intellectueel eigendom", "s7b": "Alle inhoud in de app is eigendom van de ontwikkelaar of zijn licentiegevers. Je mag het niet kopiëren, distribueren of wijzigen zonder voorafgaande schriftelijke toestemming.",
-    "s8t": "8. Uitsluiting van garantie", "s8b": "DE APP WORDT GELEVERD 'ZOALS HET IS' ZONDER ENIGE GARANTIE. DE ONTWIKKELAAR GARANDEERT NIET DAT DE APP ONONDERBROKEN OF FOUTLOOS ZAL ZIJN.",
-    "s9t": "9. Beperking van aansprakelijkheid", "s9b": "VOOR ZOVER MAXIMAAL TOEGESTAAN DOOR DE WET, IS DE ONTWIKKELAAR NIET AANSPRAKELIJK VOOR INDIRECTE, INCIDENTELE OF GEVOLGSCHADE.",
-    "s10t": "10. Vrijwaring", "s10b": "Je gaat ermee akkoord de ontwikkelaar te vrijwaren van claims die voortvloeien uit jouw schending van deze EULA of misbruik van de app.",
-    "s11t": "11. Privacy en gegevens", "s11b": "Je gegevens worden verwerkt in overeenstemming met het Privacybeleid van de app. Door de app te gebruiken, stem je in met de gegevenspraktijken die in het Privacybeleid worden beschreven.",
-    "s12t": "12. Leeftijdsvereiste", "s12b": "Je moet voldoen aan de minimumleeftijdsvereiste voor jouw regio: 13 in de meeste landen, 14 in Spanje/Italië/Oostenrijk, 15 in Frankrijk, 16 in Duitsland/Nederland/Ierland.",
-    "s13t": "13. Diensten van derden", "s13b": "De app maakt gebruik van diensten van derden (Supabase, Google). De ontwikkelaar is niet verantwoordelijk voor de praktijken van deze derden.",
-    "s14t": "14. Wijzigingen in voorwaarden", "s14b": "De ontwikkelaar kan deze EULA op elk moment bijwerken. Materiële wijzigingen vereisen dat je de bijgewerkte voorwaarden accepteert.",
-    "s15t": "15. Toepasselijk recht", "s15b": "Deze EULA wordt beheerst door de wetten van de Bondsrepubliek Duitsland.",
-    "s16t": "16. Contact", "s16b": "Voor vragen over deze EULA, neem contact met ons op via info@splitterorbs.com.",
-    "s17t": "17. Overmacht", "s17b": "De ontwikkelaar is niet aansprakelijk voor enige tekortkoming of vertraging in de uitvoering als gevolg van oorzaken buiten zijn redelijke controle, waaronder maar niet beperkt tot: overmacht, internet- of serveruitval, storingen van diensten van derden (inclusief Supabase-infrastructuur), cyberaanvallen, overheidsmaatregelen of andere gebeurtenissen buiten de controle van de ontwikkelaar. In dergelijke gevallen kunnen virtuele items, spelvoortgang en accountgegevens verloren gaan zonder compensatie.",
-    "s18t": "18. Beëindiging", "s18b": "De ontwikkelaar kan uw account op elk moment met of zonder kennisgeving schorsen of permanent beëindigen als u deze EULA schendt of gedrag vertoont dat schadelijk is voor andere gebruikers of de app. Bij beëindiging eindigt uw licentie om de app te gebruiken onmiddellijk en worden alle virtuele items, valuta en spelvoortgang verbeurd zonder terugbetaling of compensatie. U kunt uw account op elk moment verwijderen via het Instellingenscherm.",
-    "s19t": "19. Geschillenbeslechting", "s19b": "In geval van een geschil gaat u ermee akkoord eerst contact op te nemen met de ontwikkelaar via info@splitterorbs.com om een informele oplossing te zoeken. Als het geschil niet informeel kan worden opgelost binnen 30 dagen, wordt het voorgelegd aan de exclusieve bevoegdheid van de rechtbanken van Duitsland. Niets in deze clausule beperkt uw wettelijke rechten als consument onder het toepasselijke EU-recht.",
-    "s20t": "20. Scheidbaarheid", "s20b": "Als een bepaling van deze EULA door een bevoegde rechtbank ongeldig, onwettig of niet-afdwingbaar wordt bevonden, wordt die bepaling gewijzigd tot de minimale mate die nodig is om haar afdwingbaar te maken, of geschrapt als wijziging niet mogelijk is. De overige bepalingen blijven volledig van kracht.",
-    "s21t": "21. Volledige overeenkomst", "s21b": "Deze EULA vormt samen met het Privacybeleid de volledige overeenkomst tussen u en de ontwikkelaar met betrekking tot uw gebruik van de app en vervangt alle eerdere overeenkomsten, verklaringen en afspraken. Het afzien van een voorwaarde wordt niet beschouwd als een verdere of voortdurende afstand van die voorwaarde.",
-    "s22t": "22. Uitgebreide aansprakelijkheidsbeperking", "s22b": "VOOR ZOVER MAXIMAAL TOEGESTAAN DOOR HET TOEPASSELIJKE RECHT: (a) ZAL DE TOTALE AANSPRAKELIJKHEID VAN DE ONTWIKKELAAR JEGENS U VOOR ENIGE CLAIM VOORTVLOEIEND UIT DEZE EULA OF UW GEBRUIK VAN DE APP HET BEDRAG DAT U AAN DE ONTWIKKELAAR HEEFT BETAALD IN DE 12 MAANDEN VOORAFGAAND AAN DE CLAIM NIET OVERSCHRIJDEN, OF €5 ALS U GEEN BETALINGEN HEEFT GEDAAN; (b) DE ONTWIKKELAAR IS NIET AANSPRAKELIJK VOOR VERLIES VAN SPELVOORTGANG, VIRTUELE ITEMS, IN-GAME VALUTA, ACCOUNTGEGEVENS OF ANDERE IN-APP INHOUD, ONGEACHT DE OORZAAK; (c) DE ONTWIKKELAAR IS NIET AANSPRAKELIJK VOOR HANDELINGEN OF NALATIGHEDEN VAN EXTERNE DIENSTVERLENERS INCLUSIEF SUPABASE, GOOGLE OF APPLE.",
-    "s23t": "23. Exportcontrole", "s23b": "U verklaart dat u zich niet bevindt in een land dat onderworpen is aan een embargo van de Amerikaanse overheid of aangewezen is als 'terrorisme ondersteunend' land, en dat u niet voorkomt op een lijst van verboden of beperkte partijen van de Amerikaanse overheid. U stemt ermee in alle toepasselijke wet- en regelgeving inzake export- en herexportcontrole na te leven.",
-    "s24t": "24. Afstand van collectieve actie", "s24b": "VOOR ZOVER TOEGESTAAN DOOR HET TOEPASSELIJKE RECHT, DOET U AFSTAND VAN HET RECHT OM DEEL TE NEMEN AAN EEN COLLECTIEVE RECHTSZAAK OF COLLECTIEVE ARBITRAGE TEGEN DE ONTWIKKELAAR. ALLE CLAIMS MOETEN IN UW INDIVIDUELE HOEDANIGHEID WORDEN INGEDIEND EN NIET ALS EISER OF KLASSELID IN ENIGE VERMEENDE KLASSE- OF REPRESENTATIEVE PROCEDURE. Opmerking: Deze afstand is niet van toepassing waar verboden door EU-consumentenbeschermingswetgeving."
+    "s1t": "1. Acceptatie van voorwaarden",
+    "s1b": "Door Splitter Orbs te downloaden, installeren, openen of gebruiken, ga je akkoord met deze Eindgebruikerslicentieovereenkomst. Als je niet akkoord gaat, gebruik de app dan niet.",
+    "s2t": "2. Gebruikslicentie",
+    "s2b": "Onder voorbehoud van naleving van deze EULA verleent de ontwikkelaar je een beperkte, niet-exclusieve, niet-overdraagbare en herroepbare licentie om de app te installeren en te gebruiken voor persoonlijke, niet-commerciële doeleinden.",
+    "s3t": "3. Jouw account",
+    "s3b": "Je bent verantwoordelijk voor het handhaven van de beveiliging van je account en alle activiteiten die onder je account plaatsvinden.",
+    "s4t": "4. Acceptabel gebruik",
+    "s4b": "Je gaat ermee akkoord niet te: (a) valsspelen, hacken of ongeautoriseerde software van derden te gebruiken; (b) bugs of kwetsbaarheden te misbruiken; (c) andere gebruikers te lastigvallen of te schaden; (d) de app voor illegale doeleinden te gebruiken; (e) de app te reverse-engineeren; (f) meerdere accounts aan te maken om beperkingen te omzeilen.",
+    "s5t": "5. Virtuele items en valuta",
+    "s5b": "De app bevat virtuele items en valuta (munten, edelstenen, scherven) die geen echte monetaire waarde hebben. Virtuele items kunnen op elk moment zonder compensatie worden gereset of verwijderd.",
+    "s6t": "6. Geen gokken",
+    "s6b": "De app bevat gerandomiseerde beloningssystemen (kisten). Dit is geen gokken. Je ontvangt altijd in-game items. Virtuele items kunnen niet worden ingewisseld voor echt geld.",
+    "s7t": "7. Intellectueel eigendom",
+    "s7b": "Alle inhoud in de app is eigendom van de ontwikkelaar of zijn licentiegevers. Je mag het niet kopiëren, distribueren of wijzigen zonder voorafgaande schriftelijke toestemming.",
+    "s8t": "8. Uitsluiting van garantie",
+    "s8b": "DE APP WORDT GELEVERD 'ZOALS HET IS' ZONDER ENIGE GARANTIE. DE ONTWIKKELAAR GARANDEERT NIET DAT DE APP ONONDERBROKEN OF FOUTLOOS ZAL ZIJN.",
+    "s9t": "9. Beperking van aansprakelijkheid",
+    "s9b": "VOOR ZOVER MAXIMAAL TOEGESTAAN DOOR DE WET, IS DE ONTWIKKELAAR NIET AANSPRAKELIJK VOOR INDIRECTE, INCIDENTELE OF GEVOLGSCHADE.",
+    "s10t": "10. Vrijwaring",
+    "s10b": "Je gaat ermee akkoord de ontwikkelaar te vrijwaren van claims die voortvloeien uit jouw schending van deze EULA of misbruik van de app.",
+    "s11t": "11. Privacy en gegevens",
+    "s11b": "Je gegevens worden verwerkt in overeenstemming met het Privacybeleid van de app. Door de app te gebruiken, stem je in met de gegevenspraktijken die in het Privacybeleid worden beschreven.",
+    "s12t": "12. Leeftijdsvereiste",
+    "s12b": "Je moet voldoen aan de minimumleeftijdsvereiste voor jouw regio: 13 in de meeste landen, 14 in Spanje/Italië/Oostenrijk, 15 in Frankrijk, 16 in Duitsland/Nederland/Ierland.",
+    "s13t": "13. Diensten van derden",
+    "s13b": "De app maakt gebruik van diensten van derden (Supabase, Google). De ontwikkelaar is niet verantwoordelijk voor de praktijken van deze derden.",
+    "s14t": "14. Wijzigingen in voorwaarden",
+    "s14b": "De ontwikkelaar kan deze EULA op elk moment bijwerken. Materiële wijzigingen vereisen dat je de bijgewerkte voorwaarden accepteert.",
+    "s15t": "15. Toepasselijk recht",
+    "s15b": "Deze EULA wordt beheerst door de wetten van de Bondsrepubliek Duitsland.",
+    "s16t": "16. Contact",
+    "s16b": "Voor vragen over deze EULA, neem contact met ons op via info@splitterorbs.com.",
+    "s17t": "17. Overmacht",
+    "s17b": "De ontwikkelaar is niet aansprakelijk voor enige tekortkoming of vertraging in de uitvoering als gevolg van oorzaken buiten zijn redelijke controle, waaronder maar niet beperkt tot: overmacht, internet- of serveruitval, storingen van diensten van derden (inclusief Supabase-infrastructuur), cyberaanvallen, overheidsmaatregelen of andere gebeurtenissen buiten de controle van de ontwikkelaar. In dergelijke gevallen kunnen virtuele items, spelvoortgang en accountgegevens verloren gaan zonder compensatie.",
+    "s18t": "18. Beëindiging",
+    "s18b": "De ontwikkelaar kan uw account op elk moment met of zonder kennisgeving schorsen of permanent beëindigen als u deze EULA schendt of gedrag vertoont dat schadelijk is voor andere gebruikers of de app. Bij beëindiging eindigt uw licentie om de app te gebruiken onmiddellijk en worden alle virtuele items, valuta en spelvoortgang verbeurd zonder terugbetaling of compensatie. U kunt uw account op elk moment verwijderen via het Instellingenscherm.",
+    "s19t": "19. Geschillenbeslechting",
+    "s19b": "In geval van een geschil gaat u ermee akkoord eerst contact op te nemen met de ontwikkelaar via info@splitterorbs.com om een informele oplossing te zoeken. Als het geschil niet informeel kan worden opgelost binnen 30 dagen, wordt het voorgelegd aan de exclusieve bevoegdheid van de rechtbanken van Duitsland. Niets in deze clausule beperkt uw wettelijke rechten als consument onder het toepasselijke EU-recht.",
+    "s20t": "20. Scheidbaarheid",
+    "s20b": "Als een bepaling van deze EULA door een bevoegde rechtbank ongeldig, onwettig of niet-afdwingbaar wordt bevonden, wordt die bepaling gewijzigd tot de minimale mate die nodig is om haar afdwingbaar te maken, of geschrapt als wijziging niet mogelijk is. De overige bepalingen blijven volledig van kracht.",
+    "s21t": "21. Volledige overeenkomst",
+    "s21b": "Deze EULA vormt samen met het Privacybeleid de volledige overeenkomst tussen u en de ontwikkelaar met betrekking tot uw gebruik van de app en vervangt alle eerdere overeenkomsten, verklaringen en afspraken. Het afzien van een voorwaarde wordt niet beschouwd als een verdere of voortdurende afstand van die voorwaarde.",
+    "s22t": "22. Uitgebreide aansprakelijkheidsbeperking",
+    "s22b": "VOOR ZOVER MAXIMAAL TOEGESTAAN DOOR HET TOEPASSELIJKE RECHT: (a) ZAL DE TOTALE AANSPRAKELIJKHEID VAN DE ONTWIKKELAAR JEGENS U VOOR ENIGE CLAIM VOORTVLOEIEND UIT DEZE EULA OF UW GEBRUIK VAN DE APP HET BEDRAG DAT U AAN DE ONTWIKKELAAR HEEFT BETAALD IN DE 12 MAANDEN VOORAFGAAND AAN DE CLAIM NIET OVERSCHRIJDEN, OF €5 ALS U GEEN BETALINGEN HEEFT GEDAAN; (b) DE ONTWIKKELAAR IS NIET AANSPRAKELIJK VOOR VERLIES VAN SPELVOORTGANG, VIRTUELE ITEMS, IN-GAME VALUTA, ACCOUNTGEGEVENS OF ANDERE IN-APP INHOUD, ONGEACHT DE OORZAAK; (c) DE ONTWIKKELAAR IS NIET AANSPRAKELIJK VOOR HANDELINGEN OF NALATIGHEDEN VAN EXTERNE DIENSTVERLENERS INCLUSIEF SUPABASE, GOOGLE OF APPLE.",
+    "s23t": "23. Exportcontrole",
+    "s23b": "U verklaart dat u zich niet bevindt in een land dat onderworpen is aan een embargo van de Amerikaanse overheid of aangewezen is als 'terrorisme ondersteunend' land, en dat u niet voorkomt op een lijst van verboden of beperkte partijen van de Amerikaanse overheid. U stemt ermee in alle toepasselijke wet- en regelgeving inzake export- en herexportcontrole na te leven.",
+    "s24t": "24. Afstand van collectieve actie",
+    "s24b": "VOOR ZOVER TOEGESTAAN DOOR HET TOEPASSELIJKE RECHT, DOET U AFSTAND VAN HET RECHT OM DEEL TE NEMEN AAN EEN COLLECTIEVE RECHTSZAAK OF COLLECTIEVE ARBITRAGE TEGEN DE ONTWIKKELAAR. ALLE CLAIMS MOETEN IN UW INDIVIDUELE HOEDANIGHEID WORDEN INGEDIEND EN NIET ALS EISER OF KLASSELID IN ENIGE VERMEENDE KLASSE- OF REPRESENTATIEVE PROCEDURE. Opmerking: Deze afstand is niet van toepassing waar verboden door EU-consumentenbeschermingswetgeving."
   },
   "privacyContent": {
-    "s1t": "1. Inleiding", "s1b": "Dit Privacybeleid legt uit hoe Splitter Orbs je persoonlijke gegevens verzamelt, gebruikt en beschermt. We verwerken gegevens in overeenstemming met de EU Algemene Verordening Gegevensbescherming (AVG/DSGVO).",
-    "s2t": "2. Verwerkingsverantwoordelijke", "s2b": "De verwerkingsverantwoordelijke is de app-ontwikkelaar. Contact: info@splitterorbs.com.",
-    "s3t": "3. Gegevens die we verzamelen", "s3b": "Account- en profielgegevens: weergavenaam, spelvoortgang, in-game valuta, kaartverzamelingsniveaus, ontgrendelde skins, instellingen, inlogstreakgegevens. Sociale gegevens: vriendenlijst, matchgeschiedenis. Authenticatiegegevens: Google-account-ID en e-mail als je Google verbindt. Apple-account-ID en e-mail bij gebruik van Apple-aanmelding.",
-    "s4t": "4. Rechtsgrondslag voor verwerking", "s4b": "Overeenkomst (Art. 6(1)(b) AVG): Verwerking van je spelvoortgang is noodzakelijk om de dienst te leveren. Gerechtvaardigd belang (Art. 6(1)(f) AVG): Beveiligingsmaatregelen. Toestemming (Art. 6(1)(a) AVG): Google verbinden is optioneel.",
-    "s5t": "5. Gegevensbewaring", "s5b": "Je spelgegevens worden opgeslagen zolang je account actief is. Het verwijderen van je account wist alle gegevens permanent.",
-    "s6t": "6. Diensten van derden", "s6b": "Supabase host onze database en authenticatie. Google wordt gebruikt voor optionele OAuth. We verkopen je gegevens niet en gebruiken geen advertentie-SDK's.",
-    "s7t": "7. Jouw rechten", "s7b": "Onder de AVG/DSGVO heb je het recht op: Toegang, Rectificatie, Verwijdering, Overdraagbaarheid, Bezwaar en Intrekking van toestemming. Recht van bezwaar (Art. 21 AVG): je kunt te allen tijde bezwaar maken tegen verwerking op basis van gerechtvaardigd belang door contact op te nemen via info@splitterorbs.com. Contact: info@splitterorbs.com.",
-    "s8t": "8. Privacy van kinderen", "s8b": "Minimumleeftijd: 13 in de meeste landen, 14 in Spanje/Italië/Oostenrijk, 15 in Frankrijk, 16 in Duitsland/Nederland/Ierland.",
-    "s9t": "9. Wijzigingen in dit beleid", "s9b": "We kunnen dit Privacybeleid van tijd tot tijd bijwerken. Wijzigingen worden in de app gepubliceerd.",
-    "s10t": "10. Impressum", "s10b": "Felix Werner, c/o COCENTER, Koppoldstr. 1, 86551 Aichach. E-mail: info@splitterorbs.com",
-    "s11t": "11. Geografische beperking", "s11b": "Deze app is alleen beschikbaar in: Duitsland, Nederland, Frankrijk, Spanje, Italië, Verenigd Koninkrijk, Portugal, Japan, Zwitserland, Oostenrijk, Polen, Zweden, Ierland, Denemarken, Finland, Noorwegen en Roemenië.",
-    "s12t": "12. Verwerkers & verwerkingsovereenkomsten", "s12b": "Supabase, Inc. treedt op als verwerker namens ons op grond van een Verwerkersovereenkomst (DPA) die voldoet aan AVG Art. 28. Supabase verwerkt uw gegevens uitsluitend op onze instructies. Google LLC treedt op als verwerker voor authenticatie wanneer u Google Sign-In gebruikt. Beide verwerkers zijn contractueel verplicht uw gegevens te beschermen.",
-    "s13t": "13. Internationale gegevensoverdrachten", "s13b": "Supabase kan uw gegevens opslaan en verwerken op servers buiten de Europese Economische Ruimte (EER), inclusief in de Verenigde Staten. Dergelijke overdrachten worden beschermd door Standaard Contractuele Clausules (SCC's) goedgekeurd door de Europese Commissie op grond van AVG Art. 46(2)(c). U kunt een kopie van de toepasselijke overdrachtsgaranties opvragen via info@splitterorbs.com.",
-    "s14t": "14. Recht om een klacht in te dienen", "s14b": "Op grond van AVG Art. 77 heeft u het recht om een klacht in te dienen bij een toezichthoudende autoriteit als u van mening bent dat uw gegevens onrechtmatig worden verwerkt. De bevoegde toezichthoudende autoriteit voor deze app is: Bayerisches Landesamt für Datenschutzaufsicht (BayLDA), Promenade 18, 91522 Ansbach, Duitsland. Website: www.lda.bayern.de. U kunt ook contact opnemen met de toezichthoudende autoriteit in uw land van verblijf.",
-    "s15t": "15. Geautomatiseerde besluitvorming & profilering", "s15b": "Wij maken geen gebruik van geautomatiseerde besluitvorming of profilering die rechtsgevolgen heeft of u op vergelijkbare wijze aanzienlijk treft, zoals beschreven in AVG Art. 22. Matchmaking en in-game AI zijn puur gameplay-mechanismen zonder juridische of significante reële gevolgen.",
-    "s16t": "16. Lokale opslag & apparaatgegevens", "s16b": "De app slaat spelinstellingen, voorkeuren en sessietokens lokaal op uw apparaat op via AsyncStorage (equivalent aan lokale opslag). Er worden geen trackingcookies gebruikt. Supabase registreert automatisch uw IP-adres en basisapparaatmetadata (besturingssysteem, appversie) voor beveiligings- en misbruikpreventiedoeleinden op grond van ons gerechtvaardigd belang (AVG Art. 6(1)(f)). Deze gegevens worden 90 dagen bewaard.",
-    "s17t": "17. Melding van datalekken", "s17b": "In geval van een inbreuk op persoonsgegevens die waarschijnlijk een risico voor uw rechten en vrijheden inhoudt, zullen wij de bevoegde toezichthoudende autoriteit binnen 72 uur op de hoogte stellen zoals vereist door AVG Art. 33. Als de inbreuk waarschijnlijk een hoog risico voor uw rechten en vrijheden inhoudt, zullen wij u ook rechtstreeks zonder onnodige vertraging op de hoogte stellen zoals vereist door AVG Art. 34, via het e-mailadres dat aan uw account is gekoppeld.""
+    "s1t": "1. Inleiding",
+    "s1b": "Dit Privacybeleid legt uit hoe Splitter Orbs je persoonlijke gegevens verzamelt, gebruikt en beschermt. We verwerken gegevens in overeenstemming met de EU Algemene Verordening Gegevensbescherming (AVG/DSGVO).",
+    "s2t": "2. Verwerkingsverantwoordelijke",
+    "s2b": "De verwerkingsverantwoordelijke is de app-ontwikkelaar. Contact: info@splitterorbs.com.",
+    "s3t": "3. Gegevens die we verzamelen",
+    "s3b": "Account- en profielgegevens: weergavenaam, spelvoortgang, in-game valuta, kaartverzamelingsniveaus, ontgrendelde skins, instellingen, inlogstreakgegevens. Sociale gegevens: vriendenlijst, matchgeschiedenis. Authenticatiegegevens: Google-account-ID en e-mail als je Google verbindt. Apple-account-ID en e-mail bij gebruik van Apple-aanmelding.",
+    "s4t": "4. Rechtsgrondslag voor verwerking",
+    "s4b": "Overeenkomst (Art. 6(1)(b) AVG): Verwerking van je spelvoortgang is noodzakelijk om de dienst te leveren. Gerechtvaardigd belang (Art. 6(1)(f) AVG): Beveiligingsmaatregelen. Toestemming (Art. 6(1)(a) AVG): Google verbinden is optioneel.",
+    "s5t": "5. Gegevensbewaring",
+    "s5b": "Je spelgegevens worden opgeslagen zolang je account actief is. Het verwijderen van je account wist alle gegevens permanent.",
+    "s6t": "6. Diensten van derden",
+    "s6b": "Supabase host onze database en authenticatie. Google wordt gebruikt voor optionele OAuth. We verkopen je gegevens niet en gebruiken geen advertentie-SDK's.",
+    "s7t": "7. Jouw rechten",
+    "s7b": "Onder de AVG/DSGVO heb je het recht op: Toegang, Rectificatie, Verwijdering, Overdraagbaarheid, Bezwaar en Intrekking van toestemming. Recht van bezwaar (Art. 21 AVG): je kunt te allen tijde bezwaar maken tegen verwerking op basis van gerechtvaardigd belang door contact op te nemen via info@splitterorbs.com. Contact: info@splitterorbs.com.",
+    "s8t": "8. Privacy van kinderen",
+    "s8b": "Minimumleeftijd: 13 in de meeste landen, 14 in Spanje/Italië/Oostenrijk, 15 in Frankrijk, 16 in Duitsland/Nederland/Ierland.",
+    "s9t": "9. Wijzigingen in dit beleid",
+    "s9b": "We kunnen dit Privacybeleid van tijd tot tijd bijwerken. Wijzigingen worden in de app gepubliceerd.",
+    "s10t": "10. Impressum",
+    "s10b": "Felix Werner, c/o COCENTER, Koppoldstr. 1, 86551 Aichach. E-mail: info@splitterorbs.com",
+    "s11t": "11. Geografische beperking",
+    "s11b": "Deze app is alleen beschikbaar in: Duitsland, Nederland, Frankrijk, Spanje, Italië, Verenigd Koninkrijk, Portugal, Japan, Zwitserland, Oostenrijk, Polen, Zweden, Ierland, Denemarken, Finland, Noorwegen en Roemenië.",
+    "s12t": "12. Verwerkers & verwerkingsovereenkomsten",
+    "s12b": "Supabase, Inc. treedt op als verwerker namens ons op grond van een Verwerkersovereenkomst (DPA) die voldoet aan AVG Art. 28. Supabase verwerkt uw gegevens uitsluitend op onze instructies. Google LLC treedt op als verwerker voor authenticatie wanneer u Google Sign-In gebruikt. Beide verwerkers zijn contractueel verplicht uw gegevens te beschermen.",
+    "s13t": "13. Internationale gegevensoverdrachten",
+    "s13b": "Supabase kan uw gegevens opslaan en verwerken op servers buiten de Europese Economische Ruimte (EER), inclusief in de Verenigde Staten. Dergelijke overdrachten worden beschermd door Standaard Contractuele Clausules (SCC's) goedgekeurd door de Europese Commissie op grond van AVG Art. 46(2)(c). U kunt een kopie van de toepasselijke overdrachtsgaranties opvragen via info@splitterorbs.com.",
+    "s14t": "14. Recht om een klacht in te dienen",
+    "s14b": "Op grond van AVG Art. 77 heeft u het recht om een klacht in te dienen bij een toezichthoudende autoriteit als u van mening bent dat uw gegevens onrechtmatig worden verwerkt. De bevoegde toezichthoudende autoriteit voor deze app is: Bayerisches Landesamt für Datenschutzaufsicht (BayLDA), Promenade 18, 91522 Ansbach, Duitsland. Website: www.lda.bayern.de. U kunt ook contact opnemen met de toezichthoudende autoriteit in uw land van verblijf.",
+    "s15t": "15. Geautomatiseerde besluitvorming & profilering",
+    "s15b": "Wij maken geen gebruik van geautomatiseerde besluitvorming of profilering die rechtsgevolgen heeft of u op vergelijkbare wijze aanzienlijk treft, zoals beschreven in AVG Art. 22. Matchmaking en in-game AI zijn puur gameplay-mechanismen zonder juridische of significante reële gevolgen.",
+    "s16t": "16. Lokale opslag & apparaatgegevens",
+    "s16b": "De app slaat spelinstellingen, voorkeuren en sessietokens lokaal op uw apparaat op via AsyncStorage (equivalent aan lokale opslag). Er worden geen trackingcookies gebruikt. Supabase registreert automatisch uw IP-adres en basisapparaatmetadata (besturingssysteem, appversie) voor beveiligings- en misbruikpreventiedoeleinden op grond van ons gerechtvaardigd belang (AVG Art. 6(1)(f)). Deze gegevens worden 90 dagen bewaard.",
+    "s17t": "17. Melding van datalekken",
+    "s17b": "In geval van een inbreuk op persoonsgegevens die waarschijnlijk een risico voor uw rechten en vrijheden inhoudt, zullen wij de bevoegde toezichthoudende autoriteit binnen 72 uur op de hoogte stellen zoals vereist door AVG Art. 33. Als de inbreuk waarschijnlijk een hoog risico voor uw rechten en vrijheden inhoudt, zullen wij u ook rechtstreeks zonder onnodige vertraging op de hoogte stellen zoals vereist door AVG Art. 34, via het e-mailadres dat aan uw account is gekoppeld."
   }
 }

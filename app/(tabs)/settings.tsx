@@ -31,6 +31,14 @@ export default function SettingsScreen() {
   const [deleting, setDeleting] = useState(false);
   const [downloading, setDownloading] = useState(false);
 
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportUsername, setReportUsername] = useState('');
+  const [reportSearching, setReportSearching] = useState(false);
+  const [reportResult, setReportResult] = useState<{ id: string; display_name: string; trophies: number } | null>(null);
+  const [reportError, setReportError] = useState<string | null>(null);
+  const [reportSubmitting, setReportSubmitting] = useState(false);
+  const [reportDone, setReportDone] = useState(false);
+
   useEffect(() => {
     if (profile) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -137,12 +145,58 @@ export default function SettingsScreen() {
     try {
       const { data } = await supabase.functions.invoke('export-user-data', {});
       console.log('[Settings] export-user-data response', data);
-      Alert.alert('Data Export', 'Your data has been prepared. In the full app, this would download a JSON file.');
+      Alert.alert(t('settings.downloadDataTitle'), t('settings.downloadDataSuccess'));
     } catch (e) {
       console.warn('[Settings] export-user-data error', e);
-      Alert.alert('Error', 'Could not export data.');
+      Alert.alert(t('settings.downloadDataErrorTitle'), t('settings.downloadDataError'));
     }
     setDownloading(false);
+  };
+
+  const handleReportSearch = async () => {
+    console.log('[Settings] Report search', { reportUsername });
+    if (!reportUsername.trim()) return;
+    setReportSearching(true);
+    setReportResult(null);
+    setReportError(null);
+    try {
+      const { data, error } = await supabase
+        .from('player_profiles')
+        .select('user_id, display_name, trophies')
+        .ilike('display_name', reportUsername.trim())
+        .limit(1)
+        .single();
+      if (error || !data) {
+        setReportError(t('friends.notFound'));
+      } else if (data.user_id === profile?.user_id) {
+        setReportError(t('settings.reportSelf'));
+      } else {
+        setReportResult({ id: data.user_id, display_name: data.display_name, trophies: data.trophies ?? 0 });
+      }
+    } catch {
+      setReportError(t('friends.notFound'));
+    }
+    setReportSearching(false);
+  };
+
+  const handleReportSubmit = async () => {
+    if (!reportResult) return;
+    console.log('[Settings] Report submit', { target: reportResult.id });
+    setReportSubmitting(true);
+    try {
+      await supabase.functions.invoke('report-user', { body: { reported_user_id: reportResult.id } });
+    } catch (e) {
+      console.warn('[Settings] report-user error', e);
+    }
+    setReportSubmitting(false);
+    setReportDone(true);
+    setTimeout(() => {
+      setShowReportModal(false);
+      setReportUsername('');
+      setReportResult(null);
+      setReportError(null);
+      setReportDone(false);
+    }, 1500);
   };
 
   const hapticLevels = ['off', 'low', 'medium', 'high'] as const;
@@ -363,6 +417,14 @@ export default function SettingsScreen() {
             {downloading && <ActivityIndicator size="small" color={COLORS.textTertiary} />}
           </TouchableOpacity>
           <TouchableOpacity
+            onPress={() => { setShowReportModal(true); setReportUsername(''); setReportResult(null); setReportError(null); setReportDone(false); }}
+            style={styles.linkRow}
+          >
+            <Ionicons name="flag" size={20} color={COLORS.textSecondary} />
+            <Text style={styles.linkText}>{t('settings.reportUser')}</Text>
+            <Ionicons name="chevron-forward" size={16} color={COLORS.textTertiary} />
+          </TouchableOpacity>
+          <TouchableOpacity
             onPress={() => { console.log('[Settings] Delete Account pressed'); setDeleteConfirmText(''); setShowDeleteDialog(true); }}
             style={[styles.linkRow, styles.dangerRow]}
           >
@@ -433,6 +495,70 @@ export default function SettingsScreen() {
                 }
               </TouchableOpacity>
             </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Report player modal */}
+      <Modal visible={showReportModal} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>{t('settings.reportUser')}</Text>
+            {reportDone ? (
+              <Text style={[styles.modalBody, { color: '#10B981' }]}>{t('settings.reportSent')}</Text>
+            ) : (
+              <>
+                <View style={styles.nameRow}>
+                  <TextInput
+                    value={reportUsername}
+                    onChangeText={v => { setReportUsername(v); setReportResult(null); setReportError(null); }}
+                    placeholder={t('friends.usernamePlaceholder')}
+                    style={styles.nameInput}
+                    autoCapitalize="none"
+                  />
+                  <TouchableOpacity
+                    onPress={handleReportSearch}
+                    disabled={reportSearching || !reportUsername.trim()}
+                    style={styles.saveBtn}
+                  >
+                    {reportSearching
+                      ? <ActivityIndicator size="small" color="#fff" />
+                      : <Text style={styles.saveBtnText}>{t('friends.search')}</Text>
+                    }
+                  </TouchableOpacity>
+                </View>
+                {reportError && <Text style={styles.nameError}>{reportError}</Text>}
+                {reportResult && (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 10, gap: 8, borderTopWidth: 1, borderTopColor: COLORS.border, marginTop: 4 }}>
+                    <Ionicons name="person-circle" size={32} color={COLORS.textSecondary} />
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontSize: 14, fontWeight: '800', color: COLORS.text }}>{reportResult.display_name}</Text>
+                      <Text style={{ fontSize: 12, color: COLORS.textTertiary }}>🏆 {reportResult.trophies} {t('leaderboard.trophies')}</Text>
+                    </View>
+                  </View>
+                )}
+                <View style={[styles.modalBtns, { marginTop: 12 }]}>
+                  <TouchableOpacity
+                    onPress={() => setShowReportModal(false)}
+                    style={styles.modalBtnSecondary}
+                  >
+                    <Text style={styles.modalBtnSecondaryText}>{t('settings.cancel')}</Text>
+                  </TouchableOpacity>
+                  {reportResult && (
+                    <TouchableOpacity
+                      onPress={handleReportSubmit}
+                      disabled={reportSubmitting}
+                      style={[styles.modalBtnPrimary, { backgroundColor: COLORS.danger }]}
+                    >
+                      {reportSubmitting
+                        ? <ActivityIndicator size="small" color="#fff" />
+                        : <Text style={styles.modalBtnPrimaryText}>{t('settings.reportUser')}</Text>
+                      }
+                    </TouchableOpacity>
+                  )}
+                </View>
+              </>
+            )}
           </View>
         </View>
       </Modal>

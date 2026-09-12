@@ -1,68 +1,698 @@
 {
-  "home": { "tagline": "Pertahanan menara layar terpisah.", "playNow": "MAIN SEKARANG", "trophies": "Trofi", "winRate": "Tingkat Menang", "wins": "Menang", "losses": "Kalah", "recentMatches": "Pertandingan Terbaru", "dailyMissions": "Misi Harian" },
-  "nav": { "home": "Beranda", "shop": "Toko", "play": "Main", "cards": "Kartu", "ranks": "Peringkat" },
-  "setup": { "title": "Loadout", "subtitle": "Pilih 3 kekuatan, {towers} menara & {orbs} orb", "training": "Latihan", "casual": "Kasual", "ranked": "Peringkat", "aiDifficulty": "Kesulitan AI", "towers": "Menara", "orbs": "Orb", "powers": "Kekuatan", "startMatch": "MULAI PERTANDINGAN", "trophyReq": "🔒 {n}🏆", "crateLock": "🔒 Peti", "quickPlay": "Main Cepat", "quickPlayHint": "Masuk dengan loadout tersimpan", "changeLoadout": "Ubah Loadout", "moreInLab": "+{n} lagi di Lab →", "rankedBetaDisclaimer": "Bermain melawan AI di peringkat bersifat sementara." },
-  "difficulty": { "easy": "Mudah", "normal": "Normal", "hard": "Sulit" },
-  "shop": { "title": "Toko", "shards": "{n} Serpihan", "shardsHint": "Habiskan di Lab untuk meningkatkan kartu", "crates": "Peti", "freeDaily": "Gratis Harian", "claimed": "Diklaim ✓", "freeEveryDay": "Gratis setiap hari", "buy": "Beli", "free": "Gratis", "opening": "Membuka…", "youGot": "Kamu mendapat", "newUnlock": "BUKA BARU!", "leveledUp": "NAIK LEVEL ke {n}!", "shardsMaxed": "+{n} serpihan (maks)", "duplicate": "Duplikat · {n}/{m} salinan", "awesome": "Luar biasa!", "cardChanceFull": "Kartu terjamin", "cardChancePct": "{n}% kartu", "gemChancePct": "{n}% permata", "crateSuffix": "Peti", "voucherTitle": "Kode Voucher", "voucherHint": "Masukkan kode untuk klaim hadiah", "voucherPlaceholder": "MASUKKAN KODE", "redeem": "Tukar", "voucherSuccess": "Kode ditukar!", "voucherInvalid": "Kode tidak valid", "voucherAlreadyUsed": "Kode sudah digunakan", "exchangeTitle": "Tukar Permata", "exchangeRate": "1 💎 = 10 🪙", "handTitle": "Tangan", "handDesc": "Lebih banyak klik dan isi ulang lebih cepat", "handCurrent": "{clicks} klik · {recharge}d isi ulang", "handNext": "+2 maks · −0.04d isi ulang", "handMaxed": "MAX · {clicks} klik · {recharge}d", "handUpgrade": "Tingkatkan", "maxLabel": "MAX", "sideTowerTitle": "Menara Samping", "sideTowerDesc": "Sayap lebih kuat", "sideTowerCurrent": "HP {hp} · DMG {dmg} · {rate}d", "sideTowerNext": "+{hp} HP · +{dmg} DMG", "sideTowerUpgrade": "Tingkatkan", "dailyGemChest": "Peti Permata Harian", "dailyGemChestHint": "10–60 permata setiap hari.", "claimDailyGems": "Klaim 10–60 permata", "dailyGemsClaimed": "Kembali besok", "gems": "permata", "comingSoon": "Segera Hadir", "betaSubtext": "Fitur premium segera hadir." },
-  "collection": { "title": "Lab", "hint": "Tingkatkan kartu dengan salinan dan serpihan.", "towers": "Menara", "orbs": "Orb", "powers": "Kekuatan", "upgrades": "Peningkatan", "trophyLock": "🔒 {n} trofi", "crateLock": "🔒 Buka peti", "maxLevel": "★ MAX", "copies": "Salinan", "levelUpFree": "Naik Level (gratis)", "levelUpShards": "Naik Level · 💎 {n}", "levelUp": "Naik Level", "buyCopy": "Beli salinan 🔷 {n}", "collectMore": "Kumpulkan lebih banyak", "sectionStarter": "Pemula", "sectionTrophy": "Buka Trofi", "sectionCrate": "Hanya Peti", "sectionLocked": "Terkunci", "handTitle": "Tangan", "handDesc": "Lebih banyak klik per pertandingan", "sideTowerTitle": "Menara Samping", "sideTowerDesc": "Pertahanan otomatis lebih kuat", "upgrade": "Tingkatkan", "maxed": "MAX" },
-  "leaderboard": { "title": "Papan Peringkat", "loading": "Memuat…", "you": "(Saya)", "trophies": "Trofi", "tabRanks": "Peringkat", "tabAchievements": "Pencapaian" },
-  "game": { "victory": "MENANG", "defeat": "KALAH", "trainingWin": "MENANG LATIHAN", "trainingLoss": "KALAH LATIHAN", "promoted": "NAIK PERINGKAT!", "demoted": "TURUN PERINGKAT", "vs": "vs", "noTrophyChange": "Tidak ada perubahan trofi — mode latihan", "trophiesChange": "{n} trofi", "home": "Beranda", "playAgain": "Main Lagi", "forfeit": "← Menyerah", "overtime": "⚡ OT", "intensifying": "⚡ SEMAKIN INTENS", "critical": "⚡ KRITIS", "suddenDeath": "⚡ SUDDEN DEATH", "maxPressure": "⚡ TEKANAN MAKS", "towerBleed": "⚡ MENARA RUNTUH", "combo": "KOMBO x{n}", "rejoinTitle": "Pertandingan berlangsung", "rejoinDesc": "Kamu punya pertandingan yang belum selesai", "rejoin": "Bergabung Kembali", "forfeitMatch": "Menyerah", "searching": "Mencari lawan…", "searchingHint": "Ketuk di bawah untuk bermain lawan AI", "playVsAi": "Main lawan AI", "startingMatch": "Memulai pertandingan…", "cancel": "Batal" },
-  "friends": { "title": "Teman", "tabFriends": "Teman", "tabRequests": "Permintaan", "addFriend": "Tambah teman", "usernamePlaceholder": "Masukkan nama pengguna mereka", "search": "Cari", "add": "Tambah", "notFound": "Pemain tidak ditemukan", "self": "Itu kamu!", "requestSent": "Permintaan terkirim!", "alreadyFriends": "Sudah berteman", "yourFriends": "Temanmu", "noFriends": "Belum ada teman", "play": "Main", "waiting": "Menunggu…", "cancel": "Batal", "friendRequests": "Permintaan pertemanan", "noRequests": "Tidak ada permintaan tertunda", "accept": "Terima" },
-  "settings": { "title": "Pengaturan", "friends": "Teman", "changeNameTitle": "Ubah namamu?", "changeNameBody": "Namamu adalah cara teman menemukanmu.", "confirmChange": "Ubah", "account": "Akun", "language": "Bahasa", "profile": "Profil", "displayName": "Nama Tampilan", "google": "Google", "connected": "Terhubung", "connect": "Hubungkan", "save": "Simpan", "saved": "Tersimpan!", "deleteAccount": "Hapus Akun", "signOut": "Keluar", "accountDesc": "Tautkan akun untuk mengamankan kemajuan", "languageDesc": "Pilih bahasa yang diinginkan", "back": "Beranda", "nameTaken": "Nama sudah digunakan", "nameError": "Tidak dapat menyimpan nama", "nameInappropriate": "Nama tidak pantas", "sound": "Efek Suara", "soundDesc": "Bunyi bip, ledakan, dan fanfare", "advancedHaptics": "Haptic Lanjutan", "advancedHapticsDesc": "Getar di setiap klik dan koin", "soundClicks": "Ketukan & koin", "soundExplosions": "Ledakan & kekuatan", "soundFanfare": "Fanfare kemenangan", "hapticsIntensity": "Kekuatan Getaran", "hapticsIntensityDesc": "Seberapa kuat ponsel bergetar", "hapticOff": "Mati", "hapticLow": "Rendah", "hapticMedium": "Sedang", "hapticHigh": "Tinggi", "deleteConfirmTitle": "Hapus akun?", "deleteConfirmBody": "Ini akan menghapus akun dan semua kemajuanmu secara permanen.", "deleteButton": "Hapus Selamanya", "deleteTypeHint": "Ketik 'delete' untuk konfirmasi", "deleting": "Menghapus…", "cancel": "Batal", "privacyPolicy": "Kebijakan Privasi", "gameplay": "Gameplay", "gameplayDesc": "Sesuaikan HUD dalam game", "towerMenuAnytime": "Buka menu menara kapan saja", "towerMenuAnytimeDesc": "Ketuk menara untuk meningkatkan tanpa mode edit", "fitToScreen": "Sesuaikan game ke layar", "fitToScreenDesc": "Skalakan lapangan permainan.", "replayTutorial": "Putar ulang tutorial", "eula": "EULA", "impressum": "Impressum", "downloadData": "Unduh Data Saya", "reportUser": "Laporkan Pemain" },
-  "onboarding": { "welcome": "Selamat datang!", "chooseLanguage": "Pilih bahasamu", "chooseUsername": "Pilih nama penggunamu", "usernameHint": "Nama ini mewakilimu dalam pertandingan.", "usernamePlaceholder": "Masukkan nama", "checkName": "Periksa", "nameAvailable": "Tersedia!", "next": "Berikutnya", "continue": "Lanjutkan", "ageGate": "Verifikasi usiamu", "ageGateHint": "Masukkan tanggal lahirmu", "dobDay": "Hari", "dobMonth": "Bulan", "dobYear": "Tahun", "dobError": "Masukkan tanggal lahir yang valid", "saveError": "Tidak dapat menyimpan. Coba lagi." },
-  "privacy": { "back": "Kembali", "title": "Kebijakan Privasi" },
-  "impressum": { "back": "Kembali", "title": "Impressum", "heading": "Angaben gemäß § 5 TMG:", "name": "Felix Werner", "careOf": "c/o COCENTER", "street": "Koppoldstr. 1", "city": "86551 Aichach", "emailLabel": "Email: info@splitterorbs.com" },
-  "eula": { "back": "Kembali", "title": "Perjanjian Lisensi Pengguna Akhir", "intro": "Harap tinjau dan terima ketentuan.", "accept": "Terima", "decline": "Tolak", "settingsEula": "EULA", "downloadData": "Unduh Data Saya", "downloading": "Mengunduh…" },
-  "achievements": { "title": "Pencapaian", "subtitle": "Selesaikan tantangan untuk mendapatkan hadiah", "claim": "Klaim", "claimAll": "Klaim Semua", "claimed": "Diklaim ✓", "first_win": { "name": "Kemenangan Pertama", "desc": "Menangkan pertandingan pertama" }, "win_10": { "name": "Veteran", "desc": "Menangkan 10 pertandingan" }, "win_50": { "name": "Juara", "desc": "Menangkan 50 pertandingan" }, "streak_5": { "name": "Membara", "desc": "Menang 5 berturut-turut" }, "trophies_100": { "name": "Pemula", "desc": "Capai 100 trofi" }, "trophies_1000": { "name": "Juara", "desc": "Capai 1000 trofi" }, "orbs_1000": { "name": "Pemburu Orb", "desc": "Hancurkan 1000 orb" }, "towers_100": { "name": "Pembangun", "desc": "Tempatkan 100 menara" }, "abilities_50": { "name": "Penyihir", "desc": "Gunakan 50 kemampuan" }, "games_100": { "name": "Berdedikasi", "desc": "Mainkan 100 pertandingan" } },
-  "missions": { "title": "Misi Harian", "win2": "Menangkan 2 pertandingan", "play3": "Mainkan 3 pertandingan", "ranked1": "Menangkan 1 pertandingan peringkat" },
-  "leagues": { "0": "Pemula", "1": "Rookie", "2": "Kadet", "3": "Veteran", "4": "Juara", "5": "Master", "6": "Legenda" },
-  "towers": { "basic": { "name": "Blaster", "desc": "Penembak target tunggal yang andal." }, "machinegun": { "name": "Vulcan", "desc": "Tembak cepat, kerusakan rendah." }, "sniper": { "name": "Lancer", "desc": "Jangkauan ekstrem, kerusakan besar." }, "boomerang": { "name": "Piercer", "desc": "Menembus hingga 3 orb." }, "rebound": { "name": "Bumerang", "desc": "Bilah terbang keluar dan kembali." }, "bomb": { "name": "Mortir", "desc": "Melempar bahan peledak dengan percikan." }, "bouncer": { "name": "Bouncer", "desc": "Menarik orb dan memantulkannya." }, "glacier": { "name": "Gletser", "desc": "Memperlambat orb dalam jangkauan." }, "arc": { "name": "Arc", "desc": "Petir berantai antar orb." }, "pyre": { "name": "Pyre", "desc": "Api jarak pendek dengan bakar DoT." }, "venom": { "name": "Racun", "desc": "Menumpuk racun seiring waktu." }, "siege": { "name": "Pengepungan", "desc": "Sangat lambat, percikan besar." }, "orb_mortar": { "name": "Mortir Orb", "desc": "Melempar orb acak ke lawan." }, "lava_mortar": { "name": "Mortir Lava", "desc": "Melempar bom api dengan percikan." }, "repulsor": { "name": "Repulsor", "desc": "Mendorong orb ke belakang." }, "cryo": { "name": "Meriam Cryo", "desc": "Sinar yang membekukan orb." }, "seeker": { "name": "Seeker", "desc": "Rudal pencari ke orb HP terendah." }, "prism": { "name": "Tombak Prisma", "desc": "Sinar terus-menerus, kerusakan meningkat." }, "flak": { "name": "Meriam Flak", "desc": "Tembakan 5 peluru." }, "harpoon": { "name": "Harpun", "desc": "Menarik orb terjauh kembali." }, "twin": { "name": "Meriam Kembar", "desc": "Menarget dua orb secara bersamaan." }, "tesla": { "name": "Kumparan Tesla", "desc": "Pulsa AoE berkala." }, "detonator": { "name": "Detonator", "desc": "Memaksa orb bom meledak." }, "magnet": { "name": "Magnet", "desc": "Melempar penarik untuk mengelompokkan orb." }, "capacitor": { "name": "Kapasitor", "desc": "Membangun muatan lalu melepaskan ledakan." }, "overcharger": { "name": "Overcharger", "desc": "Memperkuat menara yang berdekatan." }, "mine_layer": { "name": "Penanam Ranjau", "desc": "Menanam ranjau darat." } },
-  "orbs": { "normal": { "name": "Normal", "desc": "Orb seimbang." }, "fast": { "name": "Cepat", "desc": "HP rendah tapi sangat cepat." }, "bomb": { "name": "Bom", "desc": "Meledak saat mati." }, "splitter": { "name": "Pembelah", "desc": "Membelah menjadi orb lebih kecil." }, "tank": { "name": "Tank", "desc": "HP tinggi, menyerang menara." }, "mine": { "name": "Ranjau", "desc": "Klik untuk meledak." }, "sprint": { "name": "Sprint", "desc": "Langsung ke stasiun." }, "swarmer": { "name": "Swarmer", "desc": "Muncul dalam kelompok tiga." }, "shield": { "name": "Perisai", "desc": "Memiliki perisai regenerasi." }, "healer": { "name": "Penyembuh", "desc": "Menyembuhkan sekutu secara berkala." }, "radioactive": { "name": "Radioaktif", "desc": "Menginfeksi menara dengan racun." }, "shadow": { "name": "Bayangan", "desc": "Orb siluman." }, "ice": { "name": "Es", "desc": "Membekukan menara pertama yang disentuh." }, "fog": { "name": "Kabut", "desc": "Orb siluman, merusak semua menara." }, "zap_orb": { "name": "Zap", "desc": "Melompat dari menara ke menara." }, "armored": { "name": "Berlapis Baja", "desc": "Pengurangan kerusakan tetap." }, "carrier": { "name": "Pembawa", "desc": "Melepaskan 3 orb lemah saat mati." }, "growth": { "name": "Pertumbuhan", "desc": "Mendapatkan HP dan kecepatan seiring waktu." }, "shield_bubble": { "name": "Gelembung Perisai", "desc": "Memproyeksikan perisai ke sekutu." }, "berserker": { "name": "Berserker", "desc": "Semakin kuat saat HP rendah." }, "phantom": { "name": "Hantu", "desc": "Melewati menara." }, "leech": { "name": "Lintah", "desc": "Menguras HP dari menara." }, "summoner": { "name": "Pemanggil", "desc": "Memanggil orb minion." } },
-  "abilities": { "zap": { "name": "Zap", "desc": "Menyambar semua orb dengan petir." }, "portal": { "name": "Portal", "desc": "Teleportasi hingga 6 orb ke lawan." }, "repair": { "name": "Perbaiki", "desc": "Pulihkan HP stasiunmu." }, "freeze": { "name": "Bekukan", "desc": "Bekukan semua orb di sisimu." }, "rage": { "name": "Amuk", "desc": "Semua menara menembak 3× lebih cepat." }, "shield": { "name": "Perisai", "desc": "Blokir semua kerusakan ke stasiun." }, "burner": { "name": "Pembakar", "desc": "Tekan & tahan untuk menyalurkan api." }, "meteor": { "name": "Meteor", "desc": "Ketuk titik untuk memanggil serangan meteor." }, "glue": { "name": "Lem", "desc": "Genangan lengket yang memperlambat orb." }, "overclock": { "name": "Overclock", "desc": "Menara menembak lebih cepat dan menembus." }, "speed_zone": { "name": "Zona Kecepatan", "desc": "Orbmu bergerak lebih cepat." }, "damage_zone": { "name": "Zona Kerusakan", "desc": "Orbmu memberikan lebih banyak kerusakan." }, "frost_zone": { "name": "Zona Beku", "desc": "Menara di dalamnya dibekukan." }, "deep_freeze": { "name": "Pembekuan Dalam", "desc": "Bekukan SEMUA menara lawan." } },
-  "errors": { "title": "Terjadi kesalahan", "eulaRequired": "Ketentuan diperbarui — harap terima EULA baru.", "rateLimited": "Terlalu banyak tindakan.", "unknown": "Terjadi kesalahan tak terduga." },
+  "home": {
+    "tagline": "Pertahanan menara layar terpisah.",
+    "playNow": "MAIN SEKARANG",
+    "trophies": "Trofi",
+    "winRate": "Tingkat Menang",
+    "wins": "Menang",
+    "losses": "Kalah",
+    "recentMatches": "Pertandingan Terbaru",
+    "dailyMissions": "Misi Harian"
+  },
+  "nav": {
+    "home": "Beranda",
+    "shop": "Toko",
+    "play": "Main",
+    "cards": "Kartu",
+    "ranks": "Peringkat"
+  },
+  "setup": {
+    "title": "Loadout",
+    "subtitle": "Pilih 3 kekuatan, {towers} menara & {orbs} orb",
+    "training": "Latihan",
+    "casual": "Kasual",
+    "ranked": "Peringkat",
+    "aiDifficulty": "Kesulitan AI",
+    "towers": "Menara",
+    "orbs": "Orb",
+    "powers": "Kekuatan",
+    "startMatch": "MULAI PERTANDINGAN",
+    "trophyReq": "🔒 {n}🏆",
+    "crateLock": "🔒 Peti",
+    "quickPlay": "Main Cepat",
+    "quickPlayHint": "Masuk dengan loadout tersimpan",
+    "changeLoadout": "Ubah Loadout",
+    "moreInLab": "+{n} lagi di Lab →",
+    "rankedBetaDisclaimer": "Bermain melawan AI di peringkat bersifat sementara."
+  },
+  "difficulty": {
+    "easy": "Mudah",
+    "normal": "Normal",
+    "hard": "Sulit"
+  },
+  "shop": {
+    "title": "Toko",
+    "shards": "{n} Serpihan",
+    "shardsHint": "Habiskan di Lab untuk meningkatkan kartu",
+    "crates": "Peti",
+    "freeDaily": "Gratis Harian",
+    "claimed": "Diklaim ✓",
+    "freeEveryDay": "Gratis setiap hari",
+    "buy": "Beli",
+    "free": "Gratis",
+    "opening": "Membuka…",
+    "youGot": "Kamu mendapat",
+    "newUnlock": "BUKA BARU!",
+    "leveledUp": "NAIK LEVEL ke {n}!",
+    "shardsMaxed": "+{n} serpihan (maks)",
+    "duplicate": "Duplikat · {n}/{m} salinan",
+    "awesome": "Luar biasa!",
+    "cardChanceFull": "Kartu terjamin",
+    "cardChancePct": "{n}% kartu",
+    "gemChancePct": "{n}% permata",
+    "crateSuffix": "Peti",
+    "voucherTitle": "Kode Voucher",
+    "voucherHint": "Masukkan kode untuk klaim hadiah",
+    "voucherPlaceholder": "MASUKKAN KODE",
+    "redeem": "Tukar",
+    "voucherSuccess": "Kode ditukar!",
+    "voucherInvalid": "Kode tidak valid",
+    "voucherAlreadyUsed": "Kode sudah digunakan",
+    "exchangeTitle": "Tukar Permata",
+    "exchangeRate": "1 💎 = 10 🪙",
+    "handTitle": "Tangan",
+    "handDesc": "Lebih banyak klik dan isi ulang lebih cepat",
+    "handCurrent": "{clicks} klik · {recharge}d isi ulang",
+    "handNext": "+2 maks · −0.04d isi ulang",
+    "handMaxed": "MAX · {clicks} klik · {recharge}d",
+    "handUpgrade": "Tingkatkan",
+    "maxLabel": "MAX",
+    "sideTowerTitle": "Menara Samping",
+    "sideTowerDesc": "Sayap lebih kuat",
+    "sideTowerCurrent": "HP {hp} · DMG {dmg} · {rate}d",
+    "sideTowerNext": "+{hp} HP · +{dmg} DMG",
+    "sideTowerUpgrade": "Tingkatkan",
+    "dailyGemChest": "Peti Permata Harian",
+    "dailyGemChestHint": "10–60 permata setiap hari.",
+    "claimDailyGems": "Klaim 10–60 permata",
+    "dailyGemsClaimed": "Kembali besok",
+    "gems": "permata",
+    "comingSoon": "Segera Hadir",
+    "betaSubtext": "Fitur premium segera hadir."
+  },
+  "collection": {
+    "title": "Lab",
+    "hint": "Tingkatkan kartu dengan salinan dan serpihan.",
+    "towers": "Menara",
+    "orbs": "Orb",
+    "powers": "Kekuatan",
+    "upgrades": "Peningkatan",
+    "trophyLock": "🔒 {n} trofi",
+    "crateLock": "🔒 Buka peti",
+    "maxLevel": "★ MAX",
+    "copies": "Salinan",
+    "levelUpFree": "Naik Level (gratis)",
+    "levelUpShards": "Naik Level · 💎 {n}",
+    "levelUp": "Naik Level",
+    "buyCopy": "Beli salinan 🔷 {n}",
+    "collectMore": "Kumpulkan lebih banyak",
+    "sectionStarter": "Pemula",
+    "sectionTrophy": "Buka Trofi",
+    "sectionCrate": "Hanya Peti",
+    "sectionLocked": "Terkunci",
+    "handTitle": "Tangan",
+    "handDesc": "Lebih banyak klik per pertandingan",
+    "sideTowerTitle": "Menara Samping",
+    "sideTowerDesc": "Pertahanan otomatis lebih kuat",
+    "upgrade": "Tingkatkan",
+    "maxed": "MAX"
+  },
+  "leaderboard": {
+    "title": "Papan Peringkat",
+    "loading": "Memuat…",
+    "you": "(Saya)",
+    "trophies": "Trofi",
+    "tabRanks": "Peringkat",
+    "tabAchievements": "Pencapaian"
+  },
+  "game": {
+    "victory": "MENANG",
+    "defeat": "KALAH",
+    "trainingWin": "MENANG LATIHAN",
+    "trainingLoss": "KALAH LATIHAN",
+    "promoted": "NAIK PERINGKAT!",
+    "demoted": "TURUN PERINGKAT",
+    "vs": "vs",
+    "noTrophyChange": "Tidak ada perubahan trofi — mode latihan",
+    "trophiesChange": "{n} trofi",
+    "home": "Beranda",
+    "playAgain": "Main Lagi",
+    "forfeit": "← Menyerah",
+    "overtime": "⚡ OT",
+    "intensifying": "⚡ SEMAKIN INTENS",
+    "critical": "⚡ KRITIS",
+    "suddenDeath": "⚡ SUDDEN DEATH",
+    "maxPressure": "⚡ TEKANAN MAKS",
+    "towerBleed": "⚡ MENARA RUNTUH",
+    "combo": "KOMBO x{n}",
+    "rejoinTitle": "Pertandingan berlangsung",
+    "rejoinDesc": "Kamu punya pertandingan yang belum selesai",
+    "rejoin": "Bergabung Kembali",
+    "forfeitMatch": "Menyerah",
+    "searching": "Mencari lawan…",
+    "searchingHint": "Ketuk di bawah untuk bermain lawan AI",
+    "playVsAi": "Main lawan AI",
+    "startingMatch": "Memulai pertandingan…",
+    "cancel": "Batal"
+  },
+  "friends": {
+    "title": "Teman",
+    "tabFriends": "Teman",
+    "tabRequests": "Permintaan",
+    "addFriend": "Tambah teman",
+    "usernamePlaceholder": "Masukkan nama pengguna mereka",
+    "search": "Cari",
+    "add": "Tambah",
+    "notFound": "Pemain tidak ditemukan",
+    "self": "Itu kamu!",
+    "requestSent": "Permintaan terkirim!",
+    "alreadyFriends": "Sudah berteman",
+    "yourFriends": "Temanmu",
+    "noFriends": "Belum ada teman",
+    "play": "Main",
+    "waiting": "Menunggu…",
+    "cancel": "Batal",
+    "friendRequests": "Permintaan pertemanan",
+    "noRequests": "Tidak ada permintaan tertunda",
+    "accept": "Terima"
+  },
+  "settings": {
+    "title": "Pengaturan",
+    "friends": "Teman",
+    "changeNameTitle": "Ubah namamu?",
+    "changeNameBody": "Namamu adalah cara teman menemukanmu.",
+    "confirmChange": "Ubah",
+    "account": "Akun",
+    "language": "Bahasa",
+    "profile": "Profil",
+    "displayName": "Nama Tampilan",
+    "google": "Google",
+    "connected": "Terhubung",
+    "connect": "Hubungkan",
+    "save": "Simpan",
+    "saved": "Tersimpan!",
+    "deleteAccount": "Hapus Akun",
+    "signOut": "Keluar",
+    "accountDesc": "Tautkan akun untuk mengamankan kemajuan",
+    "languageDesc": "Pilih bahasa yang diinginkan",
+    "back": "Beranda",
+    "nameTaken": "Nama sudah digunakan",
+    "nameError": "Tidak dapat menyimpan nama",
+    "nameInappropriate": "Nama tidak pantas",
+    "sound": "Efek Suara",
+    "soundDesc": "Bunyi bip, ledakan, dan fanfare",
+    "advancedHaptics": "Haptic Lanjutan",
+    "advancedHapticsDesc": "Getar di setiap klik dan koin",
+    "soundClicks": "Ketukan & koin",
+    "soundExplosions": "Ledakan & kekuatan",
+    "soundFanfare": "Fanfare kemenangan",
+    "hapticsIntensity": "Kekuatan Getaran",
+    "hapticsIntensityDesc": "Seberapa kuat ponsel bergetar",
+    "hapticOff": "Mati",
+    "hapticLow": "Rendah",
+    "hapticMedium": "Sedang",
+    "hapticHigh": "Tinggi",
+    "deleteConfirmTitle": "Hapus akun?",
+    "deleteConfirmBody": "Ini akan menghapus akun dan semua kemajuanmu secara permanen.",
+    "deleteButton": "Hapus Selamanya",
+    "deleteTypeHint": "Ketik 'delete' untuk konfirmasi",
+    "deleting": "Menghapus…",
+    "cancel": "Batal",
+    "privacyPolicy": "Kebijakan Privasi",
+    "gameplay": "Gameplay",
+    "gameplayDesc": "Sesuaikan HUD dalam game",
+    "towerMenuAnytime": "Buka menu menara kapan saja",
+    "towerMenuAnytimeDesc": "Ketuk menara untuk meningkatkan tanpa mode edit",
+    "fitToScreen": "Sesuaikan game ke layar",
+    "fitToScreenDesc": "Skalakan lapangan permainan.",
+    "replayTutorial": "Putar ulang tutorial",
+    "eula": "EULA",
+    "impressum": "Impressum",
+    "downloadData": "Unduh Data Saya",
+    "reportUser": "Laporkan Pemain",
+    "downloadDataTitle": "Ekspor Data",
+    "downloadDataSuccess": "Ekspor data Anda siap.",
+    "downloadDataErrorTitle": "Ekspor Gagal",
+    "downloadDataError": "Tidak dapat mengekspor data.",
+    "reportSelf": "Anda tidak bisa melaporkan diri sendiri.",
+    "reportSent": "Laporan terkirim. Terima kasih."
+  },
+  "onboarding": {
+    "welcome": "Selamat datang!",
+    "chooseLanguage": "Pilih bahasamu",
+    "chooseUsername": "Pilih nama penggunamu",
+    "usernameHint": "Nama ini mewakilimu dalam pertandingan.",
+    "usernamePlaceholder": "Masukkan nama",
+    "checkName": "Periksa",
+    "nameAvailable": "Tersedia!",
+    "next": "Berikutnya",
+    "continue": "Lanjutkan",
+    "ageGate": "Verifikasi usiamu",
+    "ageGateHint": "Masukkan tanggal lahirmu",
+    "dobDay": "Hari",
+    "dobMonth": "Bulan",
+    "dobYear": "Tahun",
+    "dobError": "Masukkan tanggal lahir yang valid",
+    "saveError": "Tidak dapat menyimpan. Coba lagi."
+  },
+  "privacy": {
+    "back": "Kembali",
+    "title": "Kebijakan Privasi"
+  },
+  "impressum": {
+    "back": "Kembali",
+    "title": "Impressum",
+    "heading": "Angaben gemäß § 5 TMG:",
+    "name": "Felix Werner",
+    "careOf": "c/o COCENTER",
+    "street": "Koppoldstr. 1",
+    "city": "86551 Aichach",
+    "emailLabel": "Email: info@splitterorbs.com"
+  },
+  "eula": {
+    "back": "Kembali",
+    "title": "Perjanjian Lisensi Pengguna Akhir",
+    "intro": "Harap tinjau dan terima ketentuan.",
+    "accept": "Terima",
+    "decline": "Tolak",
+    "settingsEula": "EULA",
+    "downloadData": "Unduh Data Saya",
+    "downloading": "Mengunduh…"
+  },
+  "achievements": {
+    "title": "Pencapaian",
+    "subtitle": "Selesaikan tantangan untuk mendapatkan hadiah",
+    "claim": "Klaim",
+    "claimAll": "Klaim Semua",
+    "claimed": "Diklaim ✓",
+    "first_win": {
+      "name": "Kemenangan Pertama",
+      "desc": "Menangkan pertandingan pertama"
+    },
+    "win_10": {
+      "name": "Veteran",
+      "desc": "Menangkan 10 pertandingan"
+    },
+    "win_50": {
+      "name": "Juara",
+      "desc": "Menangkan 50 pertandingan"
+    },
+    "streak_5": {
+      "name": "Membara",
+      "desc": "Menang 5 berturut-turut"
+    },
+    "trophies_100": {
+      "name": "Pemula",
+      "desc": "Capai 100 trofi"
+    },
+    "trophies_1000": {
+      "name": "Juara",
+      "desc": "Capai 1000 trofi"
+    },
+    "orbs_1000": {
+      "name": "Pemburu Orb",
+      "desc": "Hancurkan 1000 orb"
+    },
+    "towers_100": {
+      "name": "Pembangun",
+      "desc": "Tempatkan 100 menara"
+    },
+    "abilities_50": {
+      "name": "Penyihir",
+      "desc": "Gunakan 50 kemampuan"
+    },
+    "games_100": {
+      "name": "Berdedikasi",
+      "desc": "Mainkan 100 pertandingan"
+    }
+  },
+  "missions": {
+    "title": "Misi Harian",
+    "win2": "Menangkan 2 pertandingan",
+    "play3": "Mainkan 3 pertandingan",
+    "ranked1": "Menangkan 1 pertandingan peringkat"
+  },
+  "leagues": {
+    "0": "Pemula",
+    "1": "Rookie",
+    "2": "Kadet",
+    "3": "Veteran",
+    "4": "Juara",
+    "5": "Master",
+    "6": "Legenda"
+  },
+  "towers": {
+    "basic": {
+      "name": "Blaster",
+      "desc": "Penembak target tunggal yang andal."
+    },
+    "machinegun": {
+      "name": "Vulcan",
+      "desc": "Tembak cepat, kerusakan rendah."
+    },
+    "sniper": {
+      "name": "Lancer",
+      "desc": "Jangkauan ekstrem, kerusakan besar."
+    },
+    "boomerang": {
+      "name": "Piercer",
+      "desc": "Menembus hingga 3 orb."
+    },
+    "rebound": {
+      "name": "Bumerang",
+      "desc": "Bilah terbang keluar dan kembali."
+    },
+    "bomb": {
+      "name": "Mortir",
+      "desc": "Melempar bahan peledak dengan percikan."
+    },
+    "bouncer": {
+      "name": "Bouncer",
+      "desc": "Menarik orb dan memantulkannya."
+    },
+    "glacier": {
+      "name": "Gletser",
+      "desc": "Memperlambat orb dalam jangkauan."
+    },
+    "arc": {
+      "name": "Arc",
+      "desc": "Petir berantai antar orb."
+    },
+    "pyre": {
+      "name": "Pyre",
+      "desc": "Api jarak pendek dengan bakar DoT."
+    },
+    "venom": {
+      "name": "Racun",
+      "desc": "Menumpuk racun seiring waktu."
+    },
+    "siege": {
+      "name": "Pengepungan",
+      "desc": "Sangat lambat, percikan besar."
+    },
+    "orb_mortar": {
+      "name": "Mortir Orb",
+      "desc": "Melempar orb acak ke lawan."
+    },
+    "lava_mortar": {
+      "name": "Mortir Lava",
+      "desc": "Melempar bom api dengan percikan."
+    },
+    "repulsor": {
+      "name": "Repulsor",
+      "desc": "Mendorong orb ke belakang."
+    },
+    "cryo": {
+      "name": "Meriam Cryo",
+      "desc": "Sinar yang membekukan orb."
+    },
+    "seeker": {
+      "name": "Seeker",
+      "desc": "Rudal pencari ke orb HP terendah."
+    },
+    "prism": {
+      "name": "Tombak Prisma",
+      "desc": "Sinar terus-menerus, kerusakan meningkat."
+    },
+    "flak": {
+      "name": "Meriam Flak",
+      "desc": "Tembakan 5 peluru."
+    },
+    "harpoon": {
+      "name": "Harpun",
+      "desc": "Menarik orb terjauh kembali."
+    },
+    "twin": {
+      "name": "Meriam Kembar",
+      "desc": "Menarget dua orb secara bersamaan."
+    },
+    "tesla": {
+      "name": "Kumparan Tesla",
+      "desc": "Pulsa AoE berkala."
+    },
+    "detonator": {
+      "name": "Detonator",
+      "desc": "Memaksa orb bom meledak."
+    },
+    "magnet": {
+      "name": "Magnet",
+      "desc": "Melempar penarik untuk mengelompokkan orb."
+    },
+    "capacitor": {
+      "name": "Kapasitor",
+      "desc": "Membangun muatan lalu melepaskan ledakan."
+    },
+    "overcharger": {
+      "name": "Overcharger",
+      "desc": "Memperkuat menara yang berdekatan."
+    },
+    "mine_layer": {
+      "name": "Penanam Ranjau",
+      "desc": "Menanam ranjau darat."
+    }
+  },
+  "orbs": {
+    "normal": {
+      "name": "Normal",
+      "desc": "Orb seimbang."
+    },
+    "fast": {
+      "name": "Cepat",
+      "desc": "HP rendah tapi sangat cepat."
+    },
+    "bomb": {
+      "name": "Bom",
+      "desc": "Meledak saat mati."
+    },
+    "splitter": {
+      "name": "Pembelah",
+      "desc": "Membelah menjadi orb lebih kecil."
+    },
+    "tank": {
+      "name": "Tank",
+      "desc": "HP tinggi, menyerang menara."
+    },
+    "mine": {
+      "name": "Ranjau",
+      "desc": "Klik untuk meledak."
+    },
+    "sprint": {
+      "name": "Sprint",
+      "desc": "Langsung ke stasiun."
+    },
+    "swarmer": {
+      "name": "Swarmer",
+      "desc": "Muncul dalam kelompok tiga."
+    },
+    "shield": {
+      "name": "Perisai",
+      "desc": "Memiliki perisai regenerasi."
+    },
+    "healer": {
+      "name": "Penyembuh",
+      "desc": "Menyembuhkan sekutu secara berkala."
+    },
+    "radioactive": {
+      "name": "Radioaktif",
+      "desc": "Menginfeksi menara dengan racun."
+    },
+    "shadow": {
+      "name": "Bayangan",
+      "desc": "Orb siluman."
+    },
+    "ice": {
+      "name": "Es",
+      "desc": "Membekukan menara pertama yang disentuh."
+    },
+    "fog": {
+      "name": "Kabut",
+      "desc": "Orb siluman, merusak semua menara."
+    },
+    "zap_orb": {
+      "name": "Zap",
+      "desc": "Melompat dari menara ke menara."
+    },
+    "armored": {
+      "name": "Berlapis Baja",
+      "desc": "Pengurangan kerusakan tetap."
+    },
+    "carrier": {
+      "name": "Pembawa",
+      "desc": "Melepaskan 3 orb lemah saat mati."
+    },
+    "growth": {
+      "name": "Pertumbuhan",
+      "desc": "Mendapatkan HP dan kecepatan seiring waktu."
+    },
+    "shield_bubble": {
+      "name": "Gelembung Perisai",
+      "desc": "Memproyeksikan perisai ke sekutu."
+    },
+    "berserker": {
+      "name": "Berserker",
+      "desc": "Semakin kuat saat HP rendah."
+    },
+    "phantom": {
+      "name": "Hantu",
+      "desc": "Melewati menara."
+    },
+    "leech": {
+      "name": "Lintah",
+      "desc": "Menguras HP dari menara."
+    },
+    "summoner": {
+      "name": "Pemanggil",
+      "desc": "Memanggil orb minion."
+    }
+  },
+  "abilities": {
+    "zap": {
+      "name": "Zap",
+      "desc": "Menyambar semua orb dengan petir."
+    },
+    "portal": {
+      "name": "Portal",
+      "desc": "Teleportasi hingga 6 orb ke lawan."
+    },
+    "repair": {
+      "name": "Perbaiki",
+      "desc": "Pulihkan HP stasiunmu."
+    },
+    "freeze": {
+      "name": "Bekukan",
+      "desc": "Bekukan semua orb di sisimu."
+    },
+    "rage": {
+      "name": "Amuk",
+      "desc": "Semua menara menembak 3× lebih cepat."
+    },
+    "shield": {
+      "name": "Perisai",
+      "desc": "Blokir semua kerusakan ke stasiun."
+    },
+    "burner": {
+      "name": "Pembakar",
+      "desc": "Tekan & tahan untuk menyalurkan api."
+    },
+    "meteor": {
+      "name": "Meteor",
+      "desc": "Ketuk titik untuk memanggil serangan meteor."
+    },
+    "glue": {
+      "name": "Lem",
+      "desc": "Genangan lengket yang memperlambat orb."
+    },
+    "overclock": {
+      "name": "Overclock",
+      "desc": "Menara menembak lebih cepat dan menembus."
+    },
+    "speed_zone": {
+      "name": "Zona Kecepatan",
+      "desc": "Orbmu bergerak lebih cepat."
+    },
+    "damage_zone": {
+      "name": "Zona Kerusakan",
+      "desc": "Orbmu memberikan lebih banyak kerusakan."
+    },
+    "frost_zone": {
+      "name": "Zona Beku",
+      "desc": "Menara di dalamnya dibekukan."
+    },
+    "deep_freeze": {
+      "name": "Pembekuan Dalam",
+      "desc": "Bekukan SEMUA menara lawan."
+    }
+  },
+  "errors": {
+    "title": "Terjadi kesalahan",
+    "eulaRequired": "Ketentuan diperbarui — harap terima EULA baru.",
+    "rateLimited": "Terlalu banyak tindakan.",
+    "unknown": "Terjadi kesalahan tak terduga."
+  },
   "eulaContent": {
-    "s1t": "1. Penerimaan Ketentuan", "s1b": "Dengan mengunduh, menginstal, mengakses, atau menggunakan Splitter Orbs, Anda setuju untuk terikat oleh Perjanjian Lisensi Pengguna Akhir ini. Jika Anda tidak setuju, jangan gunakan Aplikasi.",
-    "s2t": "2. Lisensi Penggunaan", "s2b": "Tunduk pada kepatuhan Anda terhadap EULA ini, pengembang memberi Anda lisensi terbatas, non-eksklusif, tidak dapat dipindahtangankan, dan dapat dicabut untuk menginstal dan menggunakan Aplikasi untuk tujuan pribadi dan non-komersial.",
-    "s3t": "3. Akun Anda", "s3b": "Anda bertanggung jawab untuk menjaga keamanan akun Anda dan semua aktivitas yang terjadi di bawah akun Anda. Akun Anda dapat diamankan menggunakan tautan Google atau Apple Sign-In.",
-    "s4t": "4. Penggunaan yang Dapat Diterima", "s4b": "Anda setuju untuk tidak: (a) curang, meretas, atau menggunakan perangkat lunak pihak ketiga yang tidak sah; (b) mengeksploitasi bug atau kerentanan; (c) melecehkan atau merugikan pengguna lain; (d) menggunakan Aplikasi untuk tujuan ilegal; (e) melakukan rekayasa balik Aplikasi; (f) membuat beberapa akun untuk menghindari pembatasan.",
-    "s5t": "5. Item Virtual dan Mata Uang", "s5b": "Aplikasi berisi item virtual dan mata uang (koin, permata, pecahan) yang tidak memiliki nilai moneter nyata. Item virtual dapat direset atau dihapus kapan saja tanpa kompensasi.",
-    "s6t": "6. Bukan Perjudian", "s6b": "Aplikasi berisi sistem hadiah acak (peti). Ini bukan perjudian. Anda selalu menerima item dalam game. Item virtual tidak dapat ditukar dengan uang nyata.",
-    "s7t": "7. Kekayaan Intelektual", "s7b": "Semua konten dalam Aplikasi dimiliki oleh pengembang atau pemberi lisensinya. Anda tidak boleh menyalin, mendistribusikan, atau memodifikasinya tanpa izin tertulis sebelumnya.",
-    "s8t": "8. Penafian Garansi", "s8b": "APLIKASI DISEDIAKAN 'APA ADANYA' TANPA GARANSI APAPUN. PENGEMBANG TIDAK MENJAMIN BAHWA APLIKASI AKAN TIDAK TERPUTUS ATAU BEBAS KESALAHAN.",
-    "s9t": "9. Batasan Tanggung Jawab", "s9b": "SEJAUH YANG DIIZINKAN OLEH HUKUM, PENGEMBANG TIDAK BERTANGGUNG JAWAB ATAS KERUSAKAN TIDAK LANGSUNG, INSIDENTAL, ATAU KONSEKUENSIAL.",
-    "s10t": "10. Ganti Rugi", "s10b": "Anda setuju untuk mengganti rugi dan membebaskan pengembang dari klaim yang timbul dari pelanggaran EULA ini atau penyalahgunaan Aplikasi.",
-    "s11t": "11. Privasi dan Data", "s11b": "Data Anda diproses sesuai dengan Kebijakan Privasi Aplikasi. Dengan menggunakan Aplikasi, Anda menyetujui praktik data yang dijelaskan dalam Kebijakan Privasi.",
-    "s12t": "12. Persyaratan Usia", "s12b": "Anda harus memenuhi persyaratan usia minimum untuk wilayah Anda: 13 di sebagian besar negara, 14 di Spanyol/Italia/Austria, 15 di Prancis, 16 di Jerman/Belanda/Irlandia.",
-    "s13t": "13. Layanan Pihak Ketiga", "s13b": "Aplikasi menggunakan layanan pihak ketiga (Supabase, Google). Pengembang tidak bertanggung jawab atas praktik pihak ketiga ini.",
-    "s14t": "14. Perubahan Ketentuan", "s14b": "Pengembang dapat memperbarui EULA ini kapan saja. Perubahan material akan mengharuskan Anda menerima ketentuan yang diperbarui.",
-    "s15t": "15. Hukum yang Berlaku", "s15b": "EULA ini diatur oleh hukum Republik Federal Jerman.",
-    "s16t": "16. Kontak", "s16b": "Untuk pertanyaan tentang EULA ini, hubungi kami di info@splitterorbs.com.",
-    "s17t": "17. Keadaan Kahar", "s17b": "Pengembang tidak bertanggung jawab atas kegagalan atau keterlambatan kinerja yang disebabkan oleh hal-hal di luar kendali wajarnya, termasuk namun tidak terbatas pada: bencana alam, gangguan internet atau server, kegagalan layanan pihak ketiga (termasuk infrastruktur Supabase), serangan siber, tindakan pemerintah, atau kejadian lain di luar kendali pengembang. Dalam kasus tersebut, item virtual, kemajuan game, dan data akun dapat hilang tanpa kompensasi.",
-    "s18t": "18. Pengakhiran", "s18b": "Pengembang dapat menangguhkan atau mengakhiri akun Anda secara permanen kapan saja dengan atau tanpa pemberitahuan sebelumnya jika Anda melanggar EULA ini atau melakukan perilaku yang merugikan pengguna lain atau Aplikasi. Setelah pengakhiran, lisensi Anda untuk menggunakan Aplikasi segera berakhir, dan semua item virtual, mata uang, serta kemajuan game hangus tanpa pengembalian dana atau kompensasi. Anda dapat menghapus akun kapan saja melalui layar Pengaturan.",
-    "s19t": "19. Penyelesaian Sengketa", "s19b": "Jika terjadi sengketa, Anda setuju untuk terlebih dahulu menghubungi pengembang di info@splitterorbs.com untuk mencari penyelesaian informal. Jika sengketa tidak dapat diselesaikan secara informal dalam 30 hari, sengketa tersebut tunduk pada yurisdiksi eksklusif pengadilan Jerman. Ketentuan ini tidak membatasi hak konsumen hukum Anda berdasarkan hukum UE yang berlaku.",
-    "s20t": "20. Keterpisahan", "s20b": "Jika ketentuan apa pun dalam EULA ini ditemukan tidak valid, ilegal, atau tidak dapat dilaksanakan oleh pengadilan yang berwenang, ketentuan tersebut akan diubah seminimal mungkin agar dapat dilaksanakan, atau dihapus jika perubahan tidak memungkinkan. Ketentuan yang tersisa tetap berlaku sepenuhnya.",
-    "s21t": "21. Perjanjian Lengkap", "s21b": "EULA ini, bersama dengan Kebijakan Privasi, merupakan perjanjian lengkap antara Anda dan pengembang mengenai penggunaan Aplikasi, dan menggantikan semua perjanjian, pernyataan, dan pemahaman sebelumnya. Pengabaian suatu ketentuan tidak dianggap sebagai pengabaian lebih lanjut atau berkelanjutan atas ketentuan tersebut.",
-    "s22t": "22. Batasan Tanggung Jawab yang Diperluas", "s22b": "Sejauh yang diizinkan oleh hukum: (a) total tanggung jawab pengembang kepada Anda atas klaim yang timbul dari EULA ini atau penggunaan Aplikasi tidak akan melebihi jumlah yang Anda bayarkan kepada pengembang dalam 12 bulan sebelum klaim, atau €5 jika tidak ada pembayaran; (b) pengembang tidak bertanggung jawab atas kehilangan kemajuan game, item virtual, mata uang dalam game, data akun, atau konten dalam aplikasi lainnya, apa pun penyebabnya; (c) pengembang tidak bertanggung jawab atas tindakan atau kelalaian pihak ketiga, termasuk Supabase, Google, atau Apple.",
-    "s23t": "23. Kontrol Ekspor", "s23b": "Anda menyatakan bahwa Anda tidak berada di negara yang dikenai embargo pemerintah AS atau yang ditetapkan sebagai negara 'pendukung terorisme', dan Anda tidak terdaftar dalam daftar pihak yang dilarang atau dibatasi oleh pemerintah AS. Anda setuju untuk mematuhi semua undang-undang dan peraturan kontrol ekspor dan re-ekspor yang berlaku.",
-    "s24t": "24. Pengesampingan Gugatan Kelompok", "s24b": "Sejauh yang diizinkan oleh hukum yang berlaku, Anda melepaskan hak untuk berpartisipasi dalam gugatan kelompok atau arbitrase kelompok terhadap pengembang. Semua klaim harus diajukan dalam kapasitas individu Anda, bukan sebagai penggugat atau anggota kelas dalam proses kelompok atau perwakilan mana pun. Catatan: pengesampingan ini tidak berlaku sejauh dilarang oleh hukum perlindungan konsumen UE."
+    "s1t": "1. Penerimaan Ketentuan",
+    "s1b": "Dengan mengunduh, menginstal, mengakses, atau menggunakan Splitter Orbs, Anda setuju untuk terikat oleh Perjanjian Lisensi Pengguna Akhir ini. Jika Anda tidak setuju, jangan gunakan Aplikasi.",
+    "s2t": "2. Lisensi Penggunaan",
+    "s2b": "Tunduk pada kepatuhan Anda terhadap EULA ini, pengembang memberi Anda lisensi terbatas, non-eksklusif, tidak dapat dipindahtangankan, dan dapat dicabut untuk menginstal dan menggunakan Aplikasi untuk tujuan pribadi dan non-komersial.",
+    "s3t": "3. Akun Anda",
+    "s3b": "Anda bertanggung jawab untuk menjaga keamanan akun Anda dan semua aktivitas yang terjadi di bawah akun Anda. Akun Anda dapat diamankan menggunakan tautan Google atau Apple Sign-In.",
+    "s4t": "4. Penggunaan yang Dapat Diterima",
+    "s4b": "Anda setuju untuk tidak: (a) curang, meretas, atau menggunakan perangkat lunak pihak ketiga yang tidak sah; (b) mengeksploitasi bug atau kerentanan; (c) melecehkan atau merugikan pengguna lain; (d) menggunakan Aplikasi untuk tujuan ilegal; (e) melakukan rekayasa balik Aplikasi; (f) membuat beberapa akun untuk menghindari pembatasan.",
+    "s5t": "5. Item Virtual dan Mata Uang",
+    "s5b": "Aplikasi berisi item virtual dan mata uang (koin, permata, pecahan) yang tidak memiliki nilai moneter nyata. Item virtual dapat direset atau dihapus kapan saja tanpa kompensasi.",
+    "s6t": "6. Bukan Perjudian",
+    "s6b": "Aplikasi berisi sistem hadiah acak (peti). Ini bukan perjudian. Anda selalu menerima item dalam game. Item virtual tidak dapat ditukar dengan uang nyata.",
+    "s7t": "7. Kekayaan Intelektual",
+    "s7b": "Semua konten dalam Aplikasi dimiliki oleh pengembang atau pemberi lisensinya. Anda tidak boleh menyalin, mendistribusikan, atau memodifikasinya tanpa izin tertulis sebelumnya.",
+    "s8t": "8. Penafian Garansi",
+    "s8b": "APLIKASI DISEDIAKAN 'APA ADANYA' TANPA GARANSI APAPUN. PENGEMBANG TIDAK MENJAMIN BAHWA APLIKASI AKAN TIDAK TERPUTUS ATAU BEBAS KESALAHAN.",
+    "s9t": "9. Batasan Tanggung Jawab",
+    "s9b": "SEJAUH YANG DIIZINKAN OLEH HUKUM, PENGEMBANG TIDAK BERTANGGUNG JAWAB ATAS KERUSAKAN TIDAK LANGSUNG, INSIDENTAL, ATAU KONSEKUENSIAL.",
+    "s10t": "10. Ganti Rugi",
+    "s10b": "Anda setuju untuk mengganti rugi dan membebaskan pengembang dari klaim yang timbul dari pelanggaran EULA ini atau penyalahgunaan Aplikasi.",
+    "s11t": "11. Privasi dan Data",
+    "s11b": "Data Anda diproses sesuai dengan Kebijakan Privasi Aplikasi. Dengan menggunakan Aplikasi, Anda menyetujui praktik data yang dijelaskan dalam Kebijakan Privasi.",
+    "s12t": "12. Persyaratan Usia",
+    "s12b": "Anda harus memenuhi persyaratan usia minimum untuk wilayah Anda: 13 di sebagian besar negara, 14 di Spanyol/Italia/Austria, 15 di Prancis, 16 di Jerman/Belanda/Irlandia.",
+    "s13t": "13. Layanan Pihak Ketiga",
+    "s13b": "Aplikasi menggunakan layanan pihak ketiga (Supabase, Google). Pengembang tidak bertanggung jawab atas praktik pihak ketiga ini.",
+    "s14t": "14. Perubahan Ketentuan",
+    "s14b": "Pengembang dapat memperbarui EULA ini kapan saja. Perubahan material akan mengharuskan Anda menerima ketentuan yang diperbarui.",
+    "s15t": "15. Hukum yang Berlaku",
+    "s15b": "EULA ini diatur oleh hukum Republik Federal Jerman.",
+    "s16t": "16. Kontak",
+    "s16b": "Untuk pertanyaan tentang EULA ini, hubungi kami di info@splitterorbs.com.",
+    "s17t": "17. Keadaan Kahar",
+    "s17b": "Pengembang tidak bertanggung jawab atas kegagalan atau keterlambatan kinerja yang disebabkan oleh hal-hal di luar kendali wajarnya, termasuk namun tidak terbatas pada: bencana alam, gangguan internet atau server, kegagalan layanan pihak ketiga (termasuk infrastruktur Supabase), serangan siber, tindakan pemerintah, atau kejadian lain di luar kendali pengembang. Dalam kasus tersebut, item virtual, kemajuan game, dan data akun dapat hilang tanpa kompensasi.",
+    "s18t": "18. Pengakhiran",
+    "s18b": "Pengembang dapat menangguhkan atau mengakhiri akun Anda secara permanen kapan saja dengan atau tanpa pemberitahuan sebelumnya jika Anda melanggar EULA ini atau melakukan perilaku yang merugikan pengguna lain atau Aplikasi. Setelah pengakhiran, lisensi Anda untuk menggunakan Aplikasi segera berakhir, dan semua item virtual, mata uang, serta kemajuan game hangus tanpa pengembalian dana atau kompensasi. Anda dapat menghapus akun kapan saja melalui layar Pengaturan.",
+    "s19t": "19. Penyelesaian Sengketa",
+    "s19b": "Jika terjadi sengketa, Anda setuju untuk terlebih dahulu menghubungi pengembang di info@splitterorbs.com untuk mencari penyelesaian informal. Jika sengketa tidak dapat diselesaikan secara informal dalam 30 hari, sengketa tersebut tunduk pada yurisdiksi eksklusif pengadilan Jerman. Ketentuan ini tidak membatasi hak konsumen hukum Anda berdasarkan hukum UE yang berlaku.",
+    "s20t": "20. Keterpisahan",
+    "s20b": "Jika ketentuan apa pun dalam EULA ini ditemukan tidak valid, ilegal, atau tidak dapat dilaksanakan oleh pengadilan yang berwenang, ketentuan tersebut akan diubah seminimal mungkin agar dapat dilaksanakan, atau dihapus jika perubahan tidak memungkinkan. Ketentuan yang tersisa tetap berlaku sepenuhnya.",
+    "s21t": "21. Perjanjian Lengkap",
+    "s21b": "EULA ini, bersama dengan Kebijakan Privasi, merupakan perjanjian lengkap antara Anda dan pengembang mengenai penggunaan Aplikasi, dan menggantikan semua perjanjian, pernyataan, dan pemahaman sebelumnya. Pengabaian suatu ketentuan tidak dianggap sebagai pengabaian lebih lanjut atau berkelanjutan atas ketentuan tersebut.",
+    "s22t": "22. Batasan Tanggung Jawab yang Diperluas",
+    "s22b": "Sejauh yang diizinkan oleh hukum: (a) total tanggung jawab pengembang kepada Anda atas klaim yang timbul dari EULA ini atau penggunaan Aplikasi tidak akan melebihi jumlah yang Anda bayarkan kepada pengembang dalam 12 bulan sebelum klaim, atau €5 jika tidak ada pembayaran; (b) pengembang tidak bertanggung jawab atas kehilangan kemajuan game, item virtual, mata uang dalam game, data akun, atau konten dalam aplikasi lainnya, apa pun penyebabnya; (c) pengembang tidak bertanggung jawab atas tindakan atau kelalaian pihak ketiga, termasuk Supabase, Google, atau Apple.",
+    "s23t": "23. Kontrol Ekspor",
+    "s23b": "Anda menyatakan bahwa Anda tidak berada di negara yang dikenai embargo pemerintah AS atau yang ditetapkan sebagai negara 'pendukung terorisme', dan Anda tidak terdaftar dalam daftar pihak yang dilarang atau dibatasi oleh pemerintah AS. Anda setuju untuk mematuhi semua undang-undang dan peraturan kontrol ekspor dan re-ekspor yang berlaku.",
+    "s24t": "24. Pengesampingan Gugatan Kelompok",
+    "s24b": "Sejauh yang diizinkan oleh hukum yang berlaku, Anda melepaskan hak untuk berpartisipasi dalam gugatan kelompok atau arbitrase kelompok terhadap pengembang. Semua klaim harus diajukan dalam kapasitas individu Anda, bukan sebagai penggugat atau anggota kelas dalam proses kelompok atau perwakilan mana pun. Catatan: pengesampingan ini tidak berlaku sejauh dilarang oleh hukum perlindungan konsumen UE."
   },
   "privacyContent": {
-    "s1t": "1. Pendahuluan", "s1b": "Kebijakan Privasi ini menjelaskan bagaimana Splitter Orbs mengumpulkan, menggunakan, dan melindungi data pribadi Anda. Kami memproses data sesuai dengan Peraturan Perlindungan Data Umum UE (GDPR/DSGVO).",
-    "s2t": "2. Pengontrol Data", "s2b": "Pengontrol data adalah pengembang aplikasi. Kontak: info@splitterorbs.com.",
-    "s3t": "3. Data yang Kami Kumpulkan", "s3b": "Data Akun & Profil: nama tampilan, kemajuan game, mata uang dalam game, level koleksi kartu, skin yang dibuka, pengaturan, data streak login. Data Sosial: daftar teman, riwayat pertandingan. Data Autentikasi: ID akun Google dan email jika Anda menghubungkan Google. ID akun Apple dan email saat menggunakan Apple Sign-In.",
-    "s4t": "4. Dasar Hukum Pemrosesan", "s4b": "Kontrak (Pasal 6(1)(b) GDPR): Pemrosesan kemajuan game Anda diperlukan untuk menyediakan layanan. Kepentingan Sah (Pasal 6(1)(f) GDPR): Langkah-langkah keamanan. Persetujuan (Pasal 6(1)(a) GDPR): Menghubungkan Google bersifat opsional.",
-    "s5t": "5. Penyimpanan Data", "s5b": "Data game Anda disimpan selama akun Anda aktif. Menghapus akun Anda akan menghapus semua data secara permanen.",
-    "s6t": "6. Layanan Pihak Ketiga", "s6b": "Supabase menghosting database dan autentikasi kami. Google digunakan untuk OAuth opsional. Kami tidak menjual data Anda atau menggunakan SDK iklan.",
-    "s7t": "7. Hak Anda", "s7b": "Di bawah GDPR/DSGVO Anda memiliki hak untuk: Akses, Rektifikasi, Penghapusan, Portabilitas, Keberatan, dan Menarik persetujuan. Hak Keberatan (Pasal 21 GDPR): Anda dapat mengajukan keberatan terhadap pemrosesan berdasarkan kepentingan sah kapan saja dengan menghubungi info@splitterorbs.com. Kontak: info@splitterorbs.com.",
-    "s8t": "8. Privasi Anak-anak", "s8b": "Usia minimum: 13 di sebagian besar negara, 14 di Spanyol/Italia/Austria, 15 di Prancis, 16 di Jerman/Belanda/Irlandia.",
-    "s9t": "9. Perubahan Kebijakan Ini", "s9b": "Kami dapat memperbarui Kebijakan Privasi ini dari waktu ke waktu. Perubahan akan diposting di dalam aplikasi.",
-    "s10t": "10. Impressum", "s10b": "Felix Werner, c/o COCENTER, Koppoldstr. 1, 86551 Aichach. Email: info@splitterorbs.com",
-    "s11t": "11. Pembatasan Geografis", "s11b": "Aplikasi ini hanya tersedia di: Jerman, Belanda, Prancis, Spanyol, Italia, Inggris Raya, Portugal, Jepang, Swiss, Austria, Polandia, Swedia, Irlandia, Denmark, Finlandia, Norwegia, dan Rumania.",
-    "s12t": "12. Sub-Prosesor dan Perjanjian Pemrosesan", "s12b": "Supabase, Inc. bertindak sebagai sub-prosesor atas nama kami berdasarkan Perjanjian Pemrosesan Data (DPA) sesuai Pasal 28 GDPR. Supabase memproses data Anda hanya sesuai instruksi kami. Google LLC bertindak sebagai sub-prosesor untuk autentikasi saat menggunakan Google Sign-In. Kedua sub-prosesor terikat secara kontraktual untuk melindungi data Anda.",
-    "s13t": "13. Transfer Data Internasional", "s13b": "Supabase dapat menyimpan dan memproses data Anda di server di luar Kawasan Ekonomi Eropa (EEA), termasuk Amerika Serikat. Transfer tersebut dilindungi oleh Klausul Kontrak Standar (SCC) yang disetujui oleh Komisi Eropa berdasarkan Pasal 46(2)(c) GDPR. Anda dapat meminta salinan perlindungan transfer yang berlaku di info@splitterorbs.com.",
-    "s14t": "14. Hak Mengajukan Keluhan ke Otoritas Pengawas", "s14b": "Berdasarkan Pasal 77 GDPR, Anda berhak mengajukan keluhan kepada otoritas pengawas jika Anda yakin data Anda diproses secara tidak sah. Otoritas pengawas yang berwenang untuk aplikasi ini adalah: Kantor Negara Bavaria untuk Pengawasan Perlindungan Data (BayLDA — Bayerisches Landesamt für Datenschutzaufsicht), Promenade 18, 91522 Ansbach, Jerman. Situs web: www.lda.bayern.de. Anda juga dapat menghubungi otoritas pengawas di negara tempat tinggal Anda.",
-    "s15t": "15. Pengambilan Keputusan Otomatis dan Pembuatan Profil", "s15b": "Kami tidak melakukan pengambilan keputusan otomatis atau pembuatan profil yang menghasilkan efek hukum atau mempengaruhi Anda secara signifikan sebagaimana dimaksud dalam Pasal 22 GDPR. Matchmaking dan AI dalam game adalah mekanisme permainan murni tanpa dampak hukum atau dunia nyata yang signifikan.",
-    "s16t": "16. Penyimpanan Lokal dan Data Perangkat", "s16b": "Aplikasi menyimpan pengaturan game, preferensi, dan token sesi secara lokal di perangkat Anda menggunakan AsyncStorage (setara dengan penyimpanan lokal). Tidak ada cookie pelacakan yang digunakan. Supabase secara otomatis mencatat alamat IP Anda dan metadata perangkat dasar (OS, versi aplikasi) untuk tujuan keamanan dan pencegahan penyalahgunaan berdasarkan kepentingan sah kami (Pasal 6(1)(f) GDPR). Data ini disimpan selama 90 hari.",
-    "s17t": "17. Pemberitahuan Pelanggaran Data", "s17b": "Jika terjadi pelanggaran data pribadi yang kemungkinan menimbulkan risiko bagi hak dan kebebasan Anda, kami akan memberi tahu otoritas pengawas yang berwenang dalam 72 jam sesuai Pasal 33 GDPR. Jika pelanggaran kemungkinan menimbulkan risiko tinggi bagi hak dan kebebasan Anda, kami juga akan memberi tahu Anda secara langsung tanpa penundaan yang tidak semestinya melalui alamat email yang terkait dengan akun Anda sesuai Pasal 34 GDPR."
+    "s1t": "1. Pendahuluan",
+    "s1b": "Kebijakan Privasi ini menjelaskan bagaimana Splitter Orbs mengumpulkan, menggunakan, dan melindungi data pribadi Anda. Kami memproses data sesuai dengan Peraturan Perlindungan Data Umum UE (GDPR/DSGVO).",
+    "s2t": "2. Pengontrol Data",
+    "s2b": "Pengontrol data adalah pengembang aplikasi. Kontak: info@splitterorbs.com.",
+    "s3t": "3. Data yang Kami Kumpulkan",
+    "s3b": "Data Akun & Profil: nama tampilan, kemajuan game, mata uang dalam game, level koleksi kartu, skin yang dibuka, pengaturan, data streak login. Data Sosial: daftar teman, riwayat pertandingan. Data Autentikasi: ID akun Google dan email jika Anda menghubungkan Google. ID akun Apple dan email saat menggunakan Apple Sign-In.",
+    "s4t": "4. Dasar Hukum Pemrosesan",
+    "s4b": "Kontrak (Pasal 6(1)(b) GDPR): Pemrosesan kemajuan game Anda diperlukan untuk menyediakan layanan. Kepentingan Sah (Pasal 6(1)(f) GDPR): Langkah-langkah keamanan. Persetujuan (Pasal 6(1)(a) GDPR): Menghubungkan Google bersifat opsional.",
+    "s5t": "5. Penyimpanan Data",
+    "s5b": "Data game Anda disimpan selama akun Anda aktif. Menghapus akun Anda akan menghapus semua data secara permanen.",
+    "s6t": "6. Layanan Pihak Ketiga",
+    "s6b": "Supabase menghosting database dan autentikasi kami. Google digunakan untuk OAuth opsional. Kami tidak menjual data Anda atau menggunakan SDK iklan.",
+    "s7t": "7. Hak Anda",
+    "s7b": "Di bawah GDPR/DSGVO Anda memiliki hak untuk: Akses, Rektifikasi, Penghapusan, Portabilitas, Keberatan, dan Menarik persetujuan. Hak Keberatan (Pasal 21 GDPR): Anda dapat mengajukan keberatan terhadap pemrosesan berdasarkan kepentingan sah kapan saja dengan menghubungi info@splitterorbs.com. Kontak: info@splitterorbs.com.",
+    "s8t": "8. Privasi Anak-anak",
+    "s8b": "Usia minimum: 13 di sebagian besar negara, 14 di Spanyol/Italia/Austria, 15 di Prancis, 16 di Jerman/Belanda/Irlandia.",
+    "s9t": "9. Perubahan Kebijakan Ini",
+    "s9b": "Kami dapat memperbarui Kebijakan Privasi ini dari waktu ke waktu. Perubahan akan diposting di dalam aplikasi.",
+    "s10t": "10. Impressum",
+    "s10b": "Felix Werner, c/o COCENTER, Koppoldstr. 1, 86551 Aichach. Email: info@splitterorbs.com",
+    "s11t": "11. Pembatasan Geografis",
+    "s11b": "Aplikasi ini hanya tersedia di: Jerman, Belanda, Prancis, Spanyol, Italia, Inggris Raya, Portugal, Jepang, Swiss, Austria, Polandia, Swedia, Irlandia, Denmark, Finlandia, Norwegia, dan Rumania.",
+    "s12t": "12. Sub-Prosesor dan Perjanjian Pemrosesan",
+    "s12b": "Supabase, Inc. bertindak sebagai sub-prosesor atas nama kami berdasarkan Perjanjian Pemrosesan Data (DPA) sesuai Pasal 28 GDPR. Supabase memproses data Anda hanya sesuai instruksi kami. Google LLC bertindak sebagai sub-prosesor untuk autentikasi saat menggunakan Google Sign-In. Kedua sub-prosesor terikat secara kontraktual untuk melindungi data Anda.",
+    "s13t": "13. Transfer Data Internasional",
+    "s13b": "Supabase dapat menyimpan dan memproses data Anda di server di luar Kawasan Ekonomi Eropa (EEA), termasuk Amerika Serikat. Transfer tersebut dilindungi oleh Klausul Kontrak Standar (SCC) yang disetujui oleh Komisi Eropa berdasarkan Pasal 46(2)(c) GDPR. Anda dapat meminta salinan perlindungan transfer yang berlaku di info@splitterorbs.com.",
+    "s14t": "14. Hak Mengajukan Keluhan ke Otoritas Pengawas",
+    "s14b": "Berdasarkan Pasal 77 GDPR, Anda berhak mengajukan keluhan kepada otoritas pengawas jika Anda yakin data Anda diproses secara tidak sah. Otoritas pengawas yang berwenang untuk aplikasi ini adalah: Kantor Negara Bavaria untuk Pengawasan Perlindungan Data (BayLDA — Bayerisches Landesamt für Datenschutzaufsicht), Promenade 18, 91522 Ansbach, Jerman. Situs web: www.lda.bayern.de. Anda juga dapat menghubungi otoritas pengawas di negara tempat tinggal Anda.",
+    "s15t": "15. Pengambilan Keputusan Otomatis dan Pembuatan Profil",
+    "s15b": "Kami tidak melakukan pengambilan keputusan otomatis atau pembuatan profil yang menghasilkan efek hukum atau mempengaruhi Anda secara signifikan sebagaimana dimaksud dalam Pasal 22 GDPR. Matchmaking dan AI dalam game adalah mekanisme permainan murni tanpa dampak hukum atau dunia nyata yang signifikan.",
+    "s16t": "16. Penyimpanan Lokal dan Data Perangkat",
+    "s16b": "Aplikasi menyimpan pengaturan game, preferensi, dan token sesi secara lokal di perangkat Anda menggunakan AsyncStorage (setara dengan penyimpanan lokal). Tidak ada cookie pelacakan yang digunakan. Supabase secara otomatis mencatat alamat IP Anda dan metadata perangkat dasar (OS, versi aplikasi) untuk tujuan keamanan dan pencegahan penyalahgunaan berdasarkan kepentingan sah kami (Pasal 6(1)(f) GDPR). Data ini disimpan selama 90 hari.",
+    "s17t": "17. Pemberitahuan Pelanggaran Data",
+    "s17b": "Jika terjadi pelanggaran data pribadi yang kemungkinan menimbulkan risiko bagi hak dan kebebasan Anda, kami akan memberi tahu otoritas pengawas yang berwenang dalam 72 jam sesuai Pasal 33 GDPR. Jika pelanggaran kemungkinan menimbulkan risiko tinggi bagi hak dan kebebasan Anda, kami juga akan memberi tahu Anda secara langsung tanpa penundaan yang tidak semestinya melalui alamat email yang terkait dengan akun Anda sesuai Pasal 34 GDPR."
   }
 }
