@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "MindMap AI",
+    "name": "Splitter Orbs",
     "newArchEnabled": true,
-    "slug": "mindmap-ai",
+    "slug": "splitter-orbs",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/app-icon-jzg.png",
@@ -14,7 +14,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.placeholder.app",
+      "bundleIdentifier": "com.base6a785b6e11565e84c8170348.app",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
@@ -24,7 +24,7 @@
         "foregroundImage": "./assets/images/app-icon-jzg.png",
         "backgroundColor": "#FFFFFF"
       },
-      "package": "com.placeholder.app",
+      "package": "com.base6a785b6e11565e84c8170348.app",
       "softwareKeyboardLayoutMode": "pan"
     },
     "web": {
@@ -40,7 +40,7 @@
       "expo-splash-screen",
       "expo-status-bar",
     ],
-    "scheme": "mindmapai",
+    "scheme": "splitterorbs",
     "experiments": {
       "typedRoutes": true
     },

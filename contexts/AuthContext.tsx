@@ -226,7 +226,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signInWithGoogle = async () => {
     console.log('[Auth] signInWithGoogle called');
     try {
-      const redirectUrl = AuthSession.makeRedirectUri({ scheme: 'mindmapai', path: 'auth/callback' });
+      const redirectUrl = AuthSession.makeRedirectUri({ scheme: 'splitterorbs', path: 'auth/callback' });
       console.log('[Auth] signInWithGoogle redirectUrl', redirectUrl);
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -266,7 +266,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signInWithApple = async () => {
     console.log('[Auth] signInWithApple called');
     try {
-      const redirectUrl = AuthSession.makeRedirectUri({ scheme: 'mindmapai', path: 'auth/callback' });
+      const redirectUrl = AuthSession.makeRedirectUri({ scheme: 'splitterorbs', path: 'auth/callback' });
       console.log('[Auth] signInWithApple redirectUrl', redirectUrl);
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'apple',
