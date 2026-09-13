@@ -694,5 +694,19 @@
     "s16b": "Aplikacja przechowuje ustawienia gry, preferencje i tokeny sesji lokalnie na Twoim urządzeniu za pomocą AsyncStorage (odpowiednik lokalnego przechowywania). Nie są używane pliki cookie śledzące. Supabase automatycznie rejestruje Twój adres IP i podstawowe metadane urządzenia (system operacyjny, wersja aplikacji) w celach bezpieczeństwa i zapobiegania nadużyciom na podstawie naszego uzasadnionego interesu (Art. 6(1)(f) RODO). Dane te są przechowywane przez 90 dni.",
     "s17t": "17. Powiadomienie o naruszeniu danych",
     "s17b": "W przypadku naruszenia ochrony danych osobowych, które może skutkować ryzykiem dla Twoich praw i wolności, powiadomimy właściwy organ nadzorczy w ciągu 72 godzin zgodnie z wymogami Art. 33 RODO. Jeśli naruszenie może skutkować wysokim ryzykiem dla Twoich praw i wolności, powiadomimy Cię również bezpośrednio bez zbędnej zwłoki zgodnie z wymogami Art. 34 RODO, za pośrednictwem adresu e-mail powiązanego z Twoim kontem."
+  },
+  "auth": {
+    "bannedTitle": "Konto zawieszone",
+    "bannedReason": "Powód: {{reason}}",
+    "bannedUntil": "Zawieszone do: {{date}}",
+    "bannedSub": "Zostaniesz automatycznie wylogowany.",
+    "updateTitle": "Wymagana aktualizacja",
+    "updateBody": "Nowa wersja Splitter Orbs jest wymagana, aby kontynuować grę.",
+    "updateSub": "Zaktualizuj aplikację w sklepie.",
+    "updateBtn": "Wyloguj"
+  },
+  "common": {
+    "offlineTitle": "Jesteś offline",
+    "offlineMessage": "Możesz nadal korzystać z aplikacji! Twoje zmiany zostaną zapisane lokalnie i zsynchronizowane po powrocie do sieci."
   }
 }

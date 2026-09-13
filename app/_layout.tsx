@@ -15,7 +15,7 @@ import { WidgetProvider } from "@/contexts/WidgetContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProfileProvider } from "@/contexts/ProfileContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { LanguageProvider } from "@/i18n/LanguageContext";
+import { LanguageProvider, useTranslation } from "@/i18n/LanguageContext";
 
 // Only wrap with ErrorBoundary in dev — production apps should not include it
 const DevErrorBoundary = __DEV__
@@ -29,9 +29,28 @@ export const unstable_settings = {
   initialRouteName: "(tabs)",
 };
 
+/** Handles the offline alert — must live inside LanguageProvider to use t(). */
+function OfflineAlert() {
+  const { t } = useTranslation();
+  const networkState = useNetworkState();
+
+  React.useEffect(() => {
+    if (
+      !networkState.isConnected &&
+      networkState.isInternetReachable === false
+    ) {
+      Alert.alert(
+        t('common.offlineTitle'),
+        t('common.offlineMessage'),
+      );
+    }
+  }, [networkState.isConnected, networkState.isInternetReachable, t]);
+
+  return null;
+}
+
 export default function RootLayout() {
   const colorScheme = useColorScheme();
-  const networkState = useNetworkState();
   const [loaded] = useFonts({
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
   });
@@ -48,24 +67,13 @@ export default function RootLayout() {
     SystemUI.setBackgroundColorAsync('#0F172A').catch(() => {});
   }, []);
 
-  React.useEffect(() => {
-    if (
-      !networkState.isConnected &&
-      networkState.isInternetReachable === false
-    ) {
-      Alert.alert(
-        "🔌 You are offline",
-        "You can keep using the app! Your changes will be saved locally and synced when you are back online."
-      );
-    }
-  }, [networkState.isConnected, networkState.isInternetReachable]);
-
   return (
     <LanguageProvider>
     <DevErrorBoundary>
       <StatusBar style="light" translucent animated />
       <AppThemeProvider>
         <SafeAreaProvider>
+          <OfflineAlert />
           <AuthProvider>
             <ProfileProvider>
               <WidgetProvider>

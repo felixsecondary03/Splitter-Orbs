@@ -6,6 +6,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '@/constants/Colors';
 import { supabase } from '@/utils/supabase';
 import { useTranslation } from '@/i18n/LanguageContext';
+import * as FileSystem from 'expo-file-system/legacy';
+import * as Sharing from 'expo-sharing';
 
 export default function EulaScreen() {
   const router = useRouter();
@@ -40,24 +42,31 @@ export default function EulaScreen() {
   ];
 
   const handleDownloadData = async () => {
-    console.log('[EULA] Download My Data pressed');
     setDownloading(true);
     try {
-      const { data } = await supabase.functions.invoke('export-user-data', {});
-      console.log('[EULA] export-user-data response', data);
-      Alert.alert('Data Export', 'Your data has been prepared. In the full app, this would download a JSON file.');
+      const { data, error } = await supabase.functions.invoke('export-user-data', {});
+      if (error) {
+        console.warn('[EULA] export-user-data edge function error', error);
+        Alert.alert('Error', 'Could not export data. Please try again later.');
+        return;
+      }
+      const json = JSON.stringify(data, null, 2);
+      const fileUri = (FileSystem.cacheDirectory ?? '') + 'splitterorbs-data-export.json';
+      await FileSystem.writeAsStringAsync(fileUri, json, { encoding: FileSystem.EncodingType.UTF8 });
+      await Sharing.shareAsync(fileUri, { mimeType: 'application/json', dialogTitle: 'Export Your Data' });
     } catch (e) {
       console.warn('[EULA] export-user-data error', e);
-      Alert.alert('Error', 'Could not export data.');
+      Alert.alert('Error', 'Could not export data. Please try again later.');
+    } finally {
+      setDownloading(false);
     }
-    setDownloading(false);
   };
 
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.header}>
         <TouchableOpacity
-          onPress={() => { console.log('[EULA] Back pressed'); router.back(); }}
+          onPress={() => router.back()}
           style={styles.backBtn}
         >
           <Ionicons name="arrow-back" size={20} color={COLORS.primary} />

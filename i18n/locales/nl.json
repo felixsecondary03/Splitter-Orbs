@@ -694,5 +694,19 @@
     "s16b": "De app slaat spelinstellingen, voorkeuren en sessietokens lokaal op uw apparaat op via AsyncStorage (equivalent aan lokale opslag). Er worden geen trackingcookies gebruikt. Supabase registreert automatisch uw IP-adres en basisapparaatmetadata (besturingssysteem, appversie) voor beveiligings- en misbruikpreventiedoeleinden op grond van ons gerechtvaardigd belang (AVG Art. 6(1)(f)). Deze gegevens worden 90 dagen bewaard.",
     "s17t": "17. Melding van datalekken",
     "s17b": "In geval van een inbreuk op persoonsgegevens die waarschijnlijk een risico voor uw rechten en vrijheden inhoudt, zullen wij de bevoegde toezichthoudende autoriteit binnen 72 uur op de hoogte stellen zoals vereist door AVG Art. 33. Als de inbreuk waarschijnlijk een hoog risico voor uw rechten en vrijheden inhoudt, zullen wij u ook rechtstreeks zonder onnodige vertraging op de hoogte stellen zoals vereist door AVG Art. 34, via het e-mailadres dat aan uw account is gekoppeld."
+  },
+  "auth": {
+    "bannedTitle": "Account geschorst",
+    "bannedReason": "Reden: {{reason}}",
+    "bannedUntil": "Geschorst tot: {{date}}",
+    "bannedSub": "Je wordt automatisch uitgelogd.",
+    "updateTitle": "Update vereist",
+    "updateBody": "Een nieuwe versie van Splitter Orbs is vereist om door te spelen.",
+    "updateSub": "Werk de app bij via de store.",
+    "updateBtn": "Uitloggen"
+  },
+  "common": {
+    "offlineTitle": "Je bent offline",
+    "offlineMessage": "Je kunt de app blijven gebruiken! Je wijzigingen worden lokaal opgeslagen en gesynchroniseerd zodra je weer online bent."
   }
 }

@@ -694,5 +694,19 @@
     "s16b": "Ứng dụng lưu trữ cài đặt game, tùy chọn và mã thông báo phiên cục bộ trên thiết bị của bạn bằng AsyncStorage (tương đương với lưu trữ cục bộ). Không sử dụng cookie theo dõi. Supabase tự động ghi lại địa chỉ IP của bạn và siêu dữ liệu thiết bị cơ bản (hệ điều hành, phiên bản ứng dụng) cho mục đích bảo mật và ngăn chặn lạm dụng dựa trên lợi ích hợp pháp của chúng tôi (Điều 6(1)(f) GDPR). Dữ liệu này được lưu giữ trong 90 ngày.",
     "s17t": "17. Thông báo Vi phạm Dữ liệu",
     "s17b": "Trong trường hợp vi phạm dữ liệu cá nhân có khả năng gây rủi ro cho quyền và tự do của bạn, chúng tôi sẽ thông báo cho cơ quan giám sát có thẩm quyền trong vòng 72 giờ theo Điều 33 GDPR. Nếu vi phạm có khả năng gây rủi ro cao cho quyền và tự do của bạn, chúng tôi cũng sẽ thông báo trực tiếp cho bạn mà không chậm trễ không cần thiết qua địa chỉ email liên kết với tài khoản của bạn theo Điều 34 GDPR."
+  },
+  "auth": {
+    "bannedTitle": "Tài khoản bị tạm khóa",
+    "bannedReason": "Lý do: {{reason}}",
+    "bannedUntil": "Tạm khóa đến: {{date}}",
+    "bannedSub": "Bạn sẽ tự động đăng xuất.",
+    "updateTitle": "Cần cập nhật",
+    "updateBody": "Cần phiên bản mới của Splitter Orbs để tiếp tục chơi.",
+    "updateSub": "Vui lòng cập nhật ứng dụng từ cửa hàng.",
+    "updateBtn": "Đăng xuất"
+  },
+  "common": {
+    "offlineTitle": "Bạn đang ngoại tuyến",
+    "offlineMessage": "Bạn vẫn có thể sử dụng ứng dụng! Các thay đổi sẽ được lưu cục bộ và đồng bộ khi bạn trực tuyến trở lại."
   }
 }

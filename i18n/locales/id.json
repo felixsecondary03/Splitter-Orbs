@@ -694,5 +694,19 @@
     "s16b": "Aplikasi menyimpan pengaturan game, preferensi, dan token sesi secara lokal di perangkat Anda menggunakan AsyncStorage (setara dengan penyimpanan lokal). Tidak ada cookie pelacakan yang digunakan. Supabase secara otomatis mencatat alamat IP Anda dan metadata perangkat dasar (OS, versi aplikasi) untuk tujuan keamanan dan pencegahan penyalahgunaan berdasarkan kepentingan sah kami (Pasal 6(1)(f) GDPR). Data ini disimpan selama 90 hari.",
     "s17t": "17. Pemberitahuan Pelanggaran Data",
     "s17b": "Jika terjadi pelanggaran data pribadi yang kemungkinan menimbulkan risiko bagi hak dan kebebasan Anda, kami akan memberi tahu otoritas pengawas yang berwenang dalam 72 jam sesuai Pasal 33 GDPR. Jika pelanggaran kemungkinan menimbulkan risiko tinggi bagi hak dan kebebasan Anda, kami juga akan memberi tahu Anda secara langsung tanpa penundaan yang tidak semestinya melalui alamat email yang terkait dengan akun Anda sesuai Pasal 34 GDPR."
+  },
+  "auth": {
+    "bannedTitle": "Akun Ditangguhkan",
+    "bannedReason": "Alasan: {{reason}}",
+    "bannedUntil": "Ditangguhkan hingga: {{date}}",
+    "bannedSub": "Anda akan keluar secara otomatis.",
+    "updateTitle": "Pembaruan Diperlukan",
+    "updateBody": "Versi baru Splitter Orbs diperlukan untuk melanjutkan bermain.",
+    "updateSub": "Perbarui aplikasi dari toko.",
+    "updateBtn": "Keluar"
+  },
+  "common": {
+    "offlineTitle": "Anda sedang offline",
+    "offlineMessage": "Anda dapat terus menggunakan aplikasi! Perubahan Anda akan disimpan secara lokal dan disinkronkan saat Anda kembali online."
   }
 }

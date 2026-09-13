@@ -694,5 +694,19 @@
     "s16b": "The App stores game settings, preferences, and session tokens locally on your device using AsyncStorage (equivalent to local storage). No tracking cookies are used. Supabase automatically logs your IP address and basic device metadata (operating system, app version) for security and abuse prevention purposes under our legitimate interest (GDPR Art. 6(1)(f)). This data is retained for 90 days.",
     "s17t": "17. Data Breach Notification",
     "s17b": "In the event of a personal data breach that is likely to result in a risk to your rights and freedoms, we will notify the competent supervisory authority within 72 hours as required by GDPR Art. 33. If the breach is likely to result in a high risk to your rights and freedoms, we will also notify you directly without undue delay as required by GDPR Art. 34, via the email address associated with your account."
+  },
+  "auth": {
+    "bannedTitle": "Account Suspended",
+    "bannedReason": "Reason: {{reason}}",
+    "bannedUntil": "Suspended until: {{date}}",
+    "bannedSub": "You will be signed out automatically.",
+    "updateTitle": "Update Required",
+    "updateBody": "A new version of Splitter Orbs is required to continue playing.",
+    "updateSub": "Please update the app from the store.",
+    "updateBtn": "Sign Out"
+  },
+  "common": {
+    "offlineTitle": "You are offline",
+    "offlineMessage": "You can keep using the app! Your changes will be saved locally and synced when you are back online."
   }
 }

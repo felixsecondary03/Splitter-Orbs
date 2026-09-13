@@ -5,6 +5,7 @@ import { supabase } from '@/utils/supabase';
 import type { Session, User as SupabaseUser } from '@supabase/supabase-js';
 import * as WebBrowser from 'expo-web-browser';
 import * as AuthSession from 'expo-auth-session';
+import { useTranslation } from '@/i18n/LanguageContext';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -76,6 +77,7 @@ function handleEdgeFunctionError(data: Record<string, unknown> | null, context: 
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const { t } = useTranslation();
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -282,27 +284,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const banUntilDisplay = new Date(banInfo.until).toLocaleDateString(undefined, {
       year: 'numeric', month: 'long', day: 'numeric',
     });
+    const bannedTitle = t('auth.bannedTitle');
+    const bannedReason = t('auth.bannedReason', { reason: banInfo.reason });
+    const bannedUntil = t('auth.bannedUntil', { date: banUntilDisplay });
+    const bannedSub = t('auth.bannedSub');
     return (
       <View style={banStyles.container}>
         <Text style={banStyles.emoji}>🚫</Text>
-        <Text style={banStyles.title}>Account Suspended</Text>
-        <Text style={banStyles.reason}>{banInfo.reason}</Text>
-        <Text style={banStyles.until}>Suspended until: {banUntilDisplay}</Text>
-        <Text style={banStyles.sub}>You will be signed out automatically.</Text>
+        <Text style={banStyles.title}>{bannedTitle}</Text>
+        <Text style={banStyles.reason}>{bannedReason}</Text>
+        <Text style={banStyles.until}>{bannedUntil}</Text>
+        <Text style={banStyles.sub}>{bannedSub}</Text>
       </View>
     );
   }
 
   // Update required screen overlay
   if (needsUpdate) {
+    const updateTitle = t('auth.updateTitle');
+    const updateBody = t('auth.updateBody');
+    const updateSub = t('auth.updateSub');
+    const updateBtn = t('auth.updateBtn');
     return (
       <View style={banStyles.container}>
         <Text style={banStyles.emoji}>⬆️</Text>
-        <Text style={banStyles.title}>Update Required</Text>
-        <Text style={banStyles.reason}>A new version of the app is required to continue playing.</Text>
-        <Text style={banStyles.sub}>Please update the app from the App Store.</Text>
+        <Text style={banStyles.title}>{updateTitle}</Text>
+        <Text style={banStyles.reason}>{updateBody}</Text>
+        <Text style={banStyles.sub}>{updateSub}</Text>
         <Pressable style={banStyles.signOutBtn} onPress={signOut}>
-          <Text style={banStyles.signOutText}>Sign Out</Text>
+          <Text style={banStyles.signOutText}>{updateBtn}</Text>
         </Pressable>
       </View>
     );

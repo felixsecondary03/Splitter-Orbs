@@ -694,5 +694,19 @@
     "s16b": "Uygulama, oyun ayarlarını, tercihlerini ve oturum tokenlarını AsyncStorage (yerel depolamaya eşdeğer) kullanarak cihazınızda yerel olarak depolar. İzleme çerezi kullanılmaz. Supabase, meşru menfaatimiz kapsamında (GDPR Madde 6(1)(f)) güvenlik ve kötüye kullanımı önleme amacıyla IP adresinizi ve temel cihaz meta verilerini (işletim sistemi, uygulama sürümü) otomatik olarak kaydeder. Bu veriler 90 gün saklanır.",
     "s17t": "17. Veri İhlali Bildirimi",
     "s17b": "Haklarınız ve özgürlükleriniz için risk oluşturabilecek bir kişisel veri ihlali durumunda, GDPR Madde 33 uyarınca yetkili denetim makamını 72 saat içinde bilgilendireceğiz. İhlalin haklarınız ve özgürlükleriniz için yüksek risk oluşturabilmesi halinde, GDPR Madde 34 uyarınca hesabınızla ilişkili e-posta adresi aracılığıyla sizi de doğrudan ve gecikmeksizin bilgilendireceğiz."
+  },
+  "auth": {
+    "bannedTitle": "Hesap Askıya Alındı",
+    "bannedReason": "Neden: {{reason}}",
+    "bannedUntil": "Askıya alınma tarihi: {{date}}",
+    "bannedSub": "Otomatik olarak çıkış yapılacak.",
+    "updateTitle": "Güncelleme Gerekli",
+    "updateBody": "Oynamaya devam etmek için Splitter Orbs'un yeni bir sürümü gereklidir.",
+    "updateSub": "Lütfen uygulamayı mağazadan güncelleyin.",
+    "updateBtn": "Çıkış Yap"
+  },
+  "common": {
+    "offlineTitle": "Çevrimdışısınız",
+    "offlineMessage": "Uygulamayı kullanmaya devam edebilirsiniz! Değişiklikleriniz yerel olarak kaydedilecek ve tekrar çevrimiçi olduğunuzda senkronize edilecektir."
   }
 }
