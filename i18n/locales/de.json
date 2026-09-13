@@ -153,7 +153,12 @@
     "searchingHint": "Tippe unten, um gegen KI zu spielen",
     "playVsAi": "Gegen KI spielen",
     "startingMatch": "Spiel wird gestartet…",
-    "cancel": "Abbrechen"
+    "cancel": "Abbrechen",
+    "tapToAim": "Tippen zum Zielen",
+    "sendOrb": "Orb senden",
+    "paused": "PAUSIERT",
+    "resume": "Fortsetzen",
+    "newCardsUnlocked": "Neue Karten freigeschaltet!"
   },
   "friends": {
     "title": "Freunde",

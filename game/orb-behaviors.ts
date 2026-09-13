@@ -181,7 +181,7 @@ export function handleOrbDeath(
   state: GameState,
   killedByPlayer: boolean,
 ): OrbDeathResult {
-  console.log(`[OrbDeath] orb=${orb.id} type=${orb.type} killedByPlayer=${killedByPlayer}`);
+
 
   const newOrbs: Orb[] = [];
   const particles: Particle[] = [];
@@ -251,16 +251,16 @@ export function handleOrbDeath(
     });
   }
 
-  // Coin pickup for player kills
+  // Rare coin drop for player kills (8% chance)
   let coinPickup: CoinPickup | null = null;
-  if (killedByPlayer) {
-    const coinValue = orb.type === 'tank' ? 4 : orb.type === 'summoner' ? 5 : 2;
+  if (killedByPlayer && state.rng() < 0.08) {
+    const coinValue = orb.type === 'tank' ? 15 : orb.type === 'summoner' ? 20 : 10;
     coinPickup = {
       id: generateId(),
       x: orb.x,
       y: orb.y,
       value: coinValue,
-      timer: 5000,
+      timer: 5500,
     };
   }
 

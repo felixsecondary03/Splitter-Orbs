@@ -70,7 +70,7 @@ export default function RootLayout() {
   return (
     <LanguageProvider>
     <DevErrorBoundary>
-      <StatusBar style="light" translucent animated />
+      <StatusBar style="light" animated />
       <AppThemeProvider>
         <SafeAreaProvider>
           <OfflineAlert />

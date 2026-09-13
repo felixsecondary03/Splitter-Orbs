@@ -302,6 +302,12 @@ const BottomHUD = React.memo(function BottomHUD({
           ))}
         </View>
         <View style={styles.abilityRightBtns}>
+          <GHPressable
+            style={[styles.editToggleBtn, editMode && styles.editToggleBtnActive]}
+            onPress={onToggleEditMode}
+          >
+            <Text style={styles.editToggleBtnText}>{editMode ? '✅' : '✏️'}</Text>
+          </GHPressable>
           {!placementModeActive ? (
             <GHPressable style={styles.orbShopCircleBtn} onPress={onOpenOrbShop}>
               <Text style={styles.orbShopCircleBtnText}>🌀</Text>
@@ -309,12 +315,6 @@ const BottomHUD = React.memo(function BottomHUD({
           ) : (
             <View style={{ width: 56, height: 56 }} />
           )}
-          <GHPressable
-            style={[styles.editToggleBtn, editMode && styles.editToggleBtnActive]}
-            onPress={onToggleEditMode}
-          >
-            <Text style={styles.editToggleBtnText}>{editMode ? '✅' : '✏️'}</Text>
-          </GHPressable>
         </View>
       </View>
 
@@ -339,7 +339,6 @@ const BottomHUD = React.memo(function BottomHUD({
                   !canAfford && styles.towerCardDisabled,
                 ]}
                 onPress={() => {
-                  console.log(`[Game] Tower card pressed type=${towerType}`);
                   onSelectTower(isSelected ? null : towerType);
                 }}
               >
@@ -450,7 +449,6 @@ export default function GameScreen() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const initialState = useMemo(() => {
     try {
-      console.log('[Game] createInitialState', { engineMode, seed });
       return createInitialState(engineMode, 0, seed, loadout);
     } catch (e) {
       console.error('[Game] createInitialState failed, using fallback:', e);
@@ -465,7 +463,6 @@ export default function GameScreen() {
 
   // ── beginMatch ──
   const beginMatch = useCallback(() => {
-    console.log('[Game] beginMatch called, mode=', uiMode);
     setSearching(false);
     setSearchToast('');
   }, [uiMode]);
@@ -474,7 +471,6 @@ export default function GameScreen() {
   useEffect(() => {
     if (!params?.mode) return;
     if (params.mode === 'training' || params.mode === 'tutorial') {
-      console.log('[Game] Skipping search for mode=', params.mode);
       // eslint-disable-next-line react-hooks/set-state-in-effect
       beginMatch();
       return;
@@ -487,11 +483,9 @@ export default function GameScreen() {
   useEffect(() => {
     if (!searching) return;
     if (searchTime <= 0) {
-      console.log('[Game] Search countdown hit 0, starting vs AI');
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setSearchToast('No player found — starting vs AI');
       const t = setTimeout(() => {
-        console.log('[Game] Auto-starting vs AI after toast');
         beginMatch();
       }, 1400);
       return () => clearTimeout(t);
@@ -636,7 +630,6 @@ export default function GameScreen() {
   // ── Tutorial helpers ──
   const advanceTutorial = useCallback(() => {
     const next = tutorialStepRef.current === null ? 0 : tutorialStepRef.current + 1;
-    console.log(`[Tutorial] Advancing to step ${next}`);
     tutorialStepRef.current = next;
     setTutorialStep(next);
     setCoachmarkHidden(true);
@@ -644,12 +637,10 @@ export default function GameScreen() {
   }, []);
 
   const completeTutorial = useCallback(async () => {
-    console.log('[Tutorial] Completing tutorial');
     tutorialStepRef.current = null;
     setTutorialStep(null);
     try {
       await supabase.functions.invoke('complete-tutorial', {});
-      console.log('[Tutorial] complete-tutorial edge function called');
     } catch (e) {
       console.warn('[Tutorial] complete-tutorial error', e);
     }
@@ -660,13 +651,17 @@ export default function GameScreen() {
   useEffect(() => {
     if (uiMode !== 'tutorial') return;
     const t = setTimeout(() => {
-      console.log('[Tutorial] Starting tutorial at step 0');
       tutorialStepRef.current = 0;
       setTutorialStep(0);
     }, 500);
     return () => clearTimeout(t);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // ── Tower selection ──
+  const handleSelectTower = useCallback((type: TowerType | null) => {
+    dispatch((s) => selectTower(s, type));
+  }, [dispatch]);
 
   // ── Touch handling ──
   const tapGesture = useMemo(() => Gesture.Tap()
@@ -688,7 +683,6 @@ export default function GameScreen() {
       if (state.targeting) {
         const tappedOrb = findOrbAtPosition(state, gameX, gameY);
         if (tappedOrb) {
-          console.log(`[Game] Portal target tap orbId=${tappedOrb.id}`);
           dispatch((s) => addTargetOrb(s, tappedOrb.id));
           return;
         }
@@ -709,7 +703,6 @@ export default function GameScreen() {
           const newCount = orbTapCountRef.current + 1;
           orbTapCountRef.current = newCount;
           setOrbTapCount(newCount);
-          console.log(`[Tutorial] Orb tapped count=${newCount}`);
           if (newCount >= 5) {
             advanceTutorial();
           }
@@ -729,15 +722,14 @@ export default function GameScreen() {
 
       if (state.player.selectedTower && gameY > WALL_Y) {
         dispatch((s) => placeTower(s, s.player.selectedTower!, gameX, gameY));
-        // Tutorial step 1: tower placed
+        handleSelectTower(null);
         if (tutorialStepRef.current === 1) {
-          console.log('[Tutorial] Tower placed, advancing');
           advanceTutorial();
         }
         return;
       }
     }),
-  [canvasScale, editMode, dispatch, gameStateRef, advanceTutorial]);
+  [canvasScale, editMode, dispatch, gameStateRef, advanceTutorial, handleSelectTower]);
 
   const longPressGesture = useMemo(() => Gesture.LongPress()
     .runOnJS(true)
@@ -759,35 +751,25 @@ export default function GameScreen() {
     [longPressGesture, tapGesture]
   );
 
-  // ── Tower selection ──
-  const handleSelectTower = useCallback((type: TowerType | null) => {
-    dispatch((s) => selectTower(s, type));
-  }, [dispatch]);
-
   // ── Ability activation ──
   const handleAbility = useCallback((abilityType: AbilityType) => {
-    console.log(`[Game] Activate ability type=${abilityType}`);
     dispatch((s) => activateAbility(s, abilityType));
     // Tutorial step 3: ability used
     if (tutorialStepRef.current === 3) {
-      console.log('[Tutorial] Ability used in step 3, advancing in 2.5s');
       setTimeout(() => advanceTutorial(), 2500);
     }
   }, [dispatch, advanceTutorial]);
 
   const handleConfirmTargeting = useCallback(() => {
-    console.log('[Game] Confirm targeting (portal)');
     dispatch((s) => confirmTargeting(s));
   }, [dispatch]);
 
   // ── Tower edit actions ──
   const handleUpgradeTower = useCallback(() => {
     if (!selectedTowerForEdit) return;
-    console.log(`[Game] Upgrade tower id=${selectedTowerForEdit.id}`);
     dispatch((s) => upgradeTower(s, selectedTowerForEdit.id));
     // Tutorial step 2: mark upgrade done
     if (tutorialStepRef.current === 2) {
-      console.log('[Tutorial] Upgrade tapped in step 2');
       tutorialUpgradedRef.current = true;
       setTutorialUpgraded(true);
     }
@@ -796,26 +778,22 @@ export default function GameScreen() {
 
   const handleSellTower = useCallback(() => {
     if (!selectedTowerForEdit) return;
-    console.log(`[Game] Sell tower id=${selectedTowerForEdit.id}`);
     dispatch((s) => sellTower(s, selectedTowerForEdit.id));
     setSelectedTowerForEdit(null);
   }, [selectedTowerForEdit, dispatch]);
 
   const handleCleanseTower = useCallback(() => {
     if (!selectedTowerForEdit) return;
-    console.log(`[Game] Cleanse tower id=${selectedTowerForEdit.id}`);
     dispatch((s) => cleanseTower(s, selectedTowerForEdit.id));
     setSelectedTowerForEdit(null);
   }, [selectedTowerForEdit, dispatch]);
 
   // ── Orb shop ──
   const handleOpenOrbShop = useCallback(() => {
-    console.log('[Game] Open orb shop');
     setShowOrbShop(true);
   }, []);
 
   const handleSelectOrbType = useCallback((typeId: string) => {
-    console.log(`[Game] Orb type selected typeId=${typeId}`);
     setShowOrbShop(false);
     setPlacementMode({ active: true, typeId });
   }, []);
@@ -827,12 +805,9 @@ export default function GameScreen() {
     if (!orbDef) return;
     const state = gameStateRef.current as GameState;
     if (state.player.coins < orbDef.cost) return;
-    console.log(`[Game] Place orb typeId=${typeId} slotIndex=${slotIndex}`);
     dispatch((s) => placeOrbAtSlot(s, typeId, slotIndex));
-    setPlacementMode({ active: false, typeId: null });
     // Tutorial step 4: orb sent
     if (tutorialStepRef.current === 4) {
-      console.log('[Tutorial] Orb sent in step 4, advancing in 2.5s');
       setTimeout(() => advanceTutorial(), 2500);
     }
   }, [placementMode.typeId, dispatch, gameStateRef, advanceTutorial]);
@@ -844,7 +819,6 @@ export default function GameScreen() {
   // ── Edit mode toggle ──
   const handleToggleEditMode = useCallback(() => {
     const next = !editMode;
-    console.log(`[Game] Toggle edit mode → ${next}`);
     setEditMode(next);
     if (!next) {
       setSelectedTowerForEdit(null);
@@ -853,21 +827,18 @@ export default function GameScreen() {
 
   // ── Pause ──
   const handlePause = useCallback(() => {
-    console.log('[Game] Pause');
     pause();
     setIsPaused(true);
     setShowPauseMenu(true);
   }, [pause]);
 
   const handleResume = useCallback(() => {
-    console.log('[Game] Resume');
     setShowPauseMenu(false);
     setIsPaused(false);
     resume();
   }, [resume, setShowPauseMenu, setIsPaused]);
 
   const handleForfeit = useCallback(() => {
-    console.log('[Game] Forfeit confirmed');
     setShowForfeitDialog(false);
     setShowPauseMenu(false);
     router.push('/');
@@ -1003,7 +974,6 @@ export default function GameScreen() {
               if (state.targeting) {
                 const tappedOrb = findOrbAtPosition(state, gameX, gameY);
                 if (tappedOrb) {
-                  console.log(`[Game] Portal target tap (web) orbId=${tappedOrb.id}`);
                   dispatch((s) => addTargetOrb(s, tappedOrb.id));
                   return;
                 }
@@ -1032,6 +1002,7 @@ export default function GameScreen() {
 
               if (state.player.selectedTower && gameY > WALL_Y) {
                 dispatch((s) => placeTower(s, s.player.selectedTower!, gameX, gameY));
+                handleSelectTower(null);
                 return;
               }
             }}
@@ -1044,9 +1015,9 @@ export default function GameScreen() {
             />
             {isAiming && (
               <View style={styles.aimingBanner}>
-                <Text style={styles.aimingText}>Tap to aim — </Text>
+                <Text style={styles.aimingText}>{t('game.tapToAim')}</Text>
                 <Pressable onPress={handleCancelAim}>
-                  <Text style={styles.aimingCancel}>Cancel</Text>
+                  <Text style={styles.aimingCancel}>{t('game.cancel')}</Text>
                 </Pressable>
               </View>
             )}
@@ -1062,9 +1033,9 @@ export default function GameScreen() {
               />
               {isAiming && (
                 <View style={styles.aimingBanner}>
-                  <Text style={styles.aimingText}>Tap to aim — </Text>
+                  <Text style={styles.aimingText}>{t('game.tapToAim')}</Text>
                   <Pressable onPress={handleCancelAim}>
-                    <Text style={styles.aimingCancel}>Cancel</Text>
+                    <Text style={styles.aimingCancel}>{t('game.cancel')}</Text>
                   </Pressable>
                 </View>
               )}
@@ -1092,7 +1063,7 @@ export default function GameScreen() {
               );
             })}
             <Pressable style={styles.cancelPlacementBtn} onPress={handleCancelPlacement}>
-              <Text style={styles.cancelPlacementText}>Cancel</Text>
+              <Text style={styles.cancelPlacementText}>{t('game.cancel')}</Text>
             </Pressable>
           </View>
         )}
@@ -1163,7 +1134,6 @@ export default function GameScreen() {
                 <Pressable onPress={() => {
                   // Tutorial step 2: if upgraded, advance on close
                   if (tutorialStepRef.current === 2 && tutorialUpgradedRef.current) {
-                    console.log('[Tutorial] Edit popup closed after upgrade, advancing');
                     advanceTutorial();
                   }
                   setSelectedTowerForEdit(null);
@@ -1202,7 +1172,6 @@ export default function GameScreen() {
               ) : (
                 <Pressable
                   onPress={() => {
-                    console.log(`[Game] Upgrade tower pressed id=${selectedTowerForEdit.id}`);
                     handleUpgradeTower();
                   }}
                   disabled={!canUpgrade}
@@ -1271,7 +1240,7 @@ export default function GameScreen() {
           <Pressable style={styles.orbShopBackdrop} onPress={() => { setShowOrbShop(false); }} />
           <View style={styles.orbShopPanel}>
             <View style={styles.orbShopHeader}>
-              <Text style={styles.orbShopTitle}>Send Orb</Text>
+              <Text style={styles.orbShopTitle}>{t('game.sendOrb')}</Text>
               <Pressable onPress={() => { setShowOrbShop(false); }}>
                 <X size={18} color={COLORS.textSecondary} strokeWidth={2} />
               </Pressable>
@@ -1336,10 +1305,10 @@ export default function GameScreen() {
       >
         <View style={styles.pauseBackdrop}>
           <View style={styles.pauseMenu}>
-            <Text style={styles.pauseTitle}>PAUSED</Text>
+            <Text style={styles.pauseTitle}>{t('game.paused')}</Text>
             <Pressable style={[styles.pauseBtn2, styles.pauseResume]} onPress={handleResume}>
               <Play size={18} color="#000" strokeWidth={2.5} />
-              <Text style={styles.pauseResumeText}>Resume</Text>
+              <Text style={styles.pauseResumeText}>{t('game.resume')}</Text>
             </Pressable>
             <Pressable
               style={[styles.pauseBtn2, styles.pauseForfeit]}
@@ -1349,7 +1318,7 @@ export default function GameScreen() {
               }}
             >
               <Flag size={16} color={COLORS.danger} strokeWidth={2} />
-              <Text style={styles.pauseForfeitText}>Forfeit</Text>
+              <Text style={styles.pauseForfeitText}>{t('game.forfeitMatch')}</Text>
             </Pressable>
           </View>
         </View>
@@ -1372,7 +1341,6 @@ export default function GameScreen() {
             <Pressable
               style={styles.searchVsAiBtn}
               onPress={() => {
-                console.log('[Game] Play vs AI button pressed from searching screen');
                 beginMatch();
               }}
             >
@@ -1502,7 +1470,7 @@ export default function GameScreen() {
 
             {resultHasUnlocks && (
               <View style={styles.resultUnlocks}>
-                <Text style={styles.resultUnlocksTitle}>New cards unlocked!</Text>
+                <Text style={styles.resultUnlocksTitle}>{t('game.newCardsUnlocked')}</Text>
                 {resultTowerUnlocks.map((name) => (
                   <Text key={name} style={styles.resultUnlockItem}>🏰 {name}</Text>
                 ))}
@@ -1516,7 +1484,6 @@ export default function GameScreen() {
               <Pressable
                 style={styles.resultHomeBtn}
                 onPress={() => {
-                  console.log('[Game] Home pressed from result screen');
                   router.push('/');
                 }}
               >
@@ -1525,7 +1492,6 @@ export default function GameScreen() {
               <Pressable
                 style={styles.resultPlayAgainBtn}
                 onPress={() => {
-                  console.log('[Game] Play Again pressed from result screen');
                   router.push('/setup');
                 }}
               >

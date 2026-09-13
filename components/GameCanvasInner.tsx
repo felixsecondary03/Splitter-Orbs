@@ -1961,8 +1961,17 @@ function drawFantasyTower(
 
   // Edit highlight
   if (editMode && t.isPlayer) {
-    p.setColor(Skia.Color('rgba(59,130,246,0.15)'));
-    canvas.drawCircle(x, y, 22, p);
+    const pulse = 0.5 + 0.5 * Math.sin(Date.now() / 200);
+    // Soft fill
+    p.setColor(Skia.Color(`rgba(59,130,246,${(0.08 + pulse * 0.06).toFixed(3)})`));
+    canvas.drawCircle(t.x, t.y, 28, p);
+    // Pulsing ring
+    p.setStyle(PaintStyle.Stroke);
+    p.setColor(Skia.Color(`rgba(59,130,246,${(0.5 + pulse * 0.4).toFixed(3)})`));
+    p.setStrokeWidth(3);
+    canvas.drawCircle(t.x, t.y, 28 + pulse * 4, p);
+    p.setStrokeWidth(1);
+    p.setStyle(PaintStyle.Fill);
   }
 
   const bodyTop = y - 2 - tall;
@@ -2360,35 +2369,39 @@ function drawOrb(canvas: SkCanvas, orb: Orb, now: number, p: SkPaint, font: SkFo
 }
 
 function drawCoinPickup(canvas: SkCanvas, c: CoinPickup, now: number, p: SkPaint) {
-  const r = 8;
-  const glowR = r * (1 + 0.1 * Math.sin(now / 300 + c.x));
+  const bob = Math.sin(now * 0.004 + c.x * 0.01) * 6;
+  const cx = c.x;
+  const cy = c.y + bob;
+  const r = 18;
 
-  // Glow
-  p.setColor(Skia.Color('rgba(252,211,77,0.15)'));
-  canvas.drawCircle(c.x, c.y, glowR * 1.5, p);
-
-  // Body gradient
-  const coinShader = Skia.Shader.MakeRadialGradient(
-    { x: c.x - r * 0.2, y: c.y - r * 0.2 },
-    r,
-    [Skia.Color('#FDE68A'), Skia.Color('#F59E0B')],
-    [0, 1],
-    TileMode.Clamp,
+  // Outer glow halo
+  const haloShader = Skia.Shader.MakeRadialGradient(
+    { x: cx, y: cy }, 30,
+    [Skia.Color('rgba(251,191,36,0.45)'), Skia.Color('rgba(251,191,36,0)')],
+    [0, 1], TileMode.Clamp,
   );
-  p.setShader(coinShader);
-  canvas.drawCircle(c.x, c.y, r, p);
+  p.setShader(haloShader);
+  canvas.drawCircle(cx, cy, 30, p);
   p.setShader(null);
 
-  // Highlight
+  // Gold gradient body
+  const goldShader = Skia.Shader.MakeRadialGradient(
+    { x: cx - 5, y: cy - 5 }, r,
+    [Skia.Color('#FDE68A'), Skia.Color('#FBBF24'), Skia.Color('#F59E0B')],
+    [0, 0.6, 1], TileMode.Clamp,
+  );
+  p.setShader(goldShader);
+  canvas.drawCircle(cx, cy, r, p);
+  p.setShader(null);
+
+  // Inner highlight
   const hlShader = Skia.Shader.MakeRadialGradient(
-    { x: c.x - r * 0.2, y: c.y - r * 0.25 },
-    r * 0.35,
-    [Skia.Color('rgba(255,255,255,0.6)'), Skia.Color('rgba(255,255,255,0)')],
-    [0, 1],
-    TileMode.Clamp,
+    { x: cx - 5, y: cy - 6 }, r * 0.4,
+    [Skia.Color('rgba(255,255,255,0.65)'), Skia.Color('rgba(255,255,255,0)')],
+    [0, 1], TileMode.Clamp,
   );
   p.setShader(hlShader);
-  canvas.drawCircle(c.x - r * 0.2, c.y - r * 0.25, r * 0.35, p);
+  canvas.drawCircle(cx - 5, cy - 6, r * 0.4, p);
   p.setShader(null);
 }
 

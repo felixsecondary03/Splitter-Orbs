@@ -153,7 +153,12 @@
     "searchingHint": "Appuyez ci-dessous pour jouer contre l'IA",
     "playVsAi": "Jouer contre l'IA",
     "startingMatch": "Démarrage de la partie…",
-    "cancel": "Annuler"
+    "cancel": "Annuler",
+    "tapToAim": "Appuyez pour viser",
+    "sendOrb": "Envoyer un orbe",
+    "paused": "EN PAUSE",
+    "resume": "Reprendre",
+    "newCardsUnlocked": "Nouvelles cartes débloquées !"
   },
   "friends": {
     "title": "Amis",

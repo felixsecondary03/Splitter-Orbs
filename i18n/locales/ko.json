@@ -153,7 +153,12 @@
     "searchingHint": "아래를 탭하여 AI와 대전",
     "playVsAi": "AI와 대전",
     "startingMatch": "경기 시작 중…",
-    "cancel": "취소"
+    "cancel": "취소",
+    "tapToAim": "탭하여 조준",
+    "sendOrb": "오브 보내기",
+    "paused": "일시정지",
+    "resume": "재개",
+    "newCardsUnlocked": "새 카드 잠금 해제!"
   },
   "friends": {
     "title": "친구",

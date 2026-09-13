@@ -153,7 +153,12 @@
     "searchingHint": "Ketik di bawah untuk bermain lawan AI",
     "playVsAi": "Main lawan AI",
     "startingMatch": "Memulakan perlawanan…",
-    "cancel": "Batal"
+    "cancel": "Batal",
+    "tapToAim": "Ketuk untuk membidik",
+    "sendOrb": "Hantar orb",
+    "paused": "DIJEDA",
+    "resume": "Teruskan",
+    "newCardsUnlocked": "Kad baru dibuka!"
   },
   "friends": {
     "title": "Rakan",

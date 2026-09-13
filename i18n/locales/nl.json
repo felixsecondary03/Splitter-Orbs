@@ -153,7 +153,12 @@
     "searchingHint": "Tik hieronder om tegen AI te spelen",
     "playVsAi": "Speel tegen AI",
     "startingMatch": "Wedstrijd starten…",
-    "cancel": "Annuleren"
+    "cancel": "Annuleren",
+    "tapToAim": "Tik om te richten",
+    "sendOrb": "Orb sturen",
+    "paused": "GEPAUZEERD",
+    "resume": "Hervatten",
+    "newCardsUnlocked": "Nieuwe kaarten ontgrendeld!"
   },
   "friends": {
     "title": "Vrienden",

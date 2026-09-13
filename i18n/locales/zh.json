@@ -153,7 +153,12 @@
     "searchingHint": "点击下方与AI对战",
     "playVsAi": "与AI对战",
     "startingMatch": "正在开始比赛…",
-    "cancel": "取消"
+    "cancel": "取消",
+    "tapToAim": "点击瞄准",
+    "sendOrb": "发送球",
+    "paused": "已暂停",
+    "resume": "继续",
+    "newCardsUnlocked": "新卡片已解锁！"
   },
   "friends": {
     "title": "好友",

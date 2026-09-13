@@ -153,7 +153,12 @@
     "searchingHint": "AI के विरुद्ध खेलने के लिए नीचे टैप करें",
     "playVsAi": "AI के विरुद्ध खेलें",
     "startingMatch": "मैच शुरू हो रहा है…",
-    "cancel": "रद्द करें"
+    "cancel": "रद्द करें",
+    "tapToAim": "निशाना लगाने के लिए टैप करें",
+    "sendOrb": "ओर्ब भेजें",
+    "paused": "रुका हुआ",
+    "resume": "जारी रखें",
+    "newCardsUnlocked": "नए कार्ड अनलॉक हुए!"
   },
   "friends": {
     "title": "दोस्त",

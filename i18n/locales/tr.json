@@ -153,7 +153,12 @@
     "searchingHint": "Yapay zekaya karşı oynamak için aşağıya dokun",
     "playVsAi": "Yapay zekaya karşı oyna",
     "startingMatch": "Maç başlatılıyor…",
-    "cancel": "İptal"
+    "cancel": "İptal",
+    "tapToAim": "Nişan almak için dokun",
+    "sendOrb": "Orb gönder",
+    "paused": "DURAKLATILDI",
+    "resume": "Devam et",
+    "newCardsUnlocked": "Yeni kartlar açıldı!"
   },
   "friends": {
     "title": "Arkadaşlar",

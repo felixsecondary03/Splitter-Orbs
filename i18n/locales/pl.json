@@ -153,7 +153,12 @@
     "searchingHint": "Dotknij poniżej, aby grać z AI",
     "playVsAi": "Graj z AI",
     "startingMatch": "Rozpoczynanie meczu…",
-    "cancel": "Anuluj"
+    "cancel": "Anuluj",
+    "tapToAim": "Dotknij, aby celować",
+    "sendOrb": "Wyślij orb",
+    "paused": "PAUZA",
+    "resume": "Wznów",
+    "newCardsUnlocked": "Nowe karty odblokowane!"
   },
   "friends": {
     "title": "Znajomi",

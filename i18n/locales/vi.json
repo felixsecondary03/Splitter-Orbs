@@ -153,7 +153,12 @@
     "searchingHint": "Nhấn bên dưới để chơi với AI",
     "playVsAi": "Chơi với AI",
     "startingMatch": "Đang bắt đầu trận đấu…",
-    "cancel": "Hủy"
+    "cancel": "Hủy",
+    "tapToAim": "Chạm để nhắm",
+    "sendOrb": "Gửi orb",
+    "paused": "TẠM DỪNG",
+    "resume": "Tiếp tục",
+    "newCardsUnlocked": "Thẻ mới đã mở khóa!"
   },
   "friends": {
     "title": "Bạn bè",

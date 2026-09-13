@@ -153,7 +153,12 @@
     "searchingHint": "اضغط أدناه للعب ضد الذكاء الاصطناعي",
     "playVsAi": "العب ضد الذكاء الاصطناعي",
     "startingMatch": "بدء المباراة…",
-    "cancel": "إلغاء"
+    "cancel": "إلغاء",
+    "tapToAim": "اضغط للتصويب",
+    "sendOrb": "إرسال كرة",
+    "paused": "متوقف مؤقتاً",
+    "resume": "استئناف",
+    "newCardsUnlocked": "بطاقات جديدة مفتوحة!"
   },
   "friends": {
     "title": "الأصدقاء",

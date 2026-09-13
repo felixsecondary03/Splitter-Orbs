@@ -153,7 +153,12 @@
     "searchingHint": "下をタップしてAIと対戦",
     "playVsAi": "AIと対戦",
     "startingMatch": "試合を開始中…",
-    "cancel": "キャンセル"
+    "cancel": "キャンセル",
+    "tapToAim": "タップして狙う",
+    "sendOrb": "オーブを送る",
+    "paused": "一時停止",
+    "resume": "再開",
+    "newCardsUnlocked": "新しいカードが解放されました！"
   },
   "friends": {
     "title": "フレンド",

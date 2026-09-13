@@ -153,7 +153,12 @@
     "searchingHint": "Tap below to play vs AI instead",
     "playVsAi": "Play vs AI",
     "startingMatch": "Starting match…",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "tapToAim": "Tap to aim",
+    "sendOrb": "Send Orb",
+    "paused": "PAUSED",
+    "resume": "Resume",
+    "newCardsUnlocked": "New cards unlocked!"
   },
   "friends": {
     "title": "Friends",
