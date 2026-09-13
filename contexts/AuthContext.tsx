@@ -84,24 +84,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [needsUpdate, setNeedsUpdate] = useState(false);
 
   useEffect(() => {
-    console.log('[Auth] Initializing auth state listener');
-
     // Register listener FIRST so it catches events from getSession/auto-login
     const { data: listener } = supabase.auth.onAuthStateChange(async (event, sess) => {
-      console.log('[Auth] Auth state changed', { event, userId: sess?.user?.id });
       setSession(sess);
       if (sess?.user) {
         setUser(mapSupabaseUser(sess.user));
         // Unblock loading immediately — edge function calls must not gate it
         setIsLoading(false);
         if (event === 'SIGNED_IN') {
-          console.log('[Auth] SIGNED_IN — calling post-auth-init');
           try {
             const { data, error } = await supabase.functions.invoke('post-auth-init', {});
             if (error) {
               console.warn('[Auth] post-auth-init error', error.message);
             } else {
-              console.log('[Auth] post-auth-init response', data);
               handleEdgeFunctionError(data as Record<string, unknown>, 'post-auth-init');
 
               const profile = data?.profile as Record<string, unknown> | undefined;
@@ -136,12 +131,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
           // Check version info
           try {
-            console.log('[Auth] Calling get-version-info');
             const { data: versionData, error: versionError } = await supabase.functions.invoke('get-version-info', {});
             if (versionError) {
               console.warn('[Auth] get-version-info error', versionError.message);
             } else if (versionData) {
-              console.log('[Auth] get-version-info response', versionData);
               const minRequired = versionData.minRequiredVersion as string | undefined;
               if (minRequired && compareVersions(minRequired, APP_VERSION) > 0) {
                 console.warn('[Auth] App update required. minRequired:', minRequired, 'current:', APP_VERSION);
@@ -172,14 +165,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Handle OAuth deep link callback
     const handleUrl = async (event: { url: string }) => {
-      console.log('[Auth] Deep link received', event.url);
       if (event.url.includes('access_token') || event.url.includes('code=')) {
         const hash = event.url.split('#')[1] ?? '';
         const params = new URLSearchParams(hash);
         const at = params.get('access_token');
         const rt = params.get('refresh_token');
         if (at) {
-          console.log('[Auth] Setting session from deep link');
           await supabase.auth.setSession({ access_token: at, refresh_token: rt ?? '' });
         }
       }
@@ -193,41 +184,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    console.log('[Auth] signIn called', { email });
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
-      console.error('[Auth] signIn error', error.message);
       throw error;
     }
-    console.log('[Auth] signIn success');
   };
 
   const signUp = async (email: string, password: string) => {
-    console.log('[Auth] signUp called', { email });
     const { error } = await supabase.auth.signUp({ email, password });
     if (error) {
-      console.error('[Auth] signUp error', error.message);
       throw error;
     }
-    console.log('[Auth] signUp success');
   };
 
   const signOut = async () => {
-    console.log('[Auth] signOut called');
     await supabase.auth.signOut();
     setUser(null);
     setSession(null);
     setIsBanned(false);
     setBanInfo(null);
     setNeedsUpdate(false);
-    console.log('[Auth] signOut complete');
   };
 
   const signInWithGoogle = async () => {
-    console.log('[Auth] signInWithGoogle called');
     try {
       const redirectUrl = AuthSession.makeRedirectUri({ scheme: 'splitterorbs', path: 'auth/callback' });
-      console.log('[Auth] signInWithGoogle redirectUrl', redirectUrl);
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
@@ -237,9 +218,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
       if (error) throw error;
       if (!data.url) throw new Error('No OAuth URL returned');
-      console.log('[Auth] signInWithGoogle opening browser');
       const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUrl);
-      console.log('[Auth] signInWithGoogle browser result', result.type);
       if (result.type === 'success' && result.url) {
         const url = new URL(result.url);
         const accessToken = url.searchParams.get('access_token');
@@ -258,16 +237,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       }
     } catch (e) {
-      console.error('[Auth] signInWithGoogle error', e);
+      console.warn('[Auth] signInWithGoogle error', e);
       throw e;
     }
   };
 
   const signInWithApple = async () => {
-    console.log('[Auth] signInWithApple called');
     try {
       const redirectUrl = AuthSession.makeRedirectUri({ scheme: 'splitterorbs', path: 'auth/callback' });
-      console.log('[Auth] signInWithApple redirectUrl', redirectUrl);
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'apple',
         options: {
@@ -277,9 +254,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
       if (error) throw error;
       if (!data.url) throw new Error('No OAuth URL returned');
-      console.log('[Auth] signInWithApple opening browser');
       const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUrl);
-      console.log('[Auth] signInWithApple browser result', result.type);
       if (result.type === 'success' && result.url) {
         const url = new URL(result.url);
         const accessToken = url.searchParams.get('access_token');
@@ -297,7 +272,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       }
     } catch (e) {
-      console.error('[Auth] signInWithApple error', e);
+      console.warn('[Auth] signInWithApple error', e);
       throw e;
     }
   };

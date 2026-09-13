@@ -108,6 +108,15 @@ interface ProfileContextType {
 
 const ProfileContext = createContext<ProfileContextType | null>(null);
 
+const SAFE_PROFILE_FIELDS = new Set([
+  'language', 'sound_enabled', 'sound_categories', 'haptics_enabled',
+  'haptics_intensity', 'advanced_haptics_enabled', 'fit_to_screen',
+  'tower_menu_anytime', 'avatar_color', 'selected_towers', 'selected_abilities',
+  'selected_orbs', 'equipped_orb_pattern', 'equipped_station_skin',
+  'equipped_tower_skin', 'equipped_left_tower_skin', 'equipped_right_tower_skin',
+  'equipped_station_emblem', 'equipped_left_tower_emblem', 'equipped_right_tower_emblem',
+]);
+
 export function ProfileProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<PlayerProfile>(DEFAULT_PROFILE);
   const [isLoading, setIsLoading] = useState(true);
@@ -115,7 +124,6 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
   const refreshProfile = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
-    console.log('[Profile] Refreshing profile for user', user.id);
     const { data, error } = await supabase
       .from('player_profiles')
       .select('*')
@@ -126,7 +134,6 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
       return;
     }
     if (data) {
-      console.log('[Profile] Profile loaded', { display_name: data.display_name, trophies: data.trophies });
       setProfile({
         ...DEFAULT_PROFILE,
         ...data,
@@ -157,15 +164,12 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
   // onAuthStateChange fires INITIAL_SESSION asynchronously; this ensures
   // the profile loads even if the listener is registered after the event fires.
   useEffect(() => {
-    console.log('[Profile] Mount-time session check');
     supabase.auth.getSession().then(({ data }) => {
       if (data.session?.user) {
-        console.log('[Profile] Session found on mount, loading profile');
         refreshProfile().finally(() => {
           setIsLoading(false);
         });
       } else {
-        console.log('[Profile] No session on mount, guest mode');
         setIsLoading(false);
       }
     });
@@ -174,7 +178,6 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const { data: listener } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('[Profile] onAuthStateChange event=', event, 'hasUser=', !!session?.user);
       if (session?.user) {
         await refreshProfile();
       } else {
@@ -185,13 +188,17 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
   }, [refreshProfile]);
 
   const updateProfile = useCallback(async (partial: Partial<PlayerProfile>) => {
-    console.log('[Profile] updateProfile called', Object.keys(partial));
     setProfile((prev) => ({ ...prev, ...partial }));
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
+    // Only write safe preference fields to the database
+    const safePartial = Object.fromEntries(
+      Object.entries(partial).filter(([k]) => SAFE_PROFILE_FIELDS.has(k))
+    );
+    if (Object.keys(safePartial).length === 0) return;
     const { error } = await supabase
       .from('player_profiles')
-      .update(partial)
+      .update(safePartial)
       .eq('id', user.id);
     if (error) {
       console.warn('[Profile] updateProfile error', error.message);

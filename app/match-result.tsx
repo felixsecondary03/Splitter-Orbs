@@ -228,12 +228,10 @@ export default function MatchResultScreen() {
   }, []);
 
   const handlePlayAgain = () => {
-    console.log('[MatchResult] Play Again pressed', { mode });
     router.replace('/(tabs)/play');
   };
 
   const handleHome = () => {
-    console.log('[MatchResult] Home pressed');
     router.replace('/(tabs)/(home)');
   };
 

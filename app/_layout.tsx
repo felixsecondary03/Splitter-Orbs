@@ -43,7 +43,6 @@ export default function RootLayout() {
   }, [loaded]);
 
   useEffect(() => {
-    console.log('[Layout] Setting immersive full-screen mode');
     // Hide Android navigation bar for immersive full-screen
     NavigationBar.setVisibilityAsync('hidden').catch(() => {});
     SystemUI.setBackgroundColorAsync('#0F172A').catch(() => {});

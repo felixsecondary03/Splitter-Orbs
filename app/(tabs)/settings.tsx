@@ -64,20 +64,17 @@ export default function SettingsScreen() {
   }, [profile]);
 
   const saveField = async (field: string, value: unknown) => {
-    console.log('[Settings] saveField', { field, value });
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
-    await supabase.from('player_profiles').update({ [field]: value }).eq('user_id', user.id);
+    await supabase.from('player_profiles').update({ [field]: value }).eq('id', user.id);
   };
 
   const requestSaveName = () => {
-    console.log('[Settings] requestSaveName pressed', { name });
     if (!name.trim() || name.trim() === profile?.display_name) return;
     setShowNameConfirm(true);
   };
 
   const saveName = async () => {
-    console.log('[Settings] saveName confirmed', { name });
     if (nameBusy || !name.trim()) return;
     setNameBusy(true);
     setNameError(null);
@@ -86,26 +83,21 @@ export default function SettingsScreen() {
       if (error) throw error;
       const r = data;
       if (r?.success) {
-        console.log('[Settings] Name saved successfully');
         setSavedName(true);
         setTimeout(() => setSavedName(false), 2000);
         setShowNameConfirm(false);
         refreshProfile();
       } else if (r?.error === 'name_taken') {
-        console.log('[Settings] Name taken');
         setNameError(t('settings.nameTaken'));
         setShowNameConfirm(false);
       } else if (r?.error === 'name_inappropriate') {
-        console.log('[Settings] Name inappropriate');
         setNameError(t('settings.nameInappropriate'));
         setShowNameConfirm(false);
       } else {
-        console.log('[Settings] Name save error', r?.error);
         setNameError(t('settings.nameError'));
         setShowNameConfirm(false);
       }
     } catch (e) {
-      console.warn('[Settings] saveName error', e);
       setNameError(t('settings.nameError'));
       setShowNameConfirm(false);
     }
@@ -113,12 +105,10 @@ export default function SettingsScreen() {
   };
 
   const handleSignOut = () => {
-    console.log('[Settings] Sign Out pressed');
     Alert.alert(t('settings.signOut'), t('settings.signOut') + '?', [
       { text: t('settings.cancel'), style: 'cancel' },
       {
         text: t('settings.signOut'), style: 'destructive', onPress: async () => {
-          console.log('[Settings] Sign Out confirmed');
           await supabase.auth.signOut();
           router.replace('/auth/welcome');
         }
@@ -127,12 +117,11 @@ export default function SettingsScreen() {
   };
 
   const handleDeleteAccount = async () => {
-    console.log('[Settings] Delete Account confirmed');
     setDeleting(true);
     try {
       await supabase.functions.invoke('delete-account', {});
     } catch (e) {
-      console.warn('[Settings] delete-account error', e);
+      // ignore
     }
     await supabase.auth.signOut();
     router.replace('/auth/welcome');
@@ -140,21 +129,17 @@ export default function SettingsScreen() {
   };
 
   const handleDownloadData = async () => {
-    console.log('[Settings] Download Data pressed');
     setDownloading(true);
     try {
       const { data } = await supabase.functions.invoke('export-user-data', {});
-      console.log('[Settings] export-user-data response', data);
       Alert.alert(t('settings.downloadDataTitle'), t('settings.downloadDataSuccess'));
     } catch (e) {
-      console.warn('[Settings] export-user-data error', e);
       Alert.alert(t('settings.downloadDataErrorTitle'), t('settings.downloadDataError'));
     }
     setDownloading(false);
   };
 
   const handleReportSearch = async () => {
-    console.log('[Settings] Report search', { reportUsername });
     if (!reportUsername.trim()) return;
     setReportSearching(true);
     setReportResult(null);
@@ -162,16 +147,16 @@ export default function SettingsScreen() {
     try {
       const { data, error } = await supabase
         .from('player_profiles')
-        .select('user_id, display_name, trophies')
+        .select('id, display_name, trophies')
         .ilike('display_name', reportUsername.trim())
         .limit(1)
         .single();
       if (error || !data) {
         setReportError(t('friends.notFound'));
-      } else if (data.user_id === profile?.user_id) {
+      } else if (data.id === profile?.id) {
         setReportError(t('settings.reportSelf'));
       } else {
-        setReportResult({ id: data.user_id, display_name: data.display_name, trophies: data.trophies ?? 0 });
+        setReportResult({ id: data.id, display_name: data.display_name, trophies: data.trophies ?? 0 });
       }
     } catch {
       setReportError(t('friends.notFound'));
@@ -181,12 +166,11 @@ export default function SettingsScreen() {
 
   const handleReportSubmit = async () => {
     if (!reportResult) return;
-    console.log('[Settings] Report submit', { target: reportResult.id });
     setReportSubmitting(true);
     try {
       await supabase.functions.invoke('report-user', { body: { reported_user_id: reportResult.id } });
     } catch (e) {
-      console.warn('[Settings] report-user error', e);
+      // ignore
     }
     setReportSubmitting(false);
     setReportDone(true);
@@ -206,7 +190,7 @@ export default function SettingsScreen() {
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
         {/* Header */}
         <View style={styles.headerRow}>
-          <TouchableOpacity onPress={() => { console.log('[Settings] Back pressed'); router.back(); }} style={styles.backBtn}>
+          <TouchableOpacity onPress={() => { router.back(); }} style={styles.backBtn}>
             <Ionicons name="arrow-back" size={20} color={COLORS.textSecondary} />
             <Text style={styles.backText}>{t('settings.back')}</Text>
           </TouchableOpacity>
@@ -244,7 +228,7 @@ export default function SettingsScreen() {
           </View>
           {nameError && <Text style={styles.nameError}>{nameError}</Text>}
           <TouchableOpacity
-            onPress={() => { console.log('[Settings] Friends pressed'); router.push('/social' as any); }}
+            onPress={() => { router.push('/social' as any); }}
             style={styles.linkRow}
           >
             <Ionicons name="people" size={20} color={COLORS.primary} />
@@ -266,7 +250,7 @@ export default function SettingsScreen() {
             {LANGS_LAUNCH.map(l => (
               <TouchableOpacity
                 key={l.code}
-                onPress={() => { console.log('[Settings] Language selected', { code: l.code }); setLang(l.code); }}
+                onPress={() => { setLang(l.code); }}
                 style={[styles.langBtn, lang === l.code && styles.langBtnActive]}
               >
                 <Text style={styles.langFlag}>{l.flag}</Text>
@@ -320,7 +304,7 @@ export default function SettingsScreen() {
                 return (
                   <TouchableOpacity
                     key={lvl}
-                    onPress={() => { console.log('[Settings] Haptics intensity changed', { lvl }); setHapticsIntensity(lvl); setHapticsIntensityFn(lvl); saveField('haptics_intensity', lvl); }}
+                    onPress={() => { setHapticsIntensity(lvl); setHapticsIntensityFn(lvl); saveField('haptics_intensity', lvl); }}
                     style={[styles.hapticBtn, isActive && styles.hapticBtnActive]}
                   >
                     <Text style={[styles.hapticBtnText, isActive && styles.hapticBtnTextActive]}>
@@ -365,7 +349,7 @@ export default function SettingsScreen() {
             onChange={v => { setFitToScreen(v); saveField('fit_to_screen', v); }}
           />
           <TouchableOpacity
-            onPress={() => { console.log('[Settings] Replay Tutorial pressed'); router.push({ pathname: '/game', params: { mode: 'tutorial' } }); }}
+            onPress={() => { router.push({ pathname: '/game', params: { mode: 'tutorial' } }); }}
             style={styles.linkRow}
           >
             <Ionicons name="school" size={20} color={COLORS.primary} />
@@ -384,7 +368,7 @@ export default function SettingsScreen() {
           </View>
           <Text style={styles.cardDesc}>{t('settings.accountDesc')}</Text>
           <TouchableOpacity
-            onPress={() => { console.log('[Settings] Privacy Policy pressed'); router.push('/privacy' as any); }}
+            onPress={() => { router.push('/privacy' as any); }}
             style={styles.linkRow}
           >
             <Ionicons name="document-text" size={20} color={COLORS.textSecondary} />
@@ -392,7 +376,7 @@ export default function SettingsScreen() {
             <Ionicons name="chevron-forward" size={16} color={COLORS.textTertiary} />
           </TouchableOpacity>
           <TouchableOpacity
-            onPress={() => { console.log('[Settings] EULA pressed'); router.push('/eula-screen' as any); }}
+            onPress={() => { router.push('/eula-screen' as any); }}
             style={styles.linkRow}
           >
             <Ionicons name="document-text" size={20} color={COLORS.textSecondary} />
@@ -400,7 +384,7 @@ export default function SettingsScreen() {
             <Ionicons name="chevron-forward" size={16} color={COLORS.textTertiary} />
           </TouchableOpacity>
           <TouchableOpacity
-            onPress={() => { console.log('[Settings] Impressum pressed'); router.push('/impressum' as any); }}
+            onPress={() => { router.push('/impressum' as any); }}
             style={styles.linkRow}
           >
             <Ionicons name="document-text" size={20} color={COLORS.textSecondary} />
@@ -425,7 +409,7 @@ export default function SettingsScreen() {
             <Ionicons name="chevron-forward" size={16} color={COLORS.textTertiary} />
           </TouchableOpacity>
           <TouchableOpacity
-            onPress={() => { console.log('[Settings] Delete Account pressed'); setDeleteConfirmText(''); setShowDeleteDialog(true); }}
+            onPress={() => { setDeleteConfirmText(''); setShowDeleteDialog(true); }}
             style={[styles.linkRow, styles.dangerRow]}
           >
             <Ionicons name="trash" size={20} color={COLORS.danger} />
@@ -447,7 +431,7 @@ export default function SettingsScreen() {
             <Text style={styles.modalBody}>{t('settings.changeNameBody')}</Text>
             <View style={styles.modalBtns}>
               <TouchableOpacity
-                onPress={() => { console.log('[Settings] Name change cancelled'); setShowNameConfirm(false); }}
+                onPress={() => { setShowNameConfirm(false); }}
                 style={styles.modalBtnSecondary}
               >
                 <Text style={styles.modalBtnSecondaryText}>{t('settings.cancel')}</Text>
@@ -479,7 +463,7 @@ export default function SettingsScreen() {
             />
             <View style={styles.modalBtns}>
               <TouchableOpacity
-                onPress={() => { console.log('[Settings] Delete Account cancelled'); setShowDeleteDialog(false); }}
+                onPress={() => { setShowDeleteDialog(false); }}
                 style={styles.modalBtnSecondary}
               >
                 <Text style={styles.modalBtnSecondaryText}>{t('settings.cancel')}</Text>
@@ -568,7 +552,7 @@ export default function SettingsScreen() {
 
 function ToggleRow({ label, desc, value, onChange }: { label: string; desc?: string; value: boolean; onChange: (v: boolean) => void }) {
   return (
-    <TouchableOpacity onPress={() => { console.log('[Settings] Toggle pressed', { label, newValue: !value }); onChange(!value); }} style={styles.toggleRow}>
+    <TouchableOpacity onPress={() => { onChange(!value); }} style={styles.toggleRow}>
       <View style={{ flex: 1 }}>
         <Text style={styles.toggleLabel}>{label}</Text>
         {desc && <Text style={styles.toggleDesc}>{desc}</Text>}

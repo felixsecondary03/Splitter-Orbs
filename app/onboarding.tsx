@@ -17,7 +17,6 @@ import { Globe, Calendar, FileText, User, Check, ChevronLeft } from 'lucide-reac
 import { COLORS } from '@/constants/Colors';
 import { AnimatedPressable } from '@/components/AnimatedPressable';
 import { useProfile } from '@/contexts/ProfileContext';
-import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/utils/supabase';
 import { CURRENT_EULA_VERSION } from '@/game/constants';
 
@@ -47,7 +46,6 @@ export default function OnboardingScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { refreshProfile } = useProfile();
-  const { user } = useAuth();
 
   const [step, setStep] = useState(0);
   const [language, setLanguage] = useState('en');
@@ -79,14 +77,12 @@ export default function OnboardingScreen() {
       return;
     }
 
-    console.log('[Onboarding] Completing onboarding', { language, displayName: trimmed });
     setIsSubmitting(true);
 
     const birthDateStr = birthDate.toISOString().split('T')[0];
     const under16 = checkIsUnder16();
 
     try {
-      // Try edge function first
       const { error: fnError } = await supabase.functions.invoke('accept-eula', {
         body: {
           version: CURRENT_EULA_VERSION,
@@ -99,38 +95,12 @@ export default function OnboardingScreen() {
       });
 
       if (fnError) {
-        console.warn('[Onboarding] accept-eula edge function failed, falling back', fnError.message);
-        // Fallback: direct table update
-        if (!user) throw new Error('Not authenticated');
-        const { error: updateError } = await supabase
-          .from('player_profiles')
-          .update({
-            onboarded: true,
-            eula_accepted_version: CURRENT_EULA_VERSION,
-            display_name: trimmed,
-            language,
-          })
-          .eq('id', user.id);
-
-        if (updateError) {
-          console.error('[Onboarding] Fallback update failed', updateError.message);
-          throw updateError;
-        }
-      } else {
-        // Also save language via direct update since edge function may not handle it
-        if (user) {
-          await supabase
-            .from('player_profiles')
-            .update({ language })
-            .eq('id', user.id);
-        }
+        throw new Error('Could not complete setup. Please check your connection and try again.');
       }
 
-      console.log('[Onboarding] Onboarding complete, refreshing profile');
       await refreshProfile();
       router.replace('/(tabs)/(home)' as never);
     } catch (e: any) {
-      console.error('[Onboarding] Completion error', e?.message ?? e);
       Alert.alert('Error', e?.message ?? 'Something went wrong. Please try again.');
     } finally {
       setIsSubmitting(false);
@@ -142,7 +112,6 @@ export default function OnboardingScreen() {
       handleComplete();
       return;
     }
-    console.log('[Onboarding] Next pressed', { step });
     if (step === 1) {
       setIsUnder16(checkIsUnder16());
     }
@@ -152,22 +121,18 @@ export default function OnboardingScreen() {
 
   const handleBack = () => {
     if (step === 0) {
-      console.log('[Onboarding] Back pressed on step 0, navigating to welcome');
       router.replace('/auth/welcome' as never);
       return;
     }
-    console.log('[Onboarding] Back pressed', { step });
     animateStep(-1);
     setStep((s) => s - 1);
   };
 
   const handleLanguageSelect = (code: string) => {
-    console.log('[Onboarding] Language selected', { code });
     setLanguage(code);
   };
 
   const handleEulaToggle = () => {
-    console.log('[Onboarding] EULA checkbox toggled', { accepted: !eulaAccepted });
     setEulaAccepted((v) => !v);
   };
 
@@ -253,7 +218,6 @@ export default function OnboardingScreen() {
                 display={Platform.OS === 'ios' ? 'spinner' : 'default'}
                 onChange={(_, date) => {
                   if (date) {
-                    console.log('[Onboarding] Birth date changed', { date });
                     setBirthDate(date);
                   }
                 }}
@@ -290,7 +254,6 @@ export default function OnboardingScreen() {
             <AnimatedPressable
               style={styles.eulaLinkBtn}
               onPress={() => {
-                console.log('[Onboarding] Read full EULA pressed');
                 router.push('/eula-screen' as never);
               }}
             >
