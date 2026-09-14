@@ -167,12 +167,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Handle OAuth deep link callback
     const handleUrl = async (event: { url: string }) => {
-      if (event.url.includes('access_token') || event.url.includes('code=')) {
-        const hash = event.url.split('#')[1] ?? '';
+      const url = event.url;
+      console.log('[Auth] Deep link received:', url);
+      if (url.includes('access_token') || url.includes('code=')) {
+        // Try PKCE exchange first
+        if (url.includes('code=')) {
+          console.log('[Auth] Deep link: attempting PKCE code exchange');
+          const { error } = await supabase.auth.exchangeCodeForSession(url);
+          if (!error) {
+            console.log('[Auth] Deep link: PKCE exchange succeeded');
+            return;
+          }
+          console.warn('[Auth] Deep link: PKCE exchange failed, falling back to implicit', error.message);
+        }
+        // Fallback to implicit flow
+        const hash = url.split('#')[1] ?? '';
         const params = new URLSearchParams(hash);
         const at = params.get('access_token');
         const rt = params.get('refresh_token');
         if (at) {
+          console.log('[Auth] Deep link: setting session from implicit flow tokens');
           await supabase.auth.setSession({ access_token: at, refresh_token: rt ?? '' });
         }
       }
@@ -186,20 +200,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signIn = async (email: string, password: string) => {
+    console.log('[Auth] signIn with email:', email);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
+      console.warn('[Auth] signIn error', error.message);
       throw error;
     }
+    console.log('[Auth] signIn succeeded');
   };
 
   const signUp = async (email: string, password: string) => {
+    console.log('[Auth] signUp with email:', email);
     const { error } = await supabase.auth.signUp({ email, password });
     if (error) {
+      console.warn('[Auth] signUp error', error.message);
       throw error;
     }
+    console.log('[Auth] signUp succeeded');
   };
 
   const signOut = async () => {
+    console.log('[Auth] signOut');
     await supabase.auth.signOut();
     setUser(null);
     setSession(null);
@@ -208,36 +229,64 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setNeedsUpdate(false);
   };
 
-  const signInWithGoogle = async () => {
-    try {
-      const redirectUrl = AuthSession.makeRedirectUri({ scheme: 'splitterorbs', path: 'auth/callback' });
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: redirectUrl,
-          skipBrowserRedirect: true,
-        },
-      });
-      if (error) throw error;
-      if (!data.url) throw new Error('No OAuth URL returned');
-      const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUrl);
-      if (result.type === 'success' && result.url) {
-        const url = new URL(result.url);
-        const accessToken = url.searchParams.get('access_token');
-        const refreshToken = url.searchParams.get('refresh_token');
-        if (accessToken) {
-          await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken ?? '' });
-        } else {
-          // Try fragment params
-          const hash = result.url.split('#')[1] ?? '';
-          const params = new URLSearchParams(hash);
-          const at = params.get('access_token');
-          const rt = params.get('refresh_token');
-          if (at) {
-            await supabase.auth.setSession({ access_token: at, refresh_token: rt ?? '' });
-          }
-        }
+  const handleOAuthFlow = async (provider: 'google' | 'apple') => {
+    const redirectUrl = AuthSession.makeRedirectUri({ scheme: 'splitterorbs', path: 'auth/callback' });
+    console.log(`[Auth] ${provider} OAuth: redirectUrl =`, redirectUrl);
+
+    console.log(`[Auth] ${provider} OAuth: requesting OAuth URL from Supabase`);
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: {
+        redirectTo: redirectUrl,
+        skipBrowserRedirect: true,
+      },
+    });
+    if (error) throw error;
+    if (!data.url) throw new Error('No OAuth URL returned');
+
+    console.log(`[Auth] ${provider} OAuth: opening browser`);
+    const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUrl);
+    console.log(`[Auth] ${provider} OAuth: browser result type =`, result.type);
+
+    if (result.type === 'success' && result.url) {
+      console.log(`[Auth] ${provider} OAuth: callback URL received, attempting PKCE exchange`);
+      // PKCE flow: exchange code for session
+      const { error: sessionError } = await supabase.auth.exchangeCodeForSession(result.url);
+      if (!sessionError) {
+        console.log(`[Auth] ${provider} OAuth: PKCE exchange succeeded`);
+        return;
       }
+      console.warn(`[Auth] ${provider} OAuth: PKCE exchange failed, falling back to implicit`, sessionError.message);
+      // Fallback: try manual token extraction for implicit flow
+      const parsedUrl = new URL(result.url);
+      // Check query params first
+      const accessToken = parsedUrl.searchParams.get('access_token');
+      const refreshToken = parsedUrl.searchParams.get('refresh_token');
+      if (accessToken) {
+        console.log(`[Auth] ${provider} OAuth: setting session from query params`);
+        await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken ?? '' });
+        return;
+      }
+      // Check fragment
+      const hash = result.url.split('#')[1] ?? '';
+      const params = new URLSearchParams(hash);
+      const at = params.get('access_token');
+      const rt = params.get('refresh_token');
+      if (at) {
+        console.log(`[Auth] ${provider} OAuth: setting session from fragment tokens`);
+        await supabase.auth.setSession({ access_token: at, refresh_token: rt ?? '' });
+        return;
+      }
+      throw sessionError;
+    } else {
+      console.warn(`[Auth] ${provider} OAuth: browser session did not succeed, result type =`, result.type);
+    }
+  };
+
+  const signInWithGoogle = async () => {
+    console.log('[Auth] signInWithGoogle pressed');
+    try {
+      await handleOAuthFlow('google');
     } catch (e) {
       console.warn('[Auth] signInWithGoogle error', e);
       throw e;
@@ -245,34 +294,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signInWithApple = async () => {
+    console.log('[Auth] signInWithApple pressed');
     try {
-      const redirectUrl = AuthSession.makeRedirectUri({ scheme: 'splitterorbs', path: 'auth/callback' });
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'apple',
-        options: {
-          redirectTo: redirectUrl,
-          skipBrowserRedirect: true,
-        },
-      });
-      if (error) throw error;
-      if (!data.url) throw new Error('No OAuth URL returned');
-      const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUrl);
-      if (result.type === 'success' && result.url) {
-        const url = new URL(result.url);
-        const accessToken = url.searchParams.get('access_token');
-        const refreshToken = url.searchParams.get('refresh_token');
-        if (accessToken) {
-          await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken ?? '' });
-        } else {
-          const hash = result.url.split('#')[1] ?? '';
-          const params = new URLSearchParams(hash);
-          const at = params.get('access_token');
-          const rt = params.get('refresh_token');
-          if (at) {
-            await supabase.auth.setSession({ access_token: at, refresh_token: rt ?? '' });
-          }
-        }
-      }
+      await handleOAuthFlow('apple');
     } catch (e) {
       console.warn('[Auth] signInWithApple error', e);
       throw e;
