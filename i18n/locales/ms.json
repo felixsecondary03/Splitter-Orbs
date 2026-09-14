@@ -666,14 +666,14 @@
     "s22b": "Setakat yang dibenarkan oleh undang-undang: (a) jumlah liabiliti pembangun kepada anda atas tuntutan yang timbul daripada EULA ini atau penggunaan Aplikasi tidak akan melebihi jumlah yang anda bayar kepada pembangun dalam 12 bulan sebelum tuntutan, atau €5 jika tiada pembayaran; (b) pembangun tidak bertanggungjawab atas kehilangan kemajuan permainan, item maya, mata wang dalam permainan, data akaun atau kandungan dalam aplikasi lain, apa jua puncanya; (c) pembangun tidak bertanggungjawab atas tindakan atau peninggalan pihak ketiga, termasuk Supabase, Google atau Apple.",
     "s23t": "23. Kawalan Eksport",
     "s23b": "Anda mengakui bahawa anda tidak berada di negara yang tertakluk kepada embargo kerajaan AS atau yang ditetapkan sebagai negara 'penyokong keganasan', dan anda tidak tersenarai dalam mana-mana senarai pihak yang dilarang atau disekat oleh kerajaan AS. Anda bersetuju untuk mematuhi semua undang-undang dan peraturan kawalan eksport dan re-eksport yang terpakai.",
-    "s24t": "24. Penepian Tindakan Kelas",
-    "s24b": "Setakat yang dibenarkan oleh undang-undang yang terpakai, anda melepaskan hak untuk mengambil bahagian dalam tindakan kelas atau timbang tara kelas terhadap pembangun. Semua tuntutan mesti difailkan dalam kapasiti individu anda, bukan sebagai plaintif atau ahli kelas dalam mana-mana prosiding kelas atau perwakilan yang didakwa. Nota: penepian ini tidak terpakai setakat yang dilarang oleh undang-undang perlindungan pengguna EU."
+    "s24t": "24. Applicable Law & Dispute Resolution",
+    "s24b": "This EULA is governed by the laws of the Federal Republic of Germany. Any disputes shall be subject to the exclusive jurisdiction of the competent courts of Germany. Nothing in this EULA limits your statutory rights as a consumer under applicable EU or national law, including the right to bring claims before the courts of your country of residence."
   },
   "privacyContent": {
     "s1t": "1. Pengenalan",
     "s1b": "Dasar Privasi ini menerangkan bagaimana Splitter Orbs mengumpul, menggunakan dan melindungi data peribadi anda. Kami memproses data mengikut Peraturan Perlindungan Data Am EU (GDPR/DSGVO).",
     "s2t": "2. Pengawal Data",
-    "s2b": "Pengawal data ialah pembangun aplikasi. Hubungi: info@splitterorbs.com.",
+    "s2b": "The data controller is Felix Werner, c/o COCENTER, Koppoldstr. 1, 86551 Aichach, Germany. Contact: info@splitterorbs.com.",
     "s3t": "3. Data yang Kami Kumpul",
     "s3b": "Data Akaun & Profil: nama paparan, kemajuan permainan, mata wang dalam permainan, tahap koleksi kad, kulit yang dibuka kunci, tetapan, data jujukan log masuk. Data Sosial: senarai rakan, sejarah perlawanan. Data Pengesahan: ID akaun Google dan e-mel jika anda menghubungkan Google. ID akaun Apple dan e-mel semasa menggunakan Apple Sign-In.",
     "s4t": "4. Asas Undang-undang untuk Pemprosesan",

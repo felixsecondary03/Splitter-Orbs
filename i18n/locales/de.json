@@ -666,14 +666,14 @@
     "s22b": "IM GRÖSSTMÖGLICHEN GESETZLICH ZULÄSSIGEN UMFANG GILT: (a) DIE GESAMTHAFTUNG DES ENTWICKLERS IHNEN GEGENÜBER FÜR ANSPRÜCHE AUS DIESER EULA ODER IHRER NUTZUNG DER APP ÜBERSTEIGT NICHT DEN BETRAG, DEN SIE DEM ENTWICKLER IN DEN 12 MONATEN VOR DEM ANSPRUCH GEZAHLT HABEN, ODER €5, WENN SIE KEINE ZAHLUNGEN GELEISTET HABEN; (b) DER ENTWICKLER HAFTET NICHT FÜR DEN VERLUST VON SPIELFORTSCHRITT, VIRTUELLEN GEGENSTÄNDEN, IN-GAME-WÄHRUNG, KONTODATEN ODER ANDEREN IN-APP-INHALTEN, UNABHÄNGIG VON DER URSACHE; (c) DER ENTWICKLER HAFTET NICHT FÜR HANDLUNGEN ODER UNTERLASSUNGEN VON DRITTANBIETERN, EINSCHLIESSLICH SUPABASE, GOOGLE ODER APPLE.",
     "s23t": "23. Exportkontrolle",
     "s23b": "Sie versichern, dass Sie sich nicht in einem Land befinden, das einem US-Regierungsembargo unterliegt oder als 'terrorismusunterstützendes' Land eingestuft ist, und dass Sie nicht auf einer US-Regierungsliste verbotener oder beschränkter Parteien stehen. Sie verpflichten sich, alle anwendbaren Export- und Reexportkontrollgesetze und -vorschriften einzuhalten.",
-    "s24t": "24. Verzicht auf Sammelklagen",
-    "s24b": "SOWEIT NACH GELTENDEM RECHT ZULÄSSIG, VERZICHTEN SIE AUF DAS RECHT, AN EINER SAMMELKLAGE ODER EINEM SCHIEDSVERFAHREN ALS KLASSE GEGEN DEN ENTWICKLER TEILZUNEHMEN. ALLE ANSPRÜCHE MÜSSEN IN IHRER INDIVIDUELLEN EIGENSCHAFT GELTEND GEMACHT WERDEN UND NICHT ALS KLÄGER ODER KLASSENMITGLIED IN EINEM VERMEINTLICHEN KLASSEN- ODER REPRÄSENTATIVVERFAHREN. Hinweis: Dieser Verzicht gilt nicht, soweit er durch das EU-Verbraucherschutzrecht verboten ist."
+    "s24t": "24. Applicable Law & Dispute Resolution",
+    "s24b": "This EULA is governed by the laws of the Federal Republic of Germany. Any disputes shall be subject to the exclusive jurisdiction of the competent courts of Germany. Nothing in this EULA limits your statutory rights as a consumer under applicable EU or national law, including the right to bring claims before the courts of your country of residence."
   },
   "privacyContent": {
     "s1t": "1. Einleitung",
     "s1b": "Diese Datenschutzrichtlinie erklärt, wie Splitter Orbs Ihre personenbezogenen Daten erhebt, verwendet und schützt. Wir verarbeiten Daten gemäß der EU-Datenschutz-Grundverordnung (DSGVO).",
     "s2t": "2. Verantwortlicher",
-    "s2b": "Der Verantwortliche ist der App-Entwickler. Kontakt: info@splitterorbs.com.",
+    "s2b": "The data controller is Felix Werner, c/o COCENTER, Koppoldstr. 1, 86551 Aichach, Germany. Contact: info@splitterorbs.com.",
     "s3t": "3. Erhobene Daten",
     "s3b": "Konto- & Profildaten: Anzeigename, Spielfortschritt, In-Game-Währung, Kartensammlungsstufen, freigeschaltete Skins, Einstellungen, Login-Streak-Daten. Soziale Daten: Freundesliste, Matchverlauf. Authentifizierungsdaten: Google-Konto-ID und E-Mail bei Google-Verbindung. Apple-Konto-ID und E-Mail bei Verwendung von Apple-Anmeldung.",
     "s4t": "4. Rechtsgrundlage der Verarbeitung",

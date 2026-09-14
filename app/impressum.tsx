@@ -22,7 +22,7 @@ export default function ImpressumScreen() {
     <SafeAreaView style={styles.safe}>
       <View style={styles.header}>
         <TouchableOpacity
-          onPress={() => { console.log('[Impressum] Back pressed'); router.back(); }}
+          onPress={() => { router.back(); }}
           style={styles.backBtn}
         >
           <Ionicons name="arrow-back" size={20} color={COLORS.primary} />

@@ -666,14 +666,14 @@
     "s22b": "Trong phạm vi tối đa được pháp luật cho phép: (a) tổng trách nhiệm của nhà phát triển đối với bạn về các khiếu nại phát sinh từ EULA này hoặc việc sử dụng Ứng dụng sẽ không vượt quá số tiền bạn đã trả cho nhà phát triển trong 12 tháng trước khiếu nại, hoặc €5 nếu không có khoản thanh toán nào; (b) nhà phát triển sẽ không chịu trách nhiệm về việc mất tiến trình game, vật phẩm ảo, tiền tệ trong game, dữ liệu tài khoản hoặc bất kỳ nội dung trong ứng dụng nào khác, bất kể nguyên nhân; (c) nhà phát triển sẽ không chịu trách nhiệm về các hành động hoặc thiếu sót của bên thứ ba, bao gồm Supabase, Google hoặc Apple.",
     "s23t": "23. Kiểm soát Xuất khẩu",
     "s23b": "Bạn tuyên bố rằng bạn không ở trong quốc gia bị chính phủ Hoa Kỳ cấm vận hoặc được chỉ định là quốc gia 'hỗ trợ khủng bố', và bạn không có trong bất kỳ danh sách các bên bị cấm hoặc hạn chế nào của chính phủ Hoa Kỳ. Bạn đồng ý tuân thủ tất cả các luật và quy định kiểm soát xuất khẩu và tái xuất khẩu áp dụng.",
-    "s24t": "24. Từ bỏ Kiện tập thể",
-    "s24b": "Trong phạm vi được pháp luật áp dụng cho phép, bạn từ bỏ quyền tham gia vào vụ kiện tập thể hoặc trọng tài tập thể chống lại nhà phát triển. Tất cả các khiếu nại phải được nộp với tư cách cá nhân của bạn, không phải với tư cách là nguyên đơn hoặc thành viên lớp trong bất kỳ thủ tục tập thể hoặc đại diện nào được cho là. Lưu ý: việc từ bỏ này không áp dụng trong phạm vi bị cấm bởi luật bảo vệ người tiêu dùng EU."
+    "s24t": "24. Applicable Law & Dispute Resolution",
+    "s24b": "This EULA is governed by the laws of the Federal Republic of Germany. Any disputes shall be subject to the exclusive jurisdiction of the competent courts of Germany. Nothing in this EULA limits your statutory rights as a consumer under applicable EU or national law, including the right to bring claims before the courts of your country of residence."
   },
   "privacyContent": {
     "s1t": "1. Giới thiệu",
     "s1b": "Chính sách Quyền riêng tư này giải thích cách Splitter Orbs thu thập, sử dụng và bảo vệ dữ liệu cá nhân của bạn. Chúng tôi xử lý dữ liệu theo Quy định Bảo vệ Dữ liệu Chung của EU (GDPR/DSGVO).",
     "s2t": "2. Người kiểm soát Dữ liệu",
-    "s2b": "Người kiểm soát dữ liệu là nhà phát triển ứng dụng. Liên hệ: info@splitterorbs.com.",
+    "s2b": "The data controller is Felix Werner, c/o COCENTER, Koppoldstr. 1, 86551 Aichach, Germany. Contact: info@splitterorbs.com.",
     "s3t": "3. Dữ liệu chúng tôi Thu thập",
     "s3b": "Dữ liệu Tài khoản & Hồ sơ: tên hiển thị, tiến trình game, tiền tệ trong game, cấp độ bộ sưu tập thẻ, skin đã mở khóa, cài đặt, dữ liệu chuỗi đăng nhập. Dữ liệu Xã hội: danh sách bạn bè, lịch sử trận đấu. Dữ liệu Xác thực: ID tài khoản Google và email nếu bạn kết nối Google. ID tài khoản Apple và email khi sử dụng Apple Sign-In.",
     "s4t": "4. Cơ sở Pháp lý để Xử lý",

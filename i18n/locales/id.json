@@ -666,14 +666,14 @@
     "s22b": "Sejauh yang diizinkan oleh hukum: (a) total tanggung jawab pengembang kepada Anda atas klaim yang timbul dari EULA ini atau penggunaan Aplikasi tidak akan melebihi jumlah yang Anda bayarkan kepada pengembang dalam 12 bulan sebelum klaim, atau €5 jika tidak ada pembayaran; (b) pengembang tidak bertanggung jawab atas kehilangan kemajuan game, item virtual, mata uang dalam game, data akun, atau konten dalam aplikasi lainnya, apa pun penyebabnya; (c) pengembang tidak bertanggung jawab atas tindakan atau kelalaian pihak ketiga, termasuk Supabase, Google, atau Apple.",
     "s23t": "23. Kontrol Ekspor",
     "s23b": "Anda menyatakan bahwa Anda tidak berada di negara yang dikenai embargo pemerintah AS atau yang ditetapkan sebagai negara 'pendukung terorisme', dan Anda tidak terdaftar dalam daftar pihak yang dilarang atau dibatasi oleh pemerintah AS. Anda setuju untuk mematuhi semua undang-undang dan peraturan kontrol ekspor dan re-ekspor yang berlaku.",
-    "s24t": "24. Pengesampingan Gugatan Kelompok",
-    "s24b": "Sejauh yang diizinkan oleh hukum yang berlaku, Anda melepaskan hak untuk berpartisipasi dalam gugatan kelompok atau arbitrase kelompok terhadap pengembang. Semua klaim harus diajukan dalam kapasitas individu Anda, bukan sebagai penggugat atau anggota kelas dalam proses kelompok atau perwakilan mana pun. Catatan: pengesampingan ini tidak berlaku sejauh dilarang oleh hukum perlindungan konsumen UE."
+    "s24t": "24. Applicable Law & Dispute Resolution",
+    "s24b": "This EULA is governed by the laws of the Federal Republic of Germany. Any disputes shall be subject to the exclusive jurisdiction of the competent courts of Germany. Nothing in this EULA limits your statutory rights as a consumer under applicable EU or national law, including the right to bring claims before the courts of your country of residence."
   },
   "privacyContent": {
     "s1t": "1. Pendahuluan",
     "s1b": "Kebijakan Privasi ini menjelaskan bagaimana Splitter Orbs mengumpulkan, menggunakan, dan melindungi data pribadi Anda. Kami memproses data sesuai dengan Peraturan Perlindungan Data Umum UE (GDPR/DSGVO).",
     "s2t": "2. Pengontrol Data",
-    "s2b": "Pengontrol data adalah pengembang aplikasi. Kontak: info@splitterorbs.com.",
+    "s2b": "The data controller is Felix Werner, c/o COCENTER, Koppoldstr. 1, 86551 Aichach, Germany. Contact: info@splitterorbs.com.",
     "s3t": "3. Data yang Kami Kumpulkan",
     "s3b": "Data Akun & Profil: nama tampilan, kemajuan game, mata uang dalam game, level koleksi kartu, skin yang dibuka, pengaturan, data streak login. Data Sosial: daftar teman, riwayat pertandingan. Data Autentikasi: ID akun Google dan email jika Anda menghubungkan Google. ID akun Apple dan email saat menggunakan Apple Sign-In.",
     "s4t": "4. Dasar Hukum Pemrosesan",

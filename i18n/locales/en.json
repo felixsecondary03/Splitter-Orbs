@@ -666,14 +666,14 @@
     "s22b": "TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW: (a) THE DEVELOPER'S TOTAL LIABILITY TO YOU FOR ANY CLAIM ARISING FROM THIS EULA OR YOUR USE OF THE APP SHALL NOT EXCEED THE AMOUNT YOU PAID TO THE DEVELOPER IN THE 12 MONTHS PRECEDING THE CLAIM, OR €5 IF YOU HAVE MADE NO PAYMENTS; (b) THE DEVELOPER IS NOT LIABLE FOR LOSS OF GAME PROGRESS, VIRTUAL ITEMS, IN-GAME CURRENCY, ACCOUNT DATA, OR ANY OTHER IN-APP CONTENT, REGARDLESS OF CAUSE; (c) THE DEVELOPER IS NOT LIABLE FOR ANY ACTIONS OR OMISSIONS OF THIRD-PARTY SERVICE PROVIDERS INCLUDING SUPABASE, GOOGLE, OR APPLE.",
     "s23t": "23. Export Control",
     "s23b": "You represent that you are not located in a country subject to a U.S. Government embargo or designated as a 'terrorist supporting' country, and that you are not listed on any U.S. Government list of prohibited or restricted parties. You agree to comply with all applicable export and re-export control laws and regulations.",
-    "s24t": "24. Class Action Waiver",
-    "s24b": "TO THE EXTENT PERMITTED BY APPLICABLE LAW, YOU WAIVE ANY RIGHT TO PARTICIPATE IN A CLASS ACTION LAWSUIT OR CLASS-WIDE ARBITRATION AGAINST THE DEVELOPER. ALL CLAIMS MUST BE BROUGHT IN YOUR INDIVIDUAL CAPACITY AND NOT AS A PLAINTIFF OR CLASS MEMBER IN ANY PURPORTED CLASS OR REPRESENTATIVE PROCEEDING. Note: This waiver does not apply where prohibited by EU consumer protection law."
+    "s24t": "24. Applicable Law & Dispute Resolution",
+    "s24b": "This EULA is governed by the laws of the Federal Republic of Germany. Any disputes shall be subject to the exclusive jurisdiction of the competent courts of Germany. Nothing in this EULA limits your statutory rights as a consumer under applicable EU or national law, including the right to bring claims before the courts of your country of residence."
   },
   "privacyContent": {
     "s1t": "1. Introduction",
     "s1b": "This Privacy Policy explains how Splitter Orbs collects, uses, and protects your personal data. We process data in accordance with the EU General Data Protection Regulation (GDPR/DSGVO).",
     "s2t": "2. Data Controller",
-    "s2b": "The data controller is the app developer. Contact: info@splitterorbs.com.",
+    "s2b": "The data controller is Felix Werner, c/o COCENTER, Koppoldstr. 1, 86551 Aichach, Germany. Contact: info@splitterorbs.com.",
     "s3t": "3. Data We Collect",
     "s3b": "Account & Profile Data: display name, game progress, in-game currency, card collection levels, unlocked skins, settings, login streak data. Social Data: friends list, match history. Authentication Data: Google account ID and email if you connect Google. Apple Account ID and email when Apple Sign-In is used.",
     "s4t": "4. Legal Basis for Processing",

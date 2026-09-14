@@ -20,7 +20,7 @@ import { useProfile } from '@/contexts/ProfileContext';
 import { supabase } from '@/utils/supabase';
 import { CURRENT_EULA_VERSION } from '@/game/constants';
 
-const TOTAL_STEPS = 4;
+const TOTAL_STEPS = 5;
 
 const LANGUAGES = [
   { code: 'en', label: 'EN', name: 'English' },
@@ -33,14 +33,28 @@ const LANGUAGES = [
   { code: 'pt', label: 'PT', name: 'Português' },
 ];
 
-const LANG_MIN_AGE: Record<string, number> = {
-  de: 16, nl: 16, ie: 16,
-  fr: 15,
-  es: 14, it: 14,
-  // all others: 13
-};
+const REGIONS = [
+  { code: 'DE', flag: '🇩🇪', name: 'Deutschland', minAge: 16 },
+  { code: 'AT', flag: '🇦🇹', name: 'Österreich', minAge: 14 },
+  { code: 'CH', flag: '🇨🇭', name: 'Schweiz', minAge: 13 },
+  { code: 'NL', flag: '🇳🇱', name: 'Nederland', minAge: 16 },
+  { code: 'FR', flag: '🇫🇷', name: 'France', minAge: 15 },
+  { code: 'ES', flag: '🇪🇸', name: 'España', minAge: 14 },
+  { code: 'IT', flag: '🇮🇹', name: 'Italia', minAge: 14 },
+  { code: 'PT', flag: '🇵🇹', name: 'Portugal', minAge: 13 },
+  { code: 'GB', flag: '🇬🇧', name: 'United Kingdom', minAge: 13 },
+  { code: 'IE', flag: '🇮🇪', name: 'Ireland', minAge: 16 },
+  { code: 'PL', flag: '🇵🇱', name: 'Polska', minAge: 13 },
+  { code: 'SE', flag: '🇸🇪', name: 'Sverige', minAge: 13 },
+  { code: 'DK', flag: '🇩🇰', name: 'Danmark', minAge: 13 },
+  { code: 'FI', flag: '🇫🇮', name: 'Suomi', minAge: 13 },
+  { code: 'NO', flag: '🇳🇴', name: 'Norge', minAge: 13 },
+  { code: 'RO', flag: '🇷🇴', name: 'România', minAge: 13 },
+  { code: 'JP', flag: '🇯🇵', name: '日本', minAge: 13 },
+];
 
-const getMinAge = (lang: string): number => LANG_MIN_AGE[lang] ?? 13;
+const getMinAgeForRegion = (regionCode: string): number =>
+  REGIONS.find((r) => r.code === regionCode)?.minAge ?? 13;
 
 export default function OnboardingScreen() {
   const insets = useSafeAreaInsets();
@@ -48,6 +62,7 @@ export default function OnboardingScreen() {
   const { refreshProfile } = useProfile();
 
   const [step, setStep] = useState(0);
+  const [region, setRegion] = useState('DE');
   const [language, setLanguage] = useState('en');
   const [birthDate, setBirthDate] = useState(new Date(2000, 0, 1));
   const [eulaAccepted, setEulaAccepted] = useState(false);
@@ -91,6 +106,7 @@ export default function OnboardingScreen() {
           age_verified: true,
           is_under_16: under16,
           language,
+          region,
         },
       });
 
@@ -108,11 +124,11 @@ export default function OnboardingScreen() {
   };
 
   const handleNext = () => {
-    if (step === 3) {
+    if (step === 4) {
       handleComplete();
       return;
     }
-    if (step === 1) {
+    if (step === 2) {
       setIsUnder16(checkIsUnder16());
     }
     animateStep(1);
@@ -137,9 +153,9 @@ export default function OnboardingScreen() {
   };
 
   const canProceed = () => {
-    if (step === 1) return !isMinor();
-    if (step === 2) return eulaAccepted;
-    if (step === 3) return displayName.trim().length >= 2 && !isSubmitting;
+    if (step === 2) return !isMinor();
+    if (step === 3) return eulaAccepted;
+    if (step === 4) return displayName.trim().length >= 2 && !isSubmitting;
     return true;
   };
 
@@ -151,7 +167,7 @@ export default function OnboardingScreen() {
     return age;
   };
 
-  const minAge = getMinAge(language);
+  const minAge = getMinAgeForRegion(region);
   const isMinor = () => getAge() < minAge;
   const checkIsUnder16 = () => getAge() < 16;
 
@@ -175,6 +191,40 @@ export default function OnboardingScreen() {
 
       <Animated.View style={[styles.stepContent, { transform: [{ translateX: slideAnim }] }]}>
         {step === 0 && (
+          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.stepInner}>
+            <View style={styles.stepIcon}>
+              <Globe size={32} color={COLORS.primary} strokeWidth={1.5} />
+            </View>
+            <Text style={styles.stepTitle}>Select your region</Text>
+            <Text style={styles.stepSub}>This sets the minimum age requirement for your country</Text>
+            <View style={styles.langGrid}>
+              {REGIONS.map((r) => {
+                const isActive = region === r.code;
+                return (
+                  <AnimatedPressable
+                    key={r.code}
+                    style={[styles.langBtn, isActive && styles.langBtnActive]}
+                    onPress={() => setRegion(r.code)}
+                  >
+                    <Text style={{ fontSize: 28 }}>{r.flag}</Text>
+                    <Text style={[styles.langCode, isActive && styles.langCodeActive, { fontSize: 13 }]}>{r.name}</Text>
+                    <Text style={[styles.langName, isActive && styles.langNameActive]}>
+                      {'Min. age: '}
+                      {r.minAge}
+                    </Text>
+                    {isActive && (
+                      <View style={styles.langCheck}>
+                        <Check size={12} color={COLORS.primary} strokeWidth={3} />
+                      </View>
+                    )}
+                  </AnimatedPressable>
+                );
+              })}
+            </View>
+          </ScrollView>
+        )}
+
+        {step === 1 && (
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.stepInner}>
             <View style={styles.stepIcon}>
               <Globe size={32} color={COLORS.primary} strokeWidth={1.5} />
@@ -204,13 +254,17 @@ export default function OnboardingScreen() {
           </ScrollView>
         )}
 
-        {step === 1 && (
+        {step === 2 && (
           <View style={styles.stepInner}>
             <View style={styles.stepIcon}>
               <Calendar size={32} color={COLORS.primary} strokeWidth={1.5} />
             </View>
             <Text style={styles.stepTitle}>Age verification</Text>
-            <Text style={styles.stepSub}>You must be at least {minAge} years old to play</Text>
+            <Text style={styles.stepSub}>
+              {'You must be at least '}
+              {minAge}
+              {' years old to play'}
+            </Text>
             <View style={styles.datePickerWrap}>
               <DateTimePicker
                 value={birthDate}
@@ -230,7 +284,9 @@ export default function OnboardingScreen() {
             {isMinor() && (
               <View style={styles.warningCard}>
                 <Text style={styles.warningText}>
-                  You must be at least {minAge} years old to create an account in your region.
+                  {'You must be at least '}
+                  {minAge}
+                  {' years old to create an account in your region.'}
                 </Text>
               </View>
             )}
@@ -244,7 +300,7 @@ export default function OnboardingScreen() {
           </View>
         )}
 
-        {step === 2 && (
+        {step === 3 && (
           <View style={[styles.stepInner, { flex: 1 }]}>
             <View style={styles.stepIcon}>
               <FileText size={32} color={COLORS.primary} strokeWidth={1.5} />
@@ -269,7 +325,7 @@ export default function OnboardingScreen() {
           </View>
         )}
 
-        {step === 3 && (
+        {step === 4 && (
           <View style={styles.stepInner}>
             <View style={styles.stepIcon}>
               <User size={32} color={COLORS.primary} strokeWidth={1.5} />
@@ -295,7 +351,10 @@ export default function OnboardingScreen() {
                 autoFocus
               />
               {nameError ? <Text style={styles.errorText}>{nameError}</Text> : null}
-              <Text style={styles.charCount}>{displayName.length}/20</Text>
+              <Text style={styles.charCount}>
+                {displayName.length}
+                {'/20'}
+              </Text>
             </View>
           </View>
         )}

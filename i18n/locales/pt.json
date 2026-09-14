@@ -666,14 +666,14 @@
     "s22b": "NA EXTENSÃO MÁXIMA PERMITIDA PELA LEI APLICÁVEL: (a) A RESPONSABILIDADE TOTAL DO DESENVOLVEDOR PERANTE VOCÊ POR QUALQUER RECLAMAÇÃO DECORRENTE DESTE CLUF OU DO SEU USO DO APLICATIVO NÃO EXCEDERÁ O VALOR QUE VOCÊ PAGOU AO DESENVOLVEDOR NOS 12 MESES ANTERIORES À RECLAMAÇÃO, OU €5 SE VOCÊ NÃO FEZ NENHUM PAGAMENTO; (b) O DESENVOLVEDOR NÃO É RESPONSÁVEL PELA PERDA DE PROGRESSO DO JOGO, ITENS VIRTUAIS, MOEDA NO JOGO, DADOS DA CONTA OU QUALQUER OUTRO CONTEÚDO NO APLICATIVO, INDEPENDENTEMENTE DA CAUSA; (c) O DESENVOLVEDOR NÃO É RESPONSÁVEL POR AÇÕES OU OMISSÕES DE PROVEDORES DE SERVIÇOS TERCEIROS, INCLUINDO SUPABASE, GOOGLE OU APPLE.",
     "s23t": "23. Controle de exportações",
     "s23b": "Você declara que não está localizado em um país sujeito a embargo do Governo dos EUA ou designado como país 'que apoia o terrorismo', e que não está listado em nenhuma lista de partes proibidas ou restritas do Governo dos EUA. Você concorda em cumprir todas as leis e regulamentos aplicáveis de controle de exportação e reexportação.",
-    "s24t": "24. Renúncia a ações coletivas",
-    "s24b": "NA EXTENSÃO PERMITIDA PELA LEI APLICÁVEL, VOCÊ RENUNCIA A QUALQUER DIREITO DE PARTICIPAR EM UMA AÇÃO COLETIVA OU ARBITRAGEM COLETIVA CONTRA O DESENVOLVEDOR. TODAS AS RECLAMAÇÕES DEVEM SER APRESENTADAS NA SUA CAPACIDADE INDIVIDUAL E NÃO COMO AUTOR OU MEMBRO DE UMA CLASSE EM QUALQUER SUPOSTO PROCESSO COLETIVO OU REPRESENTATIVO. Nota: Esta renúncia não se aplica onde proibida pela lei de proteção ao consumidor da UE."
+    "s24t": "24. Applicable Law & Dispute Resolution",
+    "s24b": "This EULA is governed by the laws of the Federal Republic of Germany. Any disputes shall be subject to the exclusive jurisdiction of the competent courts of Germany. Nothing in this EULA limits your statutory rights as a consumer under applicable EU or national law, including the right to bring claims before the courts of your country of residence."
   },
   "privacyContent": {
     "s1t": "1. Introdução",
     "s1b": "Esta Política de Privacidade explica como o Splitter Orbs coleta, usa e protege seus dados pessoais. Processamos dados de acordo com o Regulamento Geral de Proteção de Dados da UE (RGPD/DSGVO).",
     "s2t": "2. Controlador de dados",
-    "s2b": "O controlador de dados é o desenvolvedor do aplicativo. Contato: info@splitterorbs.com.",
+    "s2b": "The data controller is Felix Werner, c/o COCENTER, Koppoldstr. 1, 86551 Aichach, Germany. Contact: info@splitterorbs.com.",
     "s3t": "3. Dados que coletamos",
     "s3b": "Dados de conta e perfil: nome de exibição, progresso do jogo, moeda no jogo, níveis de coleção de cartas, skins desbloqueados, configurações, dados de sequência de login. Dados sociais: lista de amigos, histórico de partidas. Dados de autenticação: ID de conta do Google e e-mail se você conectar o Google. ID de conta Apple e e-mail quando o Login com Apple é usado.",
     "s4t": "4. Base legal para processamento",

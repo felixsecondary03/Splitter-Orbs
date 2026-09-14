@@ -666,14 +666,14 @@
     "s22b": "W MAKSYMALNYM ZAKRESIE DOZWOLONYM PRZEZ OBOWIĄZUJĄCE PRAWO: (a) CAŁKOWITA ODPOWIEDZIALNOŚĆ DEWELOPERA WOBEC CIEBIE ZA JAKIEKOLWIEK ROSZCZENIE WYNIKAJĄCE Z NINIEJSZEJ EULA LUB KORZYSTANIA Z APLIKACJI NIE PRZEKROCZY KWOTY ZAPŁACONEJ DEWELOPEROWI W CIĄGU 12 MIESIĘCY POPRZEDZAJĄCYCH ROSZCZENIE LUB €5, JEŚLI NIE DOKONAŁEŚ ŻADNYCH PŁATNOŚCI; (b) DEWELOPER NIE PONOSI ODPOWIEDZIALNOŚCI ZA UTRATĘ POSTĘPU W GRZE, WIRTUALNYCH PRZEDMIOTÓW, WALUTY W GRZE, DANYCH KONTA LUB INNYCH TREŚCI W APLIKACJI, NIEZALEŻNIE OD PRZYCZYNY; (c) DEWELOPER NIE PONOSI ODPOWIEDZIALNOŚCI ZA DZIAŁANIA LUB ZANIECHANIA ZEWNĘTRZNYCH DOSTAWCÓW USŁUG, W TYM SUPABASE, GOOGLE LUB APPLE.",
     "s23t": "23. Kontrola eksportu",
     "s23b": "Oświadczasz, że nie przebywasz w kraju objętym embargiem rządu USA ani nie jesteś wyznaczony jako kraj 'wspierający terroryzm', oraz że nie figurujesz na żadnej liście zakazanych lub ograniczonych podmiotów rządu USA. Zgadzasz się przestrzegać wszystkich obowiązujących przepisów i regulacji dotyczących kontroli eksportu i reeksportu.",
-    "s24t": "24. Zrzeczenie się pozwów zbiorowych",
-    "s24b": "W ZAKRESIE DOZWOLONYM PRZEZ OBOWIĄZUJĄCE PRAWO ZRZEKASZ SIĘ PRAWA DO UCZESTNICTWA W POZWIE ZBIOROWYM LUB ARBITRAŻU ZBIOROWYM PRZECIWKO DEWELOPEROWI. WSZYSTKIE ROSZCZENIA MUSZĄ BYĆ WNOSZONE W TWOIM INDYWIDUALNYM CHARAKTERZE, A NIE JAKO POWÓD LUB CZŁONEK KLASY W JAKIMKOLWIEK DOMNIEMANYM POSTĘPOWANIU ZBIOROWYM LUB REPREZENTATYWNYM. Uwaga: To zrzeczenie nie ma zastosowania tam, gdzie jest zakazane przez unijne prawo ochrony konsumentów."
+    "s24t": "24. Applicable Law & Dispute Resolution",
+    "s24b": "This EULA is governed by the laws of the Federal Republic of Germany. Any disputes shall be subject to the exclusive jurisdiction of the competent courts of Germany. Nothing in this EULA limits your statutory rights as a consumer under applicable EU or national law, including the right to bring claims before the courts of your country of residence."
   },
   "privacyContent": {
     "s1t": "1. Wprowadzenie",
     "s1b": "Niniejsza Polityka prywatności wyjaśnia, jak Splitter Orbs zbiera, wykorzystuje i chroni Twoje dane osobowe. Przetwarzamy dane zgodnie z unijnym Ogólnym Rozporządzeniem o Ochronie Danych (RODO/DSGVO).",
     "s2t": "2. Administrator danych",
-    "s2b": "Administratorem danych jest deweloper aplikacji. Kontakt: info@splitterorbs.com.",
+    "s2b": "The data controller is Felix Werner, c/o COCENTER, Koppoldstr. 1, 86551 Aichach, Germany. Contact: info@splitterorbs.com.",
     "s3t": "3. Dane, które zbieramy",
     "s3b": "Dane konta i profilu: nazwa wyświetlana, postęp w grze, waluta w grze, poziomy kolekcji kart, odblokowane skórki, ustawienia, dane serii logowań. Dane społecznościowe: lista znajomych, historia meczów. Dane uwierzytelniające: ID konta Google i e-mail, jeśli połączysz Google. ID konta Apple i e-mail przy korzystaniu z logowania Apple.",
     "s4t": "4. Podstawa prawna przetwarzania",

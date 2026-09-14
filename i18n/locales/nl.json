@@ -666,14 +666,14 @@
     "s22b": "VOOR ZOVER MAXIMAAL TOEGESTAAN DOOR HET TOEPASSELIJKE RECHT: (a) ZAL DE TOTALE AANSPRAKELIJKHEID VAN DE ONTWIKKELAAR JEGENS U VOOR ENIGE CLAIM VOORTVLOEIEND UIT DEZE EULA OF UW GEBRUIK VAN DE APP HET BEDRAG DAT U AAN DE ONTWIKKELAAR HEEFT BETAALD IN DE 12 MAANDEN VOORAFGAAND AAN DE CLAIM NIET OVERSCHRIJDEN, OF €5 ALS U GEEN BETALINGEN HEEFT GEDAAN; (b) DE ONTWIKKELAAR IS NIET AANSPRAKELIJK VOOR VERLIES VAN SPELVOORTGANG, VIRTUELE ITEMS, IN-GAME VALUTA, ACCOUNTGEGEVENS OF ANDERE IN-APP INHOUD, ONGEACHT DE OORZAAK; (c) DE ONTWIKKELAAR IS NIET AANSPRAKELIJK VOOR HANDELINGEN OF NALATIGHEDEN VAN EXTERNE DIENSTVERLENERS INCLUSIEF SUPABASE, GOOGLE OF APPLE.",
     "s23t": "23. Exportcontrole",
     "s23b": "U verklaart dat u zich niet bevindt in een land dat onderworpen is aan een embargo van de Amerikaanse overheid of aangewezen is als 'terrorisme ondersteunend' land, en dat u niet voorkomt op een lijst van verboden of beperkte partijen van de Amerikaanse overheid. U stemt ermee in alle toepasselijke wet- en regelgeving inzake export- en herexportcontrole na te leven.",
-    "s24t": "24. Afstand van collectieve actie",
-    "s24b": "VOOR ZOVER TOEGESTAAN DOOR HET TOEPASSELIJKE RECHT, DOET U AFSTAND VAN HET RECHT OM DEEL TE NEMEN AAN EEN COLLECTIEVE RECHTSZAAK OF COLLECTIEVE ARBITRAGE TEGEN DE ONTWIKKELAAR. ALLE CLAIMS MOETEN IN UW INDIVIDUELE HOEDANIGHEID WORDEN INGEDIEND EN NIET ALS EISER OF KLASSELID IN ENIGE VERMEENDE KLASSE- OF REPRESENTATIEVE PROCEDURE. Opmerking: Deze afstand is niet van toepassing waar verboden door EU-consumentenbeschermingswetgeving."
+    "s24t": "24. Applicable Law & Dispute Resolution",
+    "s24b": "This EULA is governed by the laws of the Federal Republic of Germany. Any disputes shall be subject to the exclusive jurisdiction of the competent courts of Germany. Nothing in this EULA limits your statutory rights as a consumer under applicable EU or national law, including the right to bring claims before the courts of your country of residence."
   },
   "privacyContent": {
     "s1t": "1. Inleiding",
     "s1b": "Dit Privacybeleid legt uit hoe Splitter Orbs je persoonlijke gegevens verzamelt, gebruikt en beschermt. We verwerken gegevens in overeenstemming met de EU Algemene Verordening Gegevensbescherming (AVG/DSGVO).",
     "s2t": "2. Verwerkingsverantwoordelijke",
-    "s2b": "De verwerkingsverantwoordelijke is de app-ontwikkelaar. Contact: info@splitterorbs.com.",
+    "s2b": "The data controller is Felix Werner, c/o COCENTER, Koppoldstr. 1, 86551 Aichach, Germany. Contact: info@splitterorbs.com.",
     "s3t": "3. Gegevens die we verzamelen",
     "s3b": "Account- en profielgegevens: weergavenaam, spelvoortgang, in-game valuta, kaartverzamelingsniveaus, ontgrendelde skins, instellingen, inlogstreakgegevens. Sociale gegevens: vriendenlijst, matchgeschiedenis. Authenticatiegegevens: Google-account-ID en e-mail als je Google verbindt. Apple-account-ID en e-mail bij gebruik van Apple-aanmelding.",
     "s4t": "4. Rechtsgrondslag voor verwerking",

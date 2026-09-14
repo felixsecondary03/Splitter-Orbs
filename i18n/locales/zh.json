@@ -666,14 +666,14 @@
     "s22b": "在适用法律允许的最大范围内：(a) 开发者就本EULA或您使用应用产生的任何索赔对您的总责任不超过您在索赔前12个月内向开发者支付的金额，或如您未付款则为€5；(b) 开发者不对游戏进度、虚拟物品、游戏内货币、账户数据或任何其他应用内容的损失承担责任，无论原因如何；(c) 开发者不对第三方服务提供商（包括Supabase、Google或Apple）的行为或不作为承担责任。",
     "s23t": "23. 出口管制",
     "s23b": "您声明您不在受美国政府禁运的国家或被指定为\"支持恐怖主义\"的国家，且您未被列入任何美国政府禁止或限制方名单。您同意遵守所有适用的出口和再出口管制法律法规。",
-    "s24t": "24. 集体诉讼放弃",
-    "s24b": "在适用法律允许的范围内，您放弃参与针对开发者的集体诉讼或集体仲裁的任何权利。所有索赔必须以您的个人身份提出，而非作为任何所谓集体或代表性诉讼中的原告或集体成员。注意：此放弃在欧盟消费者保护法禁止的情况下不适用。"
+    "s24t": "24. Applicable Law & Dispute Resolution",
+    "s24b": "This EULA is governed by the laws of the Federal Republic of Germany. Any disputes shall be subject to the exclusive jurisdiction of the competent courts of Germany. Nothing in this EULA limits your statutory rights as a consumer under applicable EU or national law, including the right to bring claims before the courts of your country of residence."
   },
   "privacyContent": {
     "s1t": "1. 简介",
     "s1b": "本隐私政策说明Splitter Orbs如何收集、使用和保护您的个人数据。我们根据欧盟《通用数据保护条例》（GDPR/DSGVO）处理数据。",
     "s2t": "2. 数据控制者",
-    "s2b": "数据控制者是应用开发者。联系方式：info@splitterorbs.com。",
+    "s2b": "The data controller is Felix Werner, c/o COCENTER, Koppoldstr. 1, 86551 Aichach, Germany. Contact: info@splitterorbs.com.",
     "s3t": "3. 我们收集的数据",
     "s3b": "账户和个人资料数据：显示名称、游戏进度、游戏内货币、卡牌收集等级、已解锁皮肤、设置、登录连续数据。社交数据：好友列表、对战记录。认证数据：连接Google时的Google账户ID和电子邮件。使用Apple登录时的Apple账户ID和电子邮件。",
     "s4t": "4. 处理的法律依据",

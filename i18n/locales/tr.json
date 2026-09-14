@@ -666,14 +666,14 @@
     "s22b": "GEÇERLİ YASANIN İZİN VERDİĞİ AZAMİ ÖLÇÜDE: (a) GELİŞTİRİCİNİN BU EULA'DAN VEYA UYGULAMAYI KULLANIMINIZDAN KAYNAKLANAN HERHANGİ BİR TALEP İÇİN SIZE KARŞI TOPLAM SORUMLULUĞU, TALEP ÖNCESİNDEKİ 12 AY İÇİNDE GELİŞTİRİCİYE ÖDEDİĞİNİZ TUTARI VEYA HİÇBİR ÖDEME YAPMADIYSANIZ €5'İ AŞMAYACAKTIR; (b) GELİŞTİRİCİ, NEDENINDEN BAĞIMSIZ OLARAK OYUN İLERLEMESİ, SANAL ÖĞELER, OYUN İÇİ PARA BİRİMİ, HESAP VERİLERİ VEYA DİĞER UYGULAMA İÇİ İÇERİKLERİN KAYBI İÇİN SORUMLU DEĞİLDİR; (c) GELİŞTİRİCİ, SUPABASE, GOOGLE VEYA APPLE DAHİL ÜÇÜNCÜ TARAF HİZMET SAĞLAYICILARIN EYLEM VEYA İHMALLERİNDEN SORUMLU DEĞİLDİR.",
     "s23t": "23. İhracat Kontrolü",
     "s23b": "ABD Hükümeti ambargosu kapsamındaki bir ülkede bulunmadığınızı veya 'terörü destekleyen' ülke olarak tanımlanmadığınızı ve ABD Hükümeti'nin yasaklı veya kısıtlı taraflar listesinde yer almadığınızı beyan edersiniz. Geçerli tüm ihracat ve yeniden ihracat kontrol yasa ve yönetmeliklerine uymayı kabul edersiniz.",
-    "s24t": "24. Toplu Dava Feragatnamesi",
-    "s24b": "GEÇERLİ YASANIN İZİN VERDİĞİ ÖLÇÜDE, GELİŞTİRİCİYE KARŞI BİR TOPLU DAVAYA VEYA SINIF ÇAPINDA TAHKİME KATILMA HAKKINIZDAN FERAGAT EDERSİNİZ. TÜM TALEPLER BİREYSEL KAPASİTENİZDE VE HERHANGİ BİR VARSAYILAN SINIF VEYA TEMSİLİ YARGILAMADA DAVACI VEYA SINIF ÜYESİ OLARAK DEĞİL, BİREYSEL OLARAK YAPILMALIDIR. Not: Bu feragat, AB tüketici koruma hukuku tarafından yasaklandığı durumlarda geçerli değildir."
+    "s24t": "24. Applicable Law & Dispute Resolution",
+    "s24b": "This EULA is governed by the laws of the Federal Republic of Germany. Any disputes shall be subject to the exclusive jurisdiction of the competent courts of Germany. Nothing in this EULA limits your statutory rights as a consumer under applicable EU or national law, including the right to bring claims before the courts of your country of residence."
   },
   "privacyContent": {
     "s1t": "1. Giriş",
     "s1b": "Bu Gizlilik Politikası, Splitter Orbs'un kişisel verilerinizi nasıl topladığını, kullandığını ve koruduğunu açıklar. Verileri AB Genel Veri Koruma Yönetmeliği'ne (GDPR/DSGVO) uygun olarak işliyoruz.",
     "s2t": "2. Veri Sorumlusu",
-    "s2b": "Veri sorumlusu uygulama geliştiricisidir. İletişim: info@splitterorbs.com.",
+    "s2b": "The data controller is Felix Werner, c/o COCENTER, Koppoldstr. 1, 86551 Aichach, Germany. Contact: info@splitterorbs.com.",
     "s3t": "3. Topladığımız Veriler",
     "s3b": "Hesap ve Profil Verileri: görünen ad, oyun ilerlemesi, oyun içi para birimi, kart koleksiyonu seviyeleri, açılmış kostümler, ayarlar, giriş serisi verileri. Sosyal Veriler: arkadaş listesi, maç geçmişi. Kimlik Doğrulama Verileri: Google'ı bağlarsanız Google hesap kimliği ve e-posta. Apple ile Giriş kullanıldığında Apple hesap kimliği ve e-posta.",
     "s4t": "4. İşlemenin Hukuki Dayanağı",
