@@ -265,6 +265,8 @@ interface BottomHUDProps {
   onToggleEditMode: () => void;
   onOpenOrbShop: () => void;
   onSelectTower: (type: TowerType | null) => void;
+  onDragMove?: (absX: number, absY: number) => void;
+  onDragEnd?: (absX: number, absY: number) => void;
   insets: { top: number; bottom: number };
 }
 
@@ -279,6 +281,8 @@ const BottomHUD = React.memo(function BottomHUD({
   onToggleEditMode,
   onOpenOrbShop,
   onSelectTower,
+  onDragMove,
+  onDragEnd,
   insets,
 }: BottomHUDProps) {
   const towerNameFirst = (type: TowerType) => {
@@ -289,6 +293,13 @@ const BottomHUD = React.memo(function BottomHUD({
   return (
     <View style={[styles.bottomHud, { paddingBottom: Math.max(insets.bottom, 12) + 16 }]}>
       <View style={styles.abilityRow}>
+        <GHPressable
+          style={[styles.editToggleBtn, editMode && styles.editToggleBtnActive]}
+          onPress={onToggleEditMode}
+        >
+          <Text style={styles.editToggleBtnText}>{editMode ? '✅' : '✏️'}</Text>
+        </GHPressable>
+
         <View style={styles.abilityButtons}>
           {abilities.map((ability) => (
             <AbilityButton
@@ -301,21 +312,14 @@ const BottomHUD = React.memo(function BottomHUD({
             />
           ))}
         </View>
-        <View style={styles.abilityRightBtns}>
-          <GHPressable
-            style={[styles.editToggleBtn, editMode && styles.editToggleBtnActive]}
-            onPress={onToggleEditMode}
-          >
-            <Text style={styles.editToggleBtnText}>{editMode ? '✅' : '✏️'}</Text>
+
+        {!placementModeActive ? (
+          <GHPressable style={styles.orbShopCircleBtn} onPress={onOpenOrbShop}>
+            <Text style={styles.orbShopCircleBtnText}>🌀</Text>
           </GHPressable>
-          {!placementModeActive ? (
-            <GHPressable style={styles.orbShopCircleBtn} onPress={onOpenOrbShop}>
-              <Text style={styles.orbShopCircleBtnText}>🌀</Text>
-            </GHPressable>
-          ) : (
-            <View style={{ width: 56, height: 56 }} />
-          )}
-        </View>
+        ) : (
+          <View style={{ width: 56, height: 56 }} />
+        )}
       </View>
 
       <View style={styles.towerTrayBorder}>
@@ -331,28 +335,47 @@ const BottomHUD = React.memo(function BottomHUD({
             const canAfford = playerCoinsForTower >= cost;
             const firstName = towerNameFirst(towerType);
             return (
-              <GHPressable
+              <GestureDetector
                 key={towerType}
-                style={[
-                  styles.towerCard,
-                  isSelected && styles.towerCardSelected,
-                  !canAfford && styles.towerCardDisabled,
-                ]}
-                onPress={() => {
-                  onSelectTower(isSelected ? null : towerType);
-                }}
+                gesture={Gesture.Race(
+                  Gesture.Pan()
+                    .runOnJS(true)
+                    .minDistance(8)
+                    .onBegin(() => {
+                      onSelectTower(towerType);
+                    })
+                    .onUpdate((e) => {
+                      onDragMove?.(e.absoluteX, e.absoluteY);
+                    })
+                    .onEnd((e) => {
+                      onDragEnd?.(e.absoluteX, e.absoluteY);
+                    }),
+                  Gesture.Tap()
+                    .runOnJS(true)
+                    .onEnd(() => {
+                      onSelectTower(isSelected ? null : towerType);
+                    }),
+                )}
               >
-                <TowerIcon type={towerType} size={34} />
-                <Text style={styles.towerName} numberOfLines={1}>{firstName}</Text>
-                <View style={styles.towerCostRow}>
-                  <Text style={[styles.towerCost, !canAfford && { color: COLORS.textTertiary }]}>
-                    {'🪙 '}
-                  </Text>
-                  <Text style={[styles.towerCost, !canAfford && { color: COLORS.textTertiary }]}>
-                    {cost}
-                  </Text>
-                </View>
-              </GHPressable>
+                <Animated.View
+                  style={[
+                    styles.towerCard,
+                    isSelected && styles.towerCardSelected,
+                    !canAfford && styles.towerCardDisabled,
+                  ]}
+                >
+                  <TowerIcon type={towerType} size={34} />
+                  <Text style={styles.towerName} numberOfLines={1}>{firstName}</Text>
+                  <View style={styles.towerCostRow}>
+                    <Text style={[styles.towerCost, !canAfford && { color: COLORS.textTertiary }]}>
+                      {'🪙 '}
+                    </Text>
+                    <Text style={[styles.towerCost, !canAfford && { color: COLORS.textTertiary }]}>
+                      {cost}
+                    </Text>
+                  </View>
+                </Animated.View>
+              </GestureDetector>
             );
           })}
         </ScrollView>
@@ -444,6 +467,7 @@ export default function GameScreen() {
   const [selectedTowerForEdit, setSelectedTowerForEdit] = useState<Tower | null>(null);
   const [showOrbShop, setShowOrbShop] = useState(false);
   const [showForfeitDialog, setShowForfeitDialog] = useState(false);
+  const [previewPos, setPreviewPos] = useState<{ x: number; y: number } | null>(null);
 
   // ── Initial state (created once) ──
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -621,6 +645,8 @@ export default function GameScreen() {
   const HUD_TOP_HEIGHT = 80 + insets.top;
   const HUD_BOTTOM_HEIGHT = 180;
   const [canvasDims, setCanvasDims] = React.useState({ width: 320, height: 480 });
+  const canvasContainerRef = React.useRef<View>(null);
+  const canvasContainerLayout = React.useRef({ x: 0, y: 0, width: 320, height: 480 });
   const canvasWidth = canvasDims.width;
   const canvasHeight = canvasDims.height;
   const canvasScale = canvasWidth > 0 && canvasHeight > 0
@@ -834,6 +860,36 @@ export default function GameScreen() {
     }
   }, [editMode]);
 
+  const handleDragMove = useCallback((absX: number, absY: number) => {
+    const layout = canvasContainerLayout.current;
+    if (layout.width === 0) return;
+    const relX = absX - layout.x;
+    const relY = absY - layout.y;
+    const gx = (relX / layout.width) * GAME_WIDTH;
+    const gy = (relY / layout.height) * GAME_HEIGHT;
+    setPreviewPos({ x: gx, y: gy });
+  }, []);
+
+  const handleDragEnd = useCallback((absX: number, absY: number) => {
+    const layout = canvasContainerLayout.current;
+    if (layout.width === 0) return;
+    const relX = absX - layout.x;
+    const relY = absY - layout.y;
+    const gx = (relX / layout.width) * GAME_WIDTH;
+    const gy = (relY / layout.height) * GAME_HEIGHT;
+    const state = gameStateRef.current as GameState;
+    const type = state.player.selectedTower;
+    if (!type) return;
+    if (gy > WALL_Y + 18 && gy < GAME_HEIGHT - 24 && gx > 20 && gx < GAME_WIDTH - 20) {
+      dispatch((s) => {
+        const result = placeTower(s, type, gx, gy);
+        return result ?? s;
+      });
+    }
+    setPreviewPos(null);
+    handleSelectTower(null);
+  }, [gameStateRef, dispatch, handleSelectTower]);
+
   // ── Pause ──
   const handlePause = useCallback(() => {
     pause();
@@ -957,10 +1013,14 @@ export default function GameScreen() {
             borderWidth: 2,
             borderColor: '#e2e8f0',
           }}
+          ref={canvasContainerRef}
           onLayout={(e) => {
             const { width, height } = e.nativeEvent.layout;
             // subtract border (2px each side = 4px total) so scale matches gesture coords
             setCanvasDims({ width: width - 4, height: height - 4 });
+            canvasContainerRef.current?.measure((_x, _y, w, h, pageX, pageY) => {
+              canvasContainerLayout.current = { x: pageX, y: pageY, width: w, height: h };
+            });
           }}
         >
         {Platform.OS === 'web' ? (
@@ -1240,6 +1300,8 @@ export default function GameScreen() {
         onToggleEditMode={handleToggleEditMode}
         onOpenOrbShop={handleOpenOrbShop}
         onSelectTower={handleSelectTower}
+        onDragMove={handleDragMove}
+        onDragEnd={handleDragEnd}
         insets={insets}
       />
 
@@ -1557,9 +1619,10 @@ const styles = StyleSheet.create({
   },
   hudCenterBlock: {
     flex: 1,
-    alignItems: 'center',
+    alignItems: 'flex-start',
     gap: 2,
     minWidth: 0,
+    paddingLeft: 4,
   },
   opponentNameRow: {
     flexDirection: 'row',
@@ -1584,7 +1647,6 @@ const styles = StyleSheet.create({
     color: '#64748B',
   },
   timerPill: {
-    alignSelf: 'flex-start',
     paddingHorizontal: 10,
     paddingVertical: 3,
     borderRadius: 20,
@@ -1652,11 +1714,7 @@ const styles = StyleSheet.create({
     gap: 10,
     alignItems: 'center',
   },
-  abilityRightBtns: {
-    flexDirection: 'row',
-    gap: 4,
-    alignItems: 'center',
-  },
+
   orbShopCircleBtn: {
     width: 56,
     height: 56,

@@ -2403,6 +2403,29 @@ function drawCoinPickup(canvas: SkCanvas, c: CoinPickup, now: number, p: SkPaint
   p.setShader(hlShader);
   canvas.drawCircle(cx - 5, cy - 6, r * 0.4, p);
   p.setShader(null);
+
+  // Inner ring
+  p.setStyle(PaintStyle.Stroke);
+  p.setColor(Skia.Color('rgba(255,255,255,0.5)'));
+  p.setStrokeWidth(1.5);
+  canvas.drawCircle(cx, cy, r - 5, p);
+  p.setStyle(PaintStyle.Fill);
+
+  // 5-point star
+  p.setColor(Skia.Color('#92400E'));
+  const starPath = Skia.Path.Make();
+  const outerR = r * 0.5;
+  const innerR = outerR * 0.4;
+  for (let i = 0; i < 10; i++) {
+    const angle = (Math.PI * 2 * i) / 10 - Math.PI / 2;
+    const radius = i % 2 === 0 ? outerR : innerR;
+    const spx = cx + Math.cos(angle) * radius;
+    const spy = cy + Math.sin(angle) * radius;
+    if (i === 0) starPath.moveTo(spx, spy);
+    else starPath.lineTo(spx, spy);
+  }
+  starPath.close();
+  canvas.drawPath(starPath, p);
 }
 
 function drawProjectile(canvas: SkCanvas, proj: Projectile, p: SkPaint) {

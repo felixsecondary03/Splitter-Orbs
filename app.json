@@ -32,12 +32,15 @@
       "expo-web-browser",
       "expo-secure-store",
       "@react-native-community/datetimepicker",
-      ["expo-splash-screen", {
-        "backgroundColor": "#0F172A",
-        "image": "./assets/images/splash.png",
-        "imageWidth": 200,
-        "resizeMode": "contain"
-      }],
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#0F172A",
+          "image": "./assets/images/splash.png",
+          "imageWidth": 200,
+          "resizeMode": "contain"
+        }
+      ],
       "expo-status-bar",
       "expo-sharing",
       "expo-navigation-bar"
