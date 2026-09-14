@@ -7,7 +7,12 @@
     "wins": "胜利",
     "losses": "失败",
     "recentMatches": "最近比赛",
-    "dailyMissions": "每日任务"
+    "dailyMissions": "每日任务",
+    "rejoinMatch": "重新加入",
+    "rejoin": "重新加入",
+    "vs": "vs",
+    "league": "联赛",
+    "peak": "峰値："
   },
   "nav": {
     "home": "主页",
@@ -713,5 +718,12 @@
   "common": {
     "offlineTitle": "您已离线",
     "offlineMessage": "您可以继续使用应用！您的更改将保存在本地，并在您重新联网后同步。"
+  },
+  "tabs": {
+    "home": "主页",
+    "shop": "商店",
+    "play": "游戏",
+    "lab": "实验室",
+    "social": "排名"
   }
 }

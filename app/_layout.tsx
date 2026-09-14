@@ -8,7 +8,6 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useColorScheme, Alert } from "react-native";
 import { useNetworkState } from "expo-network";
 import { StatusBar } from "expo-status-bar";
-import * as NavigationBar from "expo-navigation-bar";
 import * as SystemUI from "expo-system-ui";
 import { AppThemeProvider } from "@/contexts/ThemeContext";
 import { WidgetProvider } from "@/contexts/WidgetContext";
@@ -62,8 +61,6 @@ export default function RootLayout() {
   }, [loaded]);
 
   useEffect(() => {
-    // Hide Android navigation bar for immersive full-screen
-    NavigationBar.setVisibilityAsync('hidden').catch(() => {});
     SystemUI.setBackgroundColorAsync('#0F172A').catch(() => {});
   }, []);
 

@@ -7,7 +7,12 @@
     "wins": "Thắng",
     "losses": "Thua",
     "recentMatches": "Trận đấu gần đây",
-    "dailyMissions": "Nhiệm vụ hàng ngày"
+    "dailyMissions": "Nhiệm vụ hàng ngày",
+    "rejoinMatch": "Quay lại trận",
+    "rejoin": "Quay lại",
+    "vs": "vs",
+    "league": "Giải đấu",
+    "peak": "Đỉnh:"
   },
   "nav": {
     "home": "Trang chủ",
@@ -713,5 +718,12 @@
   "common": {
     "offlineTitle": "Bạn đang ngoại tuyến",
     "offlineMessage": "Bạn vẫn có thể sử dụng ứng dụng! Các thay đổi sẽ được lưu cục bộ và đồng bộ khi bạn trực tuyến trở lại."
+  },
+  "tabs": {
+    "home": "Trang chủ",
+    "shop": "Cửa hàng",
+    "play": "Chơi",
+    "lab": "Lab",
+    "social": "Xếp hạng"
   }
 }

@@ -7,7 +7,12 @@
     "wins": "Wins",
     "losses": "Losses",
     "recentMatches": "Recent Matches",
-    "dailyMissions": "Daily Missions"
+    "dailyMissions": "Daily Missions",
+    "rejoinMatch": "Rejoin Match",
+    "rejoin": "Rejoin",
+    "vs": "vs",
+    "league": "League",
+    "peak": "Peak:"
   },
   "nav": {
     "home": "Home",
@@ -713,5 +718,12 @@
   "common": {
     "offlineTitle": "You are offline",
     "offlineMessage": "You can keep using the app! Your changes will be saved locally and synced when you are back online."
+  },
+  "tabs": {
+    "home": "Home",
+    "shop": "Shop",
+    "play": "Play",
+    "lab": "Lab",
+    "social": "Ranks"
   }
 }

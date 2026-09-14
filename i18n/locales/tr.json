@@ -7,7 +7,12 @@
     "wins": "Galibiyetler",
     "losses": "Mağlubiyetler",
     "recentMatches": "Son Maçlar",
-    "dailyMissions": "Günlük Görevler"
+    "dailyMissions": "Günlük Görevler",
+    "rejoinMatch": "Maça Dön",
+    "rejoin": "Dön",
+    "vs": "vs",
+    "league": "Lig",
+    "peak": "Zirve:"
   },
   "nav": {
     "home": "Ana Sayfa",
@@ -713,5 +718,12 @@
   "common": {
     "offlineTitle": "Çevrimdışısınız",
     "offlineMessage": "Uygulamayı kullanmaya devam edebilirsiniz! Değişiklikleriniz yerel olarak kaydedilecek ve tekrar çevrimiçi olduğunuzda senkronize edilecektir."
+  },
+  "tabs": {
+    "home": "Ana Sayfa",
+    "shop": "Mağaza",
+    "play": "Oyna",
+    "lab": "Lab",
+    "social": "Sıralama"
   }
 }

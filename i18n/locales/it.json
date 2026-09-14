@@ -7,7 +7,12 @@
     "wins": "Vittorie",
     "losses": "Sconfitte",
     "recentMatches": "Partite recenti",
-    "dailyMissions": "Missioni giornaliere"
+    "dailyMissions": "Missioni giornaliere",
+    "rejoinMatch": "Rientra",
+    "rejoin": "Rientra",
+    "vs": "vs",
+    "league": "Lega",
+    "peak": "Massimo:"
   },
   "nav": {
     "home": "Home",
@@ -713,5 +718,12 @@
   "common": {
     "offlineTitle": "Sei offline",
     "offlineMessage": "Puoi continuare a usare l'app! Le tue modifiche verranno salvate localmente e sincronizzate quando tornerai online."
+  },
+  "tabs": {
+    "home": "Home",
+    "shop": "Negozio",
+    "play": "Gioca",
+    "lab": "Lab",
+    "social": "Classifiche"
   }
 }

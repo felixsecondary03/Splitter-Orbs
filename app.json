@@ -5,13 +5,8 @@
     "slug": "splitter-orbs",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/app-icon-jzg.png",
+    "icon": "./assets/images/icon.png",
     "userInterfaceStyle": "automatic",
-    "splash": {
-      "image": "./assets/images/app-icon-jzg.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#FFFFFF"
-    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.base6a785b6e11565e84c8170348.app",
@@ -21,8 +16,8 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/app-icon-jzg.png",
-        "backgroundColor": "#FFFFFF"
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#0F172A"
       },
       "package": "com.base6a785b6e11565e84c8170348.app",
       "softwareKeyboardLayoutMode": "pan"
@@ -37,9 +32,15 @@
       "expo-web-browser",
       "expo-secure-store",
       "@react-native-community/datetimepicker",
-      "expo-splash-screen",
+      ["expo-splash-screen", {
+        "backgroundColor": "#0F172A",
+        "image": "./assets/images/splash.png",
+        "imageWidth": 200,
+        "resizeMode": "contain"
+      }],
       "expo-status-bar",
-      "expo-sharing"
+      "expo-sharing",
+      "expo-navigation-bar"
     ],
     "scheme": "splitterorbs",
     "experiments": {

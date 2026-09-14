@@ -7,7 +7,12 @@
     "wins": "Victoires",
     "losses": "Défaites",
     "recentMatches": "Parties récentes",
-    "dailyMissions": "Missions quotidiennes"
+    "dailyMissions": "Missions quotidiennes",
+    "rejoinMatch": "Rejoindre",
+    "rejoin": "Rejoindre",
+    "vs": "vs",
+    "league": "Ligue",
+    "peak": "Sommet :"
   },
   "nav": {
     "home": "Accueil",
@@ -713,5 +718,12 @@
   "common": {
     "offlineTitle": "Vous êtes hors ligne",
     "offlineMessage": "Vous pouvez continuer à utiliser l'application ! Vos modifications seront sauvegardées localement et synchronisées dès que vous serez de nouveau en ligne."
+  },
+  "tabs": {
+    "home": "Accueil",
+    "shop": "Boutique",
+    "play": "Jouer",
+    "lab": "Labo",
+    "social": "Classement"
   }
 }

@@ -7,7 +7,12 @@
     "wins": "Menang",
     "losses": "Kalah",
     "recentMatches": "Pertandingan Terbaru",
-    "dailyMissions": "Misi Harian"
+    "dailyMissions": "Misi Harian",
+    "rejoinMatch": "Bergabung Kembali",
+    "rejoin": "Bergabung",
+    "vs": "vs",
+    "league": "Liga",
+    "peak": "Puncak:"
   },
   "nav": {
     "home": "Beranda",
@@ -713,5 +718,12 @@
   "common": {
     "offlineTitle": "Anda sedang offline",
     "offlineMessage": "Anda dapat terus menggunakan aplikasi! Perubahan Anda akan disimpan secara lokal dan disinkronkan saat Anda kembali online."
+  },
+  "tabs": {
+    "home": "Beranda",
+    "shop": "Toko",
+    "play": "Main",
+    "lab": "Lab",
+    "social": "Peringkat"
   }
 }

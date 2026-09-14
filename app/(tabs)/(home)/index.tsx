@@ -25,6 +25,7 @@ import { useProfile } from '@/contexts/ProfileContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/utils/supabase';
 import { getLeague, LEAGUES } from '@/game/constants';
+import { useTranslation } from '@/i18n/LanguageContext';
 
 function AnimatedListItem({ index, children }: { index: number; children: React.ReactNode }) {
   const opacityRef = useRef(new Animated.Value(0));
@@ -101,6 +102,7 @@ export default function HomeScreen() {
   const router = useRouter();
   const { profile } = useProfile();
   const { user } = useAuth();
+  const { t } = useTranslation();
 
   const [activeSession, setActiveSession] = useState<ActiveSession | null>(null);
 
@@ -258,14 +260,14 @@ export default function HomeScreen() {
         <AnimatedListItem index={2}>
           <View style={styles.rejoinBanner}>
             <View style={styles.rejoinInfo}>
-              <Text style={styles.rejoinTitle}>🎮 Rejoin Match</Text>
+              <Text style={styles.rejoinTitle}>🎮 {t('home.rejoinMatch')}</Text>
               <Text style={styles.rejoinSub}>
-                vs
+                {t('home.vs')}
               </Text>
               <Text style={styles.rejoinOpponent}>{activeSession.opponentName}</Text>
             </View>
             <AnimatedPressable style={styles.rejoinBtn} onPress={handleRejoin}>
-              <Text style={styles.rejoinBtnText}>Rejoin</Text>
+              <Text style={styles.rejoinBtnText}>{t('home.rejoin')}</Text>
             </AnimatedPressable>
           </View>
         </AnimatedListItem>
@@ -277,14 +279,14 @@ export default function HomeScreen() {
           <View style={styles.leagueCardTop}>
             <View style={styles.leagueLeft}>
               <Text style={[styles.leagueName, { color: league.color }]}>{league.name}</Text>
-              <Text style={styles.leagueSub}>League</Text>
+              <Text style={styles.leagueSub}>{t('home.league')}</Text>
             </View>
             <View style={styles.leagueRight}>
               <View style={styles.trophyRow}>
                 <Trophy size={16} color={COLORS.gold} strokeWidth={2} />
                 <Text style={styles.trophyBig}>{trophyDisplay}</Text>
               </View>
-              <Text style={styles.peakText}>Peak: {(profile.peak_trophies ?? 0).toLocaleString()}</Text>
+              <Text style={styles.peakText}>{t('home.peak')} {(profile.peak_trophies ?? 0).toLocaleString()}</Text>
             </View>
           </View>
           {nextLeague && (
@@ -313,7 +315,7 @@ export default function HomeScreen() {
       {/* PLAY NOW button */}
       <AnimatedListItem index={4}>
         <AnimatedPressable style={styles.playNowBtn} onPress={handlePlayNow}>
-          <Text style={styles.playNowText}>⚡ PLAY NOW</Text>
+          <Text style={styles.playNowText}>⚡ {t('home.playNow')}</Text>
         </AnimatedPressable>
       </AnimatedListItem>
 
@@ -321,12 +323,12 @@ export default function HomeScreen() {
       <AnimatedListItem index={5}>
         <View style={styles.statsGrid}>
           <View style={styles.statsRow}>
-            <StatCard icon="🏆" label="Trophies" value={trophyDisplay} color="#f59e0b" bg="#fffbeb" />
-            <StatCard icon="📊" label="Win Rate" value={winRateDisplay} color="#3b82f6" bg="#eff6ff" />
+            <StatCard icon="🏆" label={t('home.trophies')} value={trophyDisplay} color="#f59e0b" bg="#fffbeb" />
+            <StatCard icon="📊" label={t('home.winRate')} value={winRateDisplay} color="#3b82f6" bg="#eff6ff" />
           </View>
           <View style={styles.statsRow}>
-            <StatCard icon="✅" label="Wins" value={winsDisplay} color="#10b981" bg="#f0fdf4" />
-            <StatCard icon="❌" label="Losses" value={lossesDisplay} color="#f43f5e" bg="#fff1f2" />
+            <StatCard icon="✅" label={t('home.wins')} value={winsDisplay} color="#10b981" bg="#f0fdf4" />
+            <StatCard icon="❌" label={t('home.losses')} value={lossesDisplay} color="#f43f5e" bg="#fff1f2" />
           </View>
         </View>
       </AnimatedListItem>

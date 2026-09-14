@@ -7,7 +7,12 @@
     "wins": "勝利",
     "losses": "敗北",
     "recentMatches": "最近の試合",
-    "dailyMissions": "デイリーミッション"
+    "dailyMissions": "デイリーミッション",
+    "rejoinMatch": "試合に戻る",
+    "rejoin": "戻る",
+    "vs": "vs",
+    "league": "リーグ",
+    "peak": "最高:"
   },
   "nav": {
     "home": "ホーム",
@@ -713,5 +718,12 @@
   "common": {
     "offlineTitle": "オフラインです",
     "offlineMessage": "引き続きアプリをご利用いただけます！変更内容はローカルに保存され、オンラインに戻ったときに同期されます。"
+  },
+  "tabs": {
+    "home": "ホーム",
+    "shop": "ショップ",
+    "play": "プレイ",
+    "lab": "ラボ",
+    "social": "ランク"
   }
 }

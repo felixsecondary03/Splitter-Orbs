@@ -41,10 +41,10 @@ import {
 import type { GameState, Tower, Loadout, AbilityState } from '@/game/engine-types';
 import type { TowerType, AbilityType, OrbType } from '@/game/constants';
 import { TOWER_COSTS, TOWER_TYPES, ORB_TYPES, UPGRADE_COST_MULT_ARRAY, SELL_RATIO, GAME_WIDTH, GAME_HEIGHT, WALL_Y, ORB_SLOTS } from '@/game/constants';
-import { getTowerRange, getTowerDamage, getTowerFireRate } from '@/game/engine-helpers';
+import { getTowerRange, getTowerDamage, getTowerFireRate, distance } from '@/game/engine-helpers';
 import { TowerIcon } from '@/components/TowerIcon';
 import { TutorialCoachmark } from '@/components/TutorialCoachmark';
-import { distance } from '@/game/engine-helpers';
+import { setVisibilityAsync as navBarSetVisibility } from 'expo-navigation-bar';
 import type { MatchMode } from '@/game/engine-types';
 import { useGameLoop } from '@/hooks/useGameLoop';
 import type { HudState } from '@/hooks/useGameLoop';
@@ -465,7 +465,7 @@ export default function GameScreen() {
   const beginMatch = useCallback(() => {
     setSearching(false);
     setSearchToast('');
-  }, [uiMode]);
+  }, []);
 
   // ── On mount: skip search for training/tutorial ──
   useEffect(() => {
@@ -645,6 +645,15 @@ export default function GameScreen() {
       console.warn('[Tutorial] complete-tutorial error', e);
     }
     router.replace('/(tabs)/(home)' as any);
+  }, []);
+
+  // ── Android nav bar: hide on mount, restore on unmount ──
+  useEffect(() => {
+    if (Platform.OS !== 'android') return;
+    navBarSetVisibility('hidden').catch(() => {});
+    return () => {
+      navBarSetVisibility('visible').catch(() => {});
+    };
   }, []);
 
   // ── Initialize tutorial on mount ──

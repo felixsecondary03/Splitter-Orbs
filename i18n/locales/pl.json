@@ -7,7 +7,12 @@
     "wins": "Wygrane",
     "losses": "Przegrane",
     "recentMatches": "Ostatnie mecze",
-    "dailyMissions": "Codzienne misje"
+    "dailyMissions": "Codzienne misje",
+    "rejoinMatch": "Wróć do meczu",
+    "rejoin": "Wróć",
+    "vs": "vs",
+    "league": "Liga",
+    "peak": "Szczyt:"
   },
   "nav": {
     "home": "Strona główna",
@@ -713,5 +718,12 @@
   "common": {
     "offlineTitle": "Jesteś offline",
     "offlineMessage": "Możesz nadal korzystać z aplikacji! Twoje zmiany zostaną zapisane lokalnie i zsynchronizowane po powrocie do sieci."
+  },
+  "tabs": {
+    "home": "Główna",
+    "shop": "Sklep",
+    "play": "Graj",
+    "lab": "Lab",
+    "social": "Rangi"
   }
 }

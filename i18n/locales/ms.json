@@ -7,7 +7,12 @@
     "wins": "Menang",
     "losses": "Kalah",
     "recentMatches": "Perlawanan Terkini",
-    "dailyMissions": "Misi Harian"
+    "dailyMissions": "Misi Harian",
+    "rejoinMatch": "Sertai Semula",
+    "rejoin": "Sertai",
+    "vs": "vs",
+    "league": "Liga",
+    "peak": "Puncak:"
   },
   "nav": {
     "home": "Laman Utama",
@@ -713,5 +718,12 @@
   "common": {
     "offlineTitle": "Anda sedang luar talian",
     "offlineMessage": "Anda boleh terus menggunakan aplikasi! Perubahan anda akan disimpan secara tempatan dan disegerakkan apabila anda kembali dalam talian."
+  },
+  "tabs": {
+    "home": "Utama",
+    "shop": "Kedai",
+    "play": "Main",
+    "lab": "Lab",
+    "social": "Kedudukan"
   }
 }

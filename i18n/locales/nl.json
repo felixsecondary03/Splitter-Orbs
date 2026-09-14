@@ -7,7 +7,12 @@
     "wins": "Overwinningen",
     "losses": "Verlies",
     "recentMatches": "Recente wedstrijden",
-    "dailyMissions": "Dagelijkse missies"
+    "dailyMissions": "Dagelijkse missies",
+    "rejoinMatch": "Hervatten",
+    "rejoin": "Hervatten",
+    "vs": "vs",
+    "league": "Liga",
+    "peak": "Piek:"
   },
   "nav": {
     "home": "Thuis",
@@ -713,5 +718,12 @@
   "common": {
     "offlineTitle": "Je bent offline",
     "offlineMessage": "Je kunt de app blijven gebruiken! Je wijzigingen worden lokaal opgeslagen en gesynchroniseerd zodra je weer online bent."
+  },
+  "tabs": {
+    "home": "Home",
+    "shop": "Winkel",
+    "play": "Spelen",
+    "lab": "Lab",
+    "social": "Rangen"
   }
 }
