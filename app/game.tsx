@@ -420,6 +420,7 @@ export default function GameScreen() {
   const insets = useSafeAreaInsets();
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const { profile } = useProfile();
+  const towerMenuAnytimeRef = useRef(false);
   const { t } = useTranslation();
   const params = useLocalSearchParams<{
     mode?: string;
@@ -715,6 +716,11 @@ export default function GameScreen() {
     };
   }, []);
 
+  // ── Sync towerMenuAnytime from profile ──
+  useEffect(() => {
+    if (profile) towerMenuAnytimeRef.current = profile.tower_menu_anytime === true;
+  }, [profile]);
+
   // ── Initialize tutorial on mount ──
   useEffect(() => {
     if (uiMode !== 'tutorial') return;
@@ -740,64 +746,107 @@ export default function GameScreen() {
       const { x, y } = event;
       const gameX = x / canvasScale;
       const gameY = y / canvasScale;
-
       const state = gameStateRef.current as GameState;
+      if (!state || state.status !== 'playing') return;
+      if (placementMode.active) return;
 
+      // 1. coin pickup
+      const coin = findCoinAtPosition(state, gameX, gameY);
+      if (coin) {
+        dispatch((s) => collectCoin(s, coin.id));
+        forceHudUpdate();
+        return;
+      }
+
+      // 2. edit mode: tower select/deselect only
+      if (state.editMode) {
+        let tw: Tower | null = null, td = Infinity;
+        for (const t of state.player.towers) {
+          if ((t.hp ?? 60) <= 0) continue;
+          const d = Math.hypot(t.x - gameX, t.y - gameY);
+          if (d <= 34 && d < td) { td = d; tw = t; }
+        }
+        if (tw) {
+          const twCopy = tw;
+          dispatch((s) => { s.player.selectedTower = twCopy.type; return s; });
+          setSelectedTowerForEdit({ ...tw });
+          setTowerPopupPos({ x: tw.x * canvasScale, y: tw.y * canvasScale });
+        } else {
+          dispatch((s) => { s.player.selectedTower = null; return s; });
+          setSelectedTowerForEdit(null);
+          setTowerPopupPos(null);
+        }
+        return;
+      }
+
+      // 3. targeting mode
+      if (state.targeting) {
+        const tappedOrb = findOrbAtPosition(state, gameX, gameY);
+        if (tappedOrb) {
+          dispatch((s) => addTargetOrb(s, tappedOrb.id));
+        }
+        return;
+      }
+
+      // 4. aiming mode
       if (state.aiming) {
         dispatch((s) => confirmAim(s, gameX, gameY));
         return;
       }
 
-      // Portal targeting mode: tap selects/deselects orbs
-      if (state.targeting) {
-        const tappedOrb = findOrbAtPosition(state, gameX, gameY);
-        if (tappedOrb) {
-          dispatch((s) => addTargetOrb(s, tappedOrb.id));
-          return;
-        }
-        return; // tap outside orb cancels nothing — just ignore
-      }
-
-      const coin = findCoinAtPosition(state, gameX, gameY);
-      if (coin) {
-        dispatch((s) => collectCoin(s, coin.id));
+      // 5. placing a tower
+      if (state.player.selectedTower && gameY > WALL_Y) {
+        dispatch((s) => placeTower(s, s.player.selectedTower!, gameX, gameY));
+        forceHudUpdate();
+        handleSelectTower(null);
+        if (tutorialStepRef.current === 1) advanceTutorial();
         return;
       }
 
+      // 6. click an orb
       const tappedOrb = findOrbAtPosition(state, gameX, gameY);
       if (tappedOrb) {
         dispatch((s) => clickOrb(s, tappedOrb.id));
         forceHudUpdate();
-        // Tutorial step 0: count orb taps
+        if (selectedTowerForEdit) {
+          dispatch((s) => { s.player.selectedTower = null; return s; });
+          setSelectedTowerForEdit(null);
+          setTowerPopupPos(null);
+        }
         if (tutorialStepRef.current === 0) {
           const newCount = orbTapCountRef.current + 1;
           orbTapCountRef.current = newCount;
           setOrbTapCount(newCount);
-          if (newCount >= 5) {
-            advanceTutorial();
-          }
+          if (newCount >= 5) advanceTutorial();
         }
         return;
       }
 
-      // Tower tap: always open upgrade popup (towerMenuAnytime)
-      const tappedTower = findTowerAtPosition(state, gameX, gameY);
-      if (tappedTower && tappedTower.side === 1) {
-        setSelectedTowerForEdit({ ...tappedTower });
-        setTowerPopupPos({ x: tappedTower.x * canvasScale, y: tappedTower.y * canvasScale });
-        return;
+      // 7. towerMenuAnytime: select tower without edit mode
+      if (towerMenuAnytimeRef.current) {
+        let tw: Tower | null = null, td = Infinity;
+        for (const t of state.player.towers) {
+          if ((t.hp ?? 60) <= 0) continue;
+          const d = Math.hypot(t.x - gameX, t.y - gameY);
+          if (d <= 30 && d < td) { td = d; tw = t; }
+        }
+        if (tw) {
+          const twCopy = tw;
+          dispatch((s) => { s.player.selectedTower = twCopy.type; return s; });
+          setSelectedTowerForEdit({ ...tw });
+          setTowerPopupPos({ x: tw.x * canvasScale, y: tw.y * canvasScale });
+          return;
+        }
       }
 
-      if (state.player.selectedTower && gameY > WALL_Y) {
-        dispatch((s) => placeTower(s, s.player.selectedTower!, gameX, gameY));
-        handleSelectTower(null);
-        if (tutorialStepRef.current === 1) {
-          advanceTutorial();
-        }
-        return;
+      // 8. empty tap deselects
+      if (selectedTowerForEdit) {
+        dispatch((s) => { s.player.selectedTower = null; return s; });
+        setSelectedTowerForEdit(null);
+        setTowerPopupPos(null);
       }
     }),
-  [canvasScale, dispatch, gameStateRef, advanceTutorial, handleSelectTower, forceHudUpdate]);
+  [canvasScale, dispatch, gameStateRef, advanceTutorial, handleSelectTower, forceHudUpdate, placementMode.active, towerMenuAnytimeRef, selectedTowerForEdit]);
 
   const longPressGesture = useMemo(() => Gesture.LongPress()
     .runOnJS(true)
@@ -893,11 +942,14 @@ export default function GameScreen() {
   const handleToggleEditMode = useCallback(() => {
     const next = !editMode;
     setEditMode(next);
+    const s = gameStateRef.current as GameState | null;
+    if (s) s.editMode = next;
     if (!next) {
+      if (s) s.player.selectedTower = null;
       setSelectedTowerForEdit(null);
       setTowerPopupPos(null);
     }
-  }, [editMode]);
+  }, [editMode, gameStateRef]);
 
   const handleDragMove = useCallback((absX: number, absY: number) => {
     const layout = canvasContainerLayout.current;
@@ -1082,49 +1134,104 @@ export default function GameScreen() {
                 const y = e.nativeEvent.locationY;
                 const gameX = x / canvasScale;
                 const gameY = y / canvasScale;
-
                 const state = gameStateRef.current as GameState;
+                if (!state || state.status !== 'playing') return;
+                if (placementMode.active) return;
 
+                // 1. coin pickup
+                const coin = findCoinAtPosition(state, gameX, gameY);
+                if (coin) {
+                  dispatch((s) => collectCoin(s, coin.id));
+                  forceHudUpdate();
+                  return;
+                }
+
+                // 2. edit mode: tower select/deselect only
+                if (state.editMode) {
+                  let tw: Tower | null = null, td = Infinity;
+                  for (const t of state.player.towers) {
+                    if ((t.hp ?? 60) <= 0) continue;
+                    const d = Math.hypot(t.x - gameX, t.y - gameY);
+                    if (d <= 34 && d < td) { td = d; tw = t; }
+                  }
+                  if (tw) {
+                    const twCopy = tw;
+                    dispatch((s) => { s.player.selectedTower = twCopy.type; return s; });
+                    setSelectedTowerForEdit({ ...tw });
+                    setTowerPopupPos({ x: tw.x * canvasScale, y: tw.y * canvasScale });
+                  } else {
+                    dispatch((s) => { s.player.selectedTower = null; return s; });
+                    setSelectedTowerForEdit(null);
+                    setTowerPopupPos(null);
+                  }
+                  return;
+                }
+
+                // 3. targeting mode
+                if (state.targeting) {
+                  const tappedOrb = findOrbAtPosition(state, gameX, gameY);
+                  if (tappedOrb) {
+                    dispatch((s) => addTargetOrb(s, tappedOrb.id));
+                  }
+                  return;
+                }
+
+                // 4. aiming mode
                 if (state.aiming) {
                   dispatch((s) => confirmAim(s, gameX, gameY));
                   return;
                 }
 
-                // Portal targeting mode: tap selects/deselects orbs
-                if (state.targeting) {
-                  const tappedOrb = findOrbAtPosition(state, gameX, gameY);
-                  if (tappedOrb) {
-                    dispatch((s) => addTargetOrb(s, tappedOrb.id));
-                    return;
-                  }
-                  return; // tap outside orb cancels nothing — just ignore
-                }
-
-                const coin = findCoinAtPosition(state, gameX, gameY);
-                if (coin) {
-                  dispatch((s) => collectCoin(s, coin.id));
+                // 5. placing a tower
+                if (state.player.selectedTower && gameY > WALL_Y) {
+                  dispatch((s) => placeTower(s, s.player.selectedTower!, gameX, gameY));
+                  forceHudUpdate();
+                  handleSelectTower(null);
+                  if (tutorialStepRef.current === 1) advanceTutorial();
                   return;
                 }
 
+                // 6. click an orb
                 const tappedOrb = findOrbAtPosition(state, gameX, gameY);
                 if (tappedOrb) {
                   dispatch((s) => clickOrb(s, tappedOrb.id));
                   forceHudUpdate();
+                  if (selectedTowerForEdit) {
+                    dispatch((s) => { s.player.selectedTower = null; return s; });
+                    setSelectedTowerForEdit(null);
+                    setTowerPopupPos(null);
+                  }
+                  if (tutorialStepRef.current === 0) {
+                    const newCount = orbTapCountRef.current + 1;
+                    orbTapCountRef.current = newCount;
+                    setOrbTapCount(newCount);
+                    if (newCount >= 5) advanceTutorial();
+                  }
                   return;
                 }
 
-                // Tower tap: always open upgrade popup (towerMenuAnytime)
-                const tappedTowerWeb = findTowerAtPosition(state, gameX, gameY);
-                if (tappedTowerWeb && tappedTowerWeb.side === 1) {
-                  setSelectedTowerForEdit({ ...tappedTowerWeb });
-                  setTowerPopupPos({ x: tappedTowerWeb.x * canvasScale, y: tappedTowerWeb.y * canvasScale });
-                  return;
+                // 7. towerMenuAnytime: select tower without edit mode
+                if (towerMenuAnytimeRef.current) {
+                  let tw: Tower | null = null, td = Infinity;
+                  for (const t of state.player.towers) {
+                    if ((t.hp ?? 60) <= 0) continue;
+                    const d = Math.hypot(t.x - gameX, t.y - gameY);
+                    if (d <= 30 && d < td) { td = d; tw = t; }
+                  }
+                  if (tw) {
+                    const twCopy = tw;
+                    dispatch((s) => { s.player.selectedTower = twCopy.type; return s; });
+                    setSelectedTowerForEdit({ ...tw });
+                    setTowerPopupPos({ x: tw.x * canvasScale, y: tw.y * canvasScale });
+                    return;
+                  }
                 }
 
-                if (state.player.selectedTower && gameY > WALL_Y) {
-                  dispatch((s) => placeTower(s, s.player.selectedTower!, gameX, gameY));
-                  handleSelectTower(null);
-                  return;
+                // 8. empty tap deselects
+                if (selectedTowerForEdit) {
+                  dispatch((s) => { s.player.selectedTower = null; return s; });
+                  setSelectedTowerForEdit(null);
+                  setTowerPopupPos(null);
                 }
               }}
             >
