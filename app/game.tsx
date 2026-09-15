@@ -168,6 +168,8 @@ interface TopHUDProps {
   maxClicks: number;
   playerCoins: number;
   onPause: () => void;
+  firstPlacement: boolean;
+  loadoutTowers: string[];
 }
 
 const TopHUD = React.memo(function TopHUD({
@@ -180,6 +182,8 @@ const TopHUD = React.memo(function TopHUD({
   maxClicks,
   playerCoins,
   onPause,
+  firstPlacement,
+  loadoutTowers,
 }: TopHUDProps) {
   const escalationLabel: Record<string, string> = {
     overtime: 'OT',
@@ -217,6 +221,14 @@ const TopHUD = React.memo(function TopHUD({
     ? '#F43F5E'
     : '#E2E8F0';
 
+  const cheapestCost = loadoutTowers.length > 0
+    ? Math.min(...loadoutTowers.map((t) => {
+        const base = TOWER_COSTS[t as TowerType] ?? 60;
+        return firstPlacement ? Math.round(base * 0.8) : base;
+      }))
+    : 60;
+  const coinTextColor = playerCoins < cheapestCost ? '#EF4444' : '#0F172A';
+
   const timerText = timerLabel ?? timeDisplay;
 
   return (
@@ -246,7 +258,7 @@ const TopHUD = React.memo(function TopHUD({
           </View>
           <View style={styles.coinsPill}>
             <View style={styles.coinDot} />
-            <Text style={styles.pillText}>{playerCoins}</Text>
+            <Text style={[styles.pillText, { color: coinTextColor }]}>{playerCoins}</Text>
           </View>
         </View>
       </View>
@@ -269,6 +281,7 @@ interface BottomHUDProps {
   onDragMove?: (absX: number, absY: number) => void;
   onDragEnd?: (absX: number, absY: number) => void;
   insets: { top: number; bottom: number };
+  firstPlacement: boolean;
 }
 
 const BottomHUD = React.memo(function BottomHUD({
@@ -285,6 +298,7 @@ const BottomHUD = React.memo(function BottomHUD({
   onDragMove,
   onDragEnd,
   insets,
+  firstPlacement,
 }: BottomHUDProps) {
   const towerNameFirst = (type: TowerType) => {
     const name = TOWER_TYPES[type]?.name ?? String(type);
@@ -346,7 +360,8 @@ const BottomHUD = React.memo(function BottomHUD({
           contentContainerStyle={styles.towerBarContent}
         >
           {loadoutTowers.map((towerType) => {
-            const cost = TOWER_COSTS[towerType] ?? 60;
+            const baseCost = TOWER_COSTS[towerType] ?? 60;
+            const cost = firstPlacement ? Math.round(baseCost * 0.8) : baseCost;
             const isSelected = selectedTowerType === towerType;
             const canAfford = playerCoinsForTower >= cost;
             const firstName = towerNameFirst(towerType);
@@ -384,12 +399,12 @@ const BottomHUD = React.memo(function BottomHUD({
                   <Text style={styles.towerName} numberOfLines={1}>{firstName}</Text>
                   <View style={styles.towerCostRow}>
                     <Text style={[styles.towerCost, !canAfford && { color: COLORS.textTertiary }]}>
-                      {'🪙 '}
-                    </Text>
-                    <Text style={[styles.towerCost, !canAfford && { color: COLORS.textTertiary }]}>
-                      {cost}
+                      🪙 {cost}
                     </Text>
                   </View>
+                  {firstPlacement && (
+                    <Text style={styles.towerDiscountBadge}>−20%</Text>
+                  )}
                 </Animated.View>
               </GestureDetector>
             );
@@ -651,7 +666,7 @@ export default function GameScreen() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [uiMode, difficulty, sessionIdParam, opponentNameParam]);
 
-  const { hudState, stateRef: gameStateRef, dispatch, pause, resume } = useGameLoop({
+  const { hudState, stateRef: gameStateRef, dispatch, pause, resume, forceHudUpdate } = useGameLoop({
     initialState,
     mode: engineMode,
     onGameEnd: handleGameEnd,
@@ -751,6 +766,7 @@ export default function GameScreen() {
       const tappedOrb = findOrbAtPosition(state, gameX, gameY);
       if (tappedOrb) {
         dispatch((s) => clickOrb(s, tappedOrb.id));
+        forceHudUpdate();
         // Tutorial step 0: count orb taps
         if (tutorialStepRef.current === 0) {
           const newCount = orbTapCountRef.current + 1;
@@ -782,7 +798,7 @@ export default function GameScreen() {
         return;
       }
     }),
-  [canvasScale, editMode, dispatch, gameStateRef, advanceTutorial, handleSelectTower]);
+  [canvasScale, editMode, dispatch, gameStateRef, advanceTutorial, handleSelectTower, forceHudUpdate]);
 
   const longPressGesture = useMemo(() => Gesture.LongPress()
     .runOnJS(true)
@@ -1026,6 +1042,8 @@ export default function GameScreen() {
         maxClicks={maxClicks}
         playerCoins={playerCoins}
         onPause={handlePause}
+        firstPlacement={hudState?.firstPlacement ?? true}
+        loadoutTowers={loadout.towers}
       />
 
       {/* ── Game Canvas ── */}
@@ -1086,6 +1104,7 @@ export default function GameScreen() {
               const tappedOrb = findOrbAtPosition(state, gameX, gameY);
               if (tappedOrb) {
                 dispatch((s) => clickOrb(s, tappedOrb.id));
+                forceHudUpdate();
                 return;
               }
 
@@ -1409,6 +1428,7 @@ export default function GameScreen() {
         onDragMove={handleDragMove}
         onDragEnd={handleDragEnd}
         insets={insets}
+        firstPlacement={hudState?.firstPlacement ?? true}
       />
 
       {/* ── Forfeit Dialog ── */}
@@ -1863,6 +1883,12 @@ const styles = StyleSheet.create({
     fontSize: 9,
     fontWeight: '700',
     color: '#10B981',
+  },
+  towerDiscountBadge: {
+    fontSize: 9,
+    fontWeight: '900',
+    color: '#10B981',
+    marginTop: 1,
   },
   // Canvas overlays
   aimingBanner: {

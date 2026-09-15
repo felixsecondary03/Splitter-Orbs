@@ -20,6 +20,7 @@ export interface HudState {
   selectedTower: string | null;
   floaters: import('@/game/engine-types').Floater[];
   targeting: import('@/game/engine-types').TargetingState | null;
+  firstPlacement: boolean;
 }
 
 interface UseGameLoopOptions {
@@ -47,6 +48,7 @@ export function useGameLoop({ initialState, mode, onGameEnd }: UseGameLoopOption
     selectedTower: initialState.player.selectedTower ?? null,
     floaters: initialState.floaters,
     targeting: initialState.targeting,
+    firstPlacement: initialState.player.towers.length === 0,
   }));
   const lastTimeRef = useRef<number>(0);
   const pausedRef = useRef<boolean>(false);
@@ -91,6 +93,7 @@ export function useGameLoop({ initialState, mode, onGameEnd }: UseGameLoopOption
       selectedTower: state.player.selectedTower ?? null,
       floaters: state.floaters,
       targeting: state.targeting,
+      firstPlacement: state.player.towers.length === 0,
     });
   }, []);
 
@@ -150,5 +153,9 @@ export function useGameLoop({ initialState, mode, onGameEnd }: UseGameLoopOption
     lastTimeRef.current = 0;
   }, [mode]);
 
-  return { hudState, stateRef, dispatch, pause, resume };
+  const forceHudUpdate = useCallback(() => {
+    handleHudUpdate(stateRef.current);
+  }, [handleHudUpdate]);
+
+  return { hudState, stateRef, dispatch, pause, resume, forceHudUpdate };
 }
