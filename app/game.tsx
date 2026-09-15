@@ -39,6 +39,7 @@ import {
   placeOrbAtSlot,
 } from '@/game/engine';
 import type { GameState, Tower, Loadout, AbilityState } from '@/game/engine-types';
+import type { OrbDef } from '@/game/constants';
 import type { TowerType, AbilityType, OrbType } from '@/game/constants';
 import { TOWER_COSTS, TOWER_TYPES, ORB_TYPES, UPGRADE_COST_MULT_ARRAY, SELL_RATIO, GAME_WIDTH, GAME_HEIGHT, WALL_Y, ORB_SLOTS, PLAYER_STATION_X, PLAYER_STATION_Y } from '@/game/constants';
 import { getTowerRange, getTowerDamage, getTowerFireRate, distance } from '@/game/engine-helpers';
@@ -293,13 +294,6 @@ const BottomHUD = React.memo(function BottomHUD({
   return (
     <View style={[styles.bottomHud, { paddingBottom: Math.max(insets.bottom, 12) + 16 }]}>
       <View style={styles.abilityRow}>
-        <GHPressable
-          style={[styles.editToggleBtn, editMode && styles.editToggleBtnActive]}
-          onPress={onToggleEditMode}
-        >
-          <Text style={styles.editToggleBtnText}>{editMode ? '✅' : '✏️'}</Text>
-        </GHPressable>
-
         <View style={styles.abilityButtons}>
           {abilities.map((ability) => (
             <AbilityButton
@@ -307,15 +301,41 @@ const BottomHUD = React.memo(function BottomHUD({
               abilityType={ability.type}
               cooldown={ability.cooldown}
               maxCooldown={ability.maxCooldown}
-              onPress={() => onAbility(ability.type)}
+              onPress={() => {
+                console.log('[Game] Ability pressed:', ability.type);
+                onAbility(ability.type);
+              }}
               size={56}
             />
           ))}
         </View>
 
-        <GHPressable style={styles.orbShopCircleBtn} onPress={onOpenOrbShop}>
-          <Text style={styles.orbShopCircleBtnText}>🌀</Text>
-        </GHPressable>
+        {/* Orb shop + edit toggle grouped on the right */}
+        <View style={{ position: 'relative' }}>
+          {placementModeActive ? (
+            <View style={{ width: 56, height: 56 }} />
+          ) : (
+            <GHPressable
+              style={styles.orbShopCircleBtn}
+              onPress={() => {
+                console.log('[Game] Orb shop button pressed');
+                onOpenOrbShop();
+              }}
+            >
+              <Text style={styles.orbShopCircleBtnText}>🌀</Text>
+            </GHPressable>
+          )}
+          {/* Edit toggle: diagonally below-left of orb shop */}
+          <GHPressable
+            style={[styles.editToggleBtn, editMode && styles.editToggleBtnActive, { position: 'absolute', bottom: -24, left: -40 }]}
+            onPress={() => {
+              console.log('[Game] Edit mode toggle pressed, current:', editMode);
+              onToggleEditMode();
+            }}
+          >
+            <Text style={styles.editToggleBtnText}>{editMode ? '✅' : '✏️'}</Text>
+          </GHPressable>
+        </View>
       </View>
 
       <View style={styles.towerTrayBorder}>
@@ -461,7 +481,7 @@ export default function GameScreen() {
   const [placementMode, setPlacementMode] = useState<{ active: boolean; typeId: string | null }>({ active: false, typeId: null });
   const [editMode, setEditMode] = useState(false);
   const [selectedTowerForEdit, setSelectedTowerForEdit] = useState<Tower | null>(null);
-  const [showOrbShop, setShowOrbShop] = useState(false);
+
   const [showForfeitDialog, setShowForfeitDialog] = useState(false);
   const [previewPos, setPreviewPos] = useState<{ x: number; y: number } | null>(null);
 
@@ -823,11 +843,13 @@ export default function GameScreen() {
 
   // ── Orb shop ──
   const handleOpenOrbShop = useCallback(() => {
-    setShowOrbShop(true);
-  }, []);
+    console.log('[Game] Open orb shop pressed, entering placement mode');
+    const typeId = placementMode.typeId || (loadout.orbs?.[0] ?? 'normal');
+    setPlacementMode({ active: true, typeId });
+  }, [placementMode.typeId, loadout.orbs]);
 
-  const handleSelectOrbType = useCallback((typeId: string) => {
-    setShowOrbShop(false);
+  const handleSwitchPlacementOrb = useCallback((typeId: string) => {
+    console.log('[Game] Switch placement orb:', typeId);
     setPlacementMode({ active: true, typeId });
   }, []);
 
@@ -1121,25 +1143,103 @@ export default function GameScreen() {
 
         {/* ── Placement Overlay ── */}
         {placementMode.active && (
-          <View style={[StyleSheet.absoluteFill, styles.placementOverlay, { pointerEvents: 'box-none' }]}>
-            {Array.from({ length: 5 }, (_, i) => i).map((i) => {
-              const slotLeft = (ORB_SLOTS[i] / GAME_WIDTH) * canvasWidth - 20;
-              const slotTop = (WALL_Y / GAME_HEIGHT) * canvasHeight - 20;
+          <View style={[StyleSheet.absoluteFill, { zIndex: 30, pointerEvents: 'box-none' }]}>
+            {/* Slot dots at 47% canvas height */}
+            {ORB_SLOTS.map((sx, i) => {
+              const slotLeft = (sx / GAME_WIDTH) * canvasWidth;
+              const slotTop = canvasHeight * 0.47;
               return (
                 <Pressable
                   key={i}
-                  style={[styles.orbSlot, { left: slotLeft, top: slotTop }]}
                   onPress={() => {
+                    console.log('[Game] Place orb at slot', i, 'type:', placementMode.typeId);
                     handlePlaceOrbAtSlot(i);
                   }}
+                  style={[styles.orbSlotDot, { left: slotLeft - 18, top: slotTop - 18, pointerEvents: 'auto' }]}
                 >
-                  <Text style={styles.orbSlotText}>{i + 1}</Text>
+                  <View style={styles.orbSlotDotInner} />
                 </Pressable>
               );
             })}
-            <Pressable style={styles.cancelPlacementBtn} onPress={handleCancelPlacement}>
-              <Text style={styles.cancelPlacementText}>{t('game.cancel')}</Text>
-            </Pressable>
+
+            {/* Active orb name label at 93% height */}
+            {(() => {
+              const activeDef = ORB_TYPES[placementMode.typeId as OrbType];
+              const labelColor = activeDef ? activeDef.color : '#6366F1';
+              const labelName = activeDef ? activeDef.name : '';
+              return activeDef ? (
+                <View style={[styles.orbNameLabel, { top: canvasHeight * 0.93, left: canvasWidth / 2 - 60, pointerEvents: 'none' }]}>
+                  <Text style={[styles.orbNameText, { color: labelColor }]}>{labelName}</Text>
+                </View>
+              ) : null;
+            })()}
+
+            {/* Orb ring + cancel X at 74% height */}
+            {(() => {
+              const ringSize = 180;
+              const cx = ringSize / 2;
+              const cy = ringSize / 2;
+              const R = 74;
+              const orbIds = loadout.orbs ?? [];
+              const orbs = orbIds
+                .map((id) => ORB_TYPES[id as OrbType])
+                .filter((d): d is OrbDef => !!d);
+              const n = orbs.length;
+              const coins = gameStateRef.current?.player.coins ?? 0;
+              return (
+                <View style={{
+                  position: 'absolute',
+                  left: canvasWidth / 2 - ringSize / 2,
+                  top: canvasHeight * 0.74 - ringSize / 2,
+                  width: ringSize,
+                  height: ringSize,
+                  pointerEvents: 'box-none',
+                }}>
+                  {orbs.map((def, i) => {
+                    const ang = (Math.PI * 2 * i) / n - Math.PI / 2;
+                    const x = cx + R * Math.cos(ang) - 26;
+                    const y = cy + R * Math.sin(ang) - 26;
+                    const affordable = coins >= def.cost;
+                    const active = def.id === placementMode.typeId;
+                    return (
+                      <Pressable
+                        key={def.id}
+                        onPress={() => {
+                          if (affordable) {
+                            handleSwitchPlacementOrb(def.id);
+                          }
+                        }}
+                        style={[
+                          styles.orbRingBtn,
+                          active && styles.orbRingBtnActive,
+                          !affordable && styles.orbRingBtnDisabled,
+                          { left: x, top: y, pointerEvents: 'auto' },
+                        ]}
+                      >
+                        <View style={[styles.orbRingDisc, { backgroundColor: def.color, shadowColor: def.color }]}>
+                          <Text style={styles.orbRingDiscText}>{def.hp}</Text>
+                        </View>
+                        <Text style={styles.orbRingCost}>
+                          {'🪙 '}
+                          {def.cost}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+
+                  {/* Central X cancel */}
+                  <Pressable
+                    onPress={() => {
+                      console.log('[Game] Cancel placement pressed');
+                      handleCancelPlacement();
+                    }}
+                    style={[styles.orbRingCancel, { left: cx - 32, top: cy - 32, pointerEvents: 'auto' }]}
+                  >
+                    <Text style={styles.orbRingCancelText}>✕</Text>
+                  </Pressable>
+                </View>
+              );
+            })()}
           </View>
         )}
       </View>
@@ -1310,46 +1410,6 @@ export default function GameScreen() {
         onDragEnd={handleDragEnd}
         insets={insets}
       />
-
-      {/* ── Orb Shop Panel ── */}
-      {showOrbShop && (
-        <View style={styles.orbShopOverlay}>
-          <Pressable style={styles.orbShopBackdrop} onPress={() => { setShowOrbShop(false); }} />
-          <View style={styles.orbShopPanel}>
-            <View style={styles.orbShopHeader}>
-              <Text style={styles.orbShopTitle}>{t('game.sendOrb')}</Text>
-              <Pressable onPress={() => { setShowOrbShop(false); }}>
-                <X size={18} color={COLORS.textSecondary} strokeWidth={2} />
-              </Pressable>
-            </View>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.orbShopRow}>
-              {(loadout.orbs ?? []).map((orbType) => {
-                const orbDef = ORB_TYPES[orbType];
-                if (!orbDef) return null;
-                const canAfford = playerCoins >= orbDef.cost;
-                return (
-                  <Pressable
-                    key={orbType}
-                    style={[styles.orbShopCard, !canAfford && styles.orbShopCardDisabled]}
-                    onPress={() => {
-                      
-                      handleSelectOrbType(orbType);
-                    }}
-                  >
-                    <View style={[styles.orbShopCircle, { backgroundColor: orbDef.color }]}>
-                      <Text style={styles.orbShopCircleText}>{orbDef.hp}</Text>
-                    </View>
-                    <Text style={styles.orbShopName} numberOfLines={1}>{orbDef.name}</Text>
-                    <Text style={[styles.orbShopCost, !canAfford && { color: COLORS.textTertiary }]}>
-                      🪙 {orbDef.cost}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </ScrollView>
-          </View>
-        </View>
-      )}
 
       {/* ── Forfeit Dialog ── */}
       {showForfeitDialog && (
@@ -1825,40 +1885,106 @@ const styles = StyleSheet.create({
     color: COLORS.danger,
     fontWeight: '700',
   },
-  placementOverlay: {
-    zIndex: 10,
-  },
-  orbSlot: {
+  // Placement overlay styles
+  orbSlotDot: {
     position: 'absolute',
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(79,142,247,0.85)',
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     borderWidth: 2,
-    borderColor: '#FFFFFF',
+    borderStyle: 'dashed',
+    borderColor: 'rgba(99,102,241,0.8)',
+    backgroundColor: 'rgba(99,102,241,0.1)',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  orbSlotText: {
-    fontSize: 14,
-    fontWeight: '800',
-    color: '#FFFFFF',
+  orbSlotDotInner: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#6366F1',
   },
-  cancelPlacementBtn: {
+  orbNameLabel: {
     position: 'absolute',
-    bottom: 8,
-    alignSelf: 'center',
-    left: '50%',
-    marginLeft: -40,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 10,
-    backgroundColor: 'rgba(239,68,68,0.9)',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.95)',
+    width: 120,
+    alignItems: 'center',
   },
-  cancelPlacementText: {
+  orbNameText: {
     fontSize: 13,
+    fontWeight: '900',
+  },
+  orbRingBtn: {
+    position: 'absolute',
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: '#fff',
+    borderWidth: 2,
+    borderColor: '#E2E8F0',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  orbRingBtnActive: {
+    borderColor: '#6366F1',
+    transform: [{ scale: 1.1 }],
+    shadowColor: '#6366F1',
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  orbRingBtnDisabled: {
+    opacity: 0.4,
+  },
+  orbRingDisc: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 2,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  orbRingDiscText: {
+    fontSize: 10,
+    fontWeight: '900',
+    color: '#fff',
+  },
+  orbRingCost: {
+    fontSize: 9,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: '#D97706',
+  },
+  orbRingCancel: {
+    position: 'absolute',
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: '#EF4444',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#EF4444',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  orbRingCancelText: {
+    fontSize: 28,
+    fontWeight: '900',
+    color: '#fff',
+    lineHeight: 32,
   },
   // UpgradePopup
   upgradePopup: {
@@ -1934,81 +2060,7 @@ const styles = StyleSheet.create({
     fontSize: 9,
     color: COLORS.textSecondary,
   },
-  // Orb shop
-  orbShopOverlay: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    top: 0,
-    zIndex: 30,
-    justifyContent: 'flex-end',
-  },
-  orbShopBackdrop: {
-    ...StyleSheet.absoluteFill,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-  },
-  orbShopPanel: {
-    backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    paddingTop: 16,
-    paddingBottom: 24,
-    paddingHorizontal: 16,
-    borderTopWidth: 1,
-    borderColor: '#E2E8F0',
-    gap: 12,
-  },
-  orbShopHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  orbShopTitle: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: '#0F172A',
-  },
-  orbShopRow: {
-    gap: 10,
-    paddingRight: 8,
-  },
-  orbShopCard: {
-    alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 10,
-    paddingVertical: 10,
-    borderRadius: 14,
-    borderWidth: 1.5,
-    borderColor: '#E2E8F0',
-    backgroundColor: '#F8FAFC',
-    minWidth: 72,
-  },
-  orbShopCardDisabled: {
-    opacity: 0.45,
-  },
-  orbShopCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  orbShopCircleText: {
-    fontSize: 11,
-    fontWeight: '900',
-    color: '#FFFFFF',
-  },
-  orbShopName: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: '#334155',
-  },
-  orbShopCost: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: '#F59E0B',
-  },
+
   // Forfeit dialog
   forfeitOverlay: {
     position: 'absolute',
