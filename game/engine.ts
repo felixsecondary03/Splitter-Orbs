@@ -542,18 +542,25 @@ function updateOrbs(s: GameState, dt: number): GameState {
   let newEffects = [...s.effects];
   let newCoinPickups = [...s.coinPickups];
   let newFloaters = [...s.floaters];
+  let playerCoins = s.player.coins;
   let playerStation = { ...s.player.station };
   let oppStation = { ...s.opponent.station };
 
   for (const orb of s.orbs) {
     if (orb.hp <= 0) {
       // Orb died — handle death
-      const result = handleOrbDeath(orb, s, true);
+      const killedByPlayer = orb.side === 0; // opponent's orb killed by player's towers
+      const result = handleOrbDeath(orb, s, killedByPlayer);
       newOrbs.push(...result.newOrbs);
       newParticles.push(...result.particles);
       newEffects.push(...result.effects);
       newFloaters.push(...result.floaters);
       if (result.coinPickup) newCoinPickups.push(result.coinPickup);
+      // Direct coin reward on every player kill (matching web app killOrb)
+      if (killedByPlayer) {
+        const reward = ORB_TYPES[orb.type as keyof typeof ORB_TYPES]?.reward ?? 0;
+        playerCoins = Math.min(playerCoins + reward, COIN_CAP);
+      }
       continue;
     }
 
@@ -616,7 +623,7 @@ function updateOrbs(s: GameState, dt: number): GameState {
     effects: newEffects,
     coinPickups: newCoinPickups,
     floaters: newFloaters,
-    player: { ...s.player, station: playerStation },
+    player: { ...s.player, coins: playerCoins, station: playerStation },
     opponent: { ...s.opponent, station: oppStation },
   };
 }
@@ -957,16 +964,23 @@ export function clickOrb(state: GameState, orbId: string): GameState {
   let newEffects = [...state.effects];
   let newParticles = [...state.particles, ...particles];
   let newFloaters = [...state.floaters, floater];
+  let newPlayerCoins = state.player.coins;
 
   if (newHp <= 0) {
     // Orb died
-    const deathResult = handleOrbDeath(updatedOrb, state, true);
+    const clickKilledByPlayer = updatedOrb.side === 0;
+    const deathResult = handleOrbDeath(updatedOrb, state, clickKilledByPlayer);
     newOrbs = state.orbs.filter(o => o.id !== orbId);
     newOrbs.push(...deathResult.newOrbs);
     newParticles.push(...deathResult.particles);
     newEffects.push(...deathResult.effects);
     newFloaters.push(...deathResult.floaters);
     if (deathResult.coinPickup) newCoinPickups.push(deathResult.coinPickup);
+    // Direct coin reward on click kill
+    if (clickKilledByPlayer) {
+      const reward = ORB_TYPES[updatedOrb.type as keyof typeof ORB_TYPES]?.reward ?? 0;
+      newPlayerCoins = Math.min(newPlayerCoins + reward, COIN_CAP);
+    }
   } else {
     newOrbs[orbIndex] = updatedOrb;
   }
@@ -982,6 +996,7 @@ export function clickOrb(state: GameState, orbId: string): GameState {
     comboTimer: COMBO_WINDOW,
     player: {
       ...state.player,
+      coins: newPlayerCoins,
       clicks: state.player.clicks - 1,
     },
   };

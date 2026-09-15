@@ -40,7 +40,7 @@ import {
 } from '@/game/engine';
 import type { GameState, Tower, Loadout, AbilityState } from '@/game/engine-types';
 import type { TowerType, AbilityType, OrbType } from '@/game/constants';
-import { TOWER_COSTS, TOWER_TYPES, ORB_TYPES, UPGRADE_COST_MULT_ARRAY, SELL_RATIO, GAME_WIDTH, GAME_HEIGHT, WALL_Y, ORB_SLOTS } from '@/game/constants';
+import { TOWER_COSTS, TOWER_TYPES, ORB_TYPES, UPGRADE_COST_MULT_ARRAY, SELL_RATIO, GAME_WIDTH, GAME_HEIGHT, WALL_Y, ORB_SLOTS, PLAYER_STATION_X, PLAYER_STATION_Y } from '@/game/constants';
 import { getTowerRange, getTowerDamage, getTowerFireRate, distance } from '@/game/engine-helpers';
 import { TowerIcon } from '@/components/TowerIcon';
 import { TutorialCoachmark } from '@/components/TutorialCoachmark';
@@ -313,13 +313,9 @@ const BottomHUD = React.memo(function BottomHUD({
           ))}
         </View>
 
-        {!placementModeActive ? (
-          <GHPressable style={styles.orbShopCircleBtn} onPress={onOpenOrbShop}>
-            <Text style={styles.orbShopCircleBtnText}>🌀</Text>
-          </GHPressable>
-        ) : (
-          <View style={{ width: 56, height: 56 }} />
-        )}
+        <GHPressable style={styles.orbShopCircleBtn} onPress={onOpenOrbShop}>
+          <Text style={styles.orbShopCircleBtnText}>🌀</Text>
+        </GHPressable>
       </View>
 
       <View style={styles.towerTrayBorder}>
@@ -647,6 +643,7 @@ export default function GameScreen() {
   const [canvasDims, setCanvasDims] = React.useState({ width: 320, height: 480 });
   const canvasContainerRef = React.useRef<View>(null);
   const canvasContainerLayout = React.useRef({ x: 0, y: 0, width: 320, height: 480 });
+  const dragTowerTypeRef = useRef<string | null>(null);
   const canvasWidth = canvasDims.width;
   const canvasHeight = canvasDims.height;
   const canvasScale = canvasWidth > 0 && canvasHeight > 0
@@ -695,6 +692,7 @@ export default function GameScreen() {
 
   // ── Tower selection ──
   const handleSelectTower = useCallback((type: TowerType | null) => {
+    dragTowerTypeRef.current = type;
     dispatch((s) => selectTower(s, type));
   }, [dispatch]);
 
@@ -877,18 +875,26 @@ export default function GameScreen() {
     const relY = absY - layout.y;
     const gx = (relX / layout.width) * GAME_WIDTH;
     const gy = (relY / layout.height) * GAME_HEIGHT;
-    const state = gameStateRef.current as GameState;
-    const type = state.player.selectedTower;
+    const type = dragTowerTypeRef.current;
     if (!type) return;
     if (gy > WALL_Y + 18 && gy < GAME_HEIGHT - 24 && gx > 20 && gx < GAME_WIDTH - 20) {
+      // Station clearance (matching web app)
+      const distToPlayerStation = Math.hypot(gx - PLAYER_STATION_X, gy - PLAYER_STATION_Y);
+      if (distToPlayerStation < 64) {
+        setPreviewPos(null);
+        dragTowerTypeRef.current = null;
+        handleSelectTower(null);
+        return;
+      }
       dispatch((s) => {
-        const result = placeTower(s, type, gx, gy);
+        const result = placeTower(s, type as TowerType, gx, gy);
         return result ?? s;
       });
     }
     setPreviewPos(null);
+    dragTowerTypeRef.current = null;
     handleSelectTower(null);
-  }, [gameStateRef, dispatch, handleSelectTower]);
+  }, [dispatch, handleSelectTower]);
 
   // ── Pause ──
   const handlePause = useCallback(() => {

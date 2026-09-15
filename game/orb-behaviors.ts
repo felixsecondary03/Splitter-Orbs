@@ -253,7 +253,7 @@ export function handleOrbDeath(
 
   // Rare coin drop for player kills (8% chance)
   let coinPickup: CoinPickup | null = null;
-  if (killedByPlayer && state.rng() < 0.08) {
+  if (killedByPlayer && state.rng() < 0.06) {
     const coinValue = orb.type === 'tank' ? 15 : orb.type === 'summoner' ? 20 : 10;
     coinPickup = {
       id: generateId(),

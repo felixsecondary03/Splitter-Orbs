@@ -78,9 +78,9 @@ function hpColor(pct: number): string {
 }
 
 function snapToGrid(gx: number, gy: number): { col: number; row: number; x: number; y: number } {
-  const col = Math.round(gx / GRID_SIZE);
-  const row = Math.round(gy / GRID_SIZE);
-  return { col, row, x: col * GRID_SIZE, y: row * GRID_SIZE };
+  const col = Math.round((gx - GRID_SIZE / 2) / GRID_SIZE);
+  const row = Math.round((gy - GRID_SIZE / 2) / GRID_SIZE);
+  return { col, row, x: col * GRID_SIZE + GRID_SIZE / 2, y: row * GRID_SIZE + GRID_SIZE / 2 };
 }
 
 function getTowerStats(type: string, level: number) {
@@ -1377,7 +1377,7 @@ function drawStation(
   const flip = side === 'top';
   const x = pos.x;
   const y = pos.y;
-  const dir = flip ? -1 : 1;
+  const dir = -1; // battlements and flag always point upward regardless of side
 
   const skin = STATION_SKINS[skinId || 'default'] || STATION_SKINS['default'];
   const body = skin.body;
@@ -3044,17 +3044,19 @@ function drawFrame(
   p.setColor(Skia.Color('rgba(59,130,246,0.05)'));
   canvas.drawRect(Skia.XYWHRect(0, WALL_Y + WALL_THICKNESS / 2, GAME_WIDTH, GAME_HEIGHT - WALL_Y), p);
 
-  // Grid lines
+  // Grid lines — only inside valid placement zone
+  const gridTop = WALL_Y + WALL_THICKNESS;
+  const gridBottom = GAME_HEIGHT - 24;
   p.setStyle(PaintStyle.Stroke);
   p.setStrokeWidth(1);
   p.setColor(Skia.Color('rgba(15,23,42,0.04)'));
   for (let x = 0; x < GAME_WIDTH; x += 60) {
     const gPath = Skia.Path.Make();
-    gPath.moveTo(x, 0);
-    gPath.lineTo(x, GAME_HEIGHT);
+    gPath.moveTo(x, gridTop);
+    gPath.lineTo(x, gridBottom);
     canvas.drawPath(gPath, p);
   }
-  for (let y = 0; y < GAME_HEIGHT; y += 60) {
+  for (let y = gridTop; y < gridBottom; y += 60) {
     const gPath = Skia.Path.Make();
     gPath.moveTo(0, y);
     gPath.lineTo(GAME_WIDTH, y);
