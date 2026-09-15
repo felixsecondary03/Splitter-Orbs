@@ -392,7 +392,7 @@ const BottomHUD = React.memo(function BottomHUD({
                   style={[
                     styles.towerCard,
                     isSelected && styles.towerCardSelected,
-                    !canAfford && styles.towerCardDisabled,
+                    !canAfford && !isSelected && styles.towerCardDisabled,
                   ]}
                 >
                   <TowerIcon type={towerType} size={34} />
@@ -768,7 +768,7 @@ export default function GameScreen() {
         }
         if (tw) {
           const twCopy = tw;
-          dispatch((s) => { s.player.selectedTower = twCopy.type; return s; });
+          dispatch((s) => { s.player.selectedTower = twCopy.id as any; return s; });
           setSelectedTowerForEdit({ ...tw });
           setTowerPopupPos({ x: tw.x * canvasScale, y: tw.y * canvasScale });
         } else {
@@ -803,6 +803,22 @@ export default function GameScreen() {
         return;
       }
 
+      // 5.5 cleanse an infected tower on tap
+      {
+        let infected: Tower | null = null, infD = Infinity;
+        const checkInf = (t: Tower) => {
+          if ((t.hp ?? 0) <= 0 || !(t.poisonTimer && t.poisonTimer > 0)) return;
+          const d = Math.hypot(t.x - gameX, t.y - gameY);
+          if (d <= 30 && d < infD) { infD = d; infected = t as Tower; }
+        };
+        for (const t of state.player.towers) checkInf(t);
+        if (infected != null) {
+          const infCopy = infected as Tower;
+          dispatch((s) => cleanseTower(s, infCopy.id));
+          return;
+        }
+      }
+
       // 6. click an orb
       const tappedOrb = findOrbAtPosition(state, gameX, gameY);
       if (tappedOrb) {
@@ -832,7 +848,7 @@ export default function GameScreen() {
         }
         if (tw) {
           const twCopy = tw;
-          dispatch((s) => { s.player.selectedTower = twCopy.type; return s; });
+          dispatch((s) => { s.player.selectedTower = twCopy.id as any; return s; });
           setSelectedTowerForEdit({ ...tw });
           setTowerPopupPos({ x: tw.x * canvasScale, y: tw.y * canvasScale });
           return;
@@ -848,34 +864,23 @@ export default function GameScreen() {
     }),
   [canvasScale, dispatch, gameStateRef, advanceTutorial, handleSelectTower, forceHudUpdate, placementMode.active, towerMenuAnytimeRef, selectedTowerForEdit]);
 
-  const longPressGesture = useMemo(() => Gesture.LongPress()
-    .runOnJS(true)
-    .minDuration(400)
-    .onStart((event) => {
-      const { x, y } = event;
-      const gameX = x / canvasScale;
-      const gameY = y / canvasScale;
-      const tower = findTowerAtPosition(gameStateRef.current, gameX, gameY);
-      if (tower) {
-        setSelectedTowerForEdit({ ...tower });
-        setEditMode(true);
-      }
-    }),
-  [canvasScale, gameStateRef]);
-
-  const composedGesture = useMemo(
-    () => Gesture.Exclusive(longPressGesture, tapGesture),
-    [longPressGesture, tapGesture]
-  );
-
   // ── Ability activation ──
   const handleAbility = useCallback((abilityType: AbilityType) => {
+    console.log('[Game] Ability pressed:', abilityType);
+    // Exit edit mode when using an ability (matches web)
+    if (editMode) {
+      setEditMode(false);
+      const s = gameStateRef.current as GameState | null;
+      if (s) { s.editMode = false; s.player.selectedTower = null; }
+      setSelectedTowerForEdit(null);
+      setTowerPopupPos(null);
+    }
     dispatch((s) => activateAbility(s, abilityType));
     // Tutorial step 3: ability used
     if (tutorialStepRef.current === 3) {
       setTimeout(() => advanceTutorial(), 2500);
     }
-  }, [dispatch, advanceTutorial]);
+  }, [dispatch, advanceTutorial, editMode, gameStateRef]);
 
   const handleConfirmTargeting = useCallback(() => {
     dispatch((s) => confirmTargeting(s));
@@ -948,8 +953,17 @@ export default function GameScreen() {
       if (s) s.player.selectedTower = null;
       setSelectedTowerForEdit(null);
       setTowerPopupPos(null);
+      // Tutorial step 2: if upgraded, advance when closing edit mode
+      if (tutorialStepRef.current === 2 && tutorialUpgradedRef.current) {
+        advanceTutorial();
+      }
+    } else {
+      // Tutorial step 2: hide coachmark when opening edit mode
+      if (tutorialStepRef.current === 2) {
+        setCoachmarkHidden(true);
+      }
     }
-  }, [editMode, gameStateRef]);
+  }, [editMode, gameStateRef, advanceTutorial]);
 
   const handleDragMove = useCallback((absX: number, absY: number) => {
     const layout = canvasContainerLayout.current;
@@ -1156,7 +1170,7 @@ export default function GameScreen() {
                   }
                   if (tw) {
                     const twCopy = tw;
-                    dispatch((s) => { s.player.selectedTower = twCopy.type; return s; });
+                    dispatch((s) => { s.player.selectedTower = twCopy.id as any; return s; });
                     setSelectedTowerForEdit({ ...tw });
                     setTowerPopupPos({ x: tw.x * canvasScale, y: tw.y * canvasScale });
                   } else {
@@ -1191,6 +1205,22 @@ export default function GameScreen() {
                   return;
                 }
 
+                // 5.5 cleanse an infected tower on tap
+                {
+                  let infected: Tower | null = null, infD = Infinity;
+                  const checkInf = (t: Tower) => {
+                    if ((t.hp ?? 0) <= 0 || !(t.poisonTimer && t.poisonTimer > 0)) return;
+                    const d = Math.hypot(t.x - gameX, t.y - gameY);
+                    if (d <= 30 && d < infD) { infD = d; infected = t as Tower; }
+                  };
+                  for (const t of state.player.towers) checkInf(t);
+                  if (infected != null) {
+                    const infCopy = infected as Tower;
+                    dispatch((s) => cleanseTower(s, infCopy.id));
+                    return;
+                  }
+                }
+
                 // 6. click an orb
                 const tappedOrb = findOrbAtPosition(state, gameX, gameY);
                 if (tappedOrb) {
@@ -1220,7 +1250,7 @@ export default function GameScreen() {
                   }
                   if (tw) {
                     const twCopy = tw;
-                    dispatch((s) => { s.player.selectedTower = twCopy.type; return s; });
+                    dispatch((s) => { s.player.selectedTower = twCopy.id as any; return s; });
                     setSelectedTowerForEdit({ ...tw });
                     setTowerPopupPos({ x: tw.x * canvasScale, y: tw.y * canvasScale });
                     return;
@@ -1251,7 +1281,7 @@ export default function GameScreen() {
               )}
             </Pressable>
           ) : (
-            <GestureDetector gesture={composedGesture}>
+            <GestureDetector gesture={tapGesture}>
               <View collapsable={false} style={{ width: canvasWidth, height: canvasHeight }}>
                 <GameCanvas
                   state={gameStateRef.current!}
@@ -1403,9 +1433,9 @@ export default function GameScreen() {
               <View
                 style={{
                   position: 'absolute',
-                  left: towerPopupPos ? towerPopupPos.x - 160 : canvasWidth / 2 - 160,
+                  left: towerPopupPos ? towerPopupPos.x - 88 : canvasWidth / 2 - 88,
                   top: towerPopupPos ? Math.max(8, towerPopupPos.y - 230) : canvasHeight / 2 - 115,
-                  width: 320,
+                  width: 176,
                   zIndex: 100,
                 }}
                 pointerEvents="box-none"
@@ -1947,16 +1977,19 @@ const styles = StyleSheet.create({
     fontSize: 24,
   },
   editToggleBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     backgroundColor: '#F1F5F9',
     alignItems: 'center',
     justifyContent: 'center',
     marginLeft: 4,
+    borderWidth: 2,
+    borderColor: '#E2E8F0',
   },
   editToggleBtnActive: {
-    backgroundColor: '#0F172A',
+    backgroundColor: '#2563EB',
+    borderColor: '#1D4ED8',
   },
   editToggleBtnText: {
     fontSize: 16,
