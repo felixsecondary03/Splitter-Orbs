@@ -325,7 +325,7 @@ const BottomHUD = React.memo(function BottomHUD({
         </View>
 
         {/* Orb shop + edit toggle grouped on the right */}
-        <View style={{ position: 'relative' }}>
+        <View style={{ position: 'relative', overflow: 'visible' }}>
           {placementModeActive ? (
             <View style={{ width: 56, height: 56 }} />
           ) : (
@@ -341,7 +341,7 @@ const BottomHUD = React.memo(function BottomHUD({
           )}
           {/* Edit toggle: diagonally below-left of orb shop */}
           <GHPressable
-            style={[styles.editToggleBtn, editMode && styles.editToggleBtnActive, { position: 'absolute', bottom: -24, left: -40 }]}
+            style={[styles.editToggleBtn, editMode && styles.editToggleBtnActive, { position: 'absolute', bottom: -28, left: -46 }]}
             onPress={() => {
               console.log('[Game] Edit mode toggle pressed, current:', editMode);
               onToggleEditMode();
@@ -499,6 +499,7 @@ export default function GameScreen() {
 
   const [showForfeitDialog, setShowForfeitDialog] = useState(false);
   const [previewPos, setPreviewPos] = useState<{ x: number; y: number } | null>(null);
+  const [towerPopupPos, setTowerPopupPos] = useState<{ x: number; y: number } | null>(null);
 
   // ── Initial state (created once) ──
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -779,13 +780,11 @@ export default function GameScreen() {
         return;
       }
 
-      // Edit mode: select tower on tap
-      if (editMode) {
-        const tower = findTowerAtPosition(state, gameX, gameY);
-        if (tower) {
-          setSelectedTowerForEdit({ ...tower });
-          return;
-        }
+      // Tower tap: always open upgrade popup (towerMenuAnytime)
+      const tappedTower = findTowerAtPosition(state, gameX, gameY);
+      if (tappedTower && tappedTower.side === 1) {
+        setSelectedTowerForEdit({ ...tappedTower });
+        setTowerPopupPos({ x: tappedTower.x * canvasScale, y: tappedTower.y * canvasScale });
         return;
       }
 
@@ -798,7 +797,7 @@ export default function GameScreen() {
         return;
       }
     }),
-  [canvasScale, editMode, dispatch, gameStateRef, advanceTutorial, handleSelectTower, forceHudUpdate]);
+  [canvasScale, dispatch, gameStateRef, advanceTutorial, handleSelectTower, forceHudUpdate]);
 
   const longPressGesture = useMemo(() => Gesture.LongPress()
     .runOnJS(true)
@@ -843,18 +842,21 @@ export default function GameScreen() {
       setTutorialUpgraded(true);
     }
     setSelectedTowerForEdit(null);
+    setTowerPopupPos(null);
   }, [selectedTowerForEdit, dispatch]);
 
   const handleSellTower = useCallback(() => {
     if (!selectedTowerForEdit) return;
     dispatch((s) => sellTower(s, selectedTowerForEdit.id));
     setSelectedTowerForEdit(null);
+    setTowerPopupPos(null);
   }, [selectedTowerForEdit, dispatch]);
 
   const handleCleanseTower = useCallback(() => {
     if (!selectedTowerForEdit) return;
     dispatch((s) => cleanseTower(s, selectedTowerForEdit.id));
     setSelectedTowerForEdit(null);
+    setTowerPopupPos(null);
   }, [selectedTowerForEdit, dispatch]);
 
   // ── Orb shop ──
@@ -893,6 +895,7 @@ export default function GameScreen() {
     setEditMode(next);
     if (!next) {
       setSelectedTowerForEdit(null);
+      setTowerPopupPos(null);
     }
   }, [editMode]);
 
@@ -1055,7 +1058,7 @@ export default function GameScreen() {
             maxHeight: '100%',
             width: '100%',
             borderRadius: 24,
-            overflow: 'hidden',
+            overflow: 'visible',
             borderWidth: 2,
             borderColor: '#e2e8f0',
           }}
@@ -1069,78 +1072,62 @@ export default function GameScreen() {
             });
           }}
         >
-        {Platform.OS === 'web' ? (
-          <Pressable
-            style={{ width: canvasWidth, height: canvasHeight }}
-            onPress={(e) => {
-              const x = e.nativeEvent.locationX;
-              const y = e.nativeEvent.locationY;
-              const gameX = x / canvasScale;
-              const gameY = y / canvasScale;
+          {/* Inner clipped canvas view */}
+          <View style={{ width: canvasWidth, height: canvasHeight, borderRadius: 22, overflow: 'hidden' }}>
+          {Platform.OS === 'web' ? (
+            <Pressable
+              style={{ width: canvasWidth, height: canvasHeight }}
+              onPress={(e) => {
+                const x = e.nativeEvent.locationX;
+                const y = e.nativeEvent.locationY;
+                const gameX = x / canvasScale;
+                const gameY = y / canvasScale;
 
-              const state = gameStateRef.current as GameState;
+                const state = gameStateRef.current as GameState;
 
-              if (state.aiming) {
-                dispatch((s) => confirmAim(s, gameX, gameY));
-                return;
-              }
-
-              // Portal targeting mode: tap selects/deselects orbs
-              if (state.targeting) {
-                const tappedOrb = findOrbAtPosition(state, gameX, gameY);
-                if (tappedOrb) {
-                  dispatch((s) => addTargetOrb(s, tappedOrb.id));
+                if (state.aiming) {
+                  dispatch((s) => confirmAim(s, gameX, gameY));
                   return;
                 }
-                return; // tap outside orb cancels nothing — just ignore
-              }
 
-              const coin = findCoinAtPosition(state, gameX, gameY);
-              if (coin) {
-                dispatch((s) => collectCoin(s, coin.id));
-                return;
-              }
-
-              const tappedOrb = findOrbAtPosition(state, gameX, gameY);
-              if (tappedOrb) {
-                dispatch((s) => clickOrb(s, tappedOrb.id));
-                forceHudUpdate();
-                return;
-              }
-
-              if (editMode) {
-                const tower = findTowerAtPosition(state, gameX, gameY);
-                if (tower) {
-                  setSelectedTowerForEdit({ ...tower });
+                // Portal targeting mode: tap selects/deselects orbs
+                if (state.targeting) {
+                  const tappedOrb = findOrbAtPosition(state, gameX, gameY);
+                  if (tappedOrb) {
+                    dispatch((s) => addTargetOrb(s, tappedOrb.id));
+                    return;
+                  }
+                  return; // tap outside orb cancels nothing — just ignore
                 }
-                return;
-              }
 
-              if (state.player.selectedTower && gameY > WALL_Y) {
-                dispatch((s) => placeTower(s, s.player.selectedTower!, gameX, gameY));
-                handleSelectTower(null);
-                return;
-              }
-            }}
-          >
-            <GameCanvas
-              state={gameStateRef.current!}
-              liveStateRef={gameStateRef}
-              width={canvasWidth}
-              height={canvasHeight}
-            />
-            {isAiming && (
-              <View style={styles.aimingBanner}>
-                <Text style={styles.aimingText}>{t('game.tapToAim')}</Text>
-                <Pressable onPress={handleCancelAim}>
-                  <Text style={styles.aimingCancel}>{t('game.cancel')}</Text>
-                </Pressable>
-              </View>
-            )}
-          </Pressable>
-        ) : (
-          <GestureDetector gesture={composedGesture}>
-            <View collapsable={false} style={{ width: canvasWidth, height: canvasHeight }}>
+                const coin = findCoinAtPosition(state, gameX, gameY);
+                if (coin) {
+                  dispatch((s) => collectCoin(s, coin.id));
+                  return;
+                }
+
+                const tappedOrb = findOrbAtPosition(state, gameX, gameY);
+                if (tappedOrb) {
+                  dispatch((s) => clickOrb(s, tappedOrb.id));
+                  forceHudUpdate();
+                  return;
+                }
+
+                // Tower tap: always open upgrade popup (towerMenuAnytime)
+                const tappedTowerWeb = findTowerAtPosition(state, gameX, gameY);
+                if (tappedTowerWeb && tappedTowerWeb.side === 1) {
+                  setSelectedTowerForEdit({ ...tappedTowerWeb });
+                  setTowerPopupPos({ x: tappedTowerWeb.x * canvasScale, y: tappedTowerWeb.y * canvasScale });
+                  return;
+                }
+
+                if (state.player.selectedTower && gameY > WALL_Y) {
+                  dispatch((s) => placeTower(s, s.player.selectedTower!, gameX, gameY));
+                  handleSelectTower(null);
+                  return;
+                }
+              }}
+            >
               <GameCanvas
                 state={gameStateRef.current!}
                 liveStateRef={gameStateRef}
@@ -1155,112 +1142,279 @@ export default function GameScreen() {
                   </Pressable>
                 </View>
               )}
+            </Pressable>
+          ) : (
+            <GestureDetector gesture={composedGesture}>
+              <View collapsable={false} style={{ width: canvasWidth, height: canvasHeight }}>
+                <GameCanvas
+                  state={gameStateRef.current!}
+                  liveStateRef={gameStateRef}
+                  width={canvasWidth}
+                  height={canvasHeight}
+                />
+                {isAiming && (
+                  <View style={styles.aimingBanner}>
+                    <Text style={styles.aimingText}>{t('game.tapToAim')}</Text>
+                    <Pressable onPress={handleCancelAim}>
+                      <Text style={styles.aimingCancel}>{t('game.cancel')}</Text>
+                    </Pressable>
+                  </View>
+                )}
+              </View>
+            </GestureDetector>
+          )}
+          </View>
+
+          {/* ── Placement Overlay ── */}
+          {placementMode.active && (
+            <View
+              pointerEvents="box-none"
+              style={{ position: 'absolute', top: 0, left: 0, width: canvasWidth, height: canvasHeight, zIndex: 30 }}
+            >
+              {/* Slot dots at 47% canvas height */}
+              {ORB_SLOTS.map((sx, i) => {
+                const slotLeft = (sx / GAME_WIDTH) * canvasWidth;
+                const slotTop = canvasHeight * 0.47;
+                return (
+                  <Pressable
+                    key={i}
+                    onPress={() => {
+                      console.log('[Game] Place orb at slot', i, 'type:', placementMode.typeId);
+                      handlePlaceOrbAtSlot(i);
+                    }}
+                    style={[styles.orbSlotDot, { left: slotLeft - 18, top: slotTop - 18 }]}
+                  >
+                    <View style={styles.orbSlotDotInner} />
+                  </Pressable>
+                );
+              })}
+
+              {/* Active orb name label at 93% height */}
+              {(() => {
+                const activeDef = ORB_TYPES[placementMode.typeId as OrbType];
+                const labelColor = activeDef ? activeDef.color : '#6366F1';
+                const labelName = activeDef ? activeDef.name : '';
+                return activeDef ? (
+                  <View style={[styles.orbNameLabel, { top: canvasHeight * 0.93, left: canvasWidth / 2 - 60 }]} pointerEvents="none">
+                    <Text style={[styles.orbNameText, { color: labelColor }]}>{labelName}</Text>
+                  </View>
+                ) : null;
+              })()}
+
+              {/* Orb ring + cancel X at 74% height */}
+              {(() => {
+                const ringSize = 180;
+                const cx = ringSize / 2;
+                const cy = ringSize / 2;
+                const R = 74;
+                const orbIds = loadout.orbs ?? [];
+                const orbs = orbIds
+                  .map((id) => ORB_TYPES[id as OrbType])
+                  .filter((d): d is OrbDef => !!d);
+                const n = orbs.length;
+                const coins = gameStateRef.current?.player.coins ?? 0;
+                return (
+                  <View
+                    pointerEvents="box-none"
+                    style={{
+                      position: 'absolute',
+                      left: canvasWidth / 2 - ringSize / 2,
+                      top: canvasHeight * 0.74 - ringSize / 2,
+                      width: ringSize,
+                      height: ringSize,
+                    }}
+                  >
+                    {orbs.map((def, i) => {
+                      const ang = (Math.PI * 2 * i) / n - Math.PI / 2;
+                      const x = cx + R * Math.cos(ang) - 26;
+                      const y = cy + R * Math.sin(ang) - 26;
+                      const affordable = coins >= def.cost;
+                      const active = def.id === placementMode.typeId;
+                      return (
+                        <Pressable
+                          key={def.id}
+                          onPress={() => {
+                            if (affordable) {
+                              handleSwitchPlacementOrb(def.id);
+                            }
+                          }}
+                          style={[
+                            styles.orbRingBtn,
+                            active && styles.orbRingBtnActive,
+                            !affordable && styles.orbRingBtnDisabled,
+                            { left: x, top: y },
+                          ]}
+                        >
+                          <View style={[styles.orbRingDisc, { backgroundColor: def.color, shadowColor: def.color }]}>
+                            <Text style={styles.orbRingDiscText}>{def.hp}</Text>
+                          </View>
+                          <Text style={styles.orbRingCost}>
+                            {'🪙 '}
+                            {def.cost}
+                          </Text>
+                        </Pressable>
+                      );
+                    })}
+
+                    {/* Central X cancel */}
+                    <Pressable
+                      onPress={() => {
+                        console.log('[Game] Cancel placement pressed');
+                        handleCancelPlacement();
+                      }}
+                      style={[styles.orbRingCancel, { left: cx - 32, top: cy - 32 }]}
+                    >
+                      <Text style={styles.orbRingCancelText}>✕</Text>
+                    </Pressable>
+                  </View>
+                );
+              })()}
             </View>
-          </GestureDetector>
-        )}
-        </View>
+          )}
 
-        {/* ── Placement Overlay ── */}
-        {placementMode.active && (
-          <View style={[StyleSheet.absoluteFill, { zIndex: 30, pointerEvents: 'box-none' }]}>
-            {/* Slot dots at 47% canvas height */}
-            {ORB_SLOTS.map((sx, i) => {
-              const slotLeft = (sx / GAME_WIDTH) * canvasWidth;
-              const slotTop = canvasHeight * 0.47;
-              return (
-                <Pressable
-                  key={i}
-                  onPress={() => {
-                    console.log('[Game] Place orb at slot', i, 'type:', placementMode.typeId);
-                    handlePlaceOrbAtSlot(i);
-                  }}
-                  style={[styles.orbSlotDot, { left: slotLeft - 18, top: slotTop - 18, pointerEvents: 'auto' }]}
-                >
-                  <View style={styles.orbSlotDotInner} />
-                </Pressable>
-              );
-            })}
-
-            {/* Active orb name label at 93% height */}
-            {(() => {
-              const activeDef = ORB_TYPES[placementMode.typeId as OrbType];
-              const labelColor = activeDef ? activeDef.color : '#6366F1';
-              const labelName = activeDef ? activeDef.name : '';
-              return activeDef ? (
-                <View style={[styles.orbNameLabel, { top: canvasHeight * 0.93, left: canvasWidth / 2 - 60, pointerEvents: 'none' }]}>
-                  <Text style={[styles.orbNameText, { color: labelColor }]}>{labelName}</Text>
-                </View>
-              ) : null;
-            })()}
-
-            {/* Orb ring + cancel X at 74% height */}
-            {(() => {
-              const ringSize = 180;
-              const cx = ringSize / 2;
-              const cy = ringSize / 2;
-              const R = 74;
-              const orbIds = loadout.orbs ?? [];
-              const orbs = orbIds
-                .map((id) => ORB_TYPES[id as OrbType])
-                .filter((d): d is OrbDef => !!d);
-              const n = orbs.length;
-              const coins = gameStateRef.current?.player.coins ?? 0;
-              return (
-                <View style={{
+          {/* ── UpgradePopup — anchored above tapped tower ── */}
+          {selectedTowerForEdit && (() => {
+            const level = selectedTowerForEdit.level || 1;
+            const stats = getTowerStats(selectedTowerForEdit.type, level);
+            const next = getTowerStats(selectedTowerForEdit.type, level + 1);
+            const maxLevel = 5;
+            const maxed = level >= maxLevel;
+            const isSuper = level >= 6;
+            const upgradeCost = getTowerUpgradeCost(selectedTowerForEdit);
+            const sellValue = getTowerSellValue(selectedTowerForEdit);
+            const canUpgrade = !maxed && playerCoins >= upgradeCost;
+            const dpsNow = stats ? stats.damage / stats.fireRate : 0;
+            const dpsNext = next ? next.damage / next.fireRate : 0;
+            const dDps = next ? Math.round((dpsNext - dpsNow) * 10) / 10 : 0;
+            const dRange = next && stats ? Math.round((next.range - stats.range) * 10) / 10 : 0;
+            const towerNameDisplay = t(`towers.${selectedTowerForEdit.type}.name`) || selectedTowerForEdit.type.replace(/_/g, ' ').toUpperCase();
+            const upgradeLabel = isSuper ? '★ SUPER MAX ★' : 'MAX LEVEL';
+            const upgradeBtnBg = level + 1 >= 6 ? '#F59E0B' : '#10B981';
+            const upgradeBtnLabel = level + 1 >= 6 ? `★ SUPER ⬆ Lv ${level}→${level + 1}` : `⬆ Lv ${level}→${level + 1}`;
+            const sellLabel = `Sell · 🪙 ${sellValue}`;
+            return (
+              <View
+                style={{
                   position: 'absolute',
-                  left: canvasWidth / 2 - ringSize / 2,
-                  top: canvasHeight * 0.74 - ringSize / 2,
-                  width: ringSize,
-                  height: ringSize,
-                  pointerEvents: 'box-none',
-                }}>
-                  {orbs.map((def, i) => {
-                    const ang = (Math.PI * 2 * i) / n - Math.PI / 2;
-                    const x = cx + R * Math.cos(ang) - 26;
-                    const y = cy + R * Math.sin(ang) - 26;
-                    const affordable = coins >= def.cost;
-                    const active = def.id === placementMode.typeId;
-                    return (
-                      <Pressable
-                        key={def.id}
-                        onPress={() => {
-                          if (affordable) {
-                            handleSwitchPlacementOrb(def.id);
-                          }
-                        }}
-                        style={[
-                          styles.orbRingBtn,
-                          active && styles.orbRingBtnActive,
-                          !affordable && styles.orbRingBtnDisabled,
-                          { left: x, top: y, pointerEvents: 'auto' },
-                        ]}
-                      >
-                        <View style={[styles.orbRingDisc, { backgroundColor: def.color, shadowColor: def.color }]}>
-                          <Text style={styles.orbRingDiscText}>{def.hp}</Text>
-                        </View>
-                        <Text style={styles.orbRingCost}>
-                          {'🪙 '}
-                          {def.cost}
-                        </Text>
-                      </Pressable>
-                    );
-                  })}
+                  left: towerPopupPos ? towerPopupPos.x - 160 : canvasWidth / 2 - 160,
+                  top: towerPopupPos ? Math.max(8, towerPopupPos.y - 230) : canvasHeight / 2 - 115,
+                  width: 320,
+                  zIndex: 100,
+                }}
+                pointerEvents="box-none"
+              >
+                <View style={[styles.upgradePopupCard, isSuper && { borderColor: '#F59E0B', borderWidth: 2 }]}>
+                  {/* Header */}
+                  <View style={styles.upgradePopupHeader}>
+                    <TowerIcon type={selectedTowerForEdit.type} size={30} level={level} />
+                    <View style={{ flex: 1, marginLeft: 8 }}>
+                      <Text style={styles.upgradePopupName} numberOfLines={1}>
+                        {towerNameDisplay}
+                      </Text>
+                      {/* Level pips */}
+                      <View style={{ flexDirection: 'row', gap: 3, marginTop: 2 }}>
+                        {Array.from({ length: maxLevel }, (_, i) => {
+                          const pipFilled = level >= i + 1;
+                          const pipColor = pipFilled ? (level >= 6 ? '#F59E0B' : '#FBBF24') : '#E2E8F0';
+                          return (
+                            <View key={i} style={{
+                              width: 8, height: 8, borderRadius: 4,
+                              backgroundColor: pipColor,
+                            }} />
+                          );
+                        })}
+                      </View>
+                    </View>
+                    <Pressable onPress={() => {
+                      // Tutorial step 2: if upgraded, advance on close
+                      if (tutorialStepRef.current === 2 && tutorialUpgradedRef.current) {
+                        advanceTutorial();
+                      }
+                      setSelectedTowerForEdit(null);
+                      setTowerPopupPos(null);
+                    }} style={styles.upgradePopupClose}>
+                      <X size={14} color="#94A3B8" strokeWidth={2} />
+                    </Pressable>
+                  </View>
 
-                  {/* Central X cancel */}
+                  {/* Super perk label */}
+                  {isSuper && stats?.perk && (
+                    <View style={{ alignItems: 'center', marginBottom: 6 }}>
+                      <View style={{ backgroundColor: '#FEF3C7', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 99 }}>
+                        <Text style={{ fontSize: 9, fontWeight: '900', color: '#D97706' }}>
+                          {'★ '}
+                          {stats.perk.label}
+                        </Text>
+                      </View>
+                    </View>
+                  )}
+
+                  {/* Stat deltas */}
+                  {!maxed && next && (dDps > 0 || dRange > 0) && (
+                    <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 12, marginBottom: 8 }}>
+                      {dDps > 0 && <Text style={{ fontSize: 9, fontWeight: '700', color: '#059669' }}>DPS +{dDps}</Text>}
+                      {dRange > 0 && <Text style={{ fontSize: 9, fontWeight: '700', color: '#059669' }}>Range +{dRange}</Text>}
+                    </View>
+                  )}
+
+                  {/* Upgrade button */}
+                  {maxed ? (
+                    <View style={{ alignItems: 'center', paddingVertical: 8 }}>
+                      <Text style={{ fontSize: 10, fontWeight: '900', color: '#F59E0B' }}>
+                        {upgradeLabel}
+                      </Text>
+                    </View>
+                  ) : (
+                    <Pressable
+                      onPress={() => {
+                        console.log(`[Game] Upgrade tower pressed id=${selectedTowerForEdit.id} level=${level}`);
+                        handleUpgradeTower();
+                      }}
+                      disabled={!canUpgrade}
+                      style={[{
+                        paddingVertical: 10, borderRadius: 12, alignItems: 'center',
+                        flexDirection: 'row', justifyContent: 'center', gap: 6, marginBottom: 6,
+                        backgroundColor: upgradeBtnBg,
+                        opacity: canUpgrade ? 1 : 0.4,
+                      }]}
+                    >
+                      <Text style={{ fontSize: 12, fontWeight: '900', color: '#fff' }}>
+                        {upgradeBtnLabel}
+                      </Text>
+                      <Text style={{ fontSize: 11, fontWeight: '700', color: '#fff' }}>
+                        {'🪙 '}
+                        {upgradeCost}
+                      </Text>
+                    </Pressable>
+                  )}
+
+                  {/* Sell button */}
                   <Pressable
                     onPress={() => {
-                      console.log('[Game] Cancel placement pressed');
-                      handleCancelPlacement();
+                      console.log(`[Game] Sell tower pressed id=${selectedTowerForEdit.id}`);
+                      handleSellTower();
                     }}
-                    style={[styles.orbRingCancel, { left: cx - 32, top: cy - 32, pointerEvents: 'auto' }]}
+                    style={{
+                      paddingVertical: 8, borderRadius: 12, alignItems: 'center',
+                      flexDirection: 'row', justifyContent: 'center', gap: 4,
+                      backgroundColor: '#FFF1F2', borderWidth: 1, borderColor: '#FECDD3',
+                    }}
                   >
-                    <Text style={styles.orbRingCancelText}>✕</Text>
+                    <Text style={{ fontSize: 11, fontWeight: '700', color: '#F43F5E' }}>
+                      {sellLabel}
+                    </Text>
                   </Pressable>
                 </View>
-              );
-            })()}
-          </View>
-        )}
+                {/* Pointer triangle */}
+                <View style={{
+                  width: 14, height: 14, backgroundColor: '#fff',
+                  borderRightWidth: 2, borderBottomWidth: 2, borderColor: '#1E293B',
+                  transform: [{ rotate: '45deg' }], alignSelf: 'center', marginTop: -8,
+                }} />
+              </View>
+            );
+          })()}
+        </View>
       </View>
 
       {/* ── Portal Targeting Overlay ── */}
@@ -1280,138 +1434,6 @@ export default function GameScreen() {
           </Pressable>
         </View>
       )}
-
-      {/* ── UpgradePopup (edit mode) — outside overflow:hidden canvas View ── */}
-      {editMode && selectedTowerForEdit && (() => {
-        const level = selectedTowerForEdit.level || 1;
-        const stats = getTowerStats(selectedTowerForEdit.type, level);
-        const next = getTowerStats(selectedTowerForEdit.type, level + 1);
-        const maxLevel = 5;
-        const maxed = level >= maxLevel;
-        const isSuper = level >= 6;
-        const upgradeCost = getTowerUpgradeCost(selectedTowerForEdit);
-        const sellValue = getTowerSellValue(selectedTowerForEdit);
-        const canUpgrade = !maxed && playerCoins >= upgradeCost;
-        const dpsNow = stats ? stats.damage / stats.fireRate : 0;
-        const dpsNext = next ? next.damage / next.fireRate : 0;
-        const dDps = next ? Math.round((dpsNext - dpsNow) * 10) / 10 : 0;
-        const dRange = next && stats ? Math.round((next.range - stats.range) * 10) / 10 : 0;
-        const towerNameDisplay = selectedTowerForEdit.type.replace(/_/g, ' ').toUpperCase();
-        const upgradeLabel = isSuper ? '★ SUPER MAX ★' : 'MAX LEVEL';
-        const upgradeBtnBg = level + 1 >= 6 ? '#F59E0B' : '#10B981';
-        const upgradeBtnLabel = level + 1 >= 6 ? `★ SUPER ⬆ Lv ${level}→${level + 1}` : `⬆ Lv ${level}→${level + 1}`;
-        const sellLabel = `Sell · 🪙 ${sellValue}`;
-        return (
-          <View style={styles.upgradePopup}>
-            <View style={[styles.upgradePopupCard, isSuper && { borderColor: '#F59E0B', borderWidth: 2 }]}>
-              {/* Header */}
-              <View style={styles.upgradePopupHeader}>
-                <TowerIcon type={selectedTowerForEdit.type} size={30} level={level} />
-                <View style={{ flex: 1, marginLeft: 8 }}>
-                  <Text style={styles.upgradePopupName} numberOfLines={1}>
-                    {towerNameDisplay}
-                  </Text>
-                  {/* Level pips */}
-                  <View style={{ flexDirection: 'row', gap: 3, marginTop: 2 }}>
-                    {Array.from({ length: maxLevel }, (_, i) => {
-                      const pipFilled = level >= i + 1;
-                      const pipColor = pipFilled ? (level >= 6 ? '#F59E0B' : '#FBBF24') : '#E2E8F0';
-                      return (
-                        <View key={i} style={{
-                          width: 8, height: 8, borderRadius: 4,
-                          backgroundColor: pipColor,
-                        }} />
-                      );
-                    })}
-                  </View>
-                </View>
-                <Pressable onPress={() => {
-                  // Tutorial step 2: if upgraded, advance on close
-                  if (tutorialStepRef.current === 2 && tutorialUpgradedRef.current) {
-                    advanceTutorial();
-                  }
-                  setSelectedTowerForEdit(null);
-                }} style={styles.upgradePopupClose}>
-                  <X size={14} color="#94A3B8" strokeWidth={2} />
-                </Pressable>
-              </View>
-
-              {/* Super perk label */}
-              {isSuper && stats?.perk && (
-                <View style={{ alignItems: 'center', marginBottom: 6 }}>
-                  <View style={{ backgroundColor: '#FEF3C7', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 99 }}>
-                    <Text style={{ fontSize: 9, fontWeight: '900', color: '#D97706' }}>
-                      {'★ '}
-                      {stats.perk.label}
-                    </Text>
-                  </View>
-                </View>
-              )}
-
-              {/* Stat deltas */}
-              {!maxed && next && (dDps > 0 || dRange > 0) && (
-                <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 12, marginBottom: 8 }}>
-                  {dDps > 0 && <Text style={{ fontSize: 9, fontWeight: '700', color: '#059669' }}>DPS +{dDps}</Text>}
-                  {dRange > 0 && <Text style={{ fontSize: 9, fontWeight: '700', color: '#059669' }}>Range +{dRange}</Text>}
-                </View>
-              )}
-
-              {/* Upgrade button */}
-              {maxed ? (
-                <View style={{ alignItems: 'center', paddingVertical: 8 }}>
-                  <Text style={{ fontSize: 10, fontWeight: '900', color: '#F59E0B' }}>
-                    {upgradeLabel}
-                  </Text>
-                </View>
-              ) : (
-                <Pressable
-                  onPress={() => {
-                    handleUpgradeTower();
-                  }}
-                  disabled={!canUpgrade}
-                  style={[{
-                    paddingVertical: 10, borderRadius: 12, alignItems: 'center',
-                    flexDirection: 'row', justifyContent: 'center', gap: 6, marginBottom: 6,
-                    backgroundColor: upgradeBtnBg,
-                    opacity: canUpgrade ? 1 : 0.4,
-                  }]}
-                >
-                  <Text style={{ fontSize: 12, fontWeight: '900', color: '#fff' }}>
-                    {upgradeBtnLabel}
-                  </Text>
-                  <Text style={{ fontSize: 11, fontWeight: '700', color: '#fff' }}>
-                    {'🪙 '}
-                    {upgradeCost}
-                  </Text>
-                </Pressable>
-              )}
-
-              {/* Sell button */}
-              <Pressable
-                onPress={() => {
-                  console.log(`[Game] Sell tower pressed id=${selectedTowerForEdit.id}`);
-                  handleSellTower();
-                }}
-                style={{
-                  paddingVertical: 8, borderRadius: 12, alignItems: 'center',
-                  flexDirection: 'row', justifyContent: 'center', gap: 4,
-                  backgroundColor: '#FFF1F2', borderWidth: 1, borderColor: '#FECDD3',
-                }}
-              >
-                <Text style={{ fontSize: 11, fontWeight: '700', color: '#F43F5E' }}>
-                  {sellLabel}
-                </Text>
-              </Pressable>
-            </View>
-            {/* Pointer triangle */}
-            <View style={{
-              width: 14, height: 14, backgroundColor: '#fff',
-              borderRightWidth: 2, borderBottomWidth: 2, borderColor: '#1E293B',
-              transform: [{ rotate: '45deg' }], alignSelf: 'center', marginTop: -8,
-            }} />
-          </View>
-        );
-      })()}
 
       {/* ── Bottom HUD (~10fps) ── */}
       <BottomHUD
